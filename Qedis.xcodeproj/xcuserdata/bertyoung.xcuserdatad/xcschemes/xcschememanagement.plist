@@ -9,10 +9,20 @@
 			<key>orderHint</key>
 			<integer>0</integer>
 		</dict>
+		<key>qbaselib.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>1</integer>
+		</dict>
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
 		<key>BABEBED419C4474900010636</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>BAFC83FD19C44AE800C18B22</key>
 		<dict>
 			<key>primary</key>
 			<true/>

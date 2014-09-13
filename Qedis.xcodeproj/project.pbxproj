@@ -7,9 +7,77 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		BABEBED919C4474900010636 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BABEBED819C4474900010636 /* main.cpp */; };
+		BAA158CE19C44A56007713F9 /* IntSet.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAA158B419C44A56007713F9 /* IntSet.cc */; };
+		BAA158CF19C44A56007713F9 /* QClient.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAA158B619C44A56007713F9 /* QClient.cc */; };
+		BAA158D019C44A56007713F9 /* QCommand.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAA158B819C44A56007713F9 /* QCommand.cc */; };
+		BAA158D119C44A56007713F9 /* QCommon.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAA158BA19C44A56007713F9 /* QCommon.cc */; };
+		BAA158D219C44A56007713F9 /* Qedis.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAA158BC19C44A56007713F9 /* Qedis.cc */; };
+		BAA158D319C44A56007713F9 /* QHash.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAA158BD19C44A56007713F9 /* QHash.cc */; };
+		BAA158D419C44A56007713F9 /* QKeyCommand.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAA158BF19C44A56007713F9 /* QKeyCommand.cc */; };
+		BAA158D519C44A56007713F9 /* QList.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAA158C019C44A56007713F9 /* QList.cc */; };
+		BAA158D619C44A56007713F9 /* QServerCommand.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAA158C219C44A56007713F9 /* QServerCommand.cc */; };
+		BAA158D719C44A56007713F9 /* QSet.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAA158C319C44A56007713F9 /* QSet.cc */; };
+		BAA158D819C44A56007713F9 /* QStat.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAA158C619C44A56007713F9 /* QStat.cc */; };
+		BAA158D919C44A56007713F9 /* QStore.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAA158C819C44A56007713F9 /* QStore.cc */; };
+		BAA158DA19C44A56007713F9 /* QString.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAA158CA19C44A56007713F9 /* QString.cc */; };
+		BAA158DB19C44A56007713F9 /* util.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAA158CC19C44A56007713F9 /* util.cc */; };
 		BABEBEDB19C4474900010636 /* Qedis.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = BABEBEDA19C4474900010636 /* Qedis.1 */; };
+		BAFC847219C44AFD00C18B22 /* Buffer.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC840219C44AFD00C18B22 /* Buffer.h */; };
+		BAFC847319C44AFD00C18B22 /* ClientSocket.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC840419C44AFD00C18B22 /* ClientSocket.cc */; };
+		BAFC847419C44AFD00C18B22 /* ClientSocket.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC840519C44AFD00C18B22 /* ClientSocket.h */; };
+		BAFC847519C44AFD00C18B22 /* ConfigParser.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC840719C44AFD00C18B22 /* ConfigParser.cc */; };
+		BAFC847619C44AFD00C18B22 /* ConfigParser.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC840819C44AFD00C18B22 /* ConfigParser.h */; };
+		BAFC847719C44AFD00C18B22 /* EPoller.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC840919C44AFD00C18B22 /* EPoller.cc */; };
+		BAFC847819C44AFD00C18B22 /* EPoller.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC840A19C44AFD00C18B22 /* EPoller.h */; };
+		BAFC847919C44AFD00C18B22 /* Kqueue.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC840B19C44AFD00C18B22 /* Kqueue.cc */; };
+		BAFC847A19C44AFD00C18B22 /* Kqueue.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC840C19C44AFD00C18B22 /* Kqueue.h */; };
+		BAFC847B19C44AFD00C18B22 /* ListenSocket.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC840D19C44AFD00C18B22 /* ListenSocket.cc */; };
+		BAFC847C19C44AFD00C18B22 /* ListenSocket.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC840E19C44AFD00C18B22 /* ListenSocket.h */; };
+		BAFC847D19C44AFD00C18B22 /* Logger.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC841019C44AFD00C18B22 /* Logger.cc */; };
+		BAFC847E19C44AFD00C18B22 /* Logger.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC841119C44AFD00C18B22 /* Logger.h */; };
+		BAFC848519C44AFD00C18B22 /* MemoryPool.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC841D19C44AFD00C18B22 /* MemoryPool.cc */; };
+		BAFC848619C44AFD00C18B22 /* MemoryPool.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC841F19C44AFD00C18B22 /* MemoryPool.h */; };
+		BAFC848E19C44AFD00C18B22 /* NetThreadPool.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC842A19C44AFD00C18B22 /* NetThreadPool.cc */; };
+		BAFC848F19C44AFD00C18B22 /* NetThreadPool.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC842B19C44AFD00C18B22 /* NetThreadPool.h */; };
+		BAFC849019C44AFD00C18B22 /* Poller.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC842C19C44AFD00C18B22 /* Poller.h */; };
+		BAFC849119C44AFD00C18B22 /* Server.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC842D19C44AFD00C18B22 /* Server.cc */; };
+		BAFC849219C44AFD00C18B22 /* Server.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC842E19C44AFD00C18B22 /* Server.h */; };
+		BAFC849319C44AFD00C18B22 /* CounterBase.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC843319C44AFD00C18B22 /* CounterBase.h */; };
+		BAFC849419C44AFD00C18B22 /* CounterImpl.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC843419C44AFD00C18B22 /* CounterImpl.h */; };
+		BAFC849519C44AFD00C18B22 /* EnableShareMe.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC843519C44AFD00C18B22 /* EnableShareMe.h */; };
+		BAFC849619C44AFD00C18B22 /* MakeShared.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC843619C44AFD00C18B22 /* MakeShared.h */; };
+		BAFC849719C44AFD00C18B22 /* SharedPtr.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC843719C44AFD00C18B22 /* SharedPtr.h */; };
+		BAFC849E19C44AFD00C18B22 /* UniquePtr.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC844119C44AFD00C18B22 /* UniquePtr.h */; };
+		BAFC849F19C44AFD00C18B22 /* WeakPtr.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC844219C44AFD00C18B22 /* WeakPtr.h */; };
+		BAFC84B719C44AFD00C18B22 /* Socket.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC846019C44AFD00C18B22 /* Socket.cc */; };
+		BAFC84B819C44AFD00C18B22 /* Socket.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC846119C44AFD00C18B22 /* Socket.h */; };
+		BAFC84B919C44AFD00C18B22 /* StreamSocket.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC846219C44AFD00C18B22 /* StreamSocket.cc */; };
+		BAFC84BA19C44AFD00C18B22 /* StreamSocket.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC846319C44AFD00C18B22 /* StreamSocket.h */; };
+		BAFC84BB19C44AFD00C18B22 /* TaskManager.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC846419C44AFD00C18B22 /* TaskManager.cc */; };
+		BAFC84BC19C44AFD00C18B22 /* TaskManager.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC846519C44AFD00C18B22 /* TaskManager.h */; };
+		BAFC84BD19C44AFD00C18B22 /* Atomic.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC846719C44AFD00C18B22 /* Atomic.h */; };
+		BAFC84BE19C44AFD00C18B22 /* IPC.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC846819C44AFD00C18B22 /* IPC.cc */; };
+		BAFC84BF19C44AFD00C18B22 /* IPC.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC846919C44AFD00C18B22 /* IPC.h */; };
+		BAFC84C019C44AFD00C18B22 /* Thread.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC846A19C44AFD00C18B22 /* Thread.cc */; };
+		BAFC84C119C44AFD00C18B22 /* Thread.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC846B19C44AFD00C18B22 /* Thread.h */; };
+		BAFC84C219C44AFD00C18B22 /* ThreadPool.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC846C19C44AFD00C18B22 /* ThreadPool.cc */; };
+		BAFC84C319C44AFD00C18B22 /* ThreadPool.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC846D19C44AFD00C18B22 /* ThreadPool.h */; };
+		BAFC84C419C44AFD00C18B22 /* Timer.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC846E19C44AFD00C18B22 /* Timer.cc */; };
+		BAFC84C519C44AFD00C18B22 /* Timer.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC846F19C44AFD00C18B22 /* Timer.h */; };
+		BAFC84C619C44AFD00C18B22 /* UnboundedBuffer.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC847019C44AFD00C18B22 /* UnboundedBuffer.cc */; };
+		BAFC84C719C44AFD00C18B22 /* UnboundedBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC847119C44AFD00C18B22 /* UnboundedBuffer.h */; };
+		BAFC84D619C44E7100C18B22 /* libqbaselib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BAFC83FE19C44AE800C18B22 /* libqbaselib.a */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		BAFC84D419C44B6800C18B22 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BABEBECD19C4474900010636 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BAFC83FD19C44AE800C18B22;
+			remoteInfo = qbaselib;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		BABEBED319C4474900010636 /* CopyFiles */ = {
@@ -25,13 +93,93 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		BAA158B319C44A56007713F9 /* grocery.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; path = grocery.1; sourceTree = "<group>"; };
+		BAA158B419C44A56007713F9 /* IntSet.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = IntSet.cc; sourceTree = "<group>"; };
+		BAA158B519C44A56007713F9 /* IntSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IntSet.h; sourceTree = "<group>"; };
+		BAA158B619C44A56007713F9 /* QClient.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QClient.cc; sourceTree = "<group>"; };
+		BAA158B719C44A56007713F9 /* QClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QClient.h; sourceTree = "<group>"; };
+		BAA158B819C44A56007713F9 /* QCommand.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QCommand.cc; sourceTree = "<group>"; };
+		BAA158B919C44A56007713F9 /* QCommand.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QCommand.h; sourceTree = "<group>"; };
+		BAA158BA19C44A56007713F9 /* QCommon.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QCommon.cc; sourceTree = "<group>"; };
+		BAA158BB19C44A56007713F9 /* QCommon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QCommon.h; sourceTree = "<group>"; };
+		BAA158BC19C44A56007713F9 /* Qedis.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Qedis.cc; sourceTree = "<group>"; };
+		BAA158BD19C44A56007713F9 /* QHash.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QHash.cc; sourceTree = "<group>"; };
+		BAA158BE19C44A56007713F9 /* QHash.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QHash.h; sourceTree = "<group>"; };
+		BAA158BF19C44A56007713F9 /* QKeyCommand.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QKeyCommand.cc; sourceTree = "<group>"; };
+		BAA158C019C44A56007713F9 /* QList.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QList.cc; sourceTree = "<group>"; };
+		BAA158C119C44A56007713F9 /* QList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QList.h; sourceTree = "<group>"; };
+		BAA158C219C44A56007713F9 /* QServerCommand.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QServerCommand.cc; sourceTree = "<group>"; };
+		BAA158C319C44A56007713F9 /* QSet.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QSet.cc; sourceTree = "<group>"; };
+		BAA158C419C44A56007713F9 /* QSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QSet.h; sourceTree = "<group>"; };
+		BAA158C519C44A56007713F9 /* QSkipList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QSkipList.h; sourceTree = "<group>"; };
+		BAA158C619C44A56007713F9 /* QStat.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QStat.cc; sourceTree = "<group>"; };
+		BAA158C719C44A56007713F9 /* QStat.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QStat.h; sourceTree = "<group>"; };
+		BAA158C819C44A56007713F9 /* QStore.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QStore.cc; sourceTree = "<group>"; };
+		BAA158C919C44A56007713F9 /* QStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QStore.h; sourceTree = "<group>"; };
+		BAA158CA19C44A56007713F9 /* QString.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QString.cc; sourceTree = "<group>"; };
+		BAA158CB19C44A56007713F9 /* QString.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QString.h; sourceTree = "<group>"; };
+		BAA158CC19C44A56007713F9 /* util.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = util.cc; sourceTree = "<group>"; };
+		BAA158CD19C44A56007713F9 /* util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = util.h; sourceTree = "<group>"; };
 		BABEBED519C4474900010636 /* Qedis */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Qedis; sourceTree = BUILT_PRODUCTS_DIR; };
-		BABEBED819C4474900010636 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		BABEBEDA19C4474900010636 /* Qedis.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = Qedis.1; sourceTree = "<group>"; };
+		BAFC83FE19C44AE800C18B22 /* libqbaselib.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libqbaselib.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		BAFC840219C44AFD00C18B22 /* Buffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Buffer.h; path = QBase/Buffer.h; sourceTree = "<group>"; };
+		BAFC840419C44AFD00C18B22 /* ClientSocket.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ClientSocket.cc; path = QBase/ClientSocket.cc; sourceTree = "<group>"; };
+		BAFC840519C44AFD00C18B22 /* ClientSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ClientSocket.h; path = QBase/ClientSocket.h; sourceTree = "<group>"; };
+		BAFC840619C44AFD00C18B22 /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = CMakeLists.txt; path = QBase/CMakeLists.txt; sourceTree = "<group>"; };
+		BAFC840719C44AFD00C18B22 /* ConfigParser.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ConfigParser.cc; path = QBase/ConfigParser.cc; sourceTree = "<group>"; };
+		BAFC840819C44AFD00C18B22 /* ConfigParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ConfigParser.h; path = QBase/ConfigParser.h; sourceTree = "<group>"; };
+		BAFC840919C44AFD00C18B22 /* EPoller.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = EPoller.cc; path = QBase/EPoller.cc; sourceTree = "<group>"; };
+		BAFC840A19C44AFD00C18B22 /* EPoller.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EPoller.h; path = QBase/EPoller.h; sourceTree = "<group>"; };
+		BAFC840B19C44AFD00C18B22 /* Kqueue.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Kqueue.cc; path = QBase/Kqueue.cc; sourceTree = "<group>"; };
+		BAFC840C19C44AFD00C18B22 /* Kqueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Kqueue.h; path = QBase/Kqueue.h; sourceTree = "<group>"; };
+		BAFC840D19C44AFD00C18B22 /* ListenSocket.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ListenSocket.cc; path = QBase/ListenSocket.cc; sourceTree = "<group>"; };
+		BAFC840E19C44AFD00C18B22 /* ListenSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ListenSocket.h; path = QBase/ListenSocket.h; sourceTree = "<group>"; };
+		BAFC841019C44AFD00C18B22 /* Logger.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Logger.cc; sourceTree = "<group>"; };
+		BAFC841119C44AFD00C18B22 /* Logger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Logger.h; sourceTree = "<group>"; };
+		BAFC841D19C44AFD00C18B22 /* MemoryPool.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MemoryPool.cc; path = QBase/MemoryPool.cc; sourceTree = "<group>"; };
+		BAFC841F19C44AFD00C18B22 /* MemoryPool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MemoryPool.h; path = QBase/MemoryPool.h; sourceTree = "<group>"; };
+		BAFC842A19C44AFD00C18B22 /* NetThreadPool.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NetThreadPool.cc; path = QBase/NetThreadPool.cc; sourceTree = "<group>"; };
+		BAFC842B19C44AFD00C18B22 /* NetThreadPool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NetThreadPool.h; path = QBase/NetThreadPool.h; sourceTree = "<group>"; };
+		BAFC842C19C44AFD00C18B22 /* Poller.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Poller.h; path = QBase/Poller.h; sourceTree = "<group>"; };
+		BAFC842D19C44AFD00C18B22 /* Server.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Server.cc; path = QBase/Server.cc; sourceTree = "<group>"; };
+		BAFC842E19C44AFD00C18B22 /* Server.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Server.h; path = QBase/Server.h; sourceTree = "<group>"; };
+		BAFC843319C44AFD00C18B22 /* CounterBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CounterBase.h; sourceTree = "<group>"; };
+		BAFC843419C44AFD00C18B22 /* CounterImpl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CounterImpl.h; sourceTree = "<group>"; };
+		BAFC843519C44AFD00C18B22 /* EnableShareMe.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EnableShareMe.h; sourceTree = "<group>"; };
+		BAFC843619C44AFD00C18B22 /* MakeShared.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MakeShared.h; sourceTree = "<group>"; };
+		BAFC843719C44AFD00C18B22 /* SharedPtr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SharedPtr.h; sourceTree = "<group>"; };
+		BAFC844119C44AFD00C18B22 /* UniquePtr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UniquePtr.h; sourceTree = "<group>"; };
+		BAFC844219C44AFD00C18B22 /* WeakPtr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WeakPtr.h; sourceTree = "<group>"; };
+		BAFC846019C44AFD00C18B22 /* Socket.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Socket.cc; path = QBase/Socket.cc; sourceTree = "<group>"; };
+		BAFC846119C44AFD00C18B22 /* Socket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Socket.h; path = QBase/Socket.h; sourceTree = "<group>"; };
+		BAFC846219C44AFD00C18B22 /* StreamSocket.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = StreamSocket.cc; path = QBase/StreamSocket.cc; sourceTree = "<group>"; };
+		BAFC846319C44AFD00C18B22 /* StreamSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = StreamSocket.h; path = QBase/StreamSocket.h; sourceTree = "<group>"; };
+		BAFC846419C44AFD00C18B22 /* TaskManager.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TaskManager.cc; path = QBase/TaskManager.cc; sourceTree = "<group>"; };
+		BAFC846519C44AFD00C18B22 /* TaskManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TaskManager.h; path = QBase/TaskManager.h; sourceTree = "<group>"; };
+		BAFC846719C44AFD00C18B22 /* Atomic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Atomic.h; sourceTree = "<group>"; };
+		BAFC846819C44AFD00C18B22 /* IPC.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = IPC.cc; sourceTree = "<group>"; };
+		BAFC846919C44AFD00C18B22 /* IPC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IPC.h; sourceTree = "<group>"; };
+		BAFC846A19C44AFD00C18B22 /* Thread.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Thread.cc; sourceTree = "<group>"; };
+		BAFC846B19C44AFD00C18B22 /* Thread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Thread.h; sourceTree = "<group>"; };
+		BAFC846C19C44AFD00C18B22 /* ThreadPool.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ThreadPool.cc; sourceTree = "<group>"; };
+		BAFC846D19C44AFD00C18B22 /* ThreadPool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ThreadPool.h; sourceTree = "<group>"; };
+		BAFC846E19C44AFD00C18B22 /* Timer.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Timer.cc; path = QBase/Timer.cc; sourceTree = "<group>"; };
+		BAFC846F19C44AFD00C18B22 /* Timer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Timer.h; path = QBase/Timer.h; sourceTree = "<group>"; };
+		BAFC847019C44AFD00C18B22 /* UnboundedBuffer.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = UnboundedBuffer.cc; path = QBase/UnboundedBuffer.cc; sourceTree = "<group>"; };
+		BAFC847119C44AFD00C18B22 /* UnboundedBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = UnboundedBuffer.h; path = QBase/UnboundedBuffer.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		BABEBED219C4474900010636 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BAFC84D619C44E7100C18B22 /* libqbaselib.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BAFC83FB19C44AE800C18B22 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -41,9 +189,49 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		BAA158B219C44A0F007713F9 /* QBase */ = {
+			isa = PBXGroup;
+			children = (
+				BAFC840219C44AFD00C18B22 /* Buffer.h */,
+				BAFC840419C44AFD00C18B22 /* ClientSocket.cc */,
+				BAFC840519C44AFD00C18B22 /* ClientSocket.h */,
+				BAFC840619C44AFD00C18B22 /* CMakeLists.txt */,
+				BAFC840719C44AFD00C18B22 /* ConfigParser.cc */,
+				BAFC840819C44AFD00C18B22 /* ConfigParser.h */,
+				BAFC840919C44AFD00C18B22 /* EPoller.cc */,
+				BAFC840A19C44AFD00C18B22 /* EPoller.h */,
+				BAFC840B19C44AFD00C18B22 /* Kqueue.cc */,
+				BAFC840C19C44AFD00C18B22 /* Kqueue.h */,
+				BAFC840D19C44AFD00C18B22 /* ListenSocket.cc */,
+				BAFC840E19C44AFD00C18B22 /* ListenSocket.h */,
+				BAFC840F19C44AFD00C18B22 /* Log */,
+				BAFC841D19C44AFD00C18B22 /* MemoryPool.cc */,
+				BAFC841F19C44AFD00C18B22 /* MemoryPool.h */,
+				BAFC842A19C44AFD00C18B22 /* NetThreadPool.cc */,
+				BAFC842B19C44AFD00C18B22 /* NetThreadPool.h */,
+				BAFC842C19C44AFD00C18B22 /* Poller.h */,
+				BAFC842D19C44AFD00C18B22 /* Server.cc */,
+				BAFC842E19C44AFD00C18B22 /* Server.h */,
+				BAFC843219C44AFD00C18B22 /* SmartPtr */,
+				BAFC846019C44AFD00C18B22 /* Socket.cc */,
+				BAFC846119C44AFD00C18B22 /* Socket.h */,
+				BAFC846219C44AFD00C18B22 /* StreamSocket.cc */,
+				BAFC846319C44AFD00C18B22 /* StreamSocket.h */,
+				BAFC846419C44AFD00C18B22 /* TaskManager.cc */,
+				BAFC846519C44AFD00C18B22 /* TaskManager.h */,
+				BAFC846619C44AFD00C18B22 /* Threads */,
+				BAFC846E19C44AFD00C18B22 /* Timer.cc */,
+				BAFC846F19C44AFD00C18B22 /* Timer.h */,
+				BAFC847019C44AFD00C18B22 /* UnboundedBuffer.cc */,
+				BAFC847119C44AFD00C18B22 /* UnboundedBuffer.h */,
+			);
+			name = QBase;
+			sourceTree = "<group>";
+		};
 		BABEBECC19C4474900010636 = {
 			isa = PBXGroup;
 			children = (
+				BAA158B219C44A0F007713F9 /* QBase */,
 				BABEBED719C4474900010636 /* Qedis */,
 				BABEBED619C4474900010636 /* Products */,
 			);
@@ -53,6 +241,7 @@
 			isa = PBXGroup;
 			children = (
 				BABEBED519C4474900010636 /* Qedis */,
+				BAFC83FE19C44AE800C18B22 /* libqbaselib.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -60,13 +249,116 @@
 		BABEBED719C4474900010636 /* Qedis */ = {
 			isa = PBXGroup;
 			children = (
-				BABEBED819C4474900010636 /* main.cpp */,
+				BAA158B319C44A56007713F9 /* grocery.1 */,
+				BAA158B419C44A56007713F9 /* IntSet.cc */,
+				BAA158B519C44A56007713F9 /* IntSet.h */,
+				BAA158B619C44A56007713F9 /* QClient.cc */,
+				BAA158B719C44A56007713F9 /* QClient.h */,
+				BAA158B819C44A56007713F9 /* QCommand.cc */,
+				BAA158B919C44A56007713F9 /* QCommand.h */,
+				BAA158BA19C44A56007713F9 /* QCommon.cc */,
+				BAA158BB19C44A56007713F9 /* QCommon.h */,
+				BAA158BC19C44A56007713F9 /* Qedis.cc */,
+				BAA158BD19C44A56007713F9 /* QHash.cc */,
+				BAA158BE19C44A56007713F9 /* QHash.h */,
+				BAA158BF19C44A56007713F9 /* QKeyCommand.cc */,
+				BAA158C019C44A56007713F9 /* QList.cc */,
+				BAA158C119C44A56007713F9 /* QList.h */,
+				BAA158C219C44A56007713F9 /* QServerCommand.cc */,
+				BAA158C319C44A56007713F9 /* QSet.cc */,
+				BAA158C419C44A56007713F9 /* QSet.h */,
+				BAA158C519C44A56007713F9 /* QSkipList.h */,
+				BAA158C619C44A56007713F9 /* QStat.cc */,
+				BAA158C719C44A56007713F9 /* QStat.h */,
+				BAA158C819C44A56007713F9 /* QStore.cc */,
+				BAA158C919C44A56007713F9 /* QStore.h */,
+				BAA158CA19C44A56007713F9 /* QString.cc */,
+				BAA158CB19C44A56007713F9 /* QString.h */,
+				BAA158CC19C44A56007713F9 /* util.cc */,
+				BAA158CD19C44A56007713F9 /* util.h */,
 				BABEBEDA19C4474900010636 /* Qedis.1 */,
 			);
 			path = Qedis;
 			sourceTree = "<group>";
 		};
+		BAFC840F19C44AFD00C18B22 /* Log */ = {
+			isa = PBXGroup;
+			children = (
+				BAFC841019C44AFD00C18B22 /* Logger.cc */,
+				BAFC841119C44AFD00C18B22 /* Logger.h */,
+			);
+			name = Log;
+			path = QBase/Log;
+			sourceTree = "<group>";
+		};
+		BAFC843219C44AFD00C18B22 /* SmartPtr */ = {
+			isa = PBXGroup;
+			children = (
+				BAFC843319C44AFD00C18B22 /* CounterBase.h */,
+				BAFC843419C44AFD00C18B22 /* CounterImpl.h */,
+				BAFC843519C44AFD00C18B22 /* EnableShareMe.h */,
+				BAFC843619C44AFD00C18B22 /* MakeShared.h */,
+				BAFC843719C44AFD00C18B22 /* SharedPtr.h */,
+				BAFC844119C44AFD00C18B22 /* UniquePtr.h */,
+				BAFC844219C44AFD00C18B22 /* WeakPtr.h */,
+			);
+			name = SmartPtr;
+			path = QBase/SmartPtr;
+			sourceTree = "<group>";
+		};
+		BAFC846619C44AFD00C18B22 /* Threads */ = {
+			isa = PBXGroup;
+			children = (
+				BAFC846719C44AFD00C18B22 /* Atomic.h */,
+				BAFC846819C44AFD00C18B22 /* IPC.cc */,
+				BAFC846919C44AFD00C18B22 /* IPC.h */,
+				BAFC846A19C44AFD00C18B22 /* Thread.cc */,
+				BAFC846B19C44AFD00C18B22 /* Thread.h */,
+				BAFC846C19C44AFD00C18B22 /* ThreadPool.cc */,
+				BAFC846D19C44AFD00C18B22 /* ThreadPool.h */,
+			);
+			name = Threads;
+			path = QBase/Threads;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		BAFC83FC19C44AE800C18B22 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BAFC84BC19C44AFD00C18B22 /* TaskManager.h in Headers */,
+				BAFC84C519C44AFD00C18B22 /* Timer.h in Headers */,
+				BAFC84BD19C44AFD00C18B22 /* Atomic.h in Headers */,
+				BAFC84C719C44AFD00C18B22 /* UnboundedBuffer.h in Headers */,
+				BAFC84BA19C44AFD00C18B22 /* StreamSocket.h in Headers */,
+				BAFC849419C44AFD00C18B22 /* CounterImpl.h in Headers */,
+				BAFC849319C44AFD00C18B22 /* CounterBase.h in Headers */,
+				BAFC84BF19C44AFD00C18B22 /* IPC.h in Headers */,
+				BAFC848619C44AFD00C18B22 /* MemoryPool.h in Headers */,
+				BAFC84C319C44AFD00C18B22 /* ThreadPool.h in Headers */,
+				BAFC847419C44AFD00C18B22 /* ClientSocket.h in Headers */,
+				BAFC847E19C44AFD00C18B22 /* Logger.h in Headers */,
+				BAFC847A19C44AFD00C18B22 /* Kqueue.h in Headers */,
+				BAFC84B819C44AFD00C18B22 /* Socket.h in Headers */,
+				BAFC848F19C44AFD00C18B22 /* NetThreadPool.h in Headers */,
+				BAFC847219C44AFD00C18B22 /* Buffer.h in Headers */,
+				BAFC849619C44AFD00C18B22 /* MakeShared.h in Headers */,
+				BAFC849719C44AFD00C18B22 /* SharedPtr.h in Headers */,
+				BAFC849519C44AFD00C18B22 /* EnableShareMe.h in Headers */,
+				BAFC849F19C44AFD00C18B22 /* WeakPtr.h in Headers */,
+				BAFC847819C44AFD00C18B22 /* EPoller.h in Headers */,
+				BAFC849019C44AFD00C18B22 /* Poller.h in Headers */,
+				BAFC849219C44AFD00C18B22 /* Server.h in Headers */,
+				BAFC847C19C44AFD00C18B22 /* ListenSocket.h in Headers */,
+				BAFC849E19C44AFD00C18B22 /* UniquePtr.h in Headers */,
+				BAFC84C119C44AFD00C18B22 /* Thread.h in Headers */,
+				BAFC847619C44AFD00C18B22 /* ConfigParser.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
 		BABEBED419C4474900010636 /* Qedis */ = {
@@ -80,11 +372,29 @@
 			buildRules = (
 			);
 			dependencies = (
+				BAFC84D519C44B6800C18B22 /* PBXTargetDependency */,
 			);
 			name = Qedis;
 			productName = Qedis;
 			productReference = BABEBED519C4474900010636 /* Qedis */;
 			productType = "com.apple.product-type.tool";
+		};
+		BAFC83FD19C44AE800C18B22 /* qbaselib */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BAFC840119C44AE800C18B22 /* Build configuration list for PBXNativeTarget "qbaselib" */;
+			buildPhases = (
+				BAFC83FA19C44AE800C18B22 /* Sources */,
+				BAFC83FB19C44AE800C18B22 /* Frameworks */,
+				BAFC83FC19C44AE800C18B22 /* Headers */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = qbaselib;
+			productName = qbaselib;
+			productReference = BAFC83FE19C44AE800C18B22 /* libqbaselib.a */;
+			productType = "com.apple.product-type.library.static";
 		};
 /* End PBXNativeTarget section */
 
@@ -108,6 +418,7 @@
 			projectRoot = "";
 			targets = (
 				BABEBED419C4474900010636 /* Qedis */,
+				BAFC83FD19C44AE800C18B22 /* qbaselib */,
 			);
 		};
 /* End PBXProject section */
@@ -117,11 +428,56 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BABEBED919C4474900010636 /* main.cpp in Sources */,
+				BAA158D719C44A56007713F9 /* QSet.cc in Sources */,
+				BAA158D119C44A56007713F9 /* QCommon.cc in Sources */,
+				BAA158D519C44A56007713F9 /* QList.cc in Sources */,
+				BAA158DB19C44A56007713F9 /* util.cc in Sources */,
+				BAA158D419C44A56007713F9 /* QKeyCommand.cc in Sources */,
+				BAA158D219C44A56007713F9 /* Qedis.cc in Sources */,
+				BAA158CF19C44A56007713F9 /* QClient.cc in Sources */,
+				BAA158D319C44A56007713F9 /* QHash.cc in Sources */,
+				BAA158D919C44A56007713F9 /* QStore.cc in Sources */,
+				BAA158CE19C44A56007713F9 /* IntSet.cc in Sources */,
+				BAA158DA19C44A56007713F9 /* QString.cc in Sources */,
+				BAA158D819C44A56007713F9 /* QStat.cc in Sources */,
+				BAA158D619C44A56007713F9 /* QServerCommand.cc in Sources */,
+				BAA158D019C44A56007713F9 /* QCommand.cc in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BAFC83FA19C44AE800C18B22 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BAFC847519C44AFD00C18B22 /* ConfigParser.cc in Sources */,
+				BAFC84C019C44AFD00C18B22 /* Thread.cc in Sources */,
+				BAFC84C219C44AFD00C18B22 /* ThreadPool.cc in Sources */,
+				BAFC847919C44AFD00C18B22 /* Kqueue.cc in Sources */,
+				BAFC849119C44AFD00C18B22 /* Server.cc in Sources */,
+				BAFC848E19C44AFD00C18B22 /* NetThreadPool.cc in Sources */,
+				BAFC84B719C44AFD00C18B22 /* Socket.cc in Sources */,
+				BAFC847319C44AFD00C18B22 /* ClientSocket.cc in Sources */,
+				BAFC847719C44AFD00C18B22 /* EPoller.cc in Sources */,
+				BAFC847B19C44AFD00C18B22 /* ListenSocket.cc in Sources */,
+				BAFC84C619C44AFD00C18B22 /* UnboundedBuffer.cc in Sources */,
+				BAFC84BB19C44AFD00C18B22 /* TaskManager.cc in Sources */,
+				BAFC84B919C44AFD00C18B22 /* StreamSocket.cc in Sources */,
+				BAFC84C419C44AFD00C18B22 /* Timer.cc in Sources */,
+				BAFC848519C44AFD00C18B22 /* MemoryPool.cc in Sources */,
+				BAFC847D19C44AFD00C18B22 /* Logger.cc in Sources */,
+				BAFC84BE19C44AFD00C18B22 /* IPC.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		BAFC84D519C44B6800C18B22 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BAFC83FD19C44AE800C18B22 /* qbaselib */;
+			targetProxy = BAFC84D419C44B6800C18B22 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		BABEBEDC19C4474900010636 /* Debug */ = {
@@ -195,6 +551,12 @@
 		BABEBEDF19C4474900010636 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"$(SRCROOT)/QBase",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -202,6 +564,32 @@
 		BABEBEE019C4474900010636 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"$(SRCROOT)/QBase",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		BAFC83FF19C44AE800C18B22 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				EXECUTABLE_PREFIX = lib;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		BAFC840019C44AE800C18B22 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				EXECUTABLE_PREFIX = lib;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -223,6 +611,15 @@
 			buildConfigurations = (
 				BABEBEDF19C4474900010636 /* Debug */,
 				BABEBEE019C4474900010636 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		BAFC840119C44AE800C18B22 /* Build configuration list for PBXNativeTarget "qbaselib" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BAFC83FF19C44AE800C18B22 /* Debug */,
+				BAFC840019C44AE800C18B22 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 		};
