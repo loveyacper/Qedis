@@ -7,21 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		BAA158CE19C44A56007713F9 /* IntSet.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAA158B419C44A56007713F9 /* IntSet.cc */; };
-		BAA158CF19C44A56007713F9 /* QClient.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAA158B619C44A56007713F9 /* QClient.cc */; };
-		BAA158D019C44A56007713F9 /* QCommand.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAA158B819C44A56007713F9 /* QCommand.cc */; };
-		BAA158D119C44A56007713F9 /* QCommon.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAA158BA19C44A56007713F9 /* QCommon.cc */; };
-		BAA158D219C44A56007713F9 /* Qedis.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAA158BC19C44A56007713F9 /* Qedis.cc */; };
-		BAA158D319C44A56007713F9 /* QHash.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAA158BD19C44A56007713F9 /* QHash.cc */; };
-		BAA158D419C44A56007713F9 /* QKeyCommand.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAA158BF19C44A56007713F9 /* QKeyCommand.cc */; };
-		BAA158D519C44A56007713F9 /* QList.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAA158C019C44A56007713F9 /* QList.cc */; };
-		BAA158D619C44A56007713F9 /* QServerCommand.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAA158C219C44A56007713F9 /* QServerCommand.cc */; };
-		BAA158D719C44A56007713F9 /* QSet.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAA158C319C44A56007713F9 /* QSet.cc */; };
-		BAA158D819C44A56007713F9 /* QStat.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAA158C619C44A56007713F9 /* QStat.cc */; };
-		BAA158D919C44A56007713F9 /* QStore.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAA158C819C44A56007713F9 /* QStore.cc */; };
-		BAA158DA19C44A56007713F9 /* QString.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAA158CA19C44A56007713F9 /* QString.cc */; };
-		BAA158DB19C44A56007713F9 /* util.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAA158CC19C44A56007713F9 /* util.cc */; };
-		BABEBEDB19C4474900010636 /* Qedis.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = BABEBEDA19C4474900010636 /* Qedis.1 */; };
 		BAFC847219C44AFD00C18B22 /* Buffer.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC840219C44AFD00C18B22 /* Buffer.h */; };
 		BAFC847319C44AFD00C18B22 /* ClientSocket.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC840419C44AFD00C18B22 /* ClientSocket.cc */; };
 		BAFC847419C44AFD00C18B22 /* ClientSocket.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC840519C44AFD00C18B22 /* ClientSocket.h */; };
@@ -67,6 +52,20 @@
 		BAFC84C619C44AFD00C18B22 /* UnboundedBuffer.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC847019C44AFD00C18B22 /* UnboundedBuffer.cc */; };
 		BAFC84C719C44AFD00C18B22 /* UnboundedBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC847119C44AFD00C18B22 /* UnboundedBuffer.h */; };
 		BAFC84D619C44E7100C18B22 /* libqbaselib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BAFC83FE19C44AE800C18B22 /* libqbaselib.a */; };
+		BAFC84F319C49E1100C18B22 /* IntSet.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC84D819C49E1100C18B22 /* IntSet.cc */; };
+		BAFC84F419C49E1100C18B22 /* QClient.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC84DA19C49E1100C18B22 /* QClient.cc */; };
+		BAFC84F519C49E1100C18B22 /* QCommand.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC84DC19C49E1100C18B22 /* QCommand.cc */; };
+		BAFC84F619C49E1100C18B22 /* QCommon.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC84DE19C49E1100C18B22 /* QCommon.cc */; };
+		BAFC84F719C49E1100C18B22 /* Qedis.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC84E119C49E1100C18B22 /* Qedis.cc */; };
+		BAFC84F819C49E1100C18B22 /* QHash.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC84E219C49E1100C18B22 /* QHash.cc */; };
+		BAFC84F919C49E1100C18B22 /* QKeyCommand.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC84E419C49E1100C18B22 /* QKeyCommand.cc */; };
+		BAFC84FA19C49E1100C18B22 /* QList.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC84E519C49E1100C18B22 /* QList.cc */; };
+		BAFC84FB19C49E1100C18B22 /* QServerCommand.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC84E719C49E1100C18B22 /* QServerCommand.cc */; };
+		BAFC84FC19C49E1100C18B22 /* QSet.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC84E819C49E1100C18B22 /* QSet.cc */; };
+		BAFC84FD19C49E1100C18B22 /* QStat.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC84EB19C49E1100C18B22 /* QStat.cc */; };
+		BAFC84FE19C49E1100C18B22 /* QStore.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC84ED19C49E1100C18B22 /* QStore.cc */; };
+		BAFC84FF19C49E1100C18B22 /* QString.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC84EF19C49E1100C18B22 /* QString.cc */; };
+		BAFC850019C49E1100C18B22 /* util.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC84F119C49E1100C18B22 /* util.cc */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -86,42 +85,13 @@
 			dstPath = /usr/share/man/man1/;
 			dstSubfolderSpec = 0;
 			files = (
-				BABEBEDB19C4474900010636 /* Qedis.1 in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		BAA158B319C44A56007713F9 /* grocery.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; path = grocery.1; sourceTree = "<group>"; };
-		BAA158B419C44A56007713F9 /* IntSet.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = IntSet.cc; sourceTree = "<group>"; };
-		BAA158B519C44A56007713F9 /* IntSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IntSet.h; sourceTree = "<group>"; };
-		BAA158B619C44A56007713F9 /* QClient.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QClient.cc; sourceTree = "<group>"; };
-		BAA158B719C44A56007713F9 /* QClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QClient.h; sourceTree = "<group>"; };
-		BAA158B819C44A56007713F9 /* QCommand.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QCommand.cc; sourceTree = "<group>"; };
-		BAA158B919C44A56007713F9 /* QCommand.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QCommand.h; sourceTree = "<group>"; };
-		BAA158BA19C44A56007713F9 /* QCommon.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QCommon.cc; sourceTree = "<group>"; };
-		BAA158BB19C44A56007713F9 /* QCommon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QCommon.h; sourceTree = "<group>"; };
-		BAA158BC19C44A56007713F9 /* Qedis.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Qedis.cc; sourceTree = "<group>"; };
-		BAA158BD19C44A56007713F9 /* QHash.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QHash.cc; sourceTree = "<group>"; };
-		BAA158BE19C44A56007713F9 /* QHash.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QHash.h; sourceTree = "<group>"; };
-		BAA158BF19C44A56007713F9 /* QKeyCommand.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QKeyCommand.cc; sourceTree = "<group>"; };
-		BAA158C019C44A56007713F9 /* QList.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QList.cc; sourceTree = "<group>"; };
-		BAA158C119C44A56007713F9 /* QList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QList.h; sourceTree = "<group>"; };
-		BAA158C219C44A56007713F9 /* QServerCommand.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QServerCommand.cc; sourceTree = "<group>"; };
-		BAA158C319C44A56007713F9 /* QSet.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QSet.cc; sourceTree = "<group>"; };
-		BAA158C419C44A56007713F9 /* QSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QSet.h; sourceTree = "<group>"; };
-		BAA158C519C44A56007713F9 /* QSkipList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QSkipList.h; sourceTree = "<group>"; };
-		BAA158C619C44A56007713F9 /* QStat.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QStat.cc; sourceTree = "<group>"; };
-		BAA158C719C44A56007713F9 /* QStat.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QStat.h; sourceTree = "<group>"; };
-		BAA158C819C44A56007713F9 /* QStore.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QStore.cc; sourceTree = "<group>"; };
-		BAA158C919C44A56007713F9 /* QStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QStore.h; sourceTree = "<group>"; };
-		BAA158CA19C44A56007713F9 /* QString.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QString.cc; sourceTree = "<group>"; };
-		BAA158CB19C44A56007713F9 /* QString.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QString.h; sourceTree = "<group>"; };
-		BAA158CC19C44A56007713F9 /* util.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = util.cc; sourceTree = "<group>"; };
-		BAA158CD19C44A56007713F9 /* util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = util.h; sourceTree = "<group>"; };
 		BABEBED519C4474900010636 /* Qedis */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Qedis; sourceTree = BUILT_PRODUCTS_DIR; };
-		BABEBEDA19C4474900010636 /* Qedis.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = Qedis.1; sourceTree = "<group>"; };
 		BAFC83FE19C44AE800C18B22 /* libqbaselib.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libqbaselib.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		BAFC840219C44AFD00C18B22 /* Buffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Buffer.h; path = QBase/Buffer.h; sourceTree = "<group>"; };
 		BAFC840419C44AFD00C18B22 /* ClientSocket.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ClientSocket.cc; path = QBase/ClientSocket.cc; sourceTree = "<group>"; };
@@ -168,6 +138,34 @@
 		BAFC846F19C44AFD00C18B22 /* Timer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Timer.h; path = QBase/Timer.h; sourceTree = "<group>"; };
 		BAFC847019C44AFD00C18B22 /* UnboundedBuffer.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = UnboundedBuffer.cc; path = QBase/UnboundedBuffer.cc; sourceTree = "<group>"; };
 		BAFC847119C44AFD00C18B22 /* UnboundedBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = UnboundedBuffer.h; path = QBase/UnboundedBuffer.h; sourceTree = "<group>"; };
+		BAFC84D719C49E1100C18B22 /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = CMakeLists.txt; path = QedisServer/CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+		BAFC84D819C49E1100C18B22 /* IntSet.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IntSet.cc; path = QedisServer/IntSet.cc; sourceTree = SOURCE_ROOT; };
+		BAFC84D919C49E1100C18B22 /* IntSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = IntSet.h; path = QedisServer/IntSet.h; sourceTree = SOURCE_ROOT; };
+		BAFC84DA19C49E1100C18B22 /* QClient.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QClient.cc; path = QedisServer/QClient.cc; sourceTree = SOURCE_ROOT; };
+		BAFC84DB19C49E1100C18B22 /* QClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QClient.h; path = QedisServer/QClient.h; sourceTree = SOURCE_ROOT; };
+		BAFC84DC19C49E1100C18B22 /* QCommand.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QCommand.cc; path = QedisServer/QCommand.cc; sourceTree = SOURCE_ROOT; };
+		BAFC84DD19C49E1100C18B22 /* QCommand.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QCommand.h; path = QedisServer/QCommand.h; sourceTree = SOURCE_ROOT; };
+		BAFC84DE19C49E1100C18B22 /* QCommon.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QCommon.cc; path = QedisServer/QCommon.cc; sourceTree = SOURCE_ROOT; };
+		BAFC84DF19C49E1100C18B22 /* QCommon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QCommon.h; path = QedisServer/QCommon.h; sourceTree = SOURCE_ROOT; };
+		BAFC84E019C49E1100C18B22 /* Qedis.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; name = Qedis.1; path = QedisServer/Qedis.1; sourceTree = SOURCE_ROOT; };
+		BAFC84E119C49E1100C18B22 /* Qedis.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Qedis.cc; path = QedisServer/Qedis.cc; sourceTree = SOURCE_ROOT; };
+		BAFC84E219C49E1100C18B22 /* QHash.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QHash.cc; path = QedisServer/QHash.cc; sourceTree = SOURCE_ROOT; };
+		BAFC84E319C49E1100C18B22 /* QHash.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QHash.h; path = QedisServer/QHash.h; sourceTree = SOURCE_ROOT; };
+		BAFC84E419C49E1100C18B22 /* QKeyCommand.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QKeyCommand.cc; path = QedisServer/QKeyCommand.cc; sourceTree = SOURCE_ROOT; };
+		BAFC84E519C49E1100C18B22 /* QList.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QList.cc; path = QedisServer/QList.cc; sourceTree = SOURCE_ROOT; };
+		BAFC84E619C49E1100C18B22 /* QList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QList.h; path = QedisServer/QList.h; sourceTree = SOURCE_ROOT; };
+		BAFC84E719C49E1100C18B22 /* QServerCommand.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QServerCommand.cc; path = QedisServer/QServerCommand.cc; sourceTree = SOURCE_ROOT; };
+		BAFC84E819C49E1100C18B22 /* QSet.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QSet.cc; path = QedisServer/QSet.cc; sourceTree = SOURCE_ROOT; };
+		BAFC84E919C49E1100C18B22 /* QSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QSet.h; path = QedisServer/QSet.h; sourceTree = SOURCE_ROOT; };
+		BAFC84EA19C49E1100C18B22 /* QSkipList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QSkipList.h; path = QedisServer/QSkipList.h; sourceTree = SOURCE_ROOT; };
+		BAFC84EB19C49E1100C18B22 /* QStat.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QStat.cc; path = QedisServer/QStat.cc; sourceTree = SOURCE_ROOT; };
+		BAFC84EC19C49E1100C18B22 /* QStat.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QStat.h; path = QedisServer/QStat.h; sourceTree = SOURCE_ROOT; };
+		BAFC84ED19C49E1100C18B22 /* QStore.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QStore.cc; path = QedisServer/QStore.cc; sourceTree = SOURCE_ROOT; };
+		BAFC84EE19C49E1100C18B22 /* QStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QStore.h; path = QedisServer/QStore.h; sourceTree = SOURCE_ROOT; };
+		BAFC84EF19C49E1100C18B22 /* QString.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QString.cc; path = QedisServer/QString.cc; sourceTree = SOURCE_ROOT; };
+		BAFC84F019C49E1100C18B22 /* QString.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QString.h; path = QedisServer/QString.h; sourceTree = SOURCE_ROOT; };
+		BAFC84F119C49E1100C18B22 /* util.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = util.cc; path = QedisServer/util.cc; sourceTree = SOURCE_ROOT; };
+		BAFC84F219C49E1100C18B22 /* util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = util.h; path = QedisServer/util.h; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -232,7 +230,7 @@
 			isa = PBXGroup;
 			children = (
 				BAA158B219C44A0F007713F9 /* QBase */,
-				BABEBED719C4474900010636 /* Qedis */,
+				BABEBED719C4474900010636 /* QedisServer */,
 				BABEBED619C4474900010636 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -246,38 +244,39 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		BABEBED719C4474900010636 /* Qedis */ = {
+		BABEBED719C4474900010636 /* QedisServer */ = {
 			isa = PBXGroup;
 			children = (
-				BAA158B319C44A56007713F9 /* grocery.1 */,
-				BAA158B419C44A56007713F9 /* IntSet.cc */,
-				BAA158B519C44A56007713F9 /* IntSet.h */,
-				BAA158B619C44A56007713F9 /* QClient.cc */,
-				BAA158B719C44A56007713F9 /* QClient.h */,
-				BAA158B819C44A56007713F9 /* QCommand.cc */,
-				BAA158B919C44A56007713F9 /* QCommand.h */,
-				BAA158BA19C44A56007713F9 /* QCommon.cc */,
-				BAA158BB19C44A56007713F9 /* QCommon.h */,
-				BAA158BC19C44A56007713F9 /* Qedis.cc */,
-				BAA158BD19C44A56007713F9 /* QHash.cc */,
-				BAA158BE19C44A56007713F9 /* QHash.h */,
-				BAA158BF19C44A56007713F9 /* QKeyCommand.cc */,
-				BAA158C019C44A56007713F9 /* QList.cc */,
-				BAA158C119C44A56007713F9 /* QList.h */,
-				BAA158C219C44A56007713F9 /* QServerCommand.cc */,
-				BAA158C319C44A56007713F9 /* QSet.cc */,
-				BAA158C419C44A56007713F9 /* QSet.h */,
-				BAA158C519C44A56007713F9 /* QSkipList.h */,
-				BAA158C619C44A56007713F9 /* QStat.cc */,
-				BAA158C719C44A56007713F9 /* QStat.h */,
-				BAA158C819C44A56007713F9 /* QStore.cc */,
-				BAA158C919C44A56007713F9 /* QStore.h */,
-				BAA158CA19C44A56007713F9 /* QString.cc */,
-				BAA158CB19C44A56007713F9 /* QString.h */,
-				BAA158CC19C44A56007713F9 /* util.cc */,
-				BAA158CD19C44A56007713F9 /* util.h */,
-				BABEBEDA19C4474900010636 /* Qedis.1 */,
+				BAFC84D719C49E1100C18B22 /* CMakeLists.txt */,
+				BAFC84D819C49E1100C18B22 /* IntSet.cc */,
+				BAFC84D919C49E1100C18B22 /* IntSet.h */,
+				BAFC84DA19C49E1100C18B22 /* QClient.cc */,
+				BAFC84DB19C49E1100C18B22 /* QClient.h */,
+				BAFC84DC19C49E1100C18B22 /* QCommand.cc */,
+				BAFC84DD19C49E1100C18B22 /* QCommand.h */,
+				BAFC84DE19C49E1100C18B22 /* QCommon.cc */,
+				BAFC84DF19C49E1100C18B22 /* QCommon.h */,
+				BAFC84E019C49E1100C18B22 /* Qedis.1 */,
+				BAFC84E119C49E1100C18B22 /* Qedis.cc */,
+				BAFC84E219C49E1100C18B22 /* QHash.cc */,
+				BAFC84E319C49E1100C18B22 /* QHash.h */,
+				BAFC84E419C49E1100C18B22 /* QKeyCommand.cc */,
+				BAFC84E519C49E1100C18B22 /* QList.cc */,
+				BAFC84E619C49E1100C18B22 /* QList.h */,
+				BAFC84E719C49E1100C18B22 /* QServerCommand.cc */,
+				BAFC84E819C49E1100C18B22 /* QSet.cc */,
+				BAFC84E919C49E1100C18B22 /* QSet.h */,
+				BAFC84EA19C49E1100C18B22 /* QSkipList.h */,
+				BAFC84EB19C49E1100C18B22 /* QStat.cc */,
+				BAFC84EC19C49E1100C18B22 /* QStat.h */,
+				BAFC84ED19C49E1100C18B22 /* QStore.cc */,
+				BAFC84EE19C49E1100C18B22 /* QStore.h */,
+				BAFC84EF19C49E1100C18B22 /* QString.cc */,
+				BAFC84F019C49E1100C18B22 /* QString.h */,
+				BAFC84F119C49E1100C18B22 /* util.cc */,
+				BAFC84F219C49E1100C18B22 /* util.h */,
 			);
+			name = QedisServer;
 			path = Qedis;
 			sourceTree = "<group>";
 		};
@@ -428,20 +427,20 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BAA158D719C44A56007713F9 /* QSet.cc in Sources */,
-				BAA158D119C44A56007713F9 /* QCommon.cc in Sources */,
-				BAA158D519C44A56007713F9 /* QList.cc in Sources */,
-				BAA158DB19C44A56007713F9 /* util.cc in Sources */,
-				BAA158D419C44A56007713F9 /* QKeyCommand.cc in Sources */,
-				BAA158D219C44A56007713F9 /* Qedis.cc in Sources */,
-				BAA158CF19C44A56007713F9 /* QClient.cc in Sources */,
-				BAA158D319C44A56007713F9 /* QHash.cc in Sources */,
-				BAA158D919C44A56007713F9 /* QStore.cc in Sources */,
-				BAA158CE19C44A56007713F9 /* IntSet.cc in Sources */,
-				BAA158DA19C44A56007713F9 /* QString.cc in Sources */,
-				BAA158D819C44A56007713F9 /* QStat.cc in Sources */,
-				BAA158D619C44A56007713F9 /* QServerCommand.cc in Sources */,
-				BAA158D019C44A56007713F9 /* QCommand.cc in Sources */,
+				BAFC84FC19C49E1100C18B22 /* QSet.cc in Sources */,
+				BAFC84FF19C49E1100C18B22 /* QString.cc in Sources */,
+				BAFC84F519C49E1100C18B22 /* QCommand.cc in Sources */,
+				BAFC84F819C49E1100C18B22 /* QHash.cc in Sources */,
+				BAFC84F319C49E1100C18B22 /* IntSet.cc in Sources */,
+				BAFC84FD19C49E1100C18B22 /* QStat.cc in Sources */,
+				BAFC84FE19C49E1100C18B22 /* QStore.cc in Sources */,
+				BAFC850019C49E1100C18B22 /* util.cc in Sources */,
+				BAFC84F719C49E1100C18B22 /* Qedis.cc in Sources */,
+				BAFC84FB19C49E1100C18B22 /* QServerCommand.cc in Sources */,
+				BAFC84F619C49E1100C18B22 /* QCommon.cc in Sources */,
+				BAFC84F919C49E1100C18B22 /* QKeyCommand.cc in Sources */,
+				BAFC84F419C49E1100C18B22 /* QClient.cc in Sources */,
+				BAFC84FA19C49E1100C18B22 /* QList.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
