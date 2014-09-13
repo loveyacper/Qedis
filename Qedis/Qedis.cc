@@ -59,7 +59,7 @@ bool Qedis::_Init()
     
     if (!Server::TCPBind(addr))
     {
-        LOG_ERR(g_logger) << "can not bind socket";
+        LOG_ERR(g_logger) << "can not bind socket on port " << addr.GetPort();
         return false;
     }
 

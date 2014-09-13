@@ -12,6 +12,7 @@
 #if defined(__gnu_linux__) || defined(__APPLE__)
 #include <errno.h> // TEMP_FAILURE_RETRY
 #include <unistd.h> // TEMP_FAILURE_RETRY
+#include <cassert>
 
 #endif
 
@@ -224,8 +225,7 @@ Semaphore::Semaphore(long lInit, long lMaxForWindows)
     m_sem = ::sem_open(m_name, O_CREAT | O_EXCL, S_IRUSR | S_IWUSR, lInit);
     sem_unlink(m_name);
 
-    if (m_sem == SEM_FAILED)
-        m_name[1000000] = 0;
+    assert(m_sem != SEM_FAILED);
 #else
     m_sem = ::CreateSemaphore(0, lInit, lMaxForWindows, 0);
 #endif

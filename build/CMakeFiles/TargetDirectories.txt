@@ -1,0 +1,2 @@
+/Users/bertyoung/Desktop/Qedis/Qedis/build/QBase/CMakeFiles/qbaselib.dir
+/Users/bertyoung/Desktop/Qedis/Qedis/build/Qedis/CMakeFiles/qedissvr.dir
