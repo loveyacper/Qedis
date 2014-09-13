@@ -1,9 +1,0 @@
-1.  write a  counter ptr; int* cnt; T* ptr;
-2.  write a  counter class;
-3.  weak ptr
-4.  share me
-5.  alias ctor
-6.  make share
-
-void*
-Base*
