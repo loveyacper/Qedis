@@ -11,6 +11,8 @@
 #include "NetThreadPool.h"
 #include "Log/Logger.h"
 
+using std::size_t;
+
 StreamSocket::StreamSocket()
 {
     m_bodyLen = 0;
@@ -63,7 +65,7 @@ int StreamSocket::Recv()
         return 0;
     }
 
-    int ret = static_cast<int>(::readv(m_localSock, buffers.buffers, buffers.count));
+    int ret = static_cast<int>(::readv(m_localSock, buffers.buffers, static_cast<int>(buffers.count)));
     if (ret == ERRORSOCKET && (EAGAIN == errno || EWOULDBLOCK == errno))
         return 0;
 
@@ -76,9 +78,8 @@ int StreamSocket::Recv()
 }
 
 
-int StreamSocket::_Send(const char* data, int len)
+int StreamSocket::_Send(const char* data, size_t len)
 {
-    assert (len >= 0);
 
     if (!data || len == 0)
         return 0;
@@ -92,9 +93,9 @@ int StreamSocket::_Send(const char* data, int len)
     return ret;
 }
 
-bool StreamSocket::SendPacket(const char* pData, int nBytes)
+bool StreamSocket::SendPacket(const char* pData, size_t nBytes)
 {
-    if (!pData || nBytes <= 0)
+    if (!pData || nBytes == 0)
         return true;
 
     if (!HasDataToSend())
@@ -158,7 +159,7 @@ bool StreamSocket::OnWritable()
 {
     ScopeMutex  guard(m_sendLock);
 
-    int total =  m_sendBuf.ReadableSize();
+    std::size_t total =  m_sendBuf.ReadableSize();
     int nSent = _Send(m_sendBuf.ReadAddr(), total);
    
     if (nSent < 0)

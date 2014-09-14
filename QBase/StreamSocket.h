@@ -28,7 +28,7 @@ public:
     int    Recv();
 public:
     // Send data
-    bool   SendPacket(const char* pData, int nBytes);
+    bool   SendPacket(const char* pData, std::size_t nBytes);
     bool   SendPacket(Buffer&  bf);
     bool   SendPacket(AttachedBuffer& abf);
     template <int N>
@@ -40,8 +40,8 @@ public:
 
     bool  DoMsgParse(); // false if no msg
 
-    int   RecvBufSize() const {  return  m_recvBuf.Capacity(); }
-    void  SetRecvBufSize(int size) {  m_recvBuf.InitCapacity(size); }
+    std::size_t   RecvBufSize() const {  return  m_recvBuf.Capacity(); }
+    void  SetRecvBufSize(std::size_t size) {  m_recvBuf.InitCapacity(size); }
 
     void  SetReconn(bool retry) { m_retry = retry; }
     bool  Timeout(time_t  now)  const    {  return   now > m_activeTime + m_timeout; }
@@ -52,7 +52,7 @@ public:
 private:
     bool   m_retry;
 
-    int    _Send(const char* data, int len);
+    int    _Send(const char* data, std::size_t len);
     virtual HEAD_LENGTH_T _HandleHead(AttachedBuffer& buf, BODY_LENGTH_T* bodyLen) = 0;
     virtual void _HandlePacket(AttachedBuffer& buf) = 0;
     BODY_LENGTH_T m_bodyLen;

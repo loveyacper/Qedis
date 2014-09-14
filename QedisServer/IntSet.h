@@ -111,7 +111,7 @@ public:
         m_values.clear();
     }
 
-    int Size() const {  return m_values.size(); }
+    std::size_t Size() const {  return m_values.size(); }
     
 private:
     std::vector<T>   m_values;

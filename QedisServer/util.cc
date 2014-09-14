@@ -56,13 +56,13 @@ size_t my_hash::operator() (const QString& str) const {
 
 static const uint8_t bitsinbyte[256] = {0,1,1,2,1,2,2,3,1,2,2,3,2,3,3,4,1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,1,2,2,3,2,3,3,4,2,3,3,4,3,4, 4,5,2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,3,4,4, 5,4, 5,5,6,4,5,5,6,5,6,6,7,1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,3,4,4,5,4,5, 5,6,4,5,5,6, 5,6,6,7,2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,4,5,5,6,5,6,6,7,5, 6,6,7,6,7,7,8};
 
-int BitCount(const uint8_t*  buf, int len)
+std::size_t BitCount(const uint8_t*  buf, std::size_t len)
 {
-    int cnt = 0;
-    int loop = len / 4;
-    int remain = len % 4;
+    std::size_t cnt = 0;
+    std::size_t loop = len / 4;
+    std::size_t remain = len % 4;
 
-    for (int i = 0; i  < loop; ++ i)
+    for (std::size_t i = 0; i  < loop; ++ i)
     {
         cnt += bitsinbyte[buf[4 * i]];
         cnt += bitsinbyte[buf[4 * i + 1]];
@@ -70,7 +70,7 @@ int BitCount(const uint8_t*  buf, int len)
         cnt += bitsinbyte[buf[4 * i + 3]];
     }
 
-    for (int i = 0; i  < remain; ++ i)
+    for (std::size_t i = 0; i  < remain; ++ i)
     {
         cnt += bitsinbyte[buf[4 * loop + i]];
     }

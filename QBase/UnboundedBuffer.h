@@ -14,29 +14,29 @@ public:
     {
     }
 
-    unsigned PushDataAt(const void* pData, unsigned nSize, unsigned offset = 0);
-    unsigned PushData(const void* pData, unsigned nSize);
-    void AdjustWritePtr(unsigned nBytes) {   m_writePos += nBytes; }
+    std::size_t PushDataAt(const void* pData, std::size_t nSize, std::size_t offset = 0);
+    std::size_t PushData(const void* pData, std::size_t nSize);
+    void AdjustWritePtr(std::size_t nBytes) {   m_writePos += nBytes; }
 
-    unsigned  PeekDataAt(void* pBuf, unsigned nSize, unsigned offset = 0);
-    unsigned  PeekData(void* pBuf, unsigned nSize);
-    void AdjustReadPtr(unsigned nBytes) {   m_readPos  += nBytes; }
+    std::size_t  PeekDataAt(void* pBuf, std::size_t nSize, std::size_t offset = 0);
+    std::size_t  PeekData(void* pBuf, std::size_t nSize);
+    void AdjustReadPtr(std::size_t nBytes) {   m_readPos  += nBytes; }
 
     char* ReadAddr()  {  return &m_buffer[m_readPos];  }
     char* WriteAddr() {  return &m_buffer[m_writePos]; }
 
     bool IsEmpty() const { return ReadableSize() == 0; }
-    unsigned ReadableSize() const {  return m_writePos - m_readPos;  }
-    unsigned WritableSize() const {  return static_cast<unsigned>(m_buffer.size()) - m_writePos;  }
+    std::size_t ReadableSize() const {  return m_writePos - m_readPos;  }
+    std::size_t WritableSize() const {  return m_buffer.size() - m_writePos;  }
 
     void Shrink(bool tight = false);
     void Clear();
 
-    static const unsigned  MAX_BUFFER_SIZE;
+    static const std::size_t  MAX_BUFFER_SIZE;
 private:
-    void     _AssureSpace(unsigned size);
-    unsigned m_readPos;
-    unsigned m_writePos;
+    void     _AssureSpace(std::size_t size);
+    std::size_t m_readPos;
+    std::size_t m_writePos;
     std::vector<char>  m_buffer;
 };
 

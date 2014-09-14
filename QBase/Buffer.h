@@ -12,13 +12,13 @@
 
 struct BufferSequence
 {
-    iovec   buffers[2];
-    int     count;
+    iovec       buffers[2];
+    std::size_t count;
 
-    int TotalBytes() const
+    std::size_t TotalBytes() const
     {
-        int nBytes = 0;
-        for (int i = 0; i < count; ++ i)
+        std::size_t nBytes = 0;
+        for (std::size_t i = 0; i < count; ++ i)
             nBytes += buffers[i].iov_len;
 
         return nBytes;
@@ -26,14 +26,13 @@ struct BufferSequence
 };
 
 
-static const int  DEFAULT_BUFFER_SIZE = 4 * 1024;
+static const std::size_t  DEFAULT_BUFFER_SIZE = 4 * 1024;
 
-inline int RoundUp2Power(int size)
+inline std::size_t RoundUp2Power(std::size_t size)
 {
-    assert (size >= 0 && "Size overflow or underflow");
     if (0 == size)  return 0;
 
-    int    roundSize = 1;
+    std::size_t roundSize = 1;
     while (roundSize < size)
         roundSize <<= 1;
 
@@ -46,46 +45,46 @@ class  CircularBuffer
 {
 public:
     // Constructor  to be specialized
-    explicit CircularBuffer(int size = 0) : m_maxSize(size),
+    explicit CircularBuffer(std::size_t size = 0) : m_maxSize(size),
     m_readPos(0),
     m_writePos(0),
     m_owned(false)
     {
     }
     CircularBuffer(const BufferSequence& bf);
-    CircularBuffer(char* , int );
+    CircularBuffer(char* , std::size_t );
    ~CircularBuffer() { }
 
     bool IsEmpty() const { return m_writePos == m_readPos; }
     bool IsFull()  const { return ((m_writePos + 1) & (m_maxSize - 1)) == m_readPos; }
 
     // For gather write
-    void GetDatum(BufferSequence& buffer, int maxSize = DEFAULT_BUFFER_SIZE - 1, int offset = 0);
+    void GetDatum(BufferSequence& buffer, std::size_t maxSize = DEFAULT_BUFFER_SIZE - 1, std::size_t offset = 0);
 
     // For scatter read
-    void GetSpace(BufferSequence& buffer, int offset = 0);
+    void GetSpace(BufferSequence& buffer, std::size_t offset = 0);
 
     // Put data into internal m_buffer
-    bool PushData(const void* pData, int nSize);
-    bool PushDataAt(const void* pData, int nSize, int offset = 0);
+    bool PushData(const void* pData, std::size_t nSize);
+    bool PushDataAt(const void* pData, std::size_t nSize, std::size_t offset = 0);
 
     // Get data from internal m_buffer, adjust read ptr
-    bool PeekData(void* pBuf, int nSize);
-    bool PeekDataAt(void* pBuf, int nSize, int offset = 0);
+    bool PeekData(void* pBuf, std::size_t nSize);
+    bool PeekDataAt(void* pBuf, std::size_t nSize, std::size_t offset = 0);
 
     char* ReadAddr() { return &m_buffer[m_readPos]; }
     char* WriteAddr() { return &m_buffer[m_writePos]; }
 
-    void AdjustWritePtr(int size);
-    void AdjustReadPtr(int size);
+    void AdjustWritePtr(std::size_t size);
+    void AdjustReadPtr(std::size_t size);
 
-    int ReadableSize()  const {  return (m_writePos - m_readPos) & (m_maxSize - 1);  }
-    int WritableSize()  const {  return m_maxSize - ReadableSize();  }
+    std::size_t ReadableSize()  const {  return (m_writePos - m_readPos) & (m_maxSize - 1);  }
+    std::size_t WritableSize()  const {  return m_maxSize - ReadableSize();  }
 
     void Clear() {  AtomicSet(&m_readPos, m_writePos);  }
 
-    int Capacity() const { return m_maxSize; }
-    void InitCapacity(int size);
+    std::size_t Capacity() const { return m_maxSize; }
+    void InitCapacity(std::size_t size);
 
     template <typename T>
     CircularBuffer& operator<< (const T& data);
@@ -102,14 +101,14 @@ public:
 
 protected:
     // The max capacity of m_buffer
-    int m_maxSize;
+    std::size_t m_maxSize;
 
 private:
     // The starting address can be read
-    volatile int m_readPos;
+    volatile std::size_t m_readPos;
 
     // The starting address can be write
-    volatile int m_writePos;
+    volatile std::size_t m_writePos;
 
     // The real internal buffer
     BUFFER m_buffer;
@@ -118,10 +117,9 @@ private:
 };
 
 template <typename BUFFER>
-void CircularBuffer<BUFFER>::GetDatum(BufferSequence& buffer, int maxSize, int offset)    
+void CircularBuffer<BUFFER>::GetDatum(BufferSequence& buffer, std::size_t maxSize, std::size_t offset)
 {
-    if (offset < 0 ||
-        maxSize <= 0 ||
+    if (maxSize == 0 ||
         offset >= ReadableSize()
        )
     {
@@ -129,12 +127,12 @@ void CircularBuffer<BUFFER>::GetDatum(BufferSequence& buffer, int maxSize, int o
         return;
     }
 
-    assert(m_readPos  >= 0 && m_readPos  < m_maxSize);
-    assert(m_writePos >= 0 && m_writePos < m_maxSize);
+    assert(m_readPos  < m_maxSize);
+    assert(m_writePos < m_maxSize);
 
-    int   bufferIndex  = 0;
-    const int readPos  = (m_readPos + offset) & (m_maxSize - 1);
-    const int writePos = m_writePos;
+    std::size_t   bufferIndex  = 0;
+    const std::size_t readPos  = (m_readPos + offset) & (m_maxSize - 1);
+    const std::size_t writePos = m_writePos;
     assert (readPos != writePos);
 
     buffer.buffers[bufferIndex].iov_base = &m_buffer[readPos];
@@ -147,7 +145,7 @@ void CircularBuffer<BUFFER>::GetDatum(BufferSequence& buffer, int maxSize, int o
     }
     else
     {
-        int nLeft = maxSize;
+        std::size_t nLeft = maxSize;
         if (nLeft > (m_maxSize - readPos))
             nLeft = (m_maxSize - readPos);
         buffer.buffers[bufferIndex].iov_len = nLeft;
@@ -168,7 +166,7 @@ void CircularBuffer<BUFFER>::GetDatum(BufferSequence& buffer, int maxSize, int o
 }
 
 template <typename BUFFER>
-void CircularBuffer<BUFFER>::GetSpace(BufferSequence& buffer, int offset)
+void CircularBuffer<BUFFER>::GetSpace(BufferSequence& buffer, std::size_t offset)
 {
     assert(m_readPos >= 0 && m_readPos < m_maxSize);
     assert(m_writePos >= 0 && m_writePos < m_maxSize);
@@ -179,9 +177,9 @@ void CircularBuffer<BUFFER>::GetSpace(BufferSequence& buffer, int offset)
         return;
     }
 
-    int bufferIndex = 0;
-    const int readPos  = m_readPos;
-    const int writePos = (m_writePos + offset) & (m_maxSize - 1);
+    std::size_t bufferIndex = 0;
+    const std::size_t readPos  = m_readPos;
+    const std::size_t writePos = (m_writePos + offset) & (m_maxSize - 1);
 
     buffer.buffers[bufferIndex].iov_base = &m_buffer[writePos];
 
@@ -209,16 +207,16 @@ void CircularBuffer<BUFFER>::GetSpace(BufferSequence& buffer, int offset)
 }
 
 template <typename BUFFER>
-bool CircularBuffer<BUFFER>::PushDataAt(const void* pData, int nSize, int offset)
+bool CircularBuffer<BUFFER>::PushDataAt(const void* pData, std::size_t nSize, std::size_t offset)
 {
-    if (!pData || 0 >= nSize)
+    if (!pData || 0 == nSize)
         return true;
 
     if (offset + nSize + 1 > WritableSize())
         return false;
 
-    const int readPos = m_readPos;
-    const int writePos = (m_writePos + offset) & (m_maxSize - 1);
+    const std::size_t readPos = m_readPos;
+    const std::size_t writePos = (m_writePos + offset) & (m_maxSize - 1);
     if (readPos > writePos)
     {
         assert(readPos - writePos > nSize);
@@ -226,8 +224,8 @@ bool CircularBuffer<BUFFER>::PushDataAt(const void* pData, int nSize, int offset
     }
     else
     {
-        int availBytes1 = m_maxSize - writePos;
-        int availBytes2 = readPos - 0;
+        std::size_t availBytes1 = m_maxSize - writePos;
+        std::size_t availBytes2 = readPos - 0;
         assert (availBytes1 + availBytes2 >= 1 + nSize);
 
         if (availBytes1 >= nSize + 1)
@@ -237,7 +235,7 @@ bool CircularBuffer<BUFFER>::PushDataAt(const void* pData, int nSize, int offset
         else
         {
             ::memcpy(&m_buffer[writePos], pData, availBytes1);
-            int bytesLeft = nSize - availBytes1;
+            int bytesLeft = static_cast<int>(nSize - availBytes1);
             if (bytesLeft > 0)
                 ::memcpy(&m_buffer[0], static_cast<const char*>(pData) + availBytes1, bytesLeft);
         }
@@ -247,7 +245,7 @@ bool CircularBuffer<BUFFER>::PushDataAt(const void* pData, int nSize, int offset
 }
 
 template <typename BUFFER>
-bool CircularBuffer<BUFFER>::PushData(const void* pData, int nSize)
+bool CircularBuffer<BUFFER>::PushData(const void* pData, std::size_t nSize)
 {
     if (!PushDataAt(pData, nSize))
         return false;
@@ -257,16 +255,16 @@ bool CircularBuffer<BUFFER>::PushData(const void* pData, int nSize)
 }
 
 template <typename BUFFER>
-bool CircularBuffer<BUFFER>::PeekDataAt(void* pBuf, int nSize, int offset)
+bool CircularBuffer<BUFFER>::PeekDataAt(void* pBuf, std::size_t nSize, std::size_t offset)
 {
-    if (!pBuf || 0 >= nSize)
+    if (!pBuf || 0 == nSize)
         return true;
 
     if (nSize + offset > ReadableSize())
         return false;
 
-    const int writePos = m_writePos;
-    const int readPos  = (m_readPos + offset) & (m_maxSize - 1);
+    const std::size_t writePos = m_writePos;
+    const std::size_t readPos  = (m_readPos + offset) & (m_maxSize - 1);
     if (readPos < writePos)
     {
         assert(writePos - readPos >= nSize);
@@ -275,8 +273,8 @@ bool CircularBuffer<BUFFER>::PeekDataAt(void* pBuf, int nSize, int offset)
     else
     {
         assert(readPos > writePos);
-        int availBytes1 = m_maxSize - readPos;
-        int availBytes2 = writePos - 0;
+        std::size_t availBytes1 = m_maxSize - readPos;
+        std::size_t availBytes2 = writePos - 0;
         assert(availBytes1 + availBytes2 >= nSize);
 
         if (availBytes1 >= nSize)
@@ -295,7 +293,7 @@ bool CircularBuffer<BUFFER>::PeekDataAt(void* pBuf, int nSize, int offset)
 }
 
 template <typename BUFFER>
-bool CircularBuffer<BUFFER>::PeekData(void* pBuf, int nSize)
+bool CircularBuffer<BUFFER>::PeekData(void* pBuf, std::size_t nSize)
 {
     if (PeekDataAt(pBuf, nSize))
         AdjustReadPtr(nSize);
@@ -307,25 +305,25 @@ bool CircularBuffer<BUFFER>::PeekData(void* pBuf, int nSize)
 
 
 template <typename BUFFER>
-inline void CircularBuffer<BUFFER>::AdjustWritePtr(int size)
+inline void CircularBuffer<BUFFER>::AdjustWritePtr(std::size_t size)
 {
-    int writePos = m_writePos;
+    std::size_t writePos = m_writePos;
     writePos += size;
     writePos &= m_maxSize - 1;
     AtomicSet(&m_writePos, writePos);
 }
 
 template <typename BUFFER>
-inline void CircularBuffer<BUFFER>::AdjustReadPtr(int size)
+inline void CircularBuffer<BUFFER>::AdjustReadPtr(std::size_t size)
 {
-    int readPos = m_readPos;
+    std::size_t readPos = m_readPos;
     readPos += size;
     readPos &= m_maxSize - 1;
     AtomicSet(&m_readPos, readPos);
 }
 
 template <typename BUFFER>
-inline void CircularBuffer<BUFFER>::InitCapacity(int size)
+inline void CircularBuffer<BUFFER>::InitCapacity(std::size_t size)
 {
     assert (size > 0 && size <= 1 * 1024 * 1024 * 1024);
 
@@ -420,7 +418,7 @@ inline CircularBuffer<BUFFER>& CircularBuffer<BUFFER>::operator>> (std::string& 
 typedef CircularBuffer< ::std::vector<char> >  Buffer;
 
 template <>
-inline Buffer::CircularBuffer(int maxSize) : m_maxSize(RoundUp2Power(maxSize)), m_readPos(0), m_writePos(0), m_buffer(m_maxSize)
+inline Buffer::CircularBuffer(std::size_t maxSize) : m_maxSize(RoundUp2Power(maxSize)), m_readPos(0), m_writePos(0), m_buffer(m_maxSize)
 {
     assert (0 == (m_maxSize & (m_maxSize - 1)) && "m_maxSize MUST BE power of 2");
 }
@@ -447,7 +445,7 @@ public:
 typedef CircularBuffer<char* > AttachedBuffer;
 
 template <>
-inline AttachedBuffer::CircularBuffer(char* pBuf, int len) : m_maxSize(RoundUp2Power(len + 1)),
+inline AttachedBuffer::CircularBuffer(char* pBuf, std::size_t len) : m_maxSize(RoundUp2Power(len + 1)),
                                                              m_readPos(0),
                                                              m_writePos(0)
 {

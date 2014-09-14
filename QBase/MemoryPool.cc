@@ -4,24 +4,25 @@
 #include <iostream>
 #include "MemoryPool.h"
 
+using std::size_t;
 
 __thread MemoryPool::mem_node* MemoryPool::m_freelist[MemoryPool::BUCKETS] = { NULL };
-__thread void*      MemoryPool::m_pool = NULL;
-__thread unsigned   MemoryPool::m_poolSize = 0;
+__thread void*          MemoryPool::m_pool = NULL;
+__thread std::size_t    MemoryPool::m_poolSize = 0;
 
 std::vector<void* >     MemoryPool::m_rawPtr;
 Mutex       MemoryPool::m_mutex;
 
-unsigned MemoryPool::_RoundUp( unsigned size )
+size_t MemoryPool::_RoundUp(size_t size )
 {
     return ( size + ALIGN - 1 ) & ~( ALIGN - 1 ) ;
 }
 
-unsigned MemoryPool::_GetBucketIndex(unsigned size)
+size_t MemoryPool::_GetBucketIndex(size_t size)
 {
     assert (0 != size);
     assert (size <= MAX_SIZE && "size should not bigger than MAX_SIZE!!");
-    unsigned index = (size - 1) / ALIGN;
+    size_t index = (size - 1) / ALIGN;
     return index < BUCKETS ? index : BUCKETS;
 }
 
@@ -29,14 +30,14 @@ void MemoryPool::Destructor()
 {
     ScopeMutex   guard(m_mutex);
 
-    for (unsigned int i = 0; i < m_rawPtr.size(); ++ i)
+    for (size_t i = 0; i < m_rawPtr.size(); ++ i)
     {
         ::free(m_rawPtr[i]);
     }
     m_rawPtr.clear();
 }
 
-void* MemoryPool::allocate(unsigned size)
+void* MemoryPool::allocate(size_t size)
 {
     if (0 == size)  return NULL;
 
@@ -46,7 +47,7 @@ void* MemoryPool::allocate(unsigned size)
     {
         return ::malloc(size);
     }
-    unsigned index = _GetBucketIndex(size);
+    size_t index = _GetBucketIndex(size);
     assert (index < BUCKETS);// must success
 
     if (m_freelist[index] != NULL)
@@ -69,7 +70,7 @@ void* MemoryPool::allocate(unsigned size)
             else
             {
                 //回收 pool;递归调用自己!
-                unsigned idx = _GetBucketIndex(m_poolSize);
+                size_t idx = _GetBucketIndex(m_poolSize);
                 assert(idx < BUCKETS);
 
                 mem_node* temp = (mem_node *)m_pool;
@@ -84,7 +85,7 @@ void* MemoryPool::allocate(unsigned size)
         }
         else
         {
-            unsigned malloc_size = size * TRUNK_NUM;
+            size_t malloc_size = size * TRUNK_NUM;
             ret = ::malloc(malloc_size);
             if (NULL == ret)
             {
@@ -99,7 +100,7 @@ void* MemoryPool::allocate(unsigned size)
             m_freelist[index] = (mem_node *)((char *)ret + size);
 
             mem_node* iterator = m_freelist[index];
-            for (unsigned i = 1; i < (TRUNK_NUM+1) / 2 - 1; ++i)
+            for (size_t i = 1; i < (TRUNK_NUM+1) / 2 - 1; ++i)
             {
                 iterator->next_free = (mem_node *)((char *)iterator + size);
                 iterator = iterator->next_free;
@@ -113,7 +114,7 @@ void* MemoryPool::allocate(unsigned size)
     return ret; //never reach
 }
 
-void MemoryPool::deallocate(const void* p, unsigned size )
+void MemoryPool::deallocate(const void* p, size_t size )
 {
     size = _RoundUp(size); // !!! important
     if (size > MAX_SIZE)
@@ -122,32 +123,32 @@ void MemoryPool::deallocate(const void* p, unsigned size )
     }
     else
     {
-        unsigned index   = _GetBucketIndex(size);
+        size_t    index  = _GetBucketIndex(size);
         mem_node* temp   = (mem_node *)p;
         temp->next_free  = m_freelist[index];
         m_freelist[index]= temp;
     }
 }
 
-void * MemoryPool::operator new(std::size_t size)
+void * MemoryPool::operator new(size_t size)
 {
 //    std::cerr << "Try new " << size << std::endl;
     return allocate(size);
 }
 
-void * MemoryPool::operator new[](std::size_t size)
+void * MemoryPool::operator new[](size_t size)
 {
 //    std::cerr << "Try new[] " << size << std::endl;
     return allocate(size);
 }
 
-void MemoryPool::operator delete(void* p , std::size_t size)
+void MemoryPool::operator delete(void* p , size_t size)
 {
 //    std::cerr << "Try delete " << size << std::endl;
     deallocate(p, size);
 }
 
-void MemoryPool::operator delete[](void* p , std::size_t size)
+void MemoryPool::operator delete[](void* p , size_t size)
 {
 //    std::cerr << "Try delete[] " << size << std::endl;
      deallocate(p, size);

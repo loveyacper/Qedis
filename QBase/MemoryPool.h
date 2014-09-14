@@ -7,10 +7,10 @@
 
 class MemoryPool
 {
-    static const unsigned ALIGN     = sizeof(void*);
-    static const unsigned BUCKETS   = 512;
-    static const unsigned MAX_SIZE  = ALIGN * BUCKETS;
-    static const unsigned TRUNK_NUM = 32;
+    static const std::size_t ALIGN     = sizeof(void*);
+    static const std::size_t BUCKETS   = 512;
+    static const std::size_t MAX_SIZE  = ALIGN * BUCKETS;
+    static const std::size_t TRUNK_NUM = 32;
 
     struct mem_node
     {
@@ -20,10 +20,10 @@ class MemoryPool
     static __thread mem_node* m_freelist[BUCKETS];
 
     static __thread void*    m_pool;
-    static __thread unsigned m_poolSize;
+    static __thread std::size_t m_poolSize;
 
-    static unsigned _RoundUp( unsigned size );
-    static unsigned _GetBucketIndex(unsigned size);
+    static std::size_t _RoundUp(std::size_t size );
+    static std::size_t _GetBucketIndex(std::size_t size);
 
     // 将原始指针放在一处，由主线程退出统一释放
     // 由于这是一个 PER-THREAD 线程池
@@ -33,8 +33,8 @@ class MemoryPool
     
 public:
     static void  Destructor();
-    static void* allocate(unsigned size);
-    static void  deallocate(const void*, unsigned size);
+    static void* allocate(std::size_t size);
+    static void  deallocate(const void*, std::size_t size);
 
     static void* operator new(std::size_t size);
     static void* operator new[](std::size_t size);

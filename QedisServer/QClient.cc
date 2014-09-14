@@ -19,12 +19,12 @@ enum QParseInt
     QParseInt_error,
 };
 
-static inline QParseInt  GetIntUntilCRLF(const char*& ptr, int nBytes, int& val)
+static inline QParseInt  GetIntUntilCRLF(const char*& ptr, std::size_t nBytes, int& val)
 {
     assert (ptr && nBytes);
 
     val = 0;
-    int i = 0;
+    std::size_t i = 0;
     for (i = 0; i < nBytes; ++ i)
     {
         if (isdigit(ptr[i]))
@@ -53,11 +53,11 @@ QClient*  QClient::s_pCurrentClient = 0;
     
 HEAD_LENGTH_T QClient::_HandleHead(AttachedBuffer& buf, BODY_LENGTH_T* bodyLen)
 {
-    const int   bytes = buf.ReadableSize();
+    const size_t   bytes = buf.ReadableSize();
     const char* const start = buf.ReadAddr();
 
     const char* ptr  = start;
-    const char* crlf = 0;
+    //const char* crlf = 0;
 
     QParseInt parseIntRet = QParseInt_ok;
     bool  parseBody = false;
@@ -213,7 +213,7 @@ void QClient::_HandlePacket(AttachedBuffer& buf)
 {
     s_pCurrentClient = this;
 
-    const int bytes = buf.ReadableSize();
+    const std::size_t bytes = buf.ReadableSize();
     const char* const start = buf.ReadAddr();
 
     const char* ptr  = start;

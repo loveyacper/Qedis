@@ -67,11 +67,11 @@ private:
 
     static const int MAXLINE_LOG = 2048; // TODO
     char            m_tmpBuffer[MAXLINE_LOG];
-    int             m_pos;
+    std::size_t     m_pos;
     Buffer          m_buffer;
 
     Mutex           m_backBufLock;
-    int             m_backBytes;
+    std::size_t     m_backBytes;
     UnboundedBuffer m_backBuf;
 
     unsigned int    m_level;
@@ -82,7 +82,7 @@ private:
     unsigned int    m_curLevel;
 
     char*           m_pMemory;
-    int             m_offset;
+    std::size_t     m_offset;
     int             m_file;
 
     bool    _CheckChangeFile();

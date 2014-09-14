@@ -469,7 +469,7 @@ bool Logger::Update()
         m_buffer.PeekDataAt(&level, sizeof level);
         m_buffer.AdjustReadPtr(sizeof level);
 
-        int nLen = 0;
+        size_t nLen = 0;
         m_buffer.PeekDataAt(&nLen, sizeof nLen);
         m_buffer.AdjustReadPtr(sizeof nLen);
 

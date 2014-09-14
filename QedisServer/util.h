@@ -16,7 +16,7 @@ struct my_hash
     size_t operator() (const QString& str) const;
 };
 
-int BitCount(const uint8_t*  buf, int len);
+std::size_t BitCount(const uint8_t*  buf, std::size_t len);
 
 #endif
 

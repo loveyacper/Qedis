@@ -4,17 +4,17 @@
 #include <limits>
 #include <cassert>
     
-const unsigned UnboundedBuffer::MAX_BUFFER_SIZE = std::numeric_limits<unsigned >::max() / 2;
+const std::size_t UnboundedBuffer::MAX_BUFFER_SIZE = std::numeric_limits<std::size_t>::max() / 2;
 
-unsigned UnboundedBuffer::PushData(const void* pData, unsigned nSize)
+std::size_t UnboundedBuffer::PushData(const void* pData, std::size_t nSize)
 {
-    unsigned nBytes  = PushDataAt(pData, nSize);
+    std::size_t nBytes  = PushDataAt(pData, nSize);
     AdjustWritePtr(nBytes);
 
     return nBytes;
 }
 
-unsigned UnboundedBuffer::PushDataAt(const void* pData, unsigned nSize, unsigned offset)
+std::size_t UnboundedBuffer::PushDataAt(const void* pData, std::size_t nSize, std::size_t offset)
 {
     if (!pData || nSize == 0)
         return 0;
@@ -30,19 +30,19 @@ unsigned UnboundedBuffer::PushDataAt(const void* pData, unsigned nSize, unsigned
     return  nSize;
 }
 
-unsigned UnboundedBuffer::PeekData(void* pBuf, unsigned nSize)
+std::size_t UnboundedBuffer::PeekData(void* pBuf, std::size_t nSize)
 {
-    unsigned nBytes  = PeekDataAt(pBuf, nSize);
+    std::size_t nBytes  = PeekDataAt(pBuf, nSize);
     AdjustReadPtr(nBytes);
 
     return nBytes;
 }
 
-unsigned UnboundedBuffer::PeekDataAt(void* pBuf, unsigned nSize, unsigned offset)
+std::size_t UnboundedBuffer::PeekDataAt(void* pBuf, std::size_t nSize, std::size_t offset)
 {
-    const unsigned dataSize = ReadableSize();
+    const std::size_t dataSize = ReadableSize();
     if (!pBuf ||
-         nSize <= 0 ||
+         nSize == 0 ||
          dataSize <= offset)
         return 0;
 
@@ -55,12 +55,12 @@ unsigned UnboundedBuffer::PeekDataAt(void* pBuf, unsigned nSize, unsigned offset
 }
 
 
-void UnboundedBuffer::_AssureSpace(unsigned nSize)
+void UnboundedBuffer::_AssureSpace(std::size_t nSize)
 {
     if (nSize <= WritableSize())
         return;
 
-    unsigned maxSize = static_cast<unsigned>(m_buffer.size());
+    std::size_t maxSize = m_buffer.size();
 
     while (nSize > WritableSize() + m_readPos)
     {
@@ -77,7 +77,7 @@ void UnboundedBuffer::_AssureSpace(unsigned nSize)
     if (m_readPos > 0)
     {
         std::cout << "Move buffer from " << m_readPos << std::endl;
-        unsigned dataSize = ReadableSize();
+        std::size_t dataSize = ReadableSize();
         ::memmove(&m_buffer[0], &m_buffer[m_readPos], dataSize);
         m_readPos  = 0;
         m_writePos = dataSize;
@@ -95,8 +95,8 @@ void UnboundedBuffer::Shrink(bool tight)
         return;
     }
 
-    unsigned oldCap   = static_cast<unsigned>(m_buffer.size());
-    unsigned dataSize = ReadableSize();
+    std::size_t oldCap   = m_buffer.size();
+    std::size_t dataSize = ReadableSize();
     if (!tight && dataSize > oldCap / 2)
         return;
 
@@ -120,7 +120,7 @@ void UnboundedBuffer::Clear()
 int main()
 {
     UnboundedBuffer    buf;
-    unsigned ret = buf.PushData("hello", 5);
+    std::size_t ret = buf.PushData("hello", 5);
     assert (ret == 5);
 
     char tmp[10];

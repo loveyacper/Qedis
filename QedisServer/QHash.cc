@@ -276,7 +276,7 @@ QError  hincrby(const vector<QString>& params, UnboundedBuffer& reply)
     }
 
     char tmp[32];
-    int len = snprintf(tmp, sizeof tmp - 1, "%d", val);
+    int len = snprintf(tmp, sizeof tmp - 1, "%ld", val);
     *str = tmp;
 
     (void)len;

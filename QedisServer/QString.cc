@@ -62,10 +62,10 @@ QError  get(const vector<QString>& params, UnboundedBuffer& reply)
     }
     else if (value.encoding == QEncode_int)
     {
-        int val = value.value.GetIntValue();
+        intptr_t val = value.value.GetIntValue();
         
         char ret[32];
-        int  len = snprintf(ret, sizeof ret - 1, "%d",  val);
+        int  len = snprintf(ret, sizeof ret - 1, "%ld",  val);
         FormatSingle(ret, len, reply);
     }
     else

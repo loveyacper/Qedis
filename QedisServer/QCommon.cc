@@ -4,6 +4,9 @@
 #include <cstdlib>
 #include <algorithm>
 
+
+using  std::size_t;
+
 #define CRLF "\r\n"
 
 struct QErrorInfo  g_errorInfo[] = {
@@ -15,15 +18,15 @@ struct QErrorInfo  g_errorInfo[] = {
     {sizeof "Unknown command"- 1,   "Unknown command"},
 };
 
-void Int2Str(char* ptr, int nBytes, long val)
+void Int2Str(char* ptr, size_t nBytes, long val)
 {
     snprintf(ptr, nBytes - 1, "%ld",  val);
 }
 
-bool Str2Int(const char* ptr, int nBytes, long& val)
+bool Str2Int(const char* ptr, size_t nBytes, long& val)
 {
     bool negtive = false;
-    int i = 0;
+    size_t  i = 0;
 
     if (ptr[0] == '-' || ptr[0] == '+')
     {
@@ -52,7 +55,7 @@ bool Str2Int(const char* ptr, int nBytes, long& val)
     return true;
 }
 
-bool Strtol(const char* ptr, int nBytes, long* outVal)
+bool Strtol(const char* ptr, size_t nBytes, long* outVal)
 {
     if (nBytes == 0)
         return false;
@@ -60,8 +63,9 @@ bool Strtol(const char* ptr, int nBytes, long* outVal)
     char* pEnd = 0;
     long ret = strtol(ptr, &pEnd, 0);
 
-    if (ret > std::numeric_limits<int>::max() ||
-        ret < std::numeric_limits<int>::min())
+    // TODO : bug fix
+    if (ret > std::numeric_limits<long>::max() ||
+        ret < std::numeric_limits<long>::min())
         return false;
 
     //if (ret > INT32_MAX || ret < INT32_MIN)  return false;
@@ -69,7 +73,7 @@ bool Strtol(const char* ptr, int nBytes, long* outVal)
     return pEnd == ptr + nBytes;
 }
 
-bool Strtof(const char* ptr, int nBytes, float* outVal)
+bool Strtof(const char* ptr, size_t nBytes, float* outVal)
 {
     if (nBytes == 0)
         return false;
@@ -80,7 +84,7 @@ bool Strtof(const char* ptr, int nBytes, float* outVal)
 }
 
 
-const char* Strstr(const char* ptr, int nBytes, const char* pattern, int nBytes2)
+const char* Strstr(const char* ptr, size_t nBytes, const char* pattern, size_t nBytes2)
 {
     if (!pattern || *pattern == 0)
         return 0;
@@ -89,26 +93,26 @@ const char* Strstr(const char* ptr, int nBytes, const char* pattern, int nBytes2
     return  ret == ptr + nBytes ? 0 : ret;
 }
 
-const char* SearchCRLF(const char* ptr, int nBytes)
+const char* SearchCRLF(const char* ptr, size_t nBytes)
 {
     return  Strstr(ptr, nBytes, CRLF, 2);
 }
 
-int FormatInt(int value, UnboundedBuffer& reply)
+size_t  FormatInt(long value, UnboundedBuffer& reply)
 {
     char val[32];
-    int len = snprintf(val, sizeof val, "%d" CRLF, value);
+    int len = snprintf(val, sizeof val, "%ld" CRLF, value);
     
-    int  oldSize = reply.ReadableSize();
+    size_t  oldSize = reply.ReadableSize();
     reply.PushData(":", 1);
     reply.PushData(val, len);
     
     return reply.ReadableSize() - oldSize;
 }
 
-int FormatSingle(const char* str, int len, UnboundedBuffer& reply)
+size_t  FormatSingle(const char* str, size_t len, UnboundedBuffer& reply)
 {
-    int  oldSize = reply.ReadableSize();
+    size_t   oldSize = reply.ReadableSize();
     reply.PushData("+", 1);
     reply.PushData(str, len);
     reply.PushData(CRLF, 2);
@@ -116,9 +120,9 @@ int FormatSingle(const char* str, int len, UnboundedBuffer& reply)
     return reply.ReadableSize() - oldSize;
 }
 
-int FormatError(const char* str, int len, UnboundedBuffer& reply)
+size_t  FormatError(const char* str, size_t len, UnboundedBuffer& reply)
 {
-    int  oldSize = reply.ReadableSize();
+    size_t   oldSize = reply.ReadableSize();
 
     reply.PushData("-", 1);
     reply.PushData(str, len);
@@ -127,13 +131,13 @@ int FormatError(const char* str, int len, UnboundedBuffer& reply)
     return reply.ReadableSize() - oldSize;
 }
 
-int FormatBulk(const char* str, int len, UnboundedBuffer& reply)
+size_t  FormatBulk(const char* str, size_t len, UnboundedBuffer& reply)
 {
-    int  oldSize = reply.ReadableSize();
+    size_t oldSize = reply.ReadableSize();
     reply.PushData("$", 1);
 
     char val[32];
-    int tmp = snprintf(val, sizeof val - 1, "%d" CRLF, len);
+    int tmp = snprintf(val, sizeof val - 1, "%ld" CRLF, len);
     reply.PushData(val, tmp);
 
     if (str && len > 0)
@@ -145,13 +149,13 @@ int FormatBulk(const char* str, int len, UnboundedBuffer& reply)
     return reply.ReadableSize() - oldSize;
 }
 
-int PreFormatMultiBulk(int nBulk, UnboundedBuffer& reply)
+size_t  PreFormatMultiBulk(size_t nBulk, UnboundedBuffer& reply)
 {
-    int  oldSize = reply.ReadableSize();
+    size_t  oldSize = reply.ReadableSize();
     reply.PushData("*", 1);
 
     char val[32];
-    int tmp = snprintf(val, sizeof val - 1, "%d" CRLF, nBulk);
+    int tmp = snprintf(val, sizeof val - 1, "%ld" CRLF, nBulk);
     reply.PushData(val, tmp);
 
     return reply.ReadableSize() - oldSize;
@@ -163,9 +167,9 @@ void  ReplyErrorInfo(QError err, UnboundedBuffer& reply)
     FormatError(info.errorStr, info.len, reply);
 }
 
-int FormatNull(UnboundedBuffer& reply)
+size_t  FormatNull(UnboundedBuffer& reply)
 {
-    int  oldSize = reply.ReadableSize();
+    size_t   oldSize = reply.ReadableSize();
     reply.PushData("$", 1);
 
     char val[32];

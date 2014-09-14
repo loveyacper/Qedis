@@ -2,6 +2,7 @@
 #define BERT_QCOMMON_H
 
 //#include "QString.h"
+#include <cstddef>
 
 #define QEDIS static_cast<Qedis* >(Server::Instance())
 
@@ -50,23 +51,23 @@ extern struct QErrorInfo
     const char* errorStr;
 } g_errorInfo[] ;
 
-void        Int2Str(char* ptr, int nBytes, long val);
-bool        Str2Int(const char* ptr, int nBytes, long& val); // only for decimal
-bool        Strtol(const char* ptr, int nBytes, long* outVal);
-bool        Strtof(const char* ptr, int nBytes, float* outVal);
-const char* Strstr(const char* ptr, int nBytes, const char* pattern, int nBytes2);
-const char* SearchCRLF(const char* ptr, int nBytes);
+void        Int2Str(char* ptr, std::size_t nBytes, long val);
+bool        Str2Int(const char* ptr, std::size_t nBytes, long& val); // only for decimal
+bool        Strtol(const char* ptr, std::size_t nBytes, long* outVal);
+bool        Strtof(const char* ptr, std::size_t nBytes, float* outVal);
+const char* Strstr(const char* ptr, std::size_t nBytes, const char* pattern, std::size_t nBytes2);
+const char* SearchCRLF(const char* ptr, std::size_t nBytes);
 
 
 class UnboundedBuffer;
 
-int FormatInt(int value, UnboundedBuffer& reply);
-int FormatSingle(const char* str, int len, UnboundedBuffer& reply);
-int FormatError(const char* str, int len, UnboundedBuffer& reply);
-int FormatBulk(const char* str, int len, UnboundedBuffer& reply);
-int PreFormatMultiBulk(int nBulk, UnboundedBuffer& reply);
+std::size_t FormatInt(long value, UnboundedBuffer& reply);
+std::size_t FormatSingle(const char* str, std::size_t len, UnboundedBuffer& reply);
+std::size_t FormatError(const char* str, std::size_t len, UnboundedBuffer& reply);
+std::size_t FormatBulk(const char* str, std::size_t len, UnboundedBuffer& reply);
+std::size_t PreFormatMultiBulk(std::size_t nBulk, UnboundedBuffer& reply);
 
-int FormatNull(UnboundedBuffer& reply);
+std::size_t FormatNull(UnboundedBuffer& reply);
 
 void  ReplyErrorInfo(QError err, UnboundedBuffer& reply);
 
