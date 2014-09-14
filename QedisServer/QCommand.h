@@ -49,6 +49,10 @@ QCommandHandler  lindex;
 QCommandHandler  llen;
 QCommandHandler  lset;
 QCommandHandler  ltrim;
+QCommandHandler  lrange;
+QCommandHandler  linsert;
+QCommandHandler  lrem;
+QCommandHandler  rpoplpush;
 
 // hash commands
 QCommandHandler  hget;

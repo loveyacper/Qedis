@@ -254,21 +254,18 @@ static void AdjustIndex(long& start, long& end, size_t  size)
 {
     if (size == 0)
     {
-        start = end + 1;
+        end = 0, start = 1;
         return;
     }
     
     if (start < 0)  start += size;
-    
     if (start < 0)  start = 0;
+    if (end < 0)    end += size;
     
-    if (end < 0)
-        end += size;
-    else if (end >= size)
-        end = size - 1;
+    if (start > end || start >= size)
+        end = 0, start = 1;
     
-    if (start >= size || end < 0)
-        start = end + 1;
+    if (end >= size)  end = size - 1;
 }
 
 static void Index2Iterator(long start, long end,
@@ -276,13 +273,38 @@ static void Index2Iterator(long start, long end,
                            QList::const_iterator& beginIt,
                            QList::const_iterator& endIt)
 {
+    assert (start >= 0 && end >= 0 && start <= end);
+    
     beginIt = list.begin();
     while (start -- > 0)   ++ beginIt;
 
     endIt  = list.begin();
     while (end -- > 0)  ++ endIt;
+}
+
+static size_t GetRange(long start, long end,
+                           const QList&  list,
+                           QList::const_iterator& beginIt,
+                           QList::const_iterator& endIt)
+{
+    size_t   rangeLen = 0;
+    if (start > end)
+    {
+        beginIt = endIt = list.end();  // empty
+    }
+    else if (start != 0 || end + 1 != list.size())
+    {
+        rangeLen = end - start + 1;
+        Index2Iterator(start, end, list, beginIt, endIt);
+    }
+    else
+    {
+        rangeLen= list.size();
+        beginIt = list.begin();
+        endIt   = -- list.end();  // entire list
+    }
     
-        
+    return rangeLen;
 }
 
 QError  ltrim(const vector<QString>& params, UnboundedBuffer& reply)
@@ -304,22 +326,212 @@ QError  ltrim(const vector<QString>& params, UnboundedBuffer& reply)
         return err;
     }
     
-    
     const PLIST&    list   = value.CastList();
     AdjustIndex(start, end, list->size());
-    if (start > end)
+    
+    QList::const_iterator beginIt, endIt;
+    GetRange(start, end, *list, beginIt, endIt);
+    
+    if (beginIt != list->end())
     {
-        list->clear();
-        QSTORE.DeleteKey(params[1]);
-    }
-    else if (start != 0 && end + 1 != list->size())
-    {
-        QList::const_iterator beginIt, endIt;
-        Index2Iterator(start, end, *list, beginIt, endIt);
+        assert (endIt != list->end());
         list->erase(list->begin(), beginIt);
         list->erase(++ endIt, list->end());
     }
     
     FormatSingle("OK", 2, reply);
+    return   QError_ok;
+}
+
+QError  lrange(const vector<QString>& params, UnboundedBuffer& reply)
+{
+    QObject  value(QType_list);
+    
+    QError err = QSTORE.GetValueByType(params[1], value, QType_list);
+    if (err != QError_ok)
+    {
+        ReplyErrorInfo(err, reply);
+        return  err;
+    }
+    
+    long start, end;
+    if (!Strtol(params[2].c_str(), params[2].size(), &start) ||
+        !Strtol(params[3].c_str(), params[3].size(), &end))
+    {
+        ReplyErrorInfo(QError_paramNotMatch, reply);
+        return err;
+    }
+    
+    const PLIST&    list   = value.CastList();
+    AdjustIndex(start, end, list->size());
+    
+    QList::const_iterator beginIt, endIt;
+    size_t rangeLen = GetRange(start, end, *list, beginIt, endIt);
+    
+    PreFormatMultiBulk(rangeLen, reply);
+    
+    if (beginIt != list->end())
+    {
+        assert (endIt != list->end());
+
+        while (true)
+        {
+            FormatBulk(beginIt->c_str(), beginIt->size(), reply);
+            if (beginIt == endIt)
+                break;
+            
+            ++ beginIt;
+        }
+    }
+    
+    return   QError_ok;
+}
+
+QError  linsert(const vector<QString>& params, UnboundedBuffer& reply)
+{
+    QObject  value(QType_list);
+    
+    QError err = QSTORE.GetValueByType(params[1], value, QType_list);
+    if (err != QError_ok)
+    {
+        FormatInt(0, reply);
+        return err;
+    }
+    
+    bool before = false;
+    if (params[2] == "before")
+        before = true;
+    else if (params[2] == "after")
+        before = false;
+    else
+    {
+        ReplyErrorInfo(QError_wrongType, reply);
+        return QError_wrongType;
+    }
+    
+    const PLIST&    list = value.CastList();
+    QList::iterator it = std::find(list->begin(), list->end(), params[3]);
+    if (it == list->end())
+    {
+        FormatInt(-1, reply);
+        return QError_notExist;
+    }
+    
+    if (before)
+        list->insert(it, params[4]);
+    else
+        list->insert(++ it, params[4]);
+    
+    FormatInt(static_cast<long>(list->size()), reply);
+    
+    return   QError_ok;
+}
+
+
+QError  lrem(const vector<QString>& params, UnboundedBuffer& reply)
+{
+    QObject  value(QType_list);
+    
+    QError err = QSTORE.GetValueByType(params[1], value, QType_list);
+    if (err != QError_ok)
+    {
+        FormatInt(0, reply);
+        return err;
+    }
+    
+    long count;
+    if (!Strtol(params[2].c_str(), params[2].size(), &count))
+    {
+        ReplyErrorInfo(QError_paramNotMatch, reply);
+        return err;
+    }
+    
+    const PLIST&    list = value.CastList();
+    
+    ListPosition  start = ListPosition_head;
+    
+    if (count < 0)
+    {
+        count = -count;
+        start = ListPosition_tail;
+    }
+    else if (count == 0)
+    {
+        count = list->size(); // remove all elements equal to param[3]
+    }
+    
+    long resultCount = 0;
+    if (start == ListPosition_head)
+    {
+        QList::iterator it = list->begin();
+        while (it != list->end() && resultCount < count)
+        {
+            if (*it == params[3])
+            {
+                list->erase(it ++);
+                ++ resultCount;
+            }
+            else
+            {
+                ++ it;
+            }
+        }
+    }
+    else
+    {
+        QList::reverse_iterator it = list->rbegin();
+        while (it != list->rend() && resultCount < count)
+        {
+            if (*it == params[3])
+            {
+                list->erase((++it).base()); // Effective STL, item 28
+                ++ resultCount;
+            }
+            else
+            {
+                ++ it;
+            }
+        }
+    }
+
+    FormatInt(resultCount, reply);
+    return   QError_ok;
+}
+
+
+QError  rpoplpush(const vector<QString>& params, UnboundedBuffer& reply)
+{
+    QObject  src(QType_list);
+    
+    QError err = QSTORE.GetValueByType(params[1], src, QType_list);
+    if (err != QError_ok)
+    {
+        FormatNull(reply);
+        return err;
+    }
+    
+    QObject  dst(QType_list);
+    
+    err = QSTORE.GetValueByType(params[2], dst, QType_list);
+    if (err != QError_ok)
+    {
+        if (err != QError_notExist)
+        {
+            ReplyErrorInfo(err, reply);
+            return err;
+        }
+        dst.value.Reset(new QList);
+        QSTORE.SetValue(params[2], dst);
+    }
+    
+    const PLIST& srclist = src.CastList();
+    const PLIST& dstlist = dst.CastList();
+    
+    dstlist->splice(dstlist->begin(), *srclist, (++ srclist->rbegin()).base());
+    
+    FormatBulk(dstlist->begin()->c_str(),
+               dstlist->begin()->size(),
+               reply);
+    
     return   QError_ok;
 }

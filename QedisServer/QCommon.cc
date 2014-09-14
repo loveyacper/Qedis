@@ -137,7 +137,7 @@ size_t  FormatBulk(const char* str, size_t len, UnboundedBuffer& reply)
     reply.PushData("$", 1);
 
     char val[32];
-    int tmp = snprintf(val, sizeof val - 1, "%ld" CRLF, len);
+    int tmp = snprintf(val, sizeof val - 1, "%lu" CRLF, len);
     reply.PushData(val, tmp);
 
     if (str && len > 0)
@@ -155,7 +155,7 @@ size_t  PreFormatMultiBulk(size_t nBulk, UnboundedBuffer& reply)
     reply.PushData("*", 1);
 
     char val[32];
-    int tmp = snprintf(val, sizeof val - 1, "%ld" CRLF, nBulk);
+    int tmp = snprintf(val, sizeof val - 1, "%lu" CRLF, nBulk);
     reply.PushData(val, tmp);
 
     return reply.ReadableSize() - oldSize;

@@ -35,6 +35,10 @@ const QCommandTable::QCommandInfo QCommandTable::s_info[] =
     {"llen",        QCommandAttr_read,                2,  &llen},
     {"lset",        QCommandAttr_write,               4,  &lset},
     {"ltrim",       QCommandAttr_write,               4,  &ltrim},
+    {"lrange",      QCommandAttr_write,               4,  &lrange},
+    {"linsert",     QCommandAttr_write,               5,  &linsert},
+    {"lrem",        QCommandAttr_write,               4,  &lrem},
+    {"rpoplpush",   QCommandAttr_write,               3,  &rpoplpush},
     
     
     // hash
@@ -95,8 +99,7 @@ QError QCommandTable::ExecuteCmd(const std::vector<QString>& params, UnboundedBu
     std::map<QString, const QCommandInfo* >::const_iterator it(m_handlers.find(params[0]));
     if (it == m_handlers.end())
     {
-        const QErrorInfo& err = g_errorInfo[QError_unknowCmd];
-        FormatError(err.errorStr, err.len, reply);
+        ReplyErrorInfo(QError_unknowCmd, reply);
         return QError_unknowCmd;
     }
 
