@@ -221,7 +221,7 @@ QError  lset(const vector<QString>& params, UnboundedBuffer& reply)
     
     *result = params[3];
     
-    FormatSingle("OK", 2, reply);
+    FormatOK(reply);
     return   QError_ok;
 }
 
@@ -339,7 +339,7 @@ QError  ltrim(const vector<QString>& params, UnboundedBuffer& reply)
         list->erase(++ endIt, list->end());
     }
     
-    FormatSingle("OK", 2, reply);
+    FormatOK(reply);
     return   QError_ok;
 }
 

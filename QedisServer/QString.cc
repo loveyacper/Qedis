@@ -1,7 +1,6 @@
 #include "QString.h"
 #include "QStore.h"
 #include "Log/Logger.h"
-#include "QClient.h" // test
 #include <iostream>
 #include <cassert>
 
@@ -38,8 +37,7 @@ QError  set(const vector<QString>& params, UnboundedBuffer& reply)
         return err;
     }
 
-//    QClient::Current()->SendPacket("+OK\r\n", 5);
-    FormatSingle("OK", 2, reply);
+    FormatOK(reply);
     return   QError_ok;
 }
 

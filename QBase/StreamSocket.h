@@ -44,8 +44,6 @@ public:
     void  SetRecvBufSize(std::size_t size) {  m_recvBuf.InitCapacity(size); }
 
     void  SetReconn(bool retry) { m_retry = retry; }
-    bool  Timeout(time_t  now)  const    {  return   now > m_activeTime + m_timeout; }
-    void  SetTimeout(int timeout = 1800) {  m_timeout = timeout; }
     
     bool  HasDataToSend() const { return !m_sendBuf.IsEmpty(); }
 
@@ -56,9 +54,6 @@ private:
     virtual HEAD_LENGTH_T _HandleHead(AttachedBuffer& buf, BODY_LENGTH_T* bodyLen) = 0;
     virtual void _HandlePacket(AttachedBuffer& buf) = 0;
     BODY_LENGTH_T m_bodyLen;
-
-    time_t  m_activeTime;
-    int     m_timeout;
 
 private:
     SocketAddr  m_peerAddr;

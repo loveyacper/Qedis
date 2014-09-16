@@ -143,8 +143,9 @@ size_t  FormatBulk(const char* str, size_t len, UnboundedBuffer& reply)
     if (str && len > 0)
     {
         reply.PushData(str, len);
-        reply.PushData(CRLF, 2);
     }
+    
+    reply.PushData(CRLF, 2);
     
     return reply.ReadableSize() - oldSize;
 }
@@ -170,12 +171,24 @@ void  ReplyErrorInfo(QError err, UnboundedBuffer& reply)
 size_t  FormatNull(UnboundedBuffer& reply)
 {
     size_t   oldSize = reply.ReadableSize();
-    reply.PushData("$", 1);
-
-    char val[32];
-    int len = snprintf(val, sizeof val - 1, "-1\r\n");
-    reply.PushData(val, len);
-
+    reply.PushData("$-1" CRLF, 5);
+    
     return reply.ReadableSize() - oldSize;
 }
 
+
+size_t  FormatNullArray(UnboundedBuffer& reply)
+{
+    size_t   oldSize = reply.ReadableSize();
+    reply.PushData("*-1" CRLF, 5);
+    
+    return reply.ReadableSize() - oldSize;
+}
+
+size_t  FormatOK(UnboundedBuffer& reply)
+{
+    size_t   oldSize = reply.ReadableSize();
+    reply.PushData("+OK" CRLF, 5);
+    
+    return reply.ReadableSize() - oldSize;
+}

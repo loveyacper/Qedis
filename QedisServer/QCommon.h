@@ -68,6 +68,8 @@ std::size_t FormatBulk(const char* str, std::size_t len, UnboundedBuffer& reply)
 std::size_t PreFormatMultiBulk(std::size_t nBulk, UnboundedBuffer& reply);
 
 std::size_t FormatNull(UnboundedBuffer& reply);
+std::size_t FormatNullArray(UnboundedBuffer& reply);
+std::size_t FormatOK(UnboundedBuffer& reply);
 
 void  ReplyErrorInfo(QError err, UnboundedBuffer& reply);
 

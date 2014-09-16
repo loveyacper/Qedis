@@ -15,7 +15,7 @@ QError  select(const vector<QString>& params, UnboundedBuffer& reply)
     bool succ = QClient::Current()->SelectDB(newDb);
     assert(succ);
     
-    FormatSingle("OK", 2, reply);
+    FormatOK(reply);
     return   QError_ok;
 }
 

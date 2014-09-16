@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BAC5694E19C74F73001AF3D0 /* QPubsub.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAC5694D19C74F73001AF3D0 /* QPubsub.cc */; };
 		BAFC847219C44AFD00C18B22 /* Buffer.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC840219C44AFD00C18B22 /* Buffer.h */; };
 		BAFC847319C44AFD00C18B22 /* ClientSocket.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC840419C44AFD00C18B22 /* ClientSocket.cc */; };
 		BAFC847419C44AFD00C18B22 /* ClientSocket.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC840519C44AFD00C18B22 /* ClientSocket.h */; };
@@ -20,8 +21,6 @@
 		BAFC847C19C44AFD00C18B22 /* ListenSocket.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC840E19C44AFD00C18B22 /* ListenSocket.h */; };
 		BAFC847D19C44AFD00C18B22 /* Logger.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC841019C44AFD00C18B22 /* Logger.cc */; };
 		BAFC847E19C44AFD00C18B22 /* Logger.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC841119C44AFD00C18B22 /* Logger.h */; };
-		BAFC848519C44AFD00C18B22 /* MemoryPool.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC841D19C44AFD00C18B22 /* MemoryPool.cc */; };
-		BAFC848619C44AFD00C18B22 /* MemoryPool.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC841F19C44AFD00C18B22 /* MemoryPool.h */; };
 		BAFC848E19C44AFD00C18B22 /* NetThreadPool.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC842A19C44AFD00C18B22 /* NetThreadPool.cc */; };
 		BAFC848F19C44AFD00C18B22 /* NetThreadPool.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC842B19C44AFD00C18B22 /* NetThreadPool.h */; };
 		BAFC849019C44AFD00C18B22 /* Poller.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC842C19C44AFD00C18B22 /* Poller.h */; };
@@ -92,6 +91,7 @@
 
 /* Begin PBXFileReference section */
 		BABEBED519C4474900010636 /* Qedis */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Qedis; sourceTree = BUILT_PRODUCTS_DIR; };
+		BAC5694D19C74F73001AF3D0 /* QPubsub.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QPubsub.cc; path = QedisServer/QPubsub.cc; sourceTree = SOURCE_ROOT; };
 		BAFC83FE19C44AE800C18B22 /* libqbaselib.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libqbaselib.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		BAFC840219C44AFD00C18B22 /* Buffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Buffer.h; path = QBase/Buffer.h; sourceTree = "<group>"; };
 		BAFC840419C44AFD00C18B22 /* ClientSocket.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ClientSocket.cc; path = QBase/ClientSocket.cc; sourceTree = "<group>"; };
@@ -107,8 +107,6 @@
 		BAFC840E19C44AFD00C18B22 /* ListenSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ListenSocket.h; path = QBase/ListenSocket.h; sourceTree = "<group>"; };
 		BAFC841019C44AFD00C18B22 /* Logger.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Logger.cc; sourceTree = "<group>"; };
 		BAFC841119C44AFD00C18B22 /* Logger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Logger.h; sourceTree = "<group>"; };
-		BAFC841D19C44AFD00C18B22 /* MemoryPool.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MemoryPool.cc; path = QBase/MemoryPool.cc; sourceTree = "<group>"; };
-		BAFC841F19C44AFD00C18B22 /* MemoryPool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MemoryPool.h; path = QBase/MemoryPool.h; sourceTree = "<group>"; };
 		BAFC842A19C44AFD00C18B22 /* NetThreadPool.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NetThreadPool.cc; path = QBase/NetThreadPool.cc; sourceTree = "<group>"; };
 		BAFC842B19C44AFD00C18B22 /* NetThreadPool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NetThreadPool.h; path = QBase/NetThreadPool.h; sourceTree = "<group>"; };
 		BAFC842C19C44AFD00C18B22 /* Poller.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Poller.h; path = QBase/Poller.h; sourceTree = "<group>"; };
@@ -203,8 +201,6 @@
 				BAFC840D19C44AFD00C18B22 /* ListenSocket.cc */,
 				BAFC840E19C44AFD00C18B22 /* ListenSocket.h */,
 				BAFC840F19C44AFD00C18B22 /* Log */,
-				BAFC841D19C44AFD00C18B22 /* MemoryPool.cc */,
-				BAFC841F19C44AFD00C18B22 /* MemoryPool.h */,
 				BAFC842A19C44AFD00C18B22 /* NetThreadPool.cc */,
 				BAFC842B19C44AFD00C18B22 /* NetThreadPool.h */,
 				BAFC842C19C44AFD00C18B22 /* Poller.h */,
@@ -247,6 +243,7 @@
 		BABEBED719C4474900010636 /* QedisServer */ = {
 			isa = PBXGroup;
 			children = (
+				BAC5694D19C74F73001AF3D0 /* QPubsub.cc */,
 				BAFC84D719C49E1100C18B22 /* CMakeLists.txt */,
 				BAFC84D819C49E1100C18B22 /* IntSet.cc */,
 				BAFC84D919C49E1100C18B22 /* IntSet.h */,
@@ -335,7 +332,6 @@
 				BAFC849419C44AFD00C18B22 /* CounterImpl.h in Headers */,
 				BAFC849319C44AFD00C18B22 /* CounterBase.h in Headers */,
 				BAFC84BF19C44AFD00C18B22 /* IPC.h in Headers */,
-				BAFC848619C44AFD00C18B22 /* MemoryPool.h in Headers */,
 				BAFC84C319C44AFD00C18B22 /* ThreadPool.h in Headers */,
 				BAFC847419C44AFD00C18B22 /* ClientSocket.h in Headers */,
 				BAFC847E19C44AFD00C18B22 /* Logger.h in Headers */,
@@ -433,6 +429,7 @@
 				BAFC84F819C49E1100C18B22 /* QHash.cc in Sources */,
 				BAFC84F319C49E1100C18B22 /* IntSet.cc in Sources */,
 				BAFC84FD19C49E1100C18B22 /* QStat.cc in Sources */,
+				BAC5694E19C74F73001AF3D0 /* QPubsub.cc in Sources */,
 				BAFC84FE19C49E1100C18B22 /* QStore.cc in Sources */,
 				BAFC850019C49E1100C18B22 /* util.cc in Sources */,
 				BAFC84F719C49E1100C18B22 /* Qedis.cc in Sources */,
@@ -462,7 +459,6 @@
 				BAFC84BB19C44AFD00C18B22 /* TaskManager.cc in Sources */,
 				BAFC84B919C44AFD00C18B22 /* StreamSocket.cc in Sources */,
 				BAFC84C419C44AFD00C18B22 /* Timer.cc in Sources */,
-				BAFC848519C44AFD00C18B22 /* MemoryPool.cc in Sources */,
 				BAFC847D19C44AFD00C18B22 /* Logger.cc in Sources */,
 				BAFC84BE19C44AFD00C18B22 /* IPC.cc in Sources */,
 			);
@@ -621,6 +617,7 @@
 				BAFC840019C44AE800C18B22 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

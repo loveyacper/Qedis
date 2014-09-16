@@ -87,7 +87,7 @@ QError  hmset(const vector<QString>& params, UnboundedBuffer& reply)
     for (int i = 2; i < static_cast<int>(params.size()); i += 2)
         _set_hash_force(*hash, params[i], params[i + 1]);
     
-    FormatSingle("OK", 2, reply);
+    FormatOK(reply);
     return   QError_ok;
 }
 

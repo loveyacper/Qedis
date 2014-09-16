@@ -15,10 +15,8 @@ using std::size_t;
 
 StreamSocket::StreamSocket()
 {
-    m_bodyLen = 0;
+    m_bodyLen = -1;
     m_retry   = false;
-    m_activeTime = g_now.MilliSeconds() / 1000;
-    SetTimeout();
 }
 
 StreamSocket::~StreamSocket()
@@ -208,7 +206,7 @@ bool StreamSocket::DoMsgParse()
 
         AttachedBuffer af(datum);
 
-        if (0 == m_bodyLen)
+        if (m_bodyLen == -1)
         {
             const HEAD_LENGTH_T headLen = _HandleHead(af, &m_bodyLen);
             if (headLen < 0 || headLen + 1 >= m_recvBuf.Capacity())
@@ -223,7 +221,7 @@ bool StreamSocket::DoMsgParse()
         }
 
         // tmp some defensive code
-        if (m_bodyLen < 0 ||
+        if (m_bodyLen >= 0 &&
             3 * m_bodyLen > 2 * m_recvBuf.Capacity())
         {
     LOCK_SDK_LOG; 
@@ -233,7 +231,7 @@ bool StreamSocket::DoMsgParse()
             return  false;
         }
         
-        if (0 == m_bodyLen ||
+        if (m_bodyLen == -1 ||
             m_recvBuf.ReadableSize() < m_bodyLen)
         {
             return busy;
@@ -245,12 +243,11 @@ bool StreamSocket::DoMsgParse()
         m_recvBuf.GetDatum(bf, m_bodyLen); 
         assert (m_bodyLen == bf.TotalBytes());
 
-        m_activeTime = g_now.MilliSeconds() / 1000;
         AttachedBuffer   cmd(bf);
         _HandlePacket(cmd);
 
         m_recvBuf.AdjustReadPtr(m_bodyLen);
-        m_bodyLen = 0;
+        m_bodyLen = -1;
     }
 
     return  busy;

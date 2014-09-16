@@ -165,13 +165,6 @@ void SendThread::Run( )
                 if (type == Socket::SocketType_Stream)
                 {
                     StreamSocket*  pTcpSock = static_cast<StreamSocket* >(pSock);
-                    if (pTcpSock->Timeout(g_now.MilliSeconds()/1000))
-                    {
-                        pTcpSock->OnError();
-                LOCK_SDK_LOG; 
-                        ERR << "err tcp socket send or timeout " << pTcpSock->GetSocket();
-                UNLOCK_SDK_LOG; 
-                    }
                     hasDataToSend = pTcpSock->HasDataToSend();
                 }
                 
