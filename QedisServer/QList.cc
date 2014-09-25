@@ -57,21 +57,23 @@ static QError  pop(const vector<QString>& params, UnboundedBuffer& reply, ListPo
     QError err = QSTORE.GetValueByType(params[1], value, QType_list);
     if (err != QError_ok)
     {
-        FormatBulk(0, -1, reply);
+        FormatNull(reply);
         return  err;
     }
     
     const PLIST&    list   = value.CastList();
-    const QString*  result = 0;
+    assert (!list->empty());
 
     if (pos == ListPosition_head)
     {
-        result = &list->front();
+        const QString& result = list->front();
+        FormatSingle(result.c_str(), result.size(), reply);
         list->pop_front();
     }
     else
     {
-        result = &list->back();
+        const QString& result = list->back();
+        FormatSingle(result.c_str(), result.size(), reply);
         list->pop_back();
     }
     
@@ -80,7 +82,6 @@ static QError  pop(const vector<QString>& params, UnboundedBuffer& reply, ListPo
         QSTORE.DeleteKey(params[1]);
     }
     
-    FormatSingle(result->c_str(), result->size(), reply);
     return   QError_ok;
 }
 
