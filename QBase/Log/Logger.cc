@@ -486,7 +486,7 @@ bool Logger::Update()
     return true;
 }
 
-void Logger::_WriteLog(int level, int nLen, const char* data)
+void Logger::_WriteLog(int level, size_t nLen, const char* data)
 {
     assert (nLen > 0 && data);
     
@@ -519,7 +519,7 @@ void Logger::_WriteLog(int level, int nLen, const char* data)
             break;
         }
 
-        fprintf(stdout, "%.*s", nLen, data);
+        fprintf(stdout, "%.*s", static_cast<int>(nLen), data);
         _Color(NORMAL_COLOR);
     }
 

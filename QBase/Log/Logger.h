@@ -89,7 +89,7 @@ private:
     const std::string& _MakeFileName();
     bool    _OpenLogFile(const char* name);
     bool    _CloseLogFile();
-    void    _WriteLog(int level, int nLen, const char* data);
+    void    _WriteLog(int level, std::size_t nLen, const char* data);
     void    _Color(unsigned int color);
     void    _Reset();
 

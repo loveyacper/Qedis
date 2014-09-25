@@ -53,7 +53,7 @@ QError  del(const vector<QString>& params, UnboundedBuffer& reply)
     assert (params[0] == "del");
     
     int nDel = 0;
-    for (int i = 1; i < params.size(); ++ i)
+    for (size_t i = 1; i < params.size(); ++ i)
     {
         const QString&  key = params[i];
         if (QSTORE.ClearExpire(key))
@@ -206,7 +206,7 @@ QError  move(const vector<QString>& params, UnboundedBuffer& reply)
 
     int    ret = 0;
 
-    QObject  val;
+    QObject* val;
     if (QSTORE.GetValue(key, val) == QError_ok)
     {
         LOG_DBG(g_logger) << "move " << key.c_str() << " to db " << toDb;
@@ -218,7 +218,7 @@ QError  move(const vector<QString>& params, UnboundedBuffer& reply)
             QSTORE.DeleteKey(key); // delete from old db
 
             QSTORE.SelectDB(toDb);
-            QSTORE.SetValue(key, val); // set to new db
+            QSTORE.SetValue(key, *val); // set to new db
             ret = 1;
         }
         else

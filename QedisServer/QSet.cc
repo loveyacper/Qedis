@@ -8,44 +8,43 @@ using namespace std;
 
 
 #define GET_SET(setname)  \
-    QObject  value(QType_set);  \
+    QObject* value;  \
     QError err = QSTORE.GetValueByType(setname, value, QType_set);  \
     if (err != QError_ok)  {  \
-        ReplyErrorInfo(err, reply); \
+         if (err == QError_notExist)    \
+             FormatNull(reply); \
+         else   \
+             ReplyError(err, reply);    \
         return err;  \
     }
 
 #define GET_OR_SET_SET(setname)  \
-    QObject value(QType_set);  \
+    QObject* value;  \
     QError err = QSTORE.GetValueByType(setname, value, QType_set);  \
     if (err != QError_ok && err != QError_notExist)  {  \
-        ReplyErrorInfo(err, reply); \
+        ReplyError(err, reply); \
         return err;  \
     }   \
     if (err == QError_notExist) { \
-        value.value.Reset(new QSet);  \
-        err = QSTORE.SetValue(setname, value);  \
-        if (err != QError_ok)  {  \
-            ReplyErrorInfo(err, reply);  \
-            return err; \
-        } \
+        QObject val(QType_set);  \
+        val.value.Reset(new QSet);  \
+        value = QSTORE.SetValue(setname, val);  \
     }
 
-bool _set_random(const QSet& set, QString& res)
+static bool RandomMember(const QSet& set, QString& res)
 {
-#if 0
     if (set.empty())
     {
-        ERR << "set is empty";
+        LOG_ERR(g_logger) << "set is empty";
         return false;
     }
         
-    //INF << "set bucket_count " << set.bucket_count();
+    LOG_INF(g_logger) << "set bucket_count " << set.bucket_count();
 
     while (true)
     {
-        int bucket = rand() % set.bucket_count();
-        INF << "set bucket " << bucket << ", and bucket size " << set.bucket_size(bucket);
+        size_t bucket = rand() % set.bucket_count();
+        LOG_INF(g_logger) << "set bucket " << bucket << ", and bucket size " << set.bucket_size(bucket);
         if (set.bucket_size(bucket) == 0)
             continue;
 
@@ -60,27 +59,26 @@ bool _set_random(const QSet& set, QString& res)
         res = *it;
         return true;
     }
-#endif
 
-    return true;
+    return false;
 }
 
 QError  spop(const vector<QString>& params, UnboundedBuffer& reply)
 {
-    assert (params[0] == "spop");
-
     GET_SET(params[1]);
 
-    const PSET& set  = value.CastSet();
+    const PSET& set  = value->CastSet();
 
     QString res;
-    if (_set_random(*set, res))
+    if (RandomMember(*set, res))
     {
-        FormatSingle(res.c_str(), static_cast<int>(res.size()), reply);
+        FormatSingle(res.c_str(), res.size(), reply);
         set->erase(res);
     }
     else
-        FormatSingle("", 0, reply);
+    {
+        FormatNull(reply);
+    }
     
     return   QError_ok;
 }
@@ -88,22 +86,30 @@ QError  spop(const vector<QString>& params, UnboundedBuffer& reply)
 
 QError  srandmember(const vector<QString>& params, UnboundedBuffer& reply)
 {
-    assert (params[0] == "srandmember");
-    
-    ReplyErrorInfo(QError_paramNotMatch, reply);
+    GET_SET(params[1]);
+
+    const PSET& set  = value->CastSet();
+
+    QString res;
+    if (RandomMember(*set, res))
+    {
+        FormatSingle(res.c_str(), res.size(), reply);
+    }
+    else
+    {
+        FormatNull(reply);
+    }
 
     return   QError_ok;
 }
 
 QError  sadd(const vector<QString>& params, UnboundedBuffer& reply)
 {
-    assert (params[0] == "sadd");
-   
     GET_OR_SET_SET(params[1]);
     
     int  res = 0;
-    const PSET&  set = value.CastSet();
-    for (int i = 2; i < params.size(); ++ i)
+    const PSET&  set = value->CastSet();
+    for (size_t i = 2; i < params.size(); ++ i)
         if (set->insert(params[i]).second)
             ++ res;
     
@@ -114,12 +120,10 @@ QError  sadd(const vector<QString>& params, UnboundedBuffer& reply)
 
 QError  scard(const vector<QString>& params, UnboundedBuffer& reply)
 {
-    assert (params[0] == "scard");
-
     GET_SET(params[1]);
 
-    const PSET&  set  = value.CastSet();
-    int  size = static_cast<int>(set->size());
+    const PSET&  set  = value->CastSet();
+    long size = static_cast<long>(set->size());
     cout << "scard fine= " << size << endl;
     
     FormatInt(size, reply);
@@ -128,13 +132,11 @@ QError  scard(const vector<QString>& params, UnboundedBuffer& reply)
 
 QError  srem(const vector<QString>& params, UnboundedBuffer& reply)
 {
-    assert (params[0] == "srem");
-
     GET_SET(params[1]);
 
-    const PSET& set  = value.CastSet();
+    const PSET& set  = value->CastSet();
     int res = 0;
-    for (int i = 2; i < params.size(); ++ i)
+    for (size_t i = 2; i < params.size(); ++ i)
     {
         if (set->erase(params[i]) != 0)
             ++ res;
@@ -146,12 +148,10 @@ QError  srem(const vector<QString>& params, UnboundedBuffer& reply)
 
 QError  sismember(const vector<QString>& params, UnboundedBuffer& reply)
 {
-    assert (params[0] == "sismember");
-    
     GET_SET(params[1]);
     
-    const PSET& set  = value.CastSet();
-    int res = static_cast<int>(set->count(params[2]));
+    const PSET& set  = value->CastSet();
+    long res = static_cast<long>(set->count(params[2]));
     
     FormatInt(res, reply);
 
@@ -160,26 +160,26 @@ QError  sismember(const vector<QString>& params, UnboundedBuffer& reply)
 
 QError  smembers(const vector<QString>& params, UnboundedBuffer& reply)
 {
-    assert (params[0] == "smembers");
-
     GET_SET(params[1]);
 
-    const PSET& set = value.CastSet();
+    const PSET& set = value->CastSet();
 
-    PreFormatMultiBulk(static_cast<int>(set->size()), reply);
+    PreFormatMultiBulk(set->size(), reply);
     for (QSet::const_iterator it(set->begin()); it != set->end(); ++ it)
-        FormatBulk(it->c_str(), static_cast<int>(it->size()), reply);
+        FormatBulk(it->c_str(), it->size(), reply);
 
     return   QError_ok;
 }
 
 QError  smove(const vector<QString>& params, UnboundedBuffer& reply)
 {
+    return QError_ok;
+#if 0
     assert (params[0] == "smove");
     
     GET_SET(params[1]);
     
-    const PSET& set = value.CastSet();
+    const PSET& set = value->CastSet();
     int  ret = static_cast<int>(set->erase(params[3]));
     
     if (ret != 0)
@@ -202,6 +202,7 @@ QError  smove(const vector<QString>& params, UnboundedBuffer& reply)
     
     FormatInt(ret, reply);
     return err;
+#endif
 }
 
 
@@ -268,6 +269,7 @@ static void  _set_operation(const vector<QString>& params,
                             QSet& res,
                             SetOperation oper)
 {
+#if 0
     QObject  value;
     QError err = QSTORE.GetValueByType(params[offset], value, QType_set);
     if (err != QError_ok && oper != SetOperation_union)
@@ -305,6 +307,7 @@ static void  _set_operation(const vector<QString>& params,
         if (oper != SetOperation_union && res.empty())
             return;
     }
+#endif
 }
 
 QError  sdiffstore(const vector<QString>& params, UnboundedBuffer& reply)
@@ -312,14 +315,15 @@ QError  sdiffstore(const vector<QString>& params, UnboundedBuffer& reply)
     QSet* res = new QSet();
     _set_operation(params, 2, *res, SetOperation_diff);
 
-    PreFormatMultiBulk(static_cast<int>(res->size()), reply);
+    PreFormatMultiBulk(res->size(), reply);
     for (QSet::const_iterator it(res->begin()); it != res->end(); ++ it)
-        FormatBulk(it->c_str(), static_cast<int>(it->size()), reply);
+        FormatBulk(it->c_str(), it->size(), reply);
 
     QObject value(QType_set);
     value.value.Reset(res);
     
-    return QSTORE.SetValue(params[1], value);
+    QSTORE.SetValue(params[1], value);
+    return QError_ok;
 }
 
 QError  sdiff(const vector<QString>& params, UnboundedBuffer& reply)
@@ -327,9 +331,9 @@ QError  sdiff(const vector<QString>& params, UnboundedBuffer& reply)
     QSet res;
     _set_operation(params, 1, res, SetOperation_diff);
     
-    PreFormatMultiBulk(static_cast<int>(res.size()), reply);
+    PreFormatMultiBulk(res.size(), reply);
     for (QSet::const_iterator it(res.begin()); it != res.end(); ++ it)
-        FormatBulk(it->c_str(), static_cast<int>(it->size()), reply);
+        FormatBulk(it->c_str(), it->size(), reply);
     
     return QError_ok;
 }
@@ -341,9 +345,9 @@ QError  sinter(const vector<QString>& params, UnboundedBuffer& reply)
     _set_operation(params, 1, res, SetOperation_inter);
     
     
-    PreFormatMultiBulk(static_cast<int>(res.size()), reply);
+    PreFormatMultiBulk(res.size(), reply);
     for (QSet::const_iterator it(res.begin()); it != res.end(); ++ it)
-        FormatBulk(it->c_str(), static_cast<int>(it->size()), reply);
+        FormatBulk(it->c_str(), it->size(), reply);
     
     return QError_ok;
 }
@@ -353,14 +357,15 @@ QError  sinterstore(const vector<QString>& params, UnboundedBuffer& reply)
     QSet* res = new QSet;
     _set_operation(params, 2, *res, SetOperation_inter);
     
-    PreFormatMultiBulk(static_cast<int>(res->size()), reply);
+    PreFormatMultiBulk(res->size(), reply);
     for (QSet::const_iterator it(res->begin()); it != res->end(); ++ it)
-        FormatBulk(it->c_str(), static_cast<int>(it->size()), reply);
+        FormatBulk(it->c_str(), it->size(), reply);
 
     QObject  value(QType_set);
     value.value.Reset(res);
 
-    return  QSTORE.SetValue(params[1], value);
+    QSTORE.SetValue(params[1], value);
+    return QError_ok;
 }
 
 
@@ -369,9 +374,9 @@ QError  sunion(const vector<QString>& params, UnboundedBuffer& reply)
     QSet res;
     _set_operation(params, 1, res, SetOperation_union);
     
-    PreFormatMultiBulk(static_cast<int>(res.size()), reply);
+    PreFormatMultiBulk(res.size(), reply);
     for (QSet::const_iterator it(res.begin()); it != res.end(); ++ it)
-        FormatBulk(it->c_str(), static_cast<int>(it->size()), reply);
+        FormatBulk(it->c_str(), it->size(), reply);
     
     return QError_ok;
 }
@@ -381,14 +386,15 @@ QError  sunionstore(const vector<QString>& params, UnboundedBuffer& reply)
     QSet* res = new QSet;
     _set_operation(params, 2, *res, SetOperation_union);
     
-    PreFormatMultiBulk(static_cast<int>(res->size()), reply);
+    PreFormatMultiBulk(res->size(), reply);
     for (QSet::const_iterator it(res->begin()); it != res->end(); ++ it)
-        FormatBulk(it->c_str(), static_cast<int>(it->size()), reply);
+        FormatBulk(it->c_str(), it->size(), reply);
     
     QObject  value(QType_set);
     value.value.Reset(res);
     
-    return  QSTORE.SetValue(params[1], value);
+    QSTORE.SetValue(params[1], value);
+    return QError_ok;
 }
 
 

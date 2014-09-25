@@ -41,9 +41,10 @@ bool QStore::QExpiresDB::ExpireIfNeed(const std::string& key, uint64_t now)
         
         LOG_WRN(g_logger) << "Delete timeout key " << key.c_str() << ", timeout is " << it->second;
         m_expireKeys.erase(it);
+        return true;
     }
     
-    return true;
+    return  false;
 }
 
 int   QStore::QExpiresDB::LoopCheck(uint64_t now)
@@ -98,7 +99,7 @@ int  QStore::LoopCheck(uint64_t now)
 
 int QStore::SelectDB(int dbno) 
 {
-    if (dbno >= 0 && dbno < m_store.size())
+    if (dbno >= 0 && dbno < static_cast<int>(m_store.size()))
     {
         int oldDb = m_dbno;
 
@@ -141,14 +142,14 @@ const QString* QStore::RandomKey() const
     return  ret;
 }
 
-QError  QStore::GetValue(const QString& key, QObject& value)
+QError  QStore::GetValue(const QString& key, QObject*& value)
 {
     return GetValueByType(key, value);
 }
 
-QError  QStore::GetValueByType(const QString& key, QObject& value, QType type)
+QError  QStore::GetValueByType(const QString& key, QObject*& value, QType type)
 {
-    if (ExpireIfNeed(key, ::Now()))
+    //if (ExpireIfNeed(key, ::Now()))
     {
     }
     
@@ -156,13 +157,13 @@ QError  QStore::GetValueByType(const QString& key, QObject& value, QType type)
 
     if (it != m_db->end())
     {
-        if (type != QType_invalid && type != it->second.type)
+        if (type != QType_invalid && type != QType(it->second.type))
         {
-            return QError_wrongType;
+            return QError_type;
         }
         else
         {
-            value = it->second;
+            value = &it->second;
             return QError_ok;
         }
     }
@@ -175,12 +176,22 @@ QError  QStore::GetValueByType(const QString& key, QObject& value, QType type)
 }
 
 
-QError  QStore::SetValue(const QString& key, const QObject& value)
+QObject* QStore::SetValue(const QString& key, const QObject& value)
 {
-    (*m_db)[key] = value;
-
-    return QError_ok;
+    QObject& obj = ((*m_db)[key] = value);
+    return &obj;
 }
+
+bool QStore::SetValueIfNotExist(const QString& key, const QObject& value)
+{
+    QDB::iterator    it(m_db->find(key));
+
+    if (it == m_db->end())
+        (*m_db)[key] = value;
+
+    return it == m_db->end();
+}
+
 
 void    QStore::SetExpire(const std::string& key, uint64_t when)
 {

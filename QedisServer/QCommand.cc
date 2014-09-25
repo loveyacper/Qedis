@@ -1,5 +1,7 @@
 #include "QCommand.h"
 
+using std::size_t;
+
 const QCommandTable::QCommandInfo QCommandTable::s_info[] =
 {
     // key
@@ -19,10 +21,25 @@ const QCommandTable::QCommandInfo QCommandTable::s_info[] =
     {"select",      QCommandAttr_read,                2,  &select},
     
     // string
+    {"strlen",      QCommandAttr_read,                2,  &strlen},
     {"set",         QCommandAttr_write,               3,  &set},
+    {"mset",        QCommandAttr_write,              -3,  &mset},
+    {"msetnx",      QCommandAttr_write,              -3,  &msetnx},
+    {"setnx",       QCommandAttr_write,               3,  &setnx},
+    {"setex",       QCommandAttr_write,               4,  &setex},
     {"get",         QCommandAttr_read,                2,  &get},
     {"getset",      QCommandAttr_write,               3,  &getset},
+    {"mget",        QCommandAttr_read,               -2,  &mget},
     {"append",      QCommandAttr_write,               3,  &append},
+    {"bitcount",    QCommandAttr_read,               -2,  &bitcount},
+    {"getbit",      QCommandAttr_read,                3,  &getbit},
+    {"setbit",      QCommandAttr_write,               4,  &setbit},
+    {"incr",        QCommandAttr_write,               2,  &incr},
+    {"decr",        QCommandAttr_write,               2,  &decr},
+    {"incrby",      QCommandAttr_write,               3,  &incrby},
+    {"decrby",      QCommandAttr_write,               3,  &decrby},
+    {"getrange",    QCommandAttr_read,                4,  &getrange},
+    {"setrange",    QCommandAttr_write,               4,  &setrange},
 
     // list
     {"lpush",       QCommandAttr_write,              -3,  &lpush},
@@ -81,7 +98,7 @@ QCommandTable& QCommandTable::Instance()
 
 QCommandTable::QCommandTable()
 {
-    for (int i = 0; i < sizeof s_info / sizeof s_info[0]; ++ i)
+    for (size_t i = 0; i < sizeof s_info / sizeof s_info[0]; ++ i)
     {
         const QCommandInfo& info = s_info[i];
         m_handlers[info.cmd] = &info;
@@ -92,22 +109,22 @@ QError QCommandTable::ExecuteCmd(const std::vector<QString>& params, UnboundedBu
 {
     if (params.empty())
     {
-        ReplyErrorInfo(QError_paramNotMatch, reply);
-        return   QError_paramNotMatch;
+        ReplyError(QError_param, reply);
+        return   QError_param;
     }
 
     std::map<QString, const QCommandInfo* >::const_iterator it(m_handlers.find(params[0]));
     if (it == m_handlers.end())
     {
-        ReplyErrorInfo(QError_unknowCmd, reply);
+        ReplyError(QError_unknowCmd, reply);
         return QError_unknowCmd;
     }
 
     const QCommandInfo* info = it->second;
     if (!info->CheckParamsCount(static_cast<int>(params.size())))
     {
-        ReplyErrorInfo(QError_paramNotMatch, reply);
-        return   QError_paramNotMatch;
+        ReplyError(QError_param, reply);
+        return   QError_param;
     }
 
     return info->handler(params, reply);

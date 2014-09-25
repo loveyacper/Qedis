@@ -7,6 +7,8 @@
 #include <limits>
 #include <iostream>
 #include <cassert>
+#include "SmartPtr/UniquePtr.h"
+#include "QSet.h"
 
 // small set, elem number is small, or will be slow
 template <typename T>
@@ -58,14 +60,14 @@ public:
         return true;
     }
 
-    int EraseValue(int64_t val)
+    std::size_t EraseValue(int64_t val)
     {
         iterator  it = std::lower_bound(begin(), end(), static_cast<T>(val));
 
         if (it == end())
             return  0;
 
-        int   nDeleted = 0;
+        std::size_t nDeleted = 0;
         while (*it == static_cast<T>(val))
         {
             ++ nDeleted;
@@ -85,19 +87,17 @@ public:
     }
 
 
-#if 0
-    void MoveTo(std::set<std::string>& set)
+    void MoveTo(QSet& set)
     {
         for (iterator it(begin()); it != end(); ++ it) 
         {
             char strVal[64];
-            snprintf(strVal, sizeof strVal, "%d", *it);
-            set.add(strVal);
+            snprintf(strVal, sizeof strVal, "%ld", *it);
+            set.insert(strVal);
         }
 
         m_values.clear();
     }
-#endif
 
     template <typename U>
     void MoveTo(IntSetImpl<U>& bigSet)
@@ -129,59 +129,37 @@ enum Encoding
 class  IntSet
 {
 private:
-    IntSetImpl<int64_t>* m_set64; // TODO  unique_ptr;
-    IntSetImpl<int32_t>* m_set32;
-    IntSetImpl<int16_t>* m_set16;
+    UniquePtr<IntSetImpl<int64_t> > m_set64;
+    UniquePtr<IntSetImpl<int32_t> > m_set32;
+    UniquePtr<IntSetImpl<int16_t> > m_set16;
     Encoding             m_encoding;
 
-    static int m_maxElem;
-    static void SetMaxElem(int maxElem)
-    {
-        m_maxElem = maxElem;
-    }
-
-public:
-    IntSet() : m_set64(0), m_set32(0), m_set16(0)
-    {
-        m_encoding = Encoding0;
-    }
-   
-    ~IntSet() 
-    {
-       switch (m_encoding)
-       {
-       case Encoding16:
-           delete m_set16;
-           break;
-
-       case Encoding32:
-           delete m_set32;
-           break;
-
-       case Encoding64:
-           delete m_set64;
-           break;
-       }
-   }
+    static std::size_t m_maxElem; // TODO from config
 
     static Encoding  _TestEncoding(int64_t  val);
+
+public:
+    IntSet() : m_encoding(Encoding0)
+    {
+    }
+   
 
     bool InsertValue(int64_t  val);
 
     bool Exist(int64_t val) const;
 
-    int Size() const;
+    std::size_t Size() const;
 
-    int EraseValue(int64_t val) const;
+    std::size_t EraseValue(int64_t val) const;
 
     void Print() const;
 
     void swap(IntSet& set)
     {
         std::swap(m_encoding, set.m_encoding);
-        std::swap(m_set16, set.m_set16);
-        std::swap(m_set32, set.m_set32);
-        std::swap(m_set64, set.m_set64);
+        m_set16.swap(set.m_set16);
+        m_set32.swap(set.m_set32);
+        m_set64.swap(set.m_set64);
     }
 
     int64_t  GetValue(int  idx) const { return this->operator[](idx); }

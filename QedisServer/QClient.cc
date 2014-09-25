@@ -57,11 +57,10 @@ HEAD_LENGTH_T QClient::_HandleHead(AttachedBuffer& buf, BODY_LENGTH_T* bodyLen)
     const char* const start = buf.ReadAddr();
 
     const char* ptr  = start;
-    //const char* crlf = 0;
 
     QParseInt parseIntRet = QParseInt_ok;
     bool  parseBody = false;
-    while (ptr - start < bytes && !parseBody)
+    while (static_cast<size_t>(ptr - start) < bytes && !parseBody)
     {
 
     switch (m_state)
@@ -241,7 +240,7 @@ void QClient::_HandlePacket(AttachedBuffer& buf)
         }
 
         m_params.push_back(QString(ptr, crlf - start));
-        if (m_params.size() == m_multibulk)
+        if (m_params.size() == static_cast<size_t>(m_multibulk))
         {
             m_state = ReadyState;
         }

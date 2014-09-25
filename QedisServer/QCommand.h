@@ -35,8 +35,23 @@ QCommandHandler  select;
 // string commands
 QCommandHandler  set;
 QCommandHandler  get;
+QCommandHandler  getrange;
+QCommandHandler  setrange;
 QCommandHandler  getset;
 QCommandHandler  append;
+QCommandHandler  bitcount;
+QCommandHandler  getbit;
+QCommandHandler  setbit;
+QCommandHandler  incr;
+QCommandHandler  incrby;
+QCommandHandler  decr;
+QCommandHandler  decrby;
+QCommandHandler  mget;
+QCommandHandler  mset;
+QCommandHandler  msetnx;
+QCommandHandler  setnx;
+QCommandHandler  setex;
+QCommandHandler  strlen;
 
 // list commands
 QCommandHandler  lpush;

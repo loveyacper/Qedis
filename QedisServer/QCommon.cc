@@ -10,12 +10,13 @@ using  std::size_t;
 #define CRLF "\r\n"
 
 struct QErrorInfo  g_errorInfo[] = {
-    {sizeof "Fine"- 1,   "Fine"},
-    {sizeof "Type not match"- 1,   "Type not match"},
+    {sizeof "-Fine"- 1,   "-Fine"},
+    {sizeof "-ERR Operation against a key holding the wrong kind of value\r\n"- 1, "-ERR Operation against a key holding the wrong kind of value\r\n"}, 
     {sizeof "already exist"- 1,   "already exist"},
-    {sizeof "not exist"- 1,   "not exist"},
-    {sizeof "Paramas not match"- 1,   "Paramas not match"},
-    {sizeof "Unknown command"- 1,   "Unknown command"},
+    {sizeof "-ERR no such key\r\n" - 1, "-ERR no such key\r\n"},
+    {sizeof "-ERR wrong number of arguments\r\n"- 1, "-ERR wrong number of arguments\r\n"},
+    {sizeof "-ERR Unknown command\r\n"- 1,   "-ERR Unknown command\r\n"},
+    {sizeof "-ERR value is not an integer or out of range\r\n"- 1, "-ERR value is not an integer or out of range\r\n"},
 };
 
 void Int2Str(char* ptr, size_t nBytes, long val)
@@ -23,7 +24,7 @@ void Int2Str(char* ptr, size_t nBytes, long val)
     snprintf(ptr, nBytes - 1, "%ld",  val);
 }
 
-bool Str2Int(const char* ptr, size_t nBytes, long& val)
+bool Str2Long(const char* ptr, size_t nBytes, long& val)
 {
     bool negtive = false;
     size_t  i = 0;
@@ -120,16 +121,6 @@ size_t  FormatSingle(const char* str, size_t len, UnboundedBuffer& reply)
     return reply.ReadableSize() - oldSize;
 }
 
-size_t  FormatError(const char* str, size_t len, UnboundedBuffer& reply)
-{
-    size_t   oldSize = reply.ReadableSize();
-
-    reply.PushData("-", 1);
-    reply.PushData(str, len);
-    reply.PushData(CRLF, 2);
-    
-    return reply.ReadableSize() - oldSize;
-}
 
 size_t  FormatBulk(const char* str, size_t len, UnboundedBuffer& reply)
 {
@@ -162,10 +153,11 @@ size_t  PreFormatMultiBulk(size_t nBulk, UnboundedBuffer& reply)
     return reply.ReadableSize() - oldSize;
 }
 
-void  ReplyErrorInfo(QError err, UnboundedBuffer& reply)
+void  ReplyError(QError err, UnboundedBuffer& reply)
 {
     const QErrorInfo& info = g_errorInfo[err];
-    FormatError(info.errorStr, info.len, reply);
+
+    reply.PushData(info.errorStr, info.len);
 }
 
 size_t  FormatNull(UnboundedBuffer& reply)
@@ -192,3 +184,24 @@ size_t  FormatOK(UnboundedBuffer& reply)
     
     return reply.ReadableSize() - oldSize;
 }
+
+size_t Format1(UnboundedBuffer& reply)
+{
+    const char* val = ":1\r\n";
+    
+    size_t  oldSize = reply.ReadableSize();
+    reply.PushData(val, 4);
+    
+    return reply.ReadableSize() - oldSize;
+}
+
+size_t Format0(UnboundedBuffer& reply)
+{
+    const char* val = ":0\r\n";
+    
+    size_t  oldSize = reply.ReadableSize();
+    reply.PushData(val, 4);
+    
+    return reply.ReadableSize() - oldSize;
+}
+

@@ -27,11 +27,12 @@ struct  QObject
     
     explicit QObject(QType  t = QType_invalid) : type(t)
     {
-        encoding = QEncode_raw;
+        encoding = QEncode_invalid;
         nouse = 0;
         lru   = 0;
     }
 
+#if 0
     QObject(const QObject& other)
     {
         this->type = other.type;
@@ -54,6 +55,7 @@ struct  QObject
             
         return *this;
     }
+#endif
 
     PSTRING  CastString() const { return StaticPointerCast<QString>(value); }
     PLIST    CastList()   const { return StaticPointerCast<QList>(value);   }
@@ -112,9 +114,10 @@ public:
     QType  KeyType(const QString& key) const;
     const QString* RandomKey() const;
 
-    QError  GetValue(const QString& key, QObject& value);
-    QError  GetValueByType(const QString& key, QObject& value, QType  type = QType_invalid);
-    QError  SetValue(const QString& key, const QObject& value);
+    QError  GetValue(const QString& key, QObject*& value);
+    QError  GetValueByType(const QString& key, QObject*& value, QType  type = QType_invalid);
+    QObject*SetValue(const QString& key, const QObject& value);
+    bool    SetValueIfNotExist(const QString& key, const QObject& value);
 
     // for expire key
     void    SetExpire(const std::string& key, uint64_t when);
