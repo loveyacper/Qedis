@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		BAC5694E19C74F73001AF3D0 /* QPubsub.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAC5694D19C74F73001AF3D0 /* QPubsub.cc */; };
+		BADC7D7619D6BC700036858E /* UnitTest.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = BADC7D7519D6BC700036858E /* UnitTest.1 */; };
+		BADC7D7C19D6BC960036858E /* UnitTest.cc in Sources */ = {isa = PBXBuildFile; fileRef = BADC7D7A19D6BC960036858E /* UnitTest.cc */; };
 		BAFC847219C44AFD00C18B22 /* Buffer.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC840219C44AFD00C18B22 /* Buffer.h */; };
 		BAFC847319C44AFD00C18B22 /* ClientSocket.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC840419C44AFD00C18B22 /* ClientSocket.cc */; };
 		BAFC847419C44AFD00C18B22 /* ClientSocket.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC840519C44AFD00C18B22 /* ClientSocket.h */; };
@@ -87,11 +89,25 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
+		BADC7D6F19D6BC700036858E /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+				BADC7D7619D6BC700036858E /* UnitTest.1 in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		BABEBED519C4474900010636 /* Qedis */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Qedis; sourceTree = BUILT_PRODUCTS_DIR; };
 		BAC5694D19C74F73001AF3D0 /* QPubsub.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QPubsub.cc; path = QedisServer/QPubsub.cc; sourceTree = SOURCE_ROOT; };
+		BADC7D7119D6BC700036858E /* UnitTest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = UnitTest; sourceTree = BUILT_PRODUCTS_DIR; };
+		BADC7D7519D6BC700036858E /* UnitTest.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = UnitTest.1; sourceTree = "<group>"; };
+		BADC7D7A19D6BC960036858E /* UnitTest.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = UnitTest.cc; sourceTree = "<group>"; };
+		BADC7D7B19D6BC960036858E /* UnitTest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UnitTest.h; sourceTree = "<group>"; };
 		BAFC83FE19C44AE800C18B22 /* libqbaselib.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libqbaselib.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		BAFC840219C44AFD00C18B22 /* Buffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Buffer.h; path = QBase/Buffer.h; sourceTree = "<group>"; };
 		BAFC840419C44AFD00C18B22 /* ClientSocket.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ClientSocket.cc; path = QBase/ClientSocket.cc; sourceTree = "<group>"; };
@@ -175,6 +191,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BADC7D6E19D6BC700036858E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		BAFC83FB19C44AE800C18B22 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -227,6 +250,7 @@
 			children = (
 				BAA158B219C44A0F007713F9 /* QBase */,
 				BABEBED719C4474900010636 /* QedisServer */,
+				BADC7D7219D6BC700036858E /* UnitTest */,
 				BABEBED619C4474900010636 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -236,6 +260,7 @@
 			children = (
 				BABEBED519C4474900010636 /* Qedis */,
 				BAFC83FE19C44AE800C18B22 /* libqbaselib.a */,
+				BADC7D7119D6BC700036858E /* UnitTest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -275,6 +300,16 @@
 			);
 			name = QedisServer;
 			path = Qedis;
+			sourceTree = "<group>";
+		};
+		BADC7D7219D6BC700036858E /* UnitTest */ = {
+			isa = PBXGroup;
+			children = (
+				BADC7D7A19D6BC960036858E /* UnitTest.cc */,
+				BADC7D7B19D6BC960036858E /* UnitTest.h */,
+				BADC7D7519D6BC700036858E /* UnitTest.1 */,
+			);
+			path = UnitTest;
 			sourceTree = "<group>";
 		};
 		BAFC840F19C44AFD00C18B22 /* Log */ = {
@@ -374,6 +409,23 @@
 			productReference = BABEBED519C4474900010636 /* Qedis */;
 			productType = "com.apple.product-type.tool";
 		};
+		BADC7D7019D6BC700036858E /* UnitTest */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BADC7D7719D6BC700036858E /* Build configuration list for PBXNativeTarget "UnitTest" */;
+			buildPhases = (
+				BADC7D6D19D6BC700036858E /* Sources */,
+				BADC7D6E19D6BC700036858E /* Frameworks */,
+				BADC7D6F19D6BC700036858E /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = UnitTest;
+			productName = UnitTest;
+			productReference = BADC7D7119D6BC700036858E /* UnitTest */;
+			productType = "com.apple.product-type.tool";
+		};
 		BAFC83FD19C44AE800C18B22 /* qbaselib */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = BAFC840119C44AE800C18B22 /* Build configuration list for PBXNativeTarget "qbaselib" */;
@@ -414,6 +466,7 @@
 			targets = (
 				BABEBED419C4474900010636 /* Qedis */,
 				BAFC83FD19C44AE800C18B22 /* qbaselib */,
+				BADC7D7019D6BC700036858E /* UnitTest */,
 			);
 		};
 /* End PBXProject section */
@@ -438,6 +491,14 @@
 				BAFC84F919C49E1100C18B22 /* QKeyCommand.cc in Sources */,
 				BAFC84F419C49E1100C18B22 /* QClient.cc in Sources */,
 				BAFC84FA19C49E1100C18B22 /* QList.cc in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BADC7D6D19D6BC700036858E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BADC7D7C19D6BC960036858E /* UnitTest.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -569,6 +630,24 @@
 			};
 			name = Release;
 		};
+		BADC7D7819D6BC700036858E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		BADC7D7919D6BC700036858E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		BAFC83FF19C44AE800C18B22 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -609,6 +688,14 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		BADC7D7719D6BC700036858E /* Build configuration list for PBXNativeTarget "UnitTest" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BADC7D7819D6BC700036858E /* Debug */,
+				BADC7D7919D6BC700036858E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
 		};
 		BAFC840119C44AE800C18B22 /* Build configuration list for PBXNativeTarget "qbaselib" */ = {
 			isa = XCConfigurationList;

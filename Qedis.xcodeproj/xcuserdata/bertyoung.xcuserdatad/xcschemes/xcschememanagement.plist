@@ -9,6 +9,11 @@
 			<key>orderHint</key>
 			<integer>0</integer>
 		</dict>
+		<key>UnitTest.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>2</integer>
+		</dict>
 		<key>qbaselib.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
@@ -18,6 +23,11 @@
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
 		<key>BABEBED419C4474900010636</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>BADC7D7019D6BC700036858E</key>
 		<dict>
 			<key>primary</key>
 			<true/>
