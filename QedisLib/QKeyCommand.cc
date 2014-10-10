@@ -22,11 +22,15 @@ QError  type(const vector<QString>& params, UnboundedBuffer& reply)
             break;
             
         case QType_string:
-            info = "QString";
+            info = "string";
             break;
             
         case QType_list:
-            info = "QList";
+            info = "list";
+            break;
+            
+        case QType_sortedSet:
+            info = "sortedSet";
             break;
             
         default:
@@ -34,7 +38,7 @@ QError  type(const vector<QString>& params, UnboundedBuffer& reply)
             break;
     }
 
-    FormatSingle(info, static_cast<int>(strlen(info)), reply);
+    FormatSingle(info, strlen(info), reply);
     return   QError_ok;
 }
 
@@ -44,7 +48,7 @@ QError  exists(const vector<QString>& params, UnboundedBuffer& reply)
 
     bool exist = QSTORE.ExistsKey(params[1]);
     
-    FormatInt(exist ? 1 : 0, reply);
+    exist ? Format1(reply) : Format0(reply);
     return   QError_ok;
 }
 

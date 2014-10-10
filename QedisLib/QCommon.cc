@@ -17,11 +17,12 @@ struct QErrorInfo  g_errorInfo[] = {
     {sizeof "-ERR wrong number of arguments\r\n"- 1, "-ERR wrong number of arguments\r\n"},
     {sizeof "-ERR Unknown command\r\n"- 1,   "-ERR Unknown command\r\n"},
     {sizeof "-ERR value is not an integer or out of range\r\n"- 1, "-ERR value is not an integer or out of range\r\n"},
+    {sizeof "-ERR syntax error\r\n"-1, "-ERR syntax error\r\n"},
 };
 
-void Int2Str(char* ptr, size_t nBytes, long val)
+int Int2Str(char* ptr, size_t nBytes, long val)
 {
-    snprintf(ptr, nBytes - 1, "%ld",  val);
+    return snprintf(ptr, nBytes - 1, "%ld",  val);
 }
 
 bool Str2Long(const char* ptr, size_t nBytes, long& val)

@@ -72,10 +72,10 @@ public:
     ~TimerManager();
 
     bool    UpdateTimers(const Time& now);
-    void    ScheduleAt(PTIMER pTimer, const Time& triggerTime);
-    void    AddTimer(PTIMER pTimer);
-    void    AsyncAddTimer(PTIMER pTimer);
-    void    KillTimer(PTIMER pTimer);
+    void    ScheduleAt(const PTIMER& pTimer, const Time& triggerTime);
+    void    AddTimer(const PTIMER& pTimer);
+    void    AsyncAddTimer(const PTIMER& pTimer);
+    void    KillTimer(const PTIMER& pTimer);
 
     static  TimerManager&   Instance()
     {

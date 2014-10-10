@@ -264,7 +264,7 @@ bool TimerManager::UpdateTimers(const Time& now)
 }
 
 
-void TimerManager::AddTimer(PTIMER pTimer)
+void TimerManager::AddTimer(const PTIMER& pTimer)
 {
     KillTimer(pTimer);
 
@@ -306,7 +306,7 @@ void TimerManager::AddTimer(PTIMER pTimer)
     pListHead->m_next = pTimer;
 }
 
-void    TimerManager::AsyncAddTimer(PTIMER  pTimer)
+void    TimerManager::AsyncAddTimer(const PTIMER&  pTimer)
 {
     ScopeMutex  guard(m_lock);
     m_timers.push_back(pTimer);
@@ -314,7 +314,7 @@ void    TimerManager::AsyncAddTimer(PTIMER  pTimer)
     assert (m_count == static_cast<int>(m_timers.size()));
 }
 
-void    TimerManager::ScheduleAt(PTIMER pTimer, const Time& triggerTime)
+void    TimerManager::ScheduleAt(const PTIMER& pTimer, const Time& triggerTime)
 {
     if (!pTimer)
         return;
@@ -324,7 +324,7 @@ void    TimerManager::ScheduleAt(PTIMER pTimer, const Time& triggerTime)
 }
 
 
-void TimerManager::KillTimer(PTIMER pTimer)
+void TimerManager::KillTimer(const PTIMER& pTimer)
 {
     if (pTimer && pTimer->m_prev)
     {

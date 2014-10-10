@@ -14,8 +14,8 @@ enum QType
     QType_invalid,
     QType_string,
     QType_list,
-    QType_unorderSet,
     QType_set,
+    QType_sortedSet,
     QType_hash,
     // < 16
 };
@@ -45,6 +45,7 @@ enum QError
     QError_param     = 4,
     QError_unknowCmd = 5,
     QError_nan       = 6,
+    QError_syntax    = 7,
     QError_max,
 };
 
@@ -54,7 +55,7 @@ extern struct QErrorInfo
     const char* errorStr;
 } g_errorInfo[] ;
 
-void        Int2Str(char* ptr, std::size_t nBytes, long val);
+int         Int2Str(char* ptr, std::size_t nBytes, long val);
 bool        Str2Long(const char* ptr, std::size_t nBytes, long& val); // only for decimal
 bool        Strtol(const char* ptr, std::size_t nBytes, long* outVal);
 bool        Strtof(const char* ptr, std::size_t nBytes, float* outVal);

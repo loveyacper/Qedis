@@ -24,7 +24,7 @@ QObject  CreateHash()
 #define GET_OR_SET_HASH(hashname)  \
     QObject* value;  \
     QError err = QSTORE.GetValueByType(hashname, value, QType_hash);  \
-    if (err == QError_ok && err != QError_notExist)  {  \
+    if (err != QError_ok && err != QError_notExist)  {  \
         ReplyError(err, reply); \
         return err;  \
     }   \

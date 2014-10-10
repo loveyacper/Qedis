@@ -19,3 +19,13 @@ QError  select(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
+
+QError  dbsize(const vector<QString>& params, UnboundedBuffer& reply)
+{
+    assert (params[0] == "dbsize");
+
+    FormatInt(static_cast<long>(QSTORE.DBSize()), reply);
+    return   QError_ok;
+}
+
+

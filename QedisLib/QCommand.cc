@@ -19,6 +19,7 @@ const QCommandTable::QCommandInfo QCommandTable::s_info[] =
 
     // server
     {"select",      QCommandAttr_read,                2,  &select},
+    {"dbsize",      QCommandAttr_read,                1,  &dbsize},
     
     // string
     {"strlen",      QCommandAttr_read,                2,  &strlen},
@@ -88,6 +89,21 @@ const QCommandTable::QCommandInfo QCommandTable::s_info[] =
     {"smove",       QCommandAttr_write,               4,  &smove},
     {"spop",        QCommandAttr_write,               2,  &spop},
     {"srandmember", QCommandAttr_write,               2,  &srandmember},
+
+    //
+    {"zadd",        QCommandAttr_write,              -4,  &zadd},
+    {"zcard",       QCommandAttr_read,                2,  &zcard},
+    {"zrank",       QCommandAttr_read,                3,  &zrank},
+    {"zrevrank",    QCommandAttr_read,                3,  &zrevrank},
+    {"zrem",        QCommandAttr_write,              -3,  &zrem},
+    {"zincrby",     QCommandAttr_write,               4,  &zincrby},
+    {"zscore",      QCommandAttr_read,                3,  &zscore},
+    {"zrange",      QCommandAttr_read,               -4,  &zrange},
+    {"zrevrange",   QCommandAttr_read,               -4,  &zrevrange},
+    {"zrangebyscore",   QCommandAttr_read,           -4,  &zrangebyscore},
+    {"zrevrangebyscore",QCommandAttr_read,           -4,  &zrevrangebyscore},
+    {"zremrangebyrank", QCommandAttr_write,           4,  &zremrangebyrank},
+    {"zremrangebyscore",QCommandAttr_write,           4,  &zremrangebyscore},
 };
 
 QCommandTable& QCommandTable::Instance()

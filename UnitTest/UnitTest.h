@@ -14,7 +14,7 @@ public:
     // stack only, no need virtual destructor;
     
     const std::string& GetName() const  {  return m_name;  }
-    const std::vector<std::string> GetErrors() const  {  return m_errors;   }
+//    const std::vector<std::string>&  GetErrors() const  {  return m_errors;   }
     
     virtual void Run() = 0;
 
@@ -59,10 +59,9 @@ inline UnitTestBase& UnitTestBase::operator<< (const T &  t)
 class MsgHelper 
 {
 public:
-    UnitTestBase& operator=(UnitTestBase& test)
+    void operator=(UnitTestBase& test)
     {
         test.FlushError();
-        return  test;
     }
 };
 

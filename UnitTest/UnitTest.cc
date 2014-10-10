@@ -26,7 +26,7 @@ void  SetColor(Color c)
         "\033[1;37;40m",
     };
 
-    fprintf(stdout, colors[c]);
+    fprintf(stdout, "%s", colors[c]);
 }
 
 UnitTestBase::UnitTestBase() : m_pass(true), m_abort(false)
@@ -128,7 +128,7 @@ void UnitTestManager::Run()
     SetColor(Color_normal);
 }
 
-#define HELLO_TEST  1
+#define HELLO_TEST  0
 #if HELLO_TEST
 bool f(bool b)
 {

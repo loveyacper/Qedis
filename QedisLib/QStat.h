@@ -3,10 +3,6 @@
 
 #include <map>
 
-extern std::map<int, int>  g_stat;
-extern std::map<int, int>  g_processStat;
-extern std::map<int, int>  g_sendStat;
-
 enum StaticState
 {
     PARSE_STATE,

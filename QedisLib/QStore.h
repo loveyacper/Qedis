@@ -3,6 +3,7 @@
 
 #include "QCommon.h"
 #include "QSet.h"
+#include "QSortedSet.h"
 #include "QHash.h"
 #include "QList.h"
 #include <map>
@@ -14,6 +15,7 @@
 typedef SharedPtr<QString>      PSTRING;
 typedef SharedPtr<QList>        PLIST;
 typedef SharedPtr<QSet>         PSET;
+typedef SharedPtr<QSortedSet>   PSSET;
 typedef SharedPtr<QHash>        PHASH;
 
 struct  QObject
@@ -32,35 +34,11 @@ struct  QObject
         lru   = 0;
     }
 
-#if 0
-    QObject(const QObject& other)
-    {
-        this->type = other.type;
-        this->nouse= other.nouse;
-        this->encoding = other.encoding;
-        this->lru = other.lru;
-        this->value = other.value;
-    }
-
-    QObject& operator = (const QObject& other)
-    {
-        if (this != &other)
-        {
-            this->type = other.type;
-            this->nouse= other.nouse;
-            this->encoding = other.encoding;
-            this->lru = other.lru;
-            this->value = other.value;
-        }
-            
-        return *this;
-    }
-#endif
-
-    PSTRING  CastString() const { return StaticPointerCast<QString>(value); }
-    PLIST    CastList()   const { return StaticPointerCast<QList>(value);   }
-    PSET     CastSet()    const { return StaticPointerCast<QSet>(value);    }
-    PHASH    CastHash()   const { return StaticPointerCast<QHash>(value);   }
+    PSTRING  CastString()       const { return StaticPointerCast<QString>(value); }
+    PLIST    CastList()         const { return StaticPointerCast<QList>(value);   }
+    PSET     CastSet()          const { return StaticPointerCast<QSet>(value);    }
+    PSSET    CastSortedSet()    const { return StaticPointerCast<QSortedSet>(value); }
+    PHASH    CastHash()         const { return StaticPointerCast<QHash>(value);   }
 };
 
 class QClient;
@@ -113,6 +91,7 @@ public:
     bool ExistsKey(const QString& key) const;
     QType  KeyType(const QString& key) const;
     const QString* RandomKey() const;
+    size_t DBSize() const { return m_db->size(); }
 
     QError  GetValue(const QString& key, QObject*& value);
     QError  GetValueByType(const QString& key, QObject*& value, QType  type = QType_invalid);

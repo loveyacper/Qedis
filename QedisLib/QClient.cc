@@ -267,6 +267,7 @@ void QClient::_HandlePacket(AttachedBuffer& buf)
 
     m_stat.End(PARSE_STATE);
 
+    LOG_INF(g_logger) << "client " << GetID() << ", cmd " << m_params[0].c_str();
     m_stat.Begin();
     QError err = QCommandTable::Instance().ExecuteCmd(m_params, m_reply);
     (void)err;

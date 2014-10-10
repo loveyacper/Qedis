@@ -219,7 +219,7 @@ void Logger::_Color(unsigned int color)
         "\033[1;37;40m",
     };
 
-    fprintf(stdout, colorstrings[color]);
+    fprintf(stdout, "%s", colorstrings[color]);
 }
 
 bool Logger::_MakeDir(const char* pDir)

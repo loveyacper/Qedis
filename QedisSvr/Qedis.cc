@@ -9,7 +9,6 @@
 #include <iostream>
 #include "Server.h"
 #include "Log/Logger.h"
-#include "NetThreadPool.h"
 #include "Timer.h"
 #include "QClient.h"
 #include "QStore.h"

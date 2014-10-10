@@ -31,6 +31,7 @@ QCommandHandler  move;
 
 // server commands
 QCommandHandler  select;
+QCommandHandler  dbsize;
 
 // string commands
 QCommandHandler  set;
@@ -99,6 +100,22 @@ QCommandHandler  sunionstore;
 QCommandHandler  smove;
 QCommandHandler  spop;
 QCommandHandler  srandmember;
+
+
+// sset
+QCommandHandler  zadd;
+QCommandHandler  zcard;
+QCommandHandler  zrank;
+QCommandHandler  zrevrank;
+QCommandHandler  zrem;
+QCommandHandler  zincrby;
+QCommandHandler  zscore;
+QCommandHandler  zrange;
+QCommandHandler  zrevrange;
+QCommandHandler  zrangebyscore;
+QCommandHandler  zrevrangebyscore;
+QCommandHandler  zremrangebyrank;
+QCommandHandler  zremrangebyscore;
 
 
 class QCommandTable

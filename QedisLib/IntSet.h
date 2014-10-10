@@ -136,9 +136,9 @@ private:
 
     static std::size_t m_maxElem; // TODO from config
 
+public:
     static Encoding  _TestEncoding(int64_t  val);
 
-public:
     IntSet() : m_encoding(Encoding0)
     {
     }
