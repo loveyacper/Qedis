@@ -105,7 +105,7 @@ bool StreamSocket::SendPacket(const char* pData, size_t nBytes)
             return false;
         }
 
-        if (nSent < nBytes)
+        if (nSent < static_cast<int>(nBytes))
         {
             ScopeMutex guard(m_sendLock);
             m_sendBuf.PushData(pData + nSent, nBytes - nSent);
@@ -157,7 +157,7 @@ bool StreamSocket::OnWritable()
 {
     ScopeMutex  guard(m_sendLock);
 
-    std::size_t total =  m_sendBuf.ReadableSize();
+    size_t total =  m_sendBuf.ReadableSize();
     int nSent = _Send(m_sendBuf.ReadAddr(), total);
    
     if (nSent < 0)
@@ -170,7 +170,7 @@ bool StreamSocket::OnWritable()
         m_sendBuf.AdjustReadPtr(nSent); // consumebytes ,  producebytes
     }
 
-    if (nSent == total)
+    if (static_cast<size_t>(nSent) == total)
     {
         assert (m_sendBuf.IsEmpty());
         Internal::NetThreadPool::Instance().DisableWrite(ShareMe());
@@ -209,7 +209,7 @@ bool StreamSocket::DoMsgParse()
         if (m_bodyLen == -1)
         {
             const HEAD_LENGTH_T headLen = _HandleHead(af, &m_bodyLen);
-            if (headLen < 0 || headLen + 1 >= m_recvBuf.Capacity())
+            if (headLen < 0 || static_cast<size_t>(headLen + 1) >= m_recvBuf.Capacity())
             {
                 OnError();
                 return false;
@@ -222,7 +222,7 @@ bool StreamSocket::DoMsgParse()
 
         // tmp some defensive code
         if (m_bodyLen >= 0 &&
-            3 * m_bodyLen > 2 * m_recvBuf.Capacity())
+            static_cast<size_t>(3 * m_bodyLen) > 2 * m_recvBuf.Capacity())
         {
     LOCK_SDK_LOG; 
             ERR << "Too big packet " << m_bodyLen << " on socket " << m_localSock;
@@ -232,7 +232,7 @@ bool StreamSocket::DoMsgParse()
         }
         
         if (m_bodyLen == -1 ||
-            m_recvBuf.ReadableSize() < m_bodyLen)
+            static_cast<int>(m_recvBuf.ReadableSize()) < m_bodyLen)
         {
             return busy;
         }
@@ -241,7 +241,7 @@ bool StreamSocket::DoMsgParse()
 
         BufferSequence   bf;
         m_recvBuf.GetDatum(bf, m_bodyLen); 
-        assert (m_bodyLen == bf.TotalBytes());
+        assert (m_bodyLen == static_cast<int>(bf.TotalBytes()));
 
         AttachedBuffer   cmd(bf);
         _HandlePacket(cmd);

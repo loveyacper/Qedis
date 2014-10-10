@@ -78,9 +78,9 @@ bool Kqueue::ModSocket(int sock, int events, void* userPtr)
 }
 
 
-int Kqueue::Poll(std::vector<FiredEvent>& events, int maxEvent, int timeoutMs)
+int Kqueue::Poll(std::vector<FiredEvent>& events, std::size_t maxEvent, int timeoutMs)
 {
-    if (maxEvent <= 0)
+    if (maxEvent == 0)
         return 0;
 
     while (m_events.size() < maxEvent)
@@ -95,11 +95,11 @@ int Kqueue::Poll(std::vector<FiredEvent>& events, int maxEvent, int timeoutMs)
         timeout.tv_nsec = timeoutMs % 1000 * 1000000;
     }
 
-    int nFired = ::kevent(m_multiplexer, NULL, 0, &m_events[0], maxEvent, pTimeout);
+    int nFired = ::kevent(m_multiplexer, NULL, 0, &m_events[0], static_cast<int>(maxEvent), pTimeout);
     if (nFired == -1)
         return -1;
 
-    if (nFired > 0 && nFired > events.size())
+    if (nFired > 0 && static_cast<size_t>(nFired) > events.size())
         events.resize(nFired);
 
     for (int i = 0; i < nFired; ++ i)

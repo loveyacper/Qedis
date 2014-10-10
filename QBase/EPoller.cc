@@ -112,9 +112,9 @@ bool Epoller::ModSocket(int sock, int events, void* userPtr)
 }
 
 
-int Epoller::Poll(std::vector<FiredEvent>& events, int maxEvent, int timeoutMs)
+int Epoller::Poll(std::vector<FiredEvent>& events, size_t  maxEvent, int timeoutMs)
 {
-    if (maxEvent <= 0)
+    if (maxEvent == 0)
         return 0;
 
     while (m_events.size() < maxEvent)
@@ -124,7 +124,7 @@ int Epoller::Poll(std::vector<FiredEvent>& events, int maxEvent, int timeoutMs)
     if (nFired == -1 && errno != EINTR && errno != EWOULDBLOCK)
         return -1;
 
-    if (nFired > 0 && nFired > events.size())
+    if (nFired > 0 && static_cast<size_t>(nFired) > events.size())
         events.resize(nFired);
 
     for (int i = 0; i < nFired; ++ i)

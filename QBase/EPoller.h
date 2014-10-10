@@ -17,7 +17,7 @@ public:
     bool ModSocket(int sock, int events, void* userPtr);
     bool DelSocket(int sock, int events);
 
-    int Poll(std::vector<FiredEvent>& events, int maxEvent, int timeoutMs);
+    int Poll(std::vector<FiredEvent>& events, std::size_t maxEvent, int timeoutMs);
 
 private:
     std::vector<epoll_event> m_events;    

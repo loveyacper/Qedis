@@ -136,10 +136,11 @@ QError  lindex(const vector<QString>& params, UnboundedBuffer& reply)
         return  QError_nan;
     }
     
+    const int size = static_cast<int>(list->size());
     if (idx < 0)
-        idx += list->size();
+        idx += size;
     
-    if (idx < 0 || idx >= list->size())
+    if (idx < 0 || idx >= size)
     {
         FormatNull(reply);
         return  QError_ok;
@@ -147,7 +148,7 @@ QError  lindex(const vector<QString>& params, UnboundedBuffer& reply)
     
     const QString* result = 0;
     
-    if (2 * idx < list->size())
+    if (2 * idx < size)
     {
         QList::const_iterator it = list->begin();
         while (idx -- > 0)
@@ -159,7 +160,7 @@ QError  lindex(const vector<QString>& params, UnboundedBuffer& reply)
     else
     {
         QList::const_reverse_iterator  it = list->rbegin();
-        idx = list->size() - 1 - idx;
+        idx = size - 1 - idx;
         while (idx -- > 0)
         {
             ++ it;
@@ -191,10 +192,11 @@ QError  lset(const vector<QString>& params, UnboundedBuffer& reply)
         return  QError_notExist;
     }
     
+    const int size = static_cast<int>(list->size());
     if (idx < 0)
-        idx += list->size();
+        idx += size;
     
-    if (idx < 0 || idx >= list->size())
+    if (idx < 0 || idx >= size)
     {
         FormatNull(reply);
         return  QError_ok;
@@ -202,7 +204,7 @@ QError  lset(const vector<QString>& params, UnboundedBuffer& reply)
     
     QString* result = 0;
     
-    if (2 * idx < list->size())
+    if (2 * idx < size)
     {
         QList::iterator it = list->begin();
         while (idx -- > 0)
@@ -214,7 +216,7 @@ QError  lset(const vector<QString>& params, UnboundedBuffer& reply)
     else
     {
         QList::reverse_iterator it = list->rbegin();
-        idx = list->size() - 1 - idx;
+        idx = size - 1 - idx;
         while (idx -- > 0)
         {
             ++ it;
@@ -274,9 +276,9 @@ static void AdjustIndex(long& start, long& end, size_t  size)
 #endif
 
 static void Index2Iterator(long start, long end,
-                           const QList&  list,
-                           QList::const_iterator& beginIt,
-                           QList::const_iterator& endIt)
+                           QList&  list,
+                           QList::iterator& beginIt,
+                           QList::iterator& endIt)
 {
     assert (start >= 0 && end >= 0 && start <= end);
     
@@ -288,16 +290,16 @@ static void Index2Iterator(long start, long end,
 }
 
 static size_t GetRange(long start, long end,
-                           const QList&  list,
-                           QList::const_iterator& beginIt,
-                           QList::const_iterator& endIt)
+                       QList&  list,
+                       QList::iterator& beginIt,
+                       QList::iterator& endIt)
 {
     size_t   rangeLen = 0;
     if (start > end)
     {
         beginIt = endIt = list.end();  // empty
     }
-    else if (start != 0 || end + 1 != list.size())
+    else if (start != 0 || end + 1 != static_cast<long>(list.size()))
     {
         rangeLen = end - start + 1;
         Index2Iterator(start, end, list, beginIt, endIt);
@@ -311,6 +313,7 @@ static size_t GetRange(long start, long end,
     
     return rangeLen;
 }
+
 
 QError  ltrim(const vector<QString>& params, UnboundedBuffer& reply)
 {
@@ -334,7 +337,7 @@ QError  ltrim(const vector<QString>& params, UnboundedBuffer& reply)
     const PLIST&    list   = value->CastList();
     AdjustIndex(start, end, list->size());
     
-    QList::const_iterator beginIt, endIt;
+    QList::iterator beginIt, endIt;
     GetRange(start, end, *list, beginIt, endIt);
     
     if (beginIt != list->end())
@@ -370,7 +373,7 @@ QError  lrange(const vector<QString>& params, UnboundedBuffer& reply)
     const PLIST&    list   = value->CastList();
     AdjustIndex(start, end, list->size());
     
-    QList::const_iterator beginIt, endIt;
+    QList::iterator beginIt, endIt;
     size_t rangeLen = GetRange(start, end, *list, beginIt, endIt);
     
     PreFormatMultiBulk(rangeLen, reply);

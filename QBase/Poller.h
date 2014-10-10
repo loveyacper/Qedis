@@ -35,7 +35,7 @@ public:
     virtual bool ModSocket(int sock, int events, void* userPtr) = 0;
     virtual bool DelSocket(int sock, int events) = 0;
 
-    virtual int Poll(std::vector<FiredEvent>& events, int maxEv, int timeoutMs) = 0;
+    virtual int Poll(std::vector<FiredEvent>& events, std::size_t maxEv, int timeoutMs) = 0;
 
 protected:
     int  m_multiplexer;

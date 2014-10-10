@@ -65,7 +65,7 @@ private:
     Logger();
    ~Logger();
 
-    static const int MAXLINE_LOG = 2048; // TODO
+    static const size_t MAXLINE_LOG = 2048; // TODO
     char            m_tmpBuffer[MAXLINE_LOG];
     std::size_t     m_pos;
     Buffer          m_buffer;
