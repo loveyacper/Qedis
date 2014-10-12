@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		BA6C336C19EA77B200AC1800 /* QGlobRegex.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA6C336A19EA77B200AC1800 /* QGlobRegex.cc */; };
+		BA6C336D19EA77B200AC1800 /* QGlobRegex.h in Headers */ = {isa = PBXBuildFile; fileRef = BA6C336B19EA77B200AC1800 /* QGlobRegex.h */; };
+		BA6C336F19EA77C100AC1800 /* QGlobRegex_unittest.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA6C336E19EA77C100AC1800 /* QGlobRegex_unittest.cc */; };
 		BAD0C5FE19E7A02C005B3784 /* IntSet.h in Headers */ = {isa = PBXBuildFile; fileRef = BAD0C5E219E7A02C005B3784 /* IntSet.h */; };
 		BAD0C5FF19E7A02C005B3784 /* QClient.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAD0C5E319E7A02C005B3784 /* QClient.cc */; };
 		BAD0C60019E7A02C005B3784 /* QClient.h in Headers */ = {isa = PBXBuildFile; fileRef = BAD0C5E419E7A02C005B3784 /* QClient.h */; };
@@ -146,6 +149,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		BA6C336A19EA77B200AC1800 /* QGlobRegex.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QGlobRegex.cc; path = QedisLib/QGlobRegex.cc; sourceTree = SOURCE_ROOT; };
+		BA6C336B19EA77B200AC1800 /* QGlobRegex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QGlobRegex.h; path = QedisLib/QGlobRegex.h; sourceTree = SOURCE_ROOT; };
+		BA6C336E19EA77C100AC1800 /* QGlobRegex_unittest.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QGlobRegex_unittest.cc; sourceTree = "<group>"; };
 		BABEBED519C4474900010636 /* Qedis */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Qedis; sourceTree = BUILT_PRODUCTS_DIR; };
 		BAD0C5D919E79FF7005B3784 /* libqedislib.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libqedislib.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		BAD0C5E119E7A02C005B3784 /* IntSet.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IntSet.cc; path = QedisLib/IntSet.cc; sourceTree = SOURCE_ROOT; };
@@ -328,6 +334,8 @@
 		BABEBED719C4474900010636 /* QedisLib */ = {
 			isa = PBXGroup;
 			children = (
+				BA6C336A19EA77B200AC1800 /* QGlobRegex.cc */,
+				BA6C336B19EA77B200AC1800 /* QGlobRegex.h */,
 				BAD0C61B19E7A08E005B3784 /* CMakeLists.txt */,
 				BAD0C5E119E7A02C005B3784 /* IntSet.cc */,
 				BAD0C5E219E7A02C005B3784 /* IntSet.h */,
@@ -374,6 +382,7 @@
 		BADC7D7219D6BC700036858E /* UnitTest */ = {
 			isa = PBXGroup;
 			children = (
+				BA6C336E19EA77C100AC1800 /* QGlobRegex_unittest.cc */,
 				BAD0C62919E7A9D8005B3784 /* UnitTest.h */,
 				BAD0C61D19E7A18B005B3784 /* CMakeLists.txt */,
 				BAD0C61E19E7A18B005B3784 /* intset_unittest.cc */,
@@ -432,6 +441,7 @@
 			files = (
 				BAD0C60F19E7A02C005B3784 /* QSortedSet.h in Headers */,
 				BAD0C60919E7A02C005B3784 /* QList.h in Headers */,
+				BA6C336D19EA77B200AC1800 /* QGlobRegex.h in Headers */,
 				BAD0C61519E7A02C005B3784 /* QString.h in Headers */,
 				BAD0C5FE19E7A02C005B3784 /* IntSet.h in Headers */,
 				BAD0C60D19E7A02C005B3784 /* QSet.h in Headers */,
@@ -597,6 +607,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BAD0C61619E7A02C005B3784 /* util.cc in Sources */,
+				BA6C336C19EA77B200AC1800 /* QGlobRegex.cc in Sources */,
 				BAD0C61219E7A02C005B3784 /* QStore.cc in Sources */,
 				BAD0C60C19E7A02C005B3784 /* QSet.cc in Sources */,
 				BAD0C60A19E7A02C005B3784 /* QPubsub.cc in Sources */,
@@ -619,6 +630,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BAD0C61F19E7A18B005B3784 /* intset_unittest.cc in Sources */,
+				BA6C336F19EA77C100AC1800 /* QGlobRegex_unittest.cc in Sources */,
 				BADC7D7C19D6BC960036858E /* UnitTest.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -877,6 +889,7 @@
 				BAD0C5DC19E79FF7005B3784 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		BADC7D7719D6BC700036858E /* Build configuration list for PBXNativeTarget "UnitTest" */ = {
 			isa = XCConfigurationList;

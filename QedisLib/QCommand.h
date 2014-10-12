@@ -28,6 +28,8 @@ QCommandHandler  ttl;
 QCommandHandler  pttl;
 QCommandHandler  persist;
 QCommandHandler  move;
+QCommandHandler  keys;
+QCommandHandler  randomkey;
 
 // server commands
 QCommandHandler  select;

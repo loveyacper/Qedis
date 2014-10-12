@@ -33,29 +33,10 @@ using namespace std;
 
 static bool RandomMember(const QSet& set, QString& res)
 {
-    if (set.empty())
-    {
-        LOG_ERR(g_logger) << "set is empty";
-        return false;
-    }
-        
-    LOG_INF(g_logger) << "set bucket_count " << set.bucket_count();
+    QSet::const_local_iterator it = RandomHashMember(set);
 
-    while (true)
+    if (it != QSet::const_local_iterator())
     {
-        size_t bucket = rand() % set.bucket_count();
-        LOG_INF(g_logger) << "set bucket " << bucket << ", and bucket size " << set.bucket_size(bucket);
-        if (set.bucket_size(bucket) == 0)
-            continue;
-
-        int lucky = rand() % set.bucket_size(bucket);
-        QSet::const_local_iterator it = set.begin(bucket);
-        while (lucky > 0)
-        {
-            ++ it;
-            -- lucky;
-        }
-        
         res = *it;
         return true;
     }

@@ -131,15 +131,28 @@ QType  QStore::KeyType(const QString& key) const
     return  QType(it->second.type);
 }
 
-const QString* QStore::RandomKey() const
+static bool RandomMember(const QDB& hash, QString& res)
 {
-    QString*  ret = 0;
+    QDB::const_local_iterator it = RandomHashMember(hash);
+    
+    if (it != QDB::const_local_iterator())
+    {
+        res = it->first;
+        return true;
+    }
+    
+    return false;
+}
+
+QString QStore::RandomKey() const
+{
+    QString  res;
     if (m_db && !m_db->empty())
     {
-        // TODO
+        RandomMember(*m_db, res);
     }
 
-    return  ret;
+    return  res;
 }
 
 QError  QStore::GetValue(const QString& key, QObject*& value)

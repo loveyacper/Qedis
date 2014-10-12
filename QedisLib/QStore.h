@@ -90,9 +90,15 @@ public:
     bool DeleteKey(const QString& key);
     bool ExistsKey(const QString& key) const;
     QType  KeyType(const QString& key) const;
-    const QString* RandomKey() const;
+    QString RandomKey() const;
     size_t DBSize() const { return m_db->size(); }
 
+    // iterator
+    QDB::const_iterator begin() const   { return m_db->begin(); }
+    QDB::const_iterator end()   const   { return m_db->end(); }
+    QDB::iterator       begin()         { return m_db->begin(); }
+    QDB::iterator       end()           { return m_db->end(); }
+    
     QError  GetValue(const QString& key, QObject*& value);
     QError  GetValueByType(const QString& key, QObject*& value, QType  type = QType_invalid);
     QObject*SetValue(const QString& key, const QObject& value);

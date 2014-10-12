@@ -1,5 +1,6 @@
 #include "QStore.h"
 #include "Log/Logger.h"
+#include "QGlobRegex.h"
 #include <iostream>
 #include <cassert>
 
@@ -239,3 +240,47 @@ QError  move(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
+QError  keys(const vector<QString>& params, UnboundedBuffer& reply)
+{
+    assert (params[0] == "keys");
+    
+    const QString& pattern = params[1];
+    
+    std::vector<const QString* > results;
+    for (QDB::const_iterator it(QSTORE.begin());
+         it != QSTORE.end();
+         ++ it)
+    {
+        if (glob_match(pattern, it->first))
+        {
+            results.push_back(&it->first);
+        }
+    }
+    
+    PreFormatMultiBulk(results.size(), reply);
+    for (std::vector<const QString* >::const_iterator it(results.begin());
+         it != results.end();
+         ++ it)
+    {
+        FormatBulk((*it)->c_str(), (*it)->size(), reply); 
+    }
+
+    return   QError_ok;
+}
+
+
+QError  randomkey(const vector<QString>& params, UnboundedBuffer& reply)
+{
+    const QString& res = QSTORE.RandomKey();
+  
+    if (res.empty())
+    {
+        FormatNull(reply);
+    }
+    else
+    {
+        FormatSingle(res.c_str(), res.size(), reply);
+    }
+    
+    return   QError_ok;
+}

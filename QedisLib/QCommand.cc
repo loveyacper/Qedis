@@ -16,6 +16,8 @@ const QCommandTable::QCommandInfo QCommandTable::s_info[] =
     {"pexpireat",   QCommandAttr_write,               3,  &pexpireat},
     {"persist",     QCommandAttr_read,                2,  &persist},
     {"move",        QCommandAttr_write,               3,  &move},
+    {"keys",        QCommandAttr_read,                2,  &keys},
+    {"randomkey",   QCommandAttr_read,                1,  &randomkey},
 
     // server
     {"select",      QCommandAttr_read,                2,  &select},
