@@ -11,10 +11,10 @@ public:
     friend class MsgHelper;
 
     UnitTestBase();
-    // stack only, no need virtual destructor;
+    virtual ~UnitTestBase() {}
+    // stack only, no need virtual destructor, but the warning...
     
     const std::string& GetName() const  {  return m_name;  }
-//    const std::vector<std::string>&  GetErrors() const  {  return m_errors;   }
     
     virtual void Run() = 0;
 

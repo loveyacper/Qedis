@@ -9,8 +9,10 @@ class WeakPtr
     template <typename Y>
     friend class SharedPtr;
 
-    friend bool operator==(const WeakPtr<T>& a, const WeakPtr<T>& b);
-    friend bool operator< (const WeakPtr<T>& a, const WeakPtr<T>& b);
+    template <typename U>
+    friend bool operator==(const WeakPtr<U>& a, const WeakPtr<U>& b);
+    template <typename U>
+    friend bool operator< (const WeakPtr<U>& a, const WeakPtr<U>& b);
 
 public:
     WeakPtr() : m_cnt(0), m_ptr(0)

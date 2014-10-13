@@ -143,7 +143,7 @@ bool  QGlobRegex::_ProcessBracket()
     std::set<std::pair<int, int> >  spans;
     while (m_pOff < m_pLen && m_pattern[m_pOff] != ']')
     {
-        if ((m_pOff + 2) < m_pLen && m_pattern[m_pOff + 1] == '-')
+        if ((m_pOff + 3) < m_pLen && m_pattern[m_pOff + 1] == '-')
         {
             int start = m_pattern[m_pOff];
             int end   = m_pattern[m_pOff + 2];
