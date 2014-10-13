@@ -8,6 +8,10 @@ class WeakPtr
 {
     template <typename Y>
     friend class SharedPtr;
+
+    friend bool operator==(const WeakPtr<T>& a, const WeakPtr<T>& b);
+    friend bool operator< (const WeakPtr<T>& a, const WeakPtr<T>& b);
+
 public:
     WeakPtr() : m_cnt(0), m_ptr(0)
     {
@@ -95,6 +99,18 @@ private:
     CounterBase* m_cnt;
     T*           m_ptr;
 };
+
+template <typename T>
+inline bool operator==(const WeakPtr<T>& a, const WeakPtr<T>& b)
+{
+    return a.m_ptr == b.m_ptr;
+}
+
+template <typename T>
+inline bool operator<(const WeakPtr<T>& a, const WeakPtr<T>& b)
+{
+    return a.m_ptr < b.m_ptr;
+}
 
 #endif
 
