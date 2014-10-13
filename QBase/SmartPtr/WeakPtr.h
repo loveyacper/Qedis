@@ -92,7 +92,7 @@ public:
         return 0 == UseCount();
     }
 
-    SharedPtr<T> Lock()
+    SharedPtr<T> Lock() const
     {
         return SharedPtr<T>(*this);
     }

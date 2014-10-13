@@ -1,7 +1,417 @@
-#include "QStore.h"
+#include "QPubsub.h"
 #include "QClient.h"
 #include "Log/Logger.h"
-#include <iostream>
-#include <cassert>
+#include "Timer.h"
+#include "QGlobRegex.h"
 
 using namespace std;
+
+QPubsub&    QPubsub::Instance()
+{
+    static QPubsub  ps;
+    return ps;
+}
+    
+size_t QPubsub::Subscribe(QClient* client, const string& channel)
+{
+    if (client && client->Subscribe(channel))
+    {
+        ChannelClients::iterator it(m_channels.find(channel));
+        if (it == m_channels.end())
+            it = m_channels.insert(ChannelClients::value_type(channel, Clients())).first;
+
+        assert (it != m_channels.end());
+
+        bool succ = it->second.insert(client->ShareMe()).second;
+        assert (succ);
+        return 1;
+    }
+
+    return 0;
+}
+
+
+std::size_t QPubsub::UnSubscribe(QClient* client, const std::string& channel)
+{
+    if (client && client->UnSubscribe(channel))
+    {
+        ChannelClients::iterator it(m_channels.find(channel));
+        assert (it != m_channels.end());
+
+        Clients& clientSet = it->second;
+
+        std::size_t n = clientSet.erase(client->ShareMe());
+        assert (n == 1);
+
+        if (clientSet.empty())
+            m_channels.erase(it);
+
+        return client->ChannelCount();
+    }
+
+    return 0;
+}
+
+std::size_t QPubsub::UnSubscribeAll(QClient* client)
+{
+    if (!client)  return 0;
+
+    std::size_t  n = 0;
+    const std::set<std::string>& channels = client->GetChannels();
+    for (std::set<std::string>::const_iterator it(channels.begin());
+            it != channels.end();
+            ++ it)
+    {
+        n += UnSubscribe(client, *it);
+    }
+
+    return n;
+}
+
+size_t QPubsub::PSubscribe(QClient* client, const string& channel)
+{
+    if (client && client->PSubscribe(channel))
+    {
+        ChannelClients::iterator it(m_patternChannels.find(channel));
+        if (it == m_patternChannels.end())
+            it = m_patternChannels.insert(ChannelClients::value_type(channel, Clients())).first;
+
+        assert (it != m_patternChannels.end());
+
+        bool succ = it->second.insert(client->ShareMe()).second;
+        assert (succ);
+        return 1;
+    }
+
+    return 0;
+}
+
+
+std::size_t QPubsub::PUnSubscribe(QClient* client, const std::string& channel)
+{
+    if (client && client->PUnSubscribe(channel))
+    {
+        ChannelClients::iterator it(m_patternChannels.find(channel));
+        assert (it != m_patternChannels.end());
+
+        Clients& clientSet = it->second;
+
+        std::size_t n = clientSet.erase(client->ShareMe());
+        assert (n == 1);
+
+        if (clientSet.empty())
+            m_patternChannels.erase(it);
+
+        return client->PatternChannelCount();
+    }
+
+    return 0;
+}
+
+std::size_t QPubsub::PUnSubscribeAll(QClient* client)
+{
+    if (!client)  return 0;
+
+    std::size_t  n = 0;
+    const std::set<std::string>& channels = client->GetPatternChannels();
+    for (std::set<std::string>::const_iterator it(channels.begin());
+            it != channels.end();
+            ++ it)
+    {
+        n += PUnSubscribe(client, *it);
+    }
+
+    return n;
+}
+
+
+std::size_t QPubsub::PublishMsg(const std::string& channel, const std::string& msg)
+{
+    std::size_t n = 0;
+
+    ChannelClients::iterator it(m_channels.find(channel));
+    if (it != m_channels.end())
+    {
+        Clients&  clientSet = it->second;
+        for (Clients::iterator itCli(clientSet.begin());
+                               itCli != clientSet.end();
+            )
+        {
+            SharedPtr<QClient>  cli = itCli->Lock();
+            if (!cli)
+            {
+                clientSet.erase(itCli ++);
+            }
+            else
+            {
+                SocketAddr peer;
+                Socket::GetPeerAddr(cli->GetSocket(), peer);
+                LOG_INF(g_logger) << "Publish msg:" << msg.c_str() << " to " << peer.GetIP() << ":" << peer.GetPort();
+
+                UnboundedBuffer   reply;
+                PreFormatMultiBulk(3, reply);
+                FormatSingle("message", 7, reply);
+                FormatSingle(channel.c_str(), channel.size(), reply);
+                FormatSingle(msg.c_str(), msg.size(), reply);
+                cli->SendPacket(reply.ReadAddr(), reply.ReadableSize());
+
+                ++ itCli;
+                ++ n;
+            }
+        }
+    }
+
+    // TODO fuck me
+    for (ChannelClients::iterator it(m_patternChannels.begin());
+            it != m_patternChannels.end();
+            ++ it)
+    {
+        if (glob_match(it->first, channel))
+        {
+            Clients&  clientSet = it->second;
+            for (Clients::iterator itCli(clientSet.begin());
+                                   itCli != clientSet.end();
+                )
+            {
+                SharedPtr<QClient>  cli = itCli->Lock();
+                if (!cli)
+                {
+                    clientSet.erase(itCli ++);
+                }
+                else
+                {
+                    SocketAddr peer;
+                    Socket::GetPeerAddr(cli->GetSocket(), peer);
+                    LOG_INF(g_logger) << "Publish msg:" << msg.c_str() << " to " << peer.GetIP() << ":" << peer.GetPort();
+
+                    UnboundedBuffer   reply;
+                    PreFormatMultiBulk(4, reply);
+                    FormatSingle("pmessage", 8, reply);
+                    FormatSingle(it->first.c_str(), it->first.size(), reply);
+                    FormatSingle(channel.c_str(), channel.size(), reply);
+                    FormatSingle(msg.c_str(), msg.size(), reply);
+                    cli->SendPacket(reply.ReadAddr(), reply.ReadableSize());
+
+                    ++ itCli;
+                    ++ n;
+                }
+            }
+        }
+    }
+
+    return  n;
+}
+
+void QPubsub::RecycleClients(string& startChannel, string& startPattern)
+{
+    _RecycleClients(m_channels, startChannel);
+    _RecycleClients(m_patternChannels, startPattern);
+}
+
+void QPubsub::_RecycleClients(ChannelClients& channels, string& start)
+{
+    ChannelClients::iterator it(start.empty() ? channels.begin() : channels.find(start));
+    if (it == channels.end())
+        it = channels.begin();
+
+    size_t  n = 0;
+    while (it != channels.end() && n < 20)
+    {
+        Clients& cls = it->second;
+        for (Clients::iterator itCli(cls.begin());
+                itCli != cls.end();
+                )
+        {
+            if (itCli->Expired())
+            {
+                LOG_INF(g_logger) << "erase client";
+                cls.erase(itCli ++);
+                ++ n;
+            }
+            else
+            {
+                ++ itCli;
+            }
+        }
+        
+        if (cls.empty())
+        {
+            channels.erase(it ++);
+        }
+        else
+        {
+            ++ it;
+        }
+    }
+
+    if (it != channels.end())
+        start = it->first;
+    else
+        start.clear();
+}
+
+class PubsubTimer : public Timer
+{
+public:
+    PubsubTimer() : Timer(50)
+    {
+    }
+private:
+    string  m_startChannel;
+    string  m_startPattern;
+    bool    _OnTimer()
+    {
+        QPubsub::Instance().RecycleClients(m_startChannel, m_startPattern);
+        return  true;
+    }
+};
+
+void QPubsub::InitPubsubTimer()
+{
+    TimerManager::Instance().AddTimer(PTIMER(new PubsubTimer));
+}
+
+// pubsub commands
+QError  subscribe(const vector<string>& params, UnboundedBuffer& reply)
+{
+    QClient* client = QClient::Current();
+    for (size_t i = 1; i < params.size(); ++ i)
+    {
+        size_t n = QPubsub::Instance().Subscribe(client, params[i]);
+        if (n == 1)
+        {
+            PreFormatMultiBulk(3, reply);
+            FormatSingle("subscribe", 9, reply);
+            FormatSingle(params[i].c_str(),  params[i].size(), reply);
+            FormatInt(client->ChannelCount(), reply);
+
+            SocketAddr peer;
+            Socket::GetPeerAddr(client->GetSocket(), peer);
+            LOG_INF(g_logger) << "subscribe " << params[i].c_str() << " by " << peer.GetIP() << ":" << peer.GetPort();
+        }
+    }
+
+    return QError_ok;
+}
+
+QError  psubscribe(const vector<string>& params, UnboundedBuffer& reply)
+{
+    QClient* client = QClient::Current();
+    for (size_t i = 1; i < params.size(); ++ i)
+    {
+        size_t n = QPubsub::Instance().PSubscribe(client, params[i]);
+        if (n == 1)
+        {
+            PreFormatMultiBulk(3, reply);
+            FormatSingle("psubscribe", 9, reply);
+            FormatSingle(params[i].c_str(),  params[i].size(), reply);
+            FormatInt(client->PatternChannelCount(), reply);
+
+            SocketAddr peer;
+            Socket::GetPeerAddr(client->GetSocket(), peer);
+            LOG_INF(g_logger) << "psubscribe " << params[i].c_str() << " by " << peer.GetIP() << ":" << peer.GetPort();
+        }
+    }
+
+    return QError_ok;
+}
+
+
+QError  unsubscribe(const vector<string>& params, UnboundedBuffer& reply)
+{
+    QClient* client = QClient::Current();
+
+    if (params.size() == 1)
+    {
+        const set<string>& channels = client->GetChannels();
+        for (set<string>::const_iterator it(channels.begin());
+                it != channels.end();
+                ++ it)
+        {
+            FormatSingle(it->c_str(), it->size(), reply);
+        }
+        
+        QPubsub::Instance().UnSubscribeAll(client);
+    }
+    else
+    {
+        set<string> channels;
+
+        for (size_t i = 1; i < params.size(); ++ i)
+        {
+            size_t n = QPubsub::Instance().UnSubscribe(client, params[i]);
+            if (n == 1)
+            {
+                channels.insert(params[i]);
+
+                SocketAddr peer;
+                Socket::GetPeerAddr(client->GetSocket(), peer);
+                LOG_INF(g_logger) << "unsubscribe " << params[i].c_str() << " by " << peer.GetIP() << ":" << peer.GetPort();
+            }
+        }
+
+        PreFormatMultiBulk(channels.size(), reply);
+        for (set<string>::const_iterator it(channels.begin());
+                it != channels.end();
+                ++ it)
+        {
+            FormatSingle(it->c_str(), it->size(), reply);
+        }
+    }
+
+    return  QError_ok;
+}
+
+QError  punsubscribe(const vector<string>& params, UnboundedBuffer& reply)
+{
+    QClient* client = QClient::Current();
+
+    if (params.size() == 1)
+    {
+        const set<string>& channels = client->GetPatternChannels();
+        for (set<string>::const_iterator it(channels.begin());
+                it != channels.end();
+                ++ it)
+        {
+            FormatSingle(it->c_str(), it->size(), reply);
+        }
+        
+        QPubsub::Instance().PUnSubscribeAll(client);
+    }
+    else
+    {
+        set<string> channels;
+
+        for (size_t i = 1; i < params.size(); ++ i)
+        {
+            size_t n = QPubsub::Instance().PUnSubscribe(client, params[i]);
+            if (n == 1)
+            {
+                channels.insert(params[i]);
+
+                SocketAddr peer;
+                Socket::GetPeerAddr(client->GetSocket(), peer);
+                LOG_INF(g_logger) << "punsubscribe " << params[i].c_str() << " by " << peer.GetIP() << ":" << peer.GetPort();
+            }
+        }
+
+        PreFormatMultiBulk(channels.size(), reply);
+        for (set<string>::const_iterator it(channels.begin());
+                it != channels.end();
+                ++ it)
+        {
+            FormatSingle(it->c_str(), it->size(), reply);
+        }
+    }
+
+    return  QError_ok;
+}
+
+QError  publish(const vector<string>& params, UnboundedBuffer& reply)
+{
+    size_t n = QPubsub::Instance().PublishMsg(params[1], params[2]);
+    FormatInt(n, reply);
+
+    return QError_ok;
+}
+

@@ -12,11 +12,14 @@
 
 struct BufferSequence
 {
-    iovec       buffers[2];
+    static const std::size_t kMaxIovec = 16;
+
+    iovec       buffers[kMaxIovec];
     std::size_t count;
 
     std::size_t TotalBytes() const
     {
+        assert (count <= kMaxIovec);
         std::size_t nBytes = 0;
         for (std::size_t i = 0; i < count; ++ i)
             nBytes += buffers[i].iov_len;
@@ -469,13 +472,18 @@ m_writePos(0)
         m_buffer   = (char*)bf.buffers[0].iov_base;
         m_writePos = static_cast<int>(bf.buffers[0].iov_len);
     }
-    else if (2 == bf.count)
+    else if (bf.count > 1)
     {
         m_owned  = true;
         m_buffer = new char[bf.TotalBytes()];
-        memcpy(m_buffer, bf.buffers[0].iov_base, bf.buffers[0].iov_len);
-        memcpy(m_buffer + bf.buffers[0].iov_len,
-               bf.buffers[1].iov_base, bf.buffers[1].iov_len);
+
+        std::size_t off = 0;
+        for (std::size_t i = 0; i < bf.count; ++ i)
+        {
+            memcpy(m_buffer + off, bf.buffers[i].iov_base, bf.buffers[i].iov_len);
+            off += bf.buffers[i].iov_len;
+        }
+
         m_writePos = bf.TotalBytes();
     }
 

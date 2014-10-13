@@ -119,6 +119,13 @@ QCommandHandler  zrevrangebyscore;
 QCommandHandler  zremrangebyrank;
 QCommandHandler  zremrangebyscore;
 
+// pubsub
+QCommandHandler  subscribe;
+QCommandHandler  unsubscribe;
+QCommandHandler  publish;
+QCommandHandler  psubscribe;
+QCommandHandler  punsubscribe;
+
 
 class QCommandTable
 {

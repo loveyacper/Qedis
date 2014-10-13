@@ -106,6 +106,13 @@ const QCommandTable::QCommandInfo QCommandTable::s_info[] =
     {"zrevrangebyscore",QCommandAttr_read,           -4,  &zrevrangebyscore},
     {"zremrangebyrank", QCommandAttr_write,           4,  &zremrangebyrank},
     {"zremrangebyscore",QCommandAttr_write,           4,  &zremrangebyscore},
+
+    // pubsub
+    {"subscribe",   QCommandAttr_read,               -2,  &subscribe},
+    {"unsubscribe", QCommandAttr_read,               -1,  &unsubscribe},
+    {"publish",     QCommandAttr_read,                3,  &publish},
+    {"psubscribe",  QCommandAttr_read,               -2,  &psubscribe},
+    {"punsubscribe",QCommandAttr_read,               -1,  &punsubscribe},
 };
 
 QCommandTable& QCommandTable::Instance()
