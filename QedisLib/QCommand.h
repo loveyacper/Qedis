@@ -125,6 +125,7 @@ QCommandHandler  unsubscribe;
 QCommandHandler  publish;
 QCommandHandler  psubscribe;
 QCommandHandler  punsubscribe;
+QCommandHandler  pubsub;
 
 
 class QCommandTable

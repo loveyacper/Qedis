@@ -113,6 +113,7 @@ const QCommandTable::QCommandInfo QCommandTable::s_info[] =
     {"publish",     QCommandAttr_read,                3,  &publish},
     {"psubscribe",  QCommandAttr_read,               -2,  &psubscribe},
     {"punsubscribe",QCommandAttr_read,               -1,  &punsubscribe},
+    {"pubsub",      QCommandAttr_read,               -2,  &pubsub},
 };
 
 QCommandTable& QCommandTable::Instance()

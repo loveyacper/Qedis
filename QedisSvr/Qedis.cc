@@ -12,6 +12,7 @@
 #include "Timer.h"
 #include "QClient.h"
 #include "QStore.h"
+#include "QPubsub.h"
 
 Logger*  g_logger;
 
@@ -63,6 +64,7 @@ bool Qedis::_Init()
     }
 
     QSTORE.InitExpireTimer();
+    QPubsub::Instance().InitPubsubTimer();
     
     return true;
 }

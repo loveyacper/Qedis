@@ -3,6 +3,7 @@
 
 #include <map>
 #include <set>
+#include <vector>
 #include <string>
 #include "SmartPtr/WeakPtr.h"
 
@@ -20,6 +21,11 @@ public:
     std::size_t PSubscribe(QClient* client, const std::string& pchannel);
     std::size_t PUnSubscribeAll(QClient* client);
     std::size_t PUnSubscribe(QClient* client, const std::string& pchannel);
+    
+    // introspect
+    void  PubsubChannels(std::vector<std::string>& res, const char* pattern = 0) const;
+    std::size_t PubsubNumsub(const std::string& channel) const;
+    std::size_t PubsubNumpat() const;
 
     void InitPubsubTimer();
     void RecycleClients(std::string& startChannel, std::string& startPattern);

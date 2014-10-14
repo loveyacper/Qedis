@@ -134,6 +134,7 @@ void RecvThread::Run()
         {
             if ((*it)->Invalid())
             {
+                NetThreadPool::Instance().DisableRead(*it);
                 RemoveSocket(it);
             }
             else
@@ -170,6 +171,7 @@ void SendThread::Run( )
                 
                 if (pSock->Invalid() && !hasDataToSend)
                 {
+                    NetThreadPool::Instance().DisableWrite(*it);
                     RemoveSocket(it);
                 }
                 else

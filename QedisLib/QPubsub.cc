@@ -168,6 +168,7 @@ std::size_t QPubsub::PublishMsg(const std::string& channel, const std::string& m
     {
         if (glob_match(it->first, channel))
         {
+            LOG_INF(g_logger) << channel.c_str() << " match " << it->first.c_str();
             Clients&  clientSet = it->second;
             for (Clients::iterator itCli(clientSet.begin());
                                    itCli != clientSet.end();
@@ -236,6 +237,7 @@ void QPubsub::_RecycleClients(ChannelClients& channels, string& start)
         
         if (cls.empty())
         {
+            LOG_INF(g_logger) << "erase channel " << it->first.c_str();
             channels.erase(it ++);
         }
         else
@@ -253,7 +255,7 @@ void QPubsub::_RecycleClients(ChannelClients& channels, string& start)
 class PubsubTimer : public Timer
 {
 public:
-    PubsubTimer() : Timer(50)
+    PubsubTimer() : Timer(100)
     {
     }
 private:
@@ -269,6 +271,44 @@ private:
 void QPubsub::InitPubsubTimer()
 {
     TimerManager::Instance().AddTimer(PTIMER(new PubsubTimer));
+}
+
+void QPubsub::PubsubChannels(vector<string>& res, const char* pattern) const
+{
+    res.clear();
+
+    for (ChannelClients::const_iterator it(m_channels.begin());
+         it != m_channels.end();
+         ++ it)
+    {
+        if (!pattern || glob_match(pattern, it->first))
+        {
+            res.push_back(it->first);
+        }
+    }
+}
+
+
+size_t  QPubsub::PubsubNumsub(const string& channel) const
+{
+    ChannelClients::const_iterator it = m_channels.find(channel);
+    
+    if (it != m_channels.end())
+        return it->second.size();
+    
+    return 0;
+}
+
+size_t QPubsub::PubsubNumpat() const
+{
+    std::size_t n = 0;
+    ChannelClients::const_iterator it(m_patternChannels.begin());
+    for (; it != m_patternChannels.end(); ++ it)
+    {
+        n += it->second.size();
+    }
+    
+    return n;
 }
 
 // pubsub commands
@@ -411,6 +451,56 @@ QError  publish(const vector<string>& params, UnboundedBuffer& reply)
 {
     size_t n = QPubsub::Instance().PublishMsg(params[1], params[2]);
     FormatInt(n, reply);
+
+    return QError_ok;
+}
+
+// neixing command
+QError  pubsub(const vector<string>& params, UnboundedBuffer& reply)
+{
+    if (params[1] == "channels")
+    {
+        if (params.size() > 3)
+        {
+            ReplyError(QError_param, reply);
+            return QError_param;
+        }
+#if 1
+        vector<string> res;
+        QPubsub::Instance().PubsubChannels(res, params.size() == 3 ? params[2].c_str() : 0);
+        PreFormatMultiBulk(res.size(), reply);
+        for (vector<string>::const_iterator it(res.begin());
+             it != res.end();
+             ++ it)
+        {
+            FormatSingle(it->c_str(), it->size(), reply);
+        }
+#endif
+    }
+    else if (params[1] == "numsub")
+    {
+        PreFormatMultiBulk(2 * (params.size() - 2), reply);
+        for (size_t i = 2; i < params.size(); ++ i)
+        {
+            size_t n = QPubsub::Instance().PubsubNumsub(params[i]);
+            FormatSingle(params[i].c_str(), params[i].size(), reply);
+            FormatInt(n, reply);
+        }
+    }
+    else if (params[1] == "numpat")
+    {
+        if (params.size() != 2)
+        {
+            ReplyError(QError_param, reply);
+            return QError_param;
+        }
+        
+        FormatInt(QPubsub::Instance().PubsubNumpat(), reply);
+    }
+    else
+    {
+        LOG_ERR(g_logger) << "Unknown pubsub subcmd " << params[1].c_str();
+    }
 
     return QError_ok;
 }
