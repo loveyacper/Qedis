@@ -54,13 +54,6 @@ Server::Server() : m_bTerminate(false), m_reloadCfg(false)
         sm_instance = this;
     else
         ::abort();
-
-#ifdef  DEBUG_BERT_SDK 
-    g_sdkLog = LogManager::Instance().CreateLog(Logger::logALL, Logger::logALL, "./sdk_debug_log"); 
-    LOCK_SDK_LOG;
-    DBG << "Create g_sdk Log!"; 
-    UNLOCK_SDK_LOG; 
-#endif
 }
 
 Server::~Server()

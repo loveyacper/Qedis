@@ -8,25 +8,26 @@
 #include "../Buffer.h"
 #include "../UnboundedBuffer.h"
 
+enum LogLevel
+{
+    logINFO     = 0x01 << 0,
+    logDEBUG    = 0x01 << 1,
+    logWARN     = 0x01 << 2,
+    logERROR    = 0x01 << 3,
+    logUSR      = 0x01 << 4,
+    logALL      = 0xFFFFFFFF,
+};
+
+enum LogDest
+{
+    logConsole  = 0x01 << 0,
+    logFILE     = 0x01 << 1,
+    logSocket   = 0x01 << 2,  // TODO : LOG SERVER
+};
+
 class Logger
 {
 public:
-    enum LogLevel
-    {
-        logINFO     = 0x01 << 0,
-        logDEBUG    = 0x01 << 1,
-        logWARN     = 0x01 << 2,
-        logERROR    = 0x01 << 3,
-        logUSR      = 0x01 << 4,
-        logALL      = 0xFFFFFFFF,
-    };
-
-    enum LogDest
-    {
-        logConsole  = 0x01 << 0,
-        logFILE     = 0x01 << 1,
-        logSocket   = 0x01 << 2,  // TODO : LOG SERVER
-    };
 
 	friend class LogManager;
 
@@ -101,11 +102,11 @@ private:
 class LogHelper
 {
 public:
-    LogHelper(Logger::LogLevel level);
+    LogHelper(LogLevel level);
     Logger& operator=(Logger& log);
 
 private:
-    Logger::LogLevel    m_level;
+    LogLevel    m_level;
 };
 
 
@@ -117,8 +118,8 @@ public:
 
     ~LogManager();
 
-    Logger*  CreateLog(unsigned int level = Logger::logDEBUG,
-                       unsigned int dest = Logger::logConsole,
+    Logger*  CreateLog(unsigned int level = logDEBUG,
+                       unsigned int dest = logConsole,
                        const char* pDir  = 0);
 
     bool    StartLog();
@@ -160,45 +161,19 @@ private:
 #undef DBG
 #undef WRN
 #undef ERR
-#undef CRI
 #undef USR
 
-#define  LOG_INF(pLog)      (LogHelper(Logger::logINFO))=(pLog)->SetCurLevel(Logger::logINFO)
-#define  LOG_DBG(pLog)      (LogHelper(Logger::logDEBUG))=(pLog)->SetCurLevel(Logger::logDEBUG)
-#define  LOG_WRN(pLog)      (LogHelper(Logger::logWARN))=(pLog)->SetCurLevel(Logger::logWARN)
-#define  LOG_ERR(pLog)      (LogHelper(Logger::logERROR))=(pLog)->SetCurLevel(Logger::logERROR)
-#define  LOG_USR(pLog)      (LogHelper(Logger::logUSR))=(pLog)->SetCurLevel(Logger::logUSR)
+#define  LOG_INF(x)      (LogHelper(logINFO))=(g_log ? g_log : LogManager::Instance().NullLog())->SetCurLevel(logINFO)
+#define  LOG_DBG      LOG_INF
+#define  LOG_WRN      LOG_INF
+#define  LOG_ERR      LOG_INF
+#define  LOG_USR      LOG_INF
 
-
-// Ugly debug codes, only for test
-#ifdef  DEBUG_BERT_SDK
-    extern  Logger*  g_sdkLog;
-    extern  Mutex    g_sdkMutex;
-    
-    #define LOCK_SDK_LOG    g_sdkMutex.Lock();
-    #define UNLOCK_SDK_LOG  g_sdkMutex.Unlock();
-    #define DEBUG_SDK       DBG(g_sdkLog ? g_sdkLog : LogManager::Instance().NullLog())
-
-
-#define  INF      (LogHelper(Logger::logINFO))=(g_sdkLog)->SetCurLevel(Logger::logINFO)
-#define  DBG      (LogHelper(Logger::logDEBUG))=(g_sdkLog)->SetCurLevel(Logger::logDEBUG)
-#define  WRN      (LogHelper(Logger::logWARN))=(g_sdkLog)->SetCurLevel(Logger::logWARN)
-#define  ERR      (LogHelper(Logger::logERROR))=(g_sdkLog)->SetCurLevel(Logger::logERROR)
-#define  USR      (LogHelper(Logger::logUSR))=(g_sdkLog)->SetCurLevel(Logger::logUSR)
-
-#else
-    #define LOCK_SDK_LOG
-    #define UNLOCK_SDK_LOG
-    #define DEBUG_SDK       DBG(LogManager::Instance().NullLog())
-
-
-#define  INF      (LogHelper(Logger::logINFO))=(LogManager::Instance().NullLog())->SetCurLevel(Logger::logINFO)
-#define  DBG      (LogHelper(Logger::logDEBUG))=(LogManager::Instance().NullLog())->SetCurLevel(Logger::logDEBUG)
-#define  WRN      (LogHelper(Logger::logWARN))=(LogManager::Instance().NullLog())->SetCurLevel(Logger::logWARN)
-#define  ERR      (LogHelper(Logger::logERROR))=(LogManager::Instance().NullLog())->SetCurLevel(Logger::logERROR)
-#define  USR      (LogHelper(Logger::logUSR))=(LogManager::Instance().NullLog())->SetCurLevel(Logger::logUSR)
+#define  INF      (LogHelper(logINFO))=(g_log ? g_log : LogManager::Instance().NullLog())->SetCurLevel(logINFO)
+#define  DBG      (LogHelper(logDEBUG))=(g_log ? g_log : LogManager::Instance().NullLog())->SetCurLevel(logDEBUG)
+#define  WRN      (LogHelper(logWARN))=(g_log ? g_log : LogManager::Instance().NullLog())->SetCurLevel(logWARN)
+#define  ERR      (LogHelper(logERROR))=(g_log ? g_log : LogManager::Instance().NullLog())->SetCurLevel(logERROR)
+#define  USR      (LogHelper(logUSR))=(g_log ? g_log : LogManager::Instance().NullLog())->SetCurLevel(logUSR)
 
 #endif
 
-
-#endif

@@ -14,8 +14,6 @@
 #include "QStore.h"
 #include "QPubsub.h"
 
-Logger*  g_logger;
-
 class Qedis : public Server
 {
 public:
@@ -44,8 +42,6 @@ SharedPtr<StreamSocket>   Qedis::_OnNewConnection(int connfd)
     SocketAddr  peer;
     Socket::GetPeerAddr(connfd,  peer);
 
-    LOG_INF(g_logger) << "New tcp task " << connfd << ", ip " << peer.GetIP() << " , now size = "<< TCPSize();
-    
     SharedPtr<QClient>    pNewTask(new QClient());
     if (!pNewTask->Init(connfd))
         pNewTask.Reset();
@@ -59,7 +55,7 @@ bool Qedis::_Init()
     
     if (!Server::TCPBind(addr))
     {
-        LOG_ERR(g_logger) << "can not bind socket on port " << addr.GetPort();
+        ERR << "can not bind socket on port " << addr.GetPort();
         return false;
     }
 
@@ -83,9 +79,6 @@ bool Qedis::_RunLogic()
 
 void    Qedis::_Recycle()
 {
-#if defined(__APPLE__)
-   // LOG_USR(g_logger) << __FUNCTION__ << g_mallocBytes << ", " << g_freeBytes;
-#endif
     QStat::Output(PARSE_STATE);
     QStat::Output(PROCESS_STATE);
     QStat::Output(SEND_STATE);
@@ -93,8 +86,8 @@ void    Qedis::_Recycle()
 
 int main()
 {
-   // g_logger = LogManager::Instance().CreateLog(0, 0, "./qedis_log");
-    g_logger = LogManager::Instance().CreateLog(Logger::logALL, Logger::logALL, "./qedis_log");
+    g_log = LogManager::Instance().CreateLog(0, 0, "./qedis_log");
+    //g_log = LogManager::Instance().CreateLog(logALL, logFILE, "./qedis_log");
     
     //daemon(1, 0);
 

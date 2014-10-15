@@ -33,11 +33,6 @@ enum LogColor
 
 
 
-#ifdef  DEBUG_BERT_SDK
-    Logger*  g_sdkLog = NULL;
-    Mutex    g_sdkMutex;
-#endif
-
 static const size_t DEFAULT_LOGFILESIZE = 8 * 1024 * 1024;
 static const size_t PREFIX_LEVEL_LEN    = 6;
 static const size_t PREFIX_TIME_LEN     = 20;
@@ -542,7 +537,7 @@ void Logger::_WriteLog(int level, size_t nLen, const char* data)
 
 
 
-LogHelper::LogHelper(Logger::LogLevel level) : m_level(level)    
+LogHelper::LogHelper(LogLevel level) : m_level(level)    
 {
 }
     

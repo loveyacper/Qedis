@@ -21,9 +21,7 @@ StreamSocket::StreamSocket()
 
 StreamSocket::~StreamSocket()
 {
-    LOCK_SDK_LOG; 
-    INF << "Try close tcp connection " << (m_localSock != INVALID_SOCKET ? m_localSock : 0);
-    UNLOCK_SDK_LOG; 
+    INF << __FUNCTION__ << ": Try close tcp connection " << (m_localSock != INVALID_SOCKET ? m_localSock : -1);
 }
 
 bool StreamSocket::Init(int fd)
@@ -34,32 +32,26 @@ bool StreamSocket::Init(int fd)
     Socket::GetPeerAddr(fd, m_peerAddr);
     m_localSock = fd;
     SetNonBlock(m_localSock);
-    LOCK_SDK_LOG; 
-    USR << "New task, fd = " << m_localSock
+    USR << "Init new fd = " << m_localSock
         << ", peer addr = " << m_peerAddr.GetIP()
         << ", peer port = " << m_peerAddr.GetPort();
-    UNLOCK_SDK_LOG; 
 
     return  true;
 }
 
 int StreamSocket::Recv()
 {
-    if (0 == RecvBufSize())
+    if (m_recvBuf.Capacity() == 0)
     {
-        SetRecvBufSize(DEFAULT_BUFFER_SIZE); // First recv data, allocate buffer
-    LOCK_SDK_LOG; 
-        INF << "EXPAND recv buffer, capacity " << RecvBufSize();
-    UNLOCK_SDK_LOG; 
+        m_recvBuf.InitCapacity(DEFAULT_BUFFER_SIZE); // First recv data, allocate buffer
+        INF << "First expand recv buffer, capacity " << m_recvBuf.Capacity();
     }
     
     BufferSequence  buffers;
     m_recvBuf.GetSpace(buffers);
     if (buffers.count == 0)
     {
-    LOCK_SDK_LOG; 
-        ERR << "recv buffer is full";
-    UNLOCK_SDK_LOG; 
+        WRN << "Recv buffer is full";
         return 0;
     }
 
@@ -76,54 +68,99 @@ int StreamSocket::Recv()
 }
 
 
-int StreamSocket::_Send(const char* data, size_t len)
+int StreamSocket::_Send(const BufferSequence& bf)
 {
-
-    if (!data || len == 0)
+    size_t  total = bf.TotalBytes();
+    if (total == 0)
         return 0;
 
-    int ret = static_cast<int>(::send(m_localSock, data, len, 0));
+    int ret = static_cast<int>(::writev(m_localSock, bf.buffers, bf.count));
     if (ERRORSOCKET == ret && (EAGAIN == errno || EWOULDBLOCK == errno))
     {
+        m_epollOut = true;
         ret = 0;
+    }
+    else if (ret > 0 && static_cast<size_t>(ret) < total)
+    {
+        m_epollOut = true;
+    }
+    else if (static_cast<size_t>(ret) == total)
+    {
+        m_epollOut = false;
     }
 
     return ret;
+}
+
+
+// main and timer call it
+bool  StreamSocket::MoveToSendBuffer()
+{
+    if (m_backBuf.IsEmpty())
+        return true;
+    
+    size_t  avail = m_sendBuf.WritableSize();
+    
+    WRN << __FUNCTION__ << " socket " << m_localSock <<", move bytes " << (std::min(avail, m_backBuf.ReadableSize()));
+
+    if (avail < m_backBuf.ReadableSize())
+    {
+        m_sendBuf.PushData(m_backBuf.ReadAddr(), avail);
+        m_backBuf.AdjustReadPtr(avail);
+    }
+    else
+    {
+        m_sendBuf.PushData(m_backBuf.ReadAddr(), m_backBuf.ReadableSize());
+        m_backBuf.Clear();
+    }
+    
+    if (!m_backBuf.IsEmpty())
+    {
+        WRN << __FUNCTION__ << " socket " << m_localSock <<", has back bytes " << m_backBuf.ReadableSize();
+    }
+    return   m_backBuf.IsEmpty();
 }
 
 bool StreamSocket::SendPacket(const char* pData, size_t nBytes)
 {
     if (!pData || nBytes == 0)
         return true;
-
-    if (!HasDataToSend())
+    
+    if (m_sendBuf.Capacity() == 0)
     {
-        int nSent = _Send(pData, nBytes);
-        if (nSent < 0)
-        {
-            this->OnError();
-            return false;
-        }
-
-        if (nSent < static_cast<int>(nBytes))
-        {
-            ScopeMutex guard(m_sendLock);
-            m_sendBuf.PushData(pData + nSent, nBytes - nSent);
-       
-            Internal::NetThreadPool::Instance().EnableWrite(ShareMe());
-        }
+        m_sendBuf.InitCapacity(DEFAULT_BUFFER_SIZE);
     }
-    else
+    
+    if (!MoveToSendBuffer() || !m_sendBuf.PushData(pData, nBytes))
     {
-        ScopeMutex guard(m_sendLock);
-        m_sendBuf.PushData(pData, nBytes);
-        
-        Internal::NetThreadPool::Instance().EnableWrite(ShareMe()); // 让sender自己记录epollout数量
+        m_backBuf.PushData(pData, nBytes);
+        if (!m_timer)
+        {
+            m_timer.Reset(new SendTimer());
+            m_timer->m_sock.Reset(StaticPointerCast<StreamSocket>(ShareMe()));
+            INF << __FUNCTION__ << " socket " << m_localSock << " create send timer";
+        }
+        TimerManager::Instance().AddTimer(m_timer);
     }
 
     return true;
 }
 
+StreamSocket::SendTimer::SendTimer() : Timer(50)
+{
+}
+
+bool StreamSocket::SendTimer::_OnTimer()
+{
+    SharedPtr<StreamSocket>  sock = m_sock.Lock();
+    
+    if (sock)
+    {
+        WRN << "socket " << sock->GetSocket() << ", OnSendTimer";
+    }
+    
+    return  sock && !sock->MoveToSendBuffer();
+}
 
 bool  StreamSocket::SendPacket(Buffer& bf)
 {
@@ -142,9 +179,7 @@ bool  StreamSocket::OnReadable()
     int nBytes = StreamSocket::Recv();
     if (nBytes < 0)
     {
-    LOCK_SDK_LOG; 
-        ERR << "socket " << m_localSock <<", OnRead error , nBytes = " << nBytes << ", errno " << errno;
-    UNLOCK_SDK_LOG; 
+        ERR << "socket " << m_localSock <<", OnReadable error, nBytes = " << nBytes << ", errno " << errno;
         Internal::NetThreadPool::Instance().DisableRead(ShareMe());
         return false;
     }
@@ -152,40 +187,68 @@ bool  StreamSocket::OnReadable()
     return true;
 }
 
+bool StreamSocket::Send()
+{
+    if (m_epollOut)
+        return true;
+
+    BufferSequence  bf;
+    m_sendBuf.GetDatum(bf);
+    
+    size_t  total = bf.TotalBytes();
+    if (total == 0)  return true;
+    
+    int  nSent = _Send(bf);
+    
+    if (nSent > 0)
+    {
+        m_sendBuf.AdjustReadPtr(nSent);
+    }
+        
+    if (m_epollOut)
+    {
+        assert (!m_sendBuf.IsEmpty());
+        Internal::NetThreadPool::Instance().EnableWrite(ShareMe());
+        INF << __FUNCTION__ << ": epoll out = true, socket = " << m_localSock;
+    }
+    
+    return  nSent >= 0;
+}
+
 // drive by EPOLLOUT
 bool StreamSocket::OnWritable()
 {
-    ScopeMutex  guard(m_sendLock);
-
-    size_t total =  m_sendBuf.ReadableSize();
-    int nSent = _Send(m_sendBuf.ReadAddr(), total);
-   
-    if (nSent < 0)
+    BufferSequence  bf;
+    m_sendBuf.GetDatum(bf);
+    
+    size_t  total = bf.TotalBytes();
+    int     nSent = 0;
+    if (total > 0)
     {
-        m_sendBuf.Clear();
-        return false;
+        nSent = _Send(bf);
+        if (nSent > 0)
+            m_sendBuf.AdjustReadPtr(nSent);
     }
-    else if (nSent > 0)
+    else
     {
-        m_sendBuf.AdjustReadPtr(nSent); // consumebytes ,  producebytes
+        m_epollOut = false;
     }
 
-    if (static_cast<size_t>(nSent) == total)
-    {
-        assert (m_sendBuf.IsEmpty());
+    if (!m_epollOut)
+    {  
+        INF << __FUNCTION__ << ": epoll out = false, socket = " << m_localSock;
+        assert (m_sendBuf.Capacity() == 0 || m_sendBuf.IsEmpty());
         Internal::NetThreadPool::Instance().DisableWrite(ShareMe());
     }
 
-    return true;
+    return  nSent >= 0;
 }
 
 bool StreamSocket::OnError()
 {
     if (Socket::OnError())
     {
-    LOCK_SDK_LOG; 
         ERR << "OnError stream socket " << m_localSock;
-    UNLOCK_SDK_LOG; 
 
         if (m_retry)
             Server::Instance()->TCPReconnect(m_peerAddr);
@@ -224,9 +287,7 @@ bool StreamSocket::DoMsgParse()
         if (m_bodyLen >= 0 &&
             static_cast<size_t>(3 * m_bodyLen) > 2 * m_recvBuf.Capacity())
         {
-    LOCK_SDK_LOG; 
             ERR << "Too big packet " << m_bodyLen << " on socket " << m_localSock;
-    UNLOCK_SDK_LOG; 
             OnError();
             return  false;
         }

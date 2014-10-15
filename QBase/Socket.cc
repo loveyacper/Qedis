@@ -61,9 +61,7 @@ void Socket::CloseSocket(int& sock)
     {
         TEMP_FAILURE_RETRY(::shutdown(sock, SHUT_RDWR));
         TEMP_FAILURE_RETRY(::close(sock));
-    LOCK_SDK_LOG; 
-        USR << "Close socket " << sock;
-    UNLOCK_SDK_LOG; 
+        USR << "CloseSocket " << sock;
         sock = INVALID_SOCKET;
     }
 }

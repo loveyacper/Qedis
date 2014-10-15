@@ -6,6 +6,7 @@
 #include "UnboundedBuffer.h"
 #include "Socket.h"
 #include "Threads/IPC.h"
+#include "Timer.h"
 #include <sys/types.h>
 #include <sys/socket.h>
 
@@ -40,17 +41,18 @@ public:
 
     bool  DoMsgParse(); // false if no msg
 
-    std::size_t   RecvBufSize() const {  return  m_recvBuf.Capacity(); }
-    void  SetRecvBufSize(std::size_t size) {  m_recvBuf.InitCapacity(size); }
-
     void  SetReconn(bool retry) { m_retry = retry; }
     
-    bool  HasDataToSend() const { return !m_sendBuf.IsEmpty(); }
+    // main and timer call it, return true if back buf is empty;
+    bool  MoveToSendBuffer();
+    // send thread
+    bool  Send();
+
 
 private:
     bool   m_retry;
 
-    int    _Send(const char* data, std::size_t len);
+    int    _Send(const BufferSequence& bf);
     virtual HEAD_LENGTH_T _HandleHead(AttachedBuffer& buf, BODY_LENGTH_T* bodyLen) = 0;
     virtual void _HandlePacket(AttachedBuffer& buf) = 0;
     BODY_LENGTH_T m_bodyLen;
@@ -68,8 +70,17 @@ private:
 
     Buffer   m_recvBuf;
 
-    Mutex    m_sendLock;
-    UnboundedBuffer  m_sendBuf;
+    class SendTimer : public Timer
+    {
+    public:
+        WeakPtr<StreamSocket>  m_sock;
+
+        SendTimer();
+        bool _OnTimer();
+    };
+    Buffer   m_sendBuf;
+    UnboundedBuffer  m_backBuf;
+    SharedPtr<SendTimer> m_timer;
 };
 
 template <int N>

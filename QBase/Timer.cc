@@ -118,9 +118,10 @@ const char* Time::FormatTime(char* buf, int maxSize) const
     if (buf && maxSize > 1)
     {
         _UpdateTm();
-        snprintf(buf, static_cast<size_t>(maxSize), "%04d-%02d-%02d[%02d:%02d:%02d]", 
+        snprintf(buf, static_cast<size_t>(maxSize), "%04d-%02d-%02d[%02d:%02d:%02d.%03d]", 
                 m_tm.tm_year+1900, m_tm.tm_mon+1, m_tm.tm_mday,
-                m_tm.tm_hour, m_tm.tm_min, m_tm.tm_sec);
+                m_tm.tm_hour, m_tm.tm_min, m_tm.tm_sec,
+                static_cast<int>(m_ms % 1000));
 
         return buf;
     }

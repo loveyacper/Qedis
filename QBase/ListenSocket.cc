@@ -22,9 +22,7 @@ ListenSocket::ListenSocket()
 
 ListenSocket::~ListenSocket()
 {
-    LOCK_SDK_LOG; 
     USR << "close LISTEN socket " << m_localSock;
-    UNLOCK_SDK_LOG; 
 }
 
 bool ListenSocket::Bind(const SocketAddr& addr)
@@ -50,27 +48,21 @@ bool ListenSocket::Bind(const SocketAddr& addr)
     if (SOCKET_ERROR == ret)
     {
         CloseSocket(m_localSock);
-    LOCK_SDK_LOG; 
-        ERR << "cannot bind port " << addr.GetPort();
-    UNLOCK_SDK_LOG; 
+        ERR << "Cannot bind port " << addr.GetPort();
         return false;
     }
     ret = ::listen(m_localSock, ListenSocket::LISTENQ);
     if (SOCKET_ERROR == ret)
     {
         CloseSocket(m_localSock);
-    LOCK_SDK_LOG; 
-        ERR << "cannot listen on port " << addr.GetPort();
-    UNLOCK_SDK_LOG; 
+        ERR << "Cannot listen on port " << addr.GetPort();
         return false;
     }
 
     if (!NetThreadPool::Instance().AddSocket(ShareMe(), EventTypeRead))
         return false;
 
-    LOCK_SDK_LOG; 
     INF << "CREATE LISTEN socket " << m_localSock << " on port " <<  m_localPort;
-    UNLOCK_SDK_LOG; 
     return true;
 }
 

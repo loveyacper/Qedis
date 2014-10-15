@@ -6,6 +6,10 @@
 #include "Thread.h"
 #include "../Log/Logger.h"
 
+
+__thread  Logger*  g_log;
+__thread  int      g_logLevel;
+__thread  int      g_logDest;
     
 Thread::Thread(const SharedPtr<Runnable>& runnable) :
 m_runnable(runnable),
@@ -14,7 +18,6 @@ m_tid(0),
 m_suspendCount(0)
 {
     m_working = true;
-    DBG << "creat thread but not run";
 }
 
 Thread::~Thread()
@@ -32,7 +35,6 @@ void*  Thread::ThreadFunc(void* arg)
     sigfillset(&mask);
     ::pthread_sigmask(SIG_SETMASK, &mask, NULL);
 
-    DBG << "Start run thread id " << pThread->m_tid;
     while (pThread->m_working)
     {
         pThread->_Run();
@@ -75,7 +77,7 @@ void Thread::_Run()
 
 void Thread::Stop()
 {
-    INF << "set work false";
+    INF << "Set work false " << this;
     m_working = false;
 }
 
@@ -85,14 +87,14 @@ void Thread::Join()
         return;
 
     int ret = ::pthread_join(m_handle, NULL);
-    ERR << m_handle << " 's Join result " << ret;
+    INF << this << " Join result " << ret;
     m_handle = INVALID_HANDLE_VALUE;
 }
 
 void Thread::Suspend()
 {    
     assert(m_tid == Thread::GetCurrentThreadId());
-    INF << "Suspend tid " << m_tid << ", value " << m_sem.Value();
+    INF << "Suspend " << this << ", sem value " << m_sem.Value();
     ++ m_suspendCount;
     m_sem.Wait();
 }
@@ -100,7 +102,7 @@ void Thread::Suspend()
 void Thread::Resume()
 {    
     assert(m_tid != Thread::GetCurrentThreadId());
-    ERR << "Resume tid " << m_tid << ", value " << m_sem.Value();
+    INF << "Resume " << this << ", sem value " << m_sem.Value();
     m_sem.Post();
     -- m_suspendCount;
 }

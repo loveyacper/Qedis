@@ -57,7 +57,7 @@ public:
     }
 
     template <typename U>
-    void Reset(SharedPtr<U>& sptr)
+    void Reset(const SharedPtr<U>& sptr)
     {
         if (sptr.m_ptr == m_ptr)  return;
 

@@ -16,9 +16,7 @@ namespace Epoll
         if (socket < 0)
             return false;
 
-    LOCK_SDK_LOG;
         USR << "add socket: fd " << socket << " with events " << events;
-    UNLOCK_SDK_LOG; 
 
         epoll_event  ev;
         ev.data.ptr= ptr;
@@ -37,9 +35,7 @@ namespace Epoll
         if (socket < 0)
             return false;
 
-    LOCK_SDK_LOG; 
         USR << "del events socket " << socket;
-    UNLOCK_SDK_LOG; 
 
         epoll_event dummy;
 
@@ -51,9 +47,7 @@ namespace Epoll
         if (socket < 0)
             return false;
 
-    LOCK_SDK_LOG; 
         USR << "mod socket: fd " << socket << ", new events " << events;
-    UNLOCK_SDK_LOG; 
 
         epoll_event  ev;
         ev.data.ptr= ptr;
@@ -72,16 +66,12 @@ namespace Epoll
 Epoller::Epoller()
 {
     m_multiplexer = ::epoll_create(512);
-    LOCK_SDK_LOG; 
     INF << "create epoll:  " << m_multiplexer;
-    UNLOCK_SDK_LOG; 
 }
 
 Epoller::~Epoller()
 {
-    LOCK_SDK_LOG; 
     INF << "close epoll:  " << m_multiplexer;
-    UNLOCK_SDK_LOG; 
     if (m_multiplexer != -1)  
         ::close(m_multiplexer);
 }

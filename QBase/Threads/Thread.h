@@ -25,6 +25,12 @@ public:
     virtual void  Run() = 0;
 };
 
+// per thread log
+class    Logger;
+extern __thread Logger*  g_log;
+extern __thread int      g_logLevel;
+extern __thread int      g_logDest;
+
 class Thread
 {
     SharedPtr<Runnable> m_runnable;

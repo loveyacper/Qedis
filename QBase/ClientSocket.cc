@@ -56,7 +56,7 @@ bool ClientSocket::Connect(const SocketAddr& dst)
         {
             INF << "EINPROGRESS : client socket " << m_localSock <<", connected to " << dst.GetIP() << ":" << m_peerAddr.GetPort();
             
-            Internal::NetThreadPool::Instance().EnableWrite(ShareMe());
+            Internal::NetThreadPool::Instance().AddSocket(ShareMe(), EventTypeWrite);
             m_epollOut = true;
             return true;
         }
@@ -88,7 +88,7 @@ bool ClientSocket::OnWritable()
         return false;
     }
 
-    INF << "Create client socket " << m_localSock << ", connect to " << m_peerAddr.GetPort();
+    INF << "Success client socket " << m_localSock << ", connect to " << m_peerAddr.GetPort();
 
     Server::Instance()->NewConnection(m_localSock, m_retry);
     m_localSock = INVALID_SOCKET; 
