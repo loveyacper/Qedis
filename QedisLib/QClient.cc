@@ -252,12 +252,6 @@ void QClient::_HandlePacket(AttachedBuffer& buf)
     }
 
     assert (m_state = ReadyState);
-#if 0
-    for (std::vector<std::string>::const_iterator it (m_params.begin());
-            it != m_params.end();
-            ++ it)
-        CRI << (*it).c_str();
-#endif
 
     QString& cmd = m_params[0];
     std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::tolower);

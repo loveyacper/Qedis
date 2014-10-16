@@ -48,7 +48,7 @@ typedef std::unordered_map<QString, QObject,
         my_hash,
         std::equal_to<QString> >  QDB;
 
-typedef std::unordered_map<std::string, uint64_t>  Q_EXPIRE_DB;
+typedef std::unordered_map<QString, uint64_t>  Q_EXPIRE_DB;
 
 typedef std::unordered_map<QString, SharedPtr<QClient>,
         my_hash,
@@ -56,7 +56,7 @@ typedef std::unordered_map<QString, SharedPtr<QClient>,
 #else
 typedef std::tr1::unordered_map<QString, QObject>  QDB;
 
-typedef std::tr1::unordered_map<std::string, uint64_t>  Q_EXPIRE_DB;
+typedef std::tr1::unordered_map<QString, uint64_t>  Q_EXPIRE_DB;
 
 typedef std::tr1::unordered_map<QString, SharedPtr<QClient> >  QCLIENTS;
 #endif
@@ -105,10 +105,10 @@ public:
     bool    SetValueIfNotExist(const QString& key, const QObject& value);
 
     // for expire key
-    void    SetExpire(const std::string& key, uint64_t when);
-    int64_t TTL(const std::string& key, uint64_t now) const;
-    bool    ClearExpire(const std::string& key);
-    bool    ExpireIfNeed(const std::string& key, uint64_t now);
+    void    SetExpire(const QString& key, uint64_t when);
+    int64_t TTL(const QString& key, uint64_t now) const;
+    bool    ClearExpire(const QString& key);
+    bool    ExpireIfNeed(const QString& key, uint64_t now);
     int     LoopCheck(uint64_t now);
     void    InitExpireTimer();
 
@@ -116,10 +116,10 @@ private:
     class QExpiresDB
     {
     public:
-        void    SetExpire(const std::string& key, uint64_t when);
-        int64_t TTL(const std::string& key, uint64_t now) const;
-        bool    ClearExpire(const std::string& key);
-        bool    ExpireIfNeed(const std::string& key, uint64_t now);
+        void    SetExpire(const QString& key, uint64_t when);
+        int64_t TTL(const QString& key, uint64_t now) const;
+        bool    ClearExpire(const QString& key);
+        bool    ExpireIfNeed(const QString& key, uint64_t now);
 
         int     LoopCheck(uint64_t now);
         

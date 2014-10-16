@@ -5,13 +5,13 @@
 #include <cassert>
 
 
-void QStore::QExpiresDB::SetExpire(const std::string& key, uint64_t when)
+void QStore::QExpiresDB::SetExpire(const QString& key, uint64_t when)
 {
     m_expireKeys[key] = when;
     LOG_INF(g_logger) << "Set timeout key " << key.c_str() << ", timeout is " << when;
 }
 
-int64_t  QStore::QExpiresDB::TTL(const std::string& key, uint64_t now) const
+int64_t  QStore::QExpiresDB::TTL(const QString& key, uint64_t now) const
 {
     Q_EXPIRE_DB::const_iterator it(m_expireKeys.find(key));
     
@@ -25,12 +25,12 @@ int64_t  QStore::QExpiresDB::TTL(const std::string& key, uint64_t now) const
     return ret;
 }
 
-bool QStore::QExpiresDB::ClearExpire(const std::string& key)
+bool QStore::QExpiresDB::ClearExpire(const QString& key)
 {
     return ExpireIfNeed(key, std::numeric_limits<uint64_t>::max());
 }
 
-bool QStore::QExpiresDB::ExpireIfNeed(const std::string& key, uint64_t now)
+bool QStore::QExpiresDB::ExpireIfNeed(const QString& key, uint64_t now)
 {
     Q_EXPIRE_DB::iterator it(m_expireKeys.find(key));
     if (it != m_expireKeys.end())
@@ -206,23 +206,23 @@ bool QStore::SetValueIfNotExist(const QString& key, const QObject& value)
 }
 
 
-void    QStore::SetExpire(const std::string& key, uint64_t when)
+void    QStore::SetExpire(const QString& key, uint64_t when)
 {
     m_expiresDb[m_dbno].SetExpire(key, when);
 }
 
 
-int64_t QStore::TTL(const std::string& key, uint64_t now) const
+int64_t QStore::TTL(const QString& key, uint64_t now) const
 {
     return  m_expiresDb[m_dbno].TTL(key, now);
 }
 
-bool    QStore::ClearExpire(const std::string& key)
+bool    QStore::ClearExpire(const QString& key)
 {
     return  m_expiresDb[m_dbno].ClearExpire(key);
 }
 
-bool    QStore::ExpireIfNeed(const std::string& key, uint64_t now)
+bool    QStore::ExpireIfNeed(const QString& key, uint64_t now)
 {
     return  m_expiresDb[m_dbno].ExpireIfNeed(key, now);
 }

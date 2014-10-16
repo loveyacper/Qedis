@@ -106,8 +106,6 @@ void Time::_UpdateTm()  const
 
 void Time::Now()
 {
-    struct timeval now;
-    ::gettimeofday(&now, 0);
     m_ms = ::Now();
     m_valid = false;
 }

@@ -32,28 +32,28 @@ public:
     static QClient*  Current() {  return s_pCurrentClient; }
 
     // pubsub
-    std::size_t Subscribe(const std::string& channel)
+    std::size_t Subscribe(const QString& channel)
     {
         return  m_channels.insert(channel).second ? 1 : 0;
     }
 
-    std::size_t UnSubscribe(const std::string& channel)
+    std::size_t UnSubscribe(const QString& channel)
     {
         return m_channels.erase(channel);
     }
 
-    std::size_t PSubscribe(const std::string& channel)
+    std::size_t PSubscribe(const QString& channel)
     {
         return  m_patternChannels.insert(channel).second ? 1 : 0;
     }
 
-    std::size_t PUnSubscribe(const std::string& channel)
+    std::size_t PUnSubscribe(const QString& channel)
     {
         return m_patternChannels.erase(channel);
     }
 
-    const std::set<std::string>&    GetChannels() const { return m_channels; }
-    const std::set<std::string>&    GetPatternChannels() const { return m_patternChannels; }
+    const std::set<QString>&    GetChannels() const { return m_channels; }
+    const std::set<QString>&    GetPatternChannels() const { return m_patternChannels; }
     std::size_t     ChannelCount() const { return m_channels.size(); }
     std::size_t     PatternChannelCount() const { return m_patternChannels.size(); }
 
@@ -69,8 +69,8 @@ private:
 
     int   m_db;
 
-    std::set<std::string>  m_channels;
-    std::set<std::string>  m_patternChannels;
+    std::set<QString>  m_channels;
+    std::set<QString>  m_patternChannels;
     
     QStat  m_stat;
     static  QClient*  s_pCurrentClient;

@@ -12,7 +12,7 @@ QPubsub&    QPubsub::Instance()
     return ps;
 }
     
-size_t QPubsub::Subscribe(QClient* client, const string& channel)
+size_t QPubsub::Subscribe(QClient* client, const QString& channel)
 {
     if (client && client->Subscribe(channel))
     {
@@ -31,7 +31,7 @@ size_t QPubsub::Subscribe(QClient* client, const string& channel)
 }
 
 
-std::size_t QPubsub::UnSubscribe(QClient* client, const std::string& channel)
+std::size_t QPubsub::UnSubscribe(QClient* client, const QString& channel)
 {
     if (client && client->UnSubscribe(channel))
     {
@@ -57,8 +57,8 @@ std::size_t QPubsub::UnSubscribeAll(QClient* client)
     if (!client)  return 0;
 
     std::size_t  n = 0;
-    const std::set<std::string>& channels = client->GetChannels();
-    for (std::set<std::string>::const_iterator it(channels.begin());
+    const std::set<QString>& channels = client->GetChannels();
+    for (std::set<QString>::const_iterator it(channels.begin());
             it != channels.end();
             ++ it)
     {
@@ -68,7 +68,7 @@ std::size_t QPubsub::UnSubscribeAll(QClient* client)
     return n;
 }
 
-size_t QPubsub::PSubscribe(QClient* client, const string& channel)
+size_t QPubsub::PSubscribe(QClient* client, const QString& channel)
 {
     if (client && client->PSubscribe(channel))
     {
@@ -87,7 +87,7 @@ size_t QPubsub::PSubscribe(QClient* client, const string& channel)
 }
 
 
-std::size_t QPubsub::PUnSubscribe(QClient* client, const std::string& channel)
+std::size_t QPubsub::PUnSubscribe(QClient* client, const QString& channel)
 {
     if (client && client->PUnSubscribe(channel))
     {
@@ -113,8 +113,8 @@ std::size_t QPubsub::PUnSubscribeAll(QClient* client)
     if (!client)  return 0;
 
     std::size_t  n = 0;
-    const std::set<std::string>& channels = client->GetPatternChannels();
-    for (std::set<std::string>::const_iterator it(channels.begin());
+    const std::set<QString>& channels = client->GetPatternChannels();
+    for (std::set<QString>::const_iterator it(channels.begin());
             it != channels.end();
             ++ it)
     {
@@ -125,7 +125,7 @@ std::size_t QPubsub::PUnSubscribeAll(QClient* client)
 }
 
 
-std::size_t QPubsub::PublishMsg(const std::string& channel, const std::string& msg)
+std::size_t QPubsub::PublishMsg(const QString& channel, const QString& msg)
 {
     std::size_t n = 0;
 
@@ -203,13 +203,13 @@ std::size_t QPubsub::PublishMsg(const std::string& channel, const std::string& m
     return  n;
 }
 
-void QPubsub::RecycleClients(string& startChannel, string& startPattern)
+void QPubsub::RecycleClients(QString& startChannel, QString& startPattern)
 {
     _RecycleClients(m_channels, startChannel);
     _RecycleClients(m_patternChannels, startPattern);
 }
 
-void QPubsub::_RecycleClients(ChannelClients& channels, string& start)
+void QPubsub::_RecycleClients(ChannelClients& channels, QString& start)
 {
     ChannelClients::iterator it(start.empty() ? channels.begin() : channels.find(start));
     if (it == channels.end())
@@ -259,8 +259,8 @@ public:
     {
     }
 private:
-    string  m_startChannel;
-    string  m_startPattern;
+    QString  m_startChannel;
+    QString  m_startPattern;
     bool    _OnTimer()
     {
         QPubsub::Instance().RecycleClients(m_startChannel, m_startPattern);
@@ -273,7 +273,7 @@ void QPubsub::InitPubsubTimer()
     TimerManager::Instance().AddTimer(PTIMER(new PubsubTimer));
 }
 
-void QPubsub::PubsubChannels(vector<string>& res, const char* pattern) const
+void QPubsub::PubsubChannels(vector<QString>& res, const char* pattern) const
 {
     res.clear();
 
@@ -289,7 +289,7 @@ void QPubsub::PubsubChannels(vector<string>& res, const char* pattern) const
 }
 
 
-size_t  QPubsub::PubsubNumsub(const string& channel) const
+size_t  QPubsub::PubsubNumsub(const QString& channel) const
 {
     ChannelClients::const_iterator it = m_channels.find(channel);
     
@@ -312,7 +312,7 @@ size_t QPubsub::PubsubNumpat() const
 }
 
 // pubsub commands
-QError  subscribe(const vector<string>& params, UnboundedBuffer& reply)
+QError  subscribe(const vector<QString>& params, UnboundedBuffer& reply)
 {
     QClient* client = QClient::Current();
     for (size_t i = 1; i < params.size(); ++ i)
@@ -334,7 +334,7 @@ QError  subscribe(const vector<string>& params, UnboundedBuffer& reply)
     return QError_ok;
 }
 
-QError  psubscribe(const vector<string>& params, UnboundedBuffer& reply)
+QError  psubscribe(const vector<QString>& params, UnboundedBuffer& reply)
 {
     QClient* client = QClient::Current();
     for (size_t i = 1; i < params.size(); ++ i)
@@ -357,14 +357,14 @@ QError  psubscribe(const vector<string>& params, UnboundedBuffer& reply)
 }
 
 
-QError  unsubscribe(const vector<string>& params, UnboundedBuffer& reply)
+QError  unsubscribe(const vector<QString>& params, UnboundedBuffer& reply)
 {
     QClient* client = QClient::Current();
 
     if (params.size() == 1)
     {
-        const set<string>& channels = client->GetChannels();
-        for (set<string>::const_iterator it(channels.begin());
+        const set<QString>& channels = client->GetChannels();
+        for (set<QString>::const_iterator it(channels.begin());
                 it != channels.end();
                 ++ it)
         {
@@ -375,7 +375,7 @@ QError  unsubscribe(const vector<string>& params, UnboundedBuffer& reply)
     }
     else
     {
-        set<string> channels;
+        set<QString> channels;
 
         for (size_t i = 1; i < params.size(); ++ i)
         {
@@ -391,7 +391,7 @@ QError  unsubscribe(const vector<string>& params, UnboundedBuffer& reply)
         }
 
         PreFormatMultiBulk(channels.size(), reply);
-        for (set<string>::const_iterator it(channels.begin());
+        for (set<QString>::const_iterator it(channels.begin());
                 it != channels.end();
                 ++ it)
         {
@@ -402,14 +402,14 @@ QError  unsubscribe(const vector<string>& params, UnboundedBuffer& reply)
     return  QError_ok;
 }
 
-QError  punsubscribe(const vector<string>& params, UnboundedBuffer& reply)
+QError  punsubscribe(const vector<QString>& params, UnboundedBuffer& reply)
 {
     QClient* client = QClient::Current();
 
     if (params.size() == 1)
     {
-        const set<string>& channels = client->GetPatternChannels();
-        for (set<string>::const_iterator it(channels.begin());
+        const set<QString>& channels = client->GetPatternChannels();
+        for (set<QString>::const_iterator it(channels.begin());
                 it != channels.end();
                 ++ it)
         {
@@ -420,7 +420,7 @@ QError  punsubscribe(const vector<string>& params, UnboundedBuffer& reply)
     }
     else
     {
-        set<string> channels;
+        set<QString> channels;
 
         for (size_t i = 1; i < params.size(); ++ i)
         {
@@ -436,7 +436,7 @@ QError  punsubscribe(const vector<string>& params, UnboundedBuffer& reply)
         }
 
         PreFormatMultiBulk(channels.size(), reply);
-        for (set<string>::const_iterator it(channels.begin());
+        for (set<QString>::const_iterator it(channels.begin());
                 it != channels.end();
                 ++ it)
         {
@@ -447,7 +447,7 @@ QError  punsubscribe(const vector<string>& params, UnboundedBuffer& reply)
     return  QError_ok;
 }
 
-QError  publish(const vector<string>& params, UnboundedBuffer& reply)
+QError  publish(const vector<QString>& params, UnboundedBuffer& reply)
 {
     size_t n = QPubsub::Instance().PublishMsg(params[1], params[2]);
     FormatInt(n, reply);
@@ -456,7 +456,7 @@ QError  publish(const vector<string>& params, UnboundedBuffer& reply)
 }
 
 // neixing command
-QError  pubsub(const vector<string>& params, UnboundedBuffer& reply)
+QError  pubsub(const vector<QString>& params, UnboundedBuffer& reply)
 {
     if (params[1] == "channels")
     {
@@ -465,17 +465,16 @@ QError  pubsub(const vector<string>& params, UnboundedBuffer& reply)
             ReplyError(QError_param, reply);
             return QError_param;
         }
-#if 1
-        vector<string> res;
+
+        vector<QString> res;
         QPubsub::Instance().PubsubChannels(res, params.size() == 3 ? params[2].c_str() : 0);
         PreFormatMultiBulk(res.size(), reply);
-        for (vector<string>::const_iterator it(res.begin());
+        for (vector<QString>::const_iterator it(res.begin());
              it != res.end();
              ++ it)
         {
             FormatSingle(it->c_str(), it->size(), reply);
         }
-#endif
     }
     else if (params[1] == "numsub")
     {

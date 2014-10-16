@@ -264,7 +264,7 @@ QError  getrange(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  getset(const vector<string>& params, UnboundedBuffer& reply)
+QError  getset(const vector<QString>& params, UnboundedBuffer& reply)
 {
     QObject*  value;
     QError err = QSTORE.GetValueByType(params[1], value, QType_string);

@@ -1,6 +1,7 @@
 #ifndef BERT_QGLOBREGEX_H
 #define BERT_QGLOBREGEX_H
 
+#include "QString.h"
 
 class QGlobRegex
 {
@@ -43,8 +44,8 @@ inline bool glob_match(const char* pattern,
     return glob_match(pattern, strlen(pattern), text, strlen(text));
 }
 
-inline bool glob_match(const std::string& pattern,
-                       const std::string& text)
+inline bool glob_match(const QString& pattern,
+                       const QString& text)
 {
     return glob_match(pattern.c_str(), pattern.size(),
                       text.c_str(), text.size());
@@ -54,7 +55,7 @@ inline bool glob_match(const std::string& pattern,
 inline bool glob_search(const char* pattern,
                        const char* str)
 {
-    std::string sPattern("*");
+    QString sPattern("*");
     sPattern += pattern;
     sPattern += "*";
 
