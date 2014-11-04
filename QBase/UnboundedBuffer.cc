@@ -116,6 +116,14 @@ void UnboundedBuffer::Clear()
     m_readPos = m_writePos = 0; 
 }
 
+
+void UnboundedBuffer::Swap(UnboundedBuffer& buf)
+{
+    m_buffer.swap(buf.m_buffer);
+    std::swap(m_readPos, buf.m_readPos);
+    std::swap(m_writePos, buf.m_writePos);
+}
+
 #if 0
 int main()
 {

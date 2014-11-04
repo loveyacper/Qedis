@@ -8,8 +8,8 @@
 
 enum QCommandAttr
 {
-    QCommandAttr_read  = 0x1,
-    QCommandAttr_write = 0x1 << 1,
+    QAttr_read  = 0x1,
+    QAttr_write = 0x1 << 1,
 };
 
 
@@ -127,29 +127,36 @@ QCommandHandler  psubscribe;
 QCommandHandler  punsubscribe;
 QCommandHandler  pubsub;
 
+//multi
+QCommandHandler  watch;
+QCommandHandler  unwatch;
+QCommandHandler  multi;
+QCommandHandler  exec;
+QCommandHandler  discard;
+
+struct QCommandInfo
+{
+    QString     cmd;
+    int         attr;
+    int         params;
+    QCommandHandler* handler;
+    bool  CheckParamsCount(int nParams) const;
+};
 
 class QCommandTable
 {
 public:
-    static QCommandTable& Instance();
+    QCommandTable();
+    
+    static void Init();
 
-    QError ExecuteCmd(const std::vector<QString>& params, UnboundedBuffer& reply);
+    static const QCommandInfo* GetCommandInfo(const QString& cmd);
+    static QError ExecuteCmd(const std::vector<QString>& params, const QCommandInfo* info, UnboundedBuffer& reply);
+    static QError ExecuteCmd(const std::vector<QString>& params, UnboundedBuffer& reply);
 
 private:
-    
-    QCommandTable();
-
-    struct QCommandInfo
-    {
-        QString     cmd;
-        int         attr;
-        int         params;
-        QCommandHandler* handler;
-        bool  CheckParamsCount(int nParams) const;
-    };
-
     static const QCommandInfo s_info[];
-    std::map<QString, const QCommandInfo* >  m_handlers;
+    static std::map<QString, const QCommandInfo* >  s_handlers;
 };
 
 

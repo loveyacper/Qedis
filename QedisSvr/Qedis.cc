@@ -13,6 +13,7 @@
 #include "QClient.h"
 #include "QStore.h"
 #include "QPubsub.h"
+#include "QCommand.h"
 
 class Qedis : public Server
 {
@@ -59,6 +60,7 @@ bool Qedis::_Init()
         return false;
     }
 
+    QCommandTable::Init();
     QSTORE.InitExpireTimer();
     QPubsub::Instance().InitPubsubTimer();
     
@@ -86,8 +88,8 @@ void    Qedis::_Recycle()
 
 int main()
 {
-    g_log = LogManager::Instance().CreateLog(0, 0, "./qedis_log");
-    //g_log = LogManager::Instance().CreateLog(logALL, logFILE, "./qedis_log");
+    g_log = LogManager::Instance().NullLog();
+    g_log = LogManager::Instance().CreateLog(logALL, logALL, "./qedis_log");
     
     //daemon(1, 0);
 

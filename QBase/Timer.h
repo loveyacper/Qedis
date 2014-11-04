@@ -77,11 +77,7 @@ public:
     void    AsyncAddTimer(const PTIMER& pTimer);
     void    KillTimer(const PTIMER& pTimer);
 
-    static  TimerManager&   Instance()
-    {
-        static TimerManager mgr;
-        return  mgr;
-    }
+    static  TimerManager&   Instance();
 
 private:
     TimerManager();

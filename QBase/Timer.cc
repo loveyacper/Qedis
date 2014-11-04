@@ -217,6 +217,11 @@ TimerManager::~TimerManager()
     }
 }
 
+TimerManager&  TimerManager::Instance()
+{
+    static TimerManager mgr;
+    return  mgr;
+}
 
 bool TimerManager::UpdateTimers(const Time& now)
 {

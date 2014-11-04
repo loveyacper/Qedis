@@ -2,6 +2,7 @@
 #include "QStore.h"
 #include "Log/Logger.h"
 #include "QCommand.h"
+#include "QMulti.h"
 
 // *3  CR LF
 // $4  CR LF
@@ -116,7 +117,7 @@ HEAD_LENGTH_T QClient::_HandleHead(AttachedBuffer& buf, BODY_LENGTH_T* bodyLen)
         ptr += 2;
 #endif
             
-        INF << "Got multibulk " << m_multibulk;
+        DBG << "Got multibulk " << m_multibulk;
         if (m_multibulk < 0 || m_multibulk > 1024)
         {
             LOG_ERR(g_logger) << "Abnormal m_multibulk " << m_multibulk;
@@ -235,7 +236,6 @@ void QClient::_HandlePacket(AttachedBuffer& buf)
         {
             LOG_ERR(g_logger) << "param len said " << m_paramLen << ", but actual get " << (crlf - start);
             OnError();
-            assert (false);
             return ;
         }
 
@@ -258,12 +258,43 @@ void QClient::_HandlePacket(AttachedBuffer& buf)
 
     bool succ = (QSTORE.SelectDB(m_db) >= 0);
     assert (succ);
-
     m_stat.End(PARSE_STATE);
 
     LOG_INF(g_logger) << "client " << GetID() << ", cmd " << m_params[0].c_str();
+    
+    const QCommandInfo* info = QCommandTable::GetCommandInfo(m_params[0]);
+    // if is multi state,  GetCmdInfo, CheckParamsCount;
+    if (IsFlagOn(ClientFlag_multi))
+    {
+        if (cmd != "multi" &&
+            cmd != "exec" &&
+            cmd != "watch" &&
+            cmd != "unwatch" &&
+            cmd != "discard")
+        {
+            if (!info || !info->CheckParamsCount(static_cast<int>(m_params.size())))
+            {
+                
+                ERR << "queue failed: cmd " << cmd.c_str() << " has params " << m_params.size();
+                ReplyError(info ? QError_param : QError_unknowCmd, m_reply);
+                SendPacket(m_reply.ReadAddr(), m_reply.ReadableSize());
+                FlagExecWrong();
+            }
+            else
+            {
+                m_queueCmds.push_back(m_params);
+                SendPacket("+QUEUED\r\n", 9);
+                INF << "queue cmd " << cmd.c_str();
+            }
+
+            _Reset();
+            return;
+        }
+    }
+    // return;
+    
     m_stat.Begin();
-    QError err = QCommandTable::Instance().ExecuteCmd(m_params, m_reply);
+    QError err = QCommandTable::ExecuteCmd(m_params, info, m_reply);
     (void)err;
     m_stat.End(PROCESS_STATE);
 
@@ -273,10 +304,23 @@ void QClient::_HandlePacket(AttachedBuffer& buf)
         SendPacket(m_reply.ReadAddr(), m_reply.ReadableSize());
         m_stat.End(SEND_STATE);
     }
+    
+    if (err == QError_ok && (info->attr & QAttr_write))
+    {
+        assert(m_params.size() > 1);
+        QMulti::Instance().NotifyDirty(m_params[1]);
+    }
+    
     _Reset();
 }
 
-QClient::QClient() : m_db(0)
+
+QClient*  QClient::Current()
+{
+    return s_pCurrentClient;
+}
+
+QClient::QClient() : m_db(0), m_flag(0)
 {
     SelectDB(0);
     _Reset();
@@ -303,4 +347,78 @@ void QClient::_Reset()
     m_params.clear();
     m_reply.Clear();
 }
+
+// multi
+bool QClient::Watch(const QString& key)
+{
+    INF << "Watch " << key.c_str();
+    return m_watchKeys.insert(key).second;
+}
+
+void QClient::UnWatch()
+{
+    m_watchKeys.clear();
+}
+
+bool QClient::NotifyDirty(const QString& key)
+{
+    if (IsFlagOn(ClientFlag_dirty))
+    {
+        INF << "client is already dirty";
+        return false;
+    }
+    
+    if (m_watchKeys.count(key))
+    {
+        INF << "Dirty client because key " << key.c_str();
+        SetFlag(ClientFlag_dirty);
+        return true;
+    }
+    
+    return false;
+}
+
+bool QClient::Exec()
+{
+    if (IsFlagOn(ClientFlag_wrongExec))
+    {
+        return false;
+    }
+    
+    if (IsFlagOn(ClientFlag_dirty))
+    {
+        FormatNullArray(m_reply);
+        return true;
+    }
+    
+    PreFormatMultiBulk(m_queueCmds.size(), m_reply);
+    for (std::vector<std::vector<QString> >::const_iterator it(m_queueCmds.begin());
+         it != m_queueCmds.end();
+         ++ it)
+    {
+        INF << "EXEC " << (*it)[0].c_str();
+        const QCommandInfo* info = QCommandTable::GetCommandInfo((*it)[0]);
+        QError err = QCommandTable::ExecuteCmd(*it, info, m_reply);
+        SendPacket(m_reply.ReadAddr(), m_reply.ReadableSize());
+        _Reset();
+        
+        // may dirty clients;
+        if (err == QError_ok && (info->attr & QAttr_write))
+        {
+            QMulti::Instance().NotifyDirty((*it)[1]);
+        }
+    }
+    
+    return true;
+}
+
+void QClient::ClearMulti()
+{
+//    m_watchKeys.clear();
+    m_queueCmds.clear();
+    ClearFlag(ClientFlag_multi);
+    ClearFlag(ClientFlag_dirty);
+    ClearFlag(ClientFlag_wrongExec);
+}
+
 

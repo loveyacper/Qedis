@@ -31,6 +31,7 @@ public:
 
     void Shrink(bool tight = false);
     void Clear();
+    void Swap(UnboundedBuffer& buf);
 
     static const std::size_t  MAX_BUFFER_SIZE;
 private:

@@ -18,6 +18,10 @@ struct QErrorInfo  g_errorInfo[] = {
     {sizeof "-ERR Unknown command\r\n"- 1,   "-ERR Unknown command\r\n"},
     {sizeof "-ERR value is not an integer or out of range\r\n"- 1, "-ERR value is not an integer or out of range\r\n"},
     {sizeof "-ERR syntax error\r\n"-1, "-ERR syntax error\r\n"},
+    
+    {sizeof "-EXECABORT Transaction discarded because of previous errors.\r\n"-1, "-EXECABORT Transaction discarded because of previous errors.\r\n"},
+    {sizeof "-WATCH inside MULTI is not allowed\r\n"-1, "-WATCH inside MULTI is not allowed\r\n"},
+    {sizeof "-EXEC without MULTI\r\n"-1, "-EXEC without MULTI\r\n"},
 };
 
 int Int2Str(char* ptr, size_t nBytes, long val)

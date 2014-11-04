@@ -18,6 +18,13 @@ enum  ParseCmdState
     ReadyState,
 };
 
+enum ClientFlag
+{
+    ClientFlag_multi = 0x1,
+    ClientFlag_dirty = 0x1 << 1,
+    ClientFlag_wrongExec = 0x1 << 2,
+};
+
 class DB;
 
 class QClient: public StreamSocket
@@ -29,7 +36,19 @@ private:
 public:
     QClient();
     bool SelectDB(int db);
-    static QClient*  Current() {  return s_pCurrentClient; }
+    static QClient*  Current();
+    
+    //multi
+    void SetFlag(unsigned flag) { m_flag |= flag; }
+    void ClearFlag(unsigned flag) { m_flag &= ~flag; }
+    bool IsFlagOn(unsigned flag) { return m_flag & flag; }
+    void FlagExecWrong() { if (IsFlagOn(ClientFlag_multi)) SetFlag(ClientFlag_wrongExec);   }
+    
+    bool Watch(const QString& key);
+    void UnWatch();
+    bool NotifyDirty(const QString& key);
+    bool Exec();
+    void ClearMulti();
 
     // pubsub
     std::size_t Subscribe(const QString& channel)
@@ -71,6 +90,10 @@ private:
 
     std::set<QString>  m_channels;
     std::set<QString>  m_patternChannels;
+    
+    unsigned m_flag;
+    std::set<QString>  m_watchKeys;
+    std::vector<std::vector<QString> > m_queueCmds;
     
     QStat  m_stat;
     static  QClient*  s_pCurrentClient;

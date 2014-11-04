@@ -46,6 +46,9 @@ enum QError
     QError_unknowCmd = 5,
     QError_nan       = 6,
     QError_syntax    = 7,
+    QError_dirtyExec = 8,
+    QError_watch     = 9,
+    QError_noMulti   = 10,
     QError_max,
 };
 
