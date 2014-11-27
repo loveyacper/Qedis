@@ -13,7 +13,9 @@ typedef std::unordered_set<QString,
 #else
 
 #include <tr1/unordered_set>
-typedef std::tr1::unordered_set<QString> QSet;
+typedef std::tr1::unordered_set<QString,
+        my_hash,
+        std::equal_to<QString> >  QSet;
 
 #endif
 

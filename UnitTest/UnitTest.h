@@ -49,7 +49,8 @@ inline UnitTestBase& UnitTestBase::operator<< (const T &  t)
 {
     if (!m_pass)
     {
-        std::ostringstream  str(t);
+        std::ostringstream  str;
+        str << t;
         m_expr += str.str();
     }
 

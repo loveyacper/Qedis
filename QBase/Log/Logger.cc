@@ -37,7 +37,7 @@ static const size_t DEFAULT_LOGFILESIZE = 8 * 1024 * 1024;
 static const size_t PREFIX_LEVEL_LEN    = 6;
 static const size_t PREFIX_TIME_LEN     = 24;
 
-Logger::Logger() : m_buffer(2 * 1024 * 1024),
+Logger::Logger() : m_buffer(1 * 1024 * 1024),
 m_backBytes(0),
 m_level(0),
 m_dest(0),
@@ -451,6 +451,7 @@ bool Logger::Update()
             }
 
             m_backBytes = 0;
+            UnboundedBuffer().Swap(m_backBuf);
             m_backBufLock.Unlock();
         }
 

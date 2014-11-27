@@ -105,12 +105,12 @@ public:
         return m_ptr;
     }
     
-    const T& operator[](int idx) const
+    const T& operator[](size_t idx) const
     {
         return m_ptr[idx];
     }
 
-    T& operator[](int idx)
+    T& operator[](size_t idx)
     {
         return m_ptr[idx];
     }

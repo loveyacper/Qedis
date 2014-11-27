@@ -21,10 +21,14 @@ public:
     typedef std::set<QString> Members;
     typedef std::map<long, Members>  Score2Members;
 #if defined(__APPLE__)
-    typedef std::unordered_map<QString, long>   Member2Score;
+    typedef std::unordered_map<QString, long,
+            my_hash,
+            std::equal_to<QString> >   Member2Score;
 
 #else
-    typedef std::tr1::unordered_map<QString, long>  Member2Score;
+    typedef std::tr1::unordered_map<QString, long,
+            my_hash,
+            std::equal_to<QString> >   Member2Score;
 
 #endif
 

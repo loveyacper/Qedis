@@ -7,7 +7,9 @@
 
 #include "util.h"
 #include <unordered_map>
-typedef std::unordered_map<QString, QString>  QHash;
+typedef std::unordered_map<QString, QString,
+        my_hash,
+        std::equal_to<QString> >  QHash;
 /*typedef std::unordered_map<QString, QString,
         my_hash,
         std::equal_to<QString>,
@@ -16,7 +18,9 @@ typedef std::unordered_map<QString, QString>  QHash;
 #else
 
 #include <tr1/unordered_map>
-typedef std::tr1::unordered_map<QString, QString> QHash;
+typedef std::tr1::unordered_map<QString, QString,
+        my_hash,
+        std::equal_to<QString> >  QHash;
 
 #endif
 

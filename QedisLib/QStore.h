@@ -48,7 +48,9 @@ typedef std::unordered_map<QString, QObject,
         my_hash,
         std::equal_to<QString> >  QDB;
 
-typedef std::unordered_map<QString, uint64_t>  Q_EXPIRE_DB;
+typedef std::unordered_map<QString, uint64_t,
+        my_hash,
+        std::equal_to<QString> >  Q_EXPIRE_DB;
 
 typedef std::unordered_map<QString, SharedPtr<QClient>,
         my_hash,
