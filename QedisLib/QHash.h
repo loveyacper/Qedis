@@ -2,18 +2,14 @@
 #define BERT_QHASH_H
 
 #include "QString.h"
+#include "util.h"
 
 #if defined(__APPLE__)
 
-#include "util.h"
 #include <unordered_map>
 typedef std::unordered_map<QString, QString,
         my_hash,
         std::equal_to<QString> >  QHash;
-/*typedef std::unordered_map<QString, QString,
-        my_hash,
-        std::equal_to<QString>,
-        Bert::Allocator<QString> >  QHash;*/
 
 #else
 
@@ -23,7 +19,6 @@ typedef std::tr1::unordered_map<QString, QString,
         std::equal_to<QString> >  QHash;
 
 #endif
-
 
 
 #endif

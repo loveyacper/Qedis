@@ -70,6 +70,8 @@ private:
     char            m_tmpBuffer[MAXLINE_LOG];
     std::size_t     m_pos;
     Buffer          m_buffer;
+    
+    THREAD_ID       m_thread;
 
     Mutex           m_backBufLock;
     std::size_t     m_backBytes;
@@ -117,6 +119,9 @@ public:
     static LogManager& Instance();
 
     ~LogManager();
+    
+    LogManager(const LogManager& )     = delete;
+    void operator=(const LogManager& ) = delete;
 
     Logger*  CreateLog(unsigned int level = logDEBUG,
                        unsigned int dest = logConsole,
@@ -129,13 +134,12 @@ public:
     Logger* NullLog()  {  return  &m_nullLog;  }
 
 private:
-  //  NONCOPYABLE(LogManager);
-
     LogManager();
 
     Logger  m_nullLog;
 
     typedef std::set<Logger* >  LOG_SET;
+    Mutex   m_logsMutex;
     LOG_SET m_logs;
     
 

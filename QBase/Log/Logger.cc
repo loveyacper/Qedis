@@ -45,8 +45,8 @@ m_pMemory(0),
 m_offset(DEFAULT_LOGFILESIZE), 
 m_file(-1)
 {
+    m_thread = Thread::GetCurrentThreadId();
     _Reset();
-    m_fileName.reserve(32);
 }
 
 Logger::~Logger()
@@ -141,6 +141,8 @@ void Logger::Flush(enum LogLevel level)
         return;
     }
 
+    assert (m_thread == Thread::GetCurrentThreadId());
+    
     g_now.Now();
     g_now.FormatTime(m_tmpBuffer, PREFIX_TIME_LEN + 1);
 
@@ -193,8 +195,8 @@ void Logger::Flush(enum LogLevel level)
         m_backBytes = m_backBuf.ReadableSize();
 
         _Color(NORMAL_COLOR);
-        std::cerr << "push bytes to back buffer " << m_pos << std::endl;
-        std::cerr << "push content to back buffer " << m_tmpBuffer << std::endl;
+       // std::cerr << "push bytes to back buffer " << m_pos << std::endl;
+        //std::cerr << "push content to back buffer " << m_tmpBuffer << std::endl;
     }
 
     _Reset();
@@ -441,7 +443,7 @@ bool Logger::Update()
             int level = 0;
             m_backBuf.PeekData(&level, sizeof level);
 
-            int nLen = 0;
+            decltype(m_pos)  nLen = 0;
             m_backBuf.PeekData(&nLen, sizeof nLen);
 
             assert (nLen && level);
@@ -464,7 +466,7 @@ bool Logger::Update()
         m_buffer.PeekDataAt(&level, sizeof level);
         m_buffer.AdjustReadPtr(sizeof level);
 
-        size_t nLen = 0;
+        decltype(m_pos) nLen = 0;
         m_buffer.PeekDataAt(&nLen, sizeof nLen);
         m_buffer.AdjustReadPtr(sizeof nLen);
 
@@ -576,7 +578,7 @@ Logger*  LogManager::CreateLog(unsigned int level ,
                unsigned int dest ,
                const char* pDir)
 {
-    assert (!m_logThread->IsAlive() && "You can not create log after log-thread running");
+    //assert (!m_logThread->IsAlive() && "You can not create log after log-thread running");
 
     Logger*  pLog(new Logger);
     if (!pLog->Init(level, dest, pDir))
@@ -586,6 +588,7 @@ Logger*  LogManager::CreateLog(unsigned int level ,
     }
     else
     {
+        ScopeMutex  guard(m_logsMutex);
         m_logs.insert(pLog);
     }
 
@@ -607,12 +610,12 @@ void LogManager::StopLog()
 bool LogManager::Update()
 {
     bool busy = false;
-
-    for (LOG_SET::iterator it(m_logs.begin());
-        it != m_logs.end();
-        ++ it)
+    
+    ScopeMutex  guard(m_logsMutex);
+  
+    for (auto log : m_logs)
     {
-        if ((*it)->Update() && !busy)
+        if (log->Update() && !busy)
         {
             busy = true;
         }
