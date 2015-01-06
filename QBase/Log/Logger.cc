@@ -6,14 +6,6 @@
 #include <cstdarg>
 #include <errno.h>
 
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <sys/mman.h>
-#include <iostream>
-
-#if defined(__APPLE__)
-#include <unistd.h>
-#endif
 
 enum LogColor
 {
@@ -32,21 +24,18 @@ enum LogColor
 #include "../Threads/ThreadPool.h"
 
 
-
-static const size_t DEFAULT_LOGFILESIZE = 8 * 1024 * 1024;
+static const size_t DEFAULT_LOGFILESIZE = 32 * 1024 * 1024;
 static const size_t PREFIX_LEVEL_LEN    = 6;
 static const size_t PREFIX_TIME_LEN     = 24;
 
 Logger::Logger() : m_buffer(1 * 1024 * 1024),
-m_backBytes(0),
-m_level(0),
-m_dest(0),
-m_pMemory(0),
-m_offset(DEFAULT_LOGFILESIZE), 
-m_file(-1)
+                   m_level(0),
+                   m_dest(0)
 {
     m_thread = Thread::GetCurrentThreadId();
     _Reset();
+
+    m_file.SetFlushHook(std::bind(&Logger::_LogHook, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 Logger::~Logger()
@@ -68,19 +57,31 @@ bool Logger::Init(unsigned int level, unsigned int dest, const char* pDir)
   
     if (m_dest & logFILE)
     {
-        if (m_directory != ".")
-            return _MakeDir(m_directory.c_str());
+        if (m_directory == "." ||
+            AsyncOutputFile::MakeDir(m_directory.c_str()))
+        {
+            _OpenLogFile(_MakeFileName().c_str());
+            return true;
+        }
+        
+        return false;
     }
 
+    if (!(m_dest & logConsole))
+    {
+        std::cerr << "log has no output, but loglevel is " << level << std::endl;
+        return false;
+    }
+            
     return true;
 }
 
 bool Logger::_CheckChangeFile()
 {
-    if (m_file == -1)
+    if (!m_file.IsOpen())
         return true;
     
-    return m_offset + MAXLINE_LOG >= DEFAULT_LOGFILESIZE;
+    return m_file.Offset() + MAXLINE_LOG > DEFAULT_LOGFILESIZE;
 }
 
 const std::string& Logger::_MakeFileName()
@@ -97,37 +98,12 @@ const std::string& Logger::_MakeFileName()
 
 bool Logger::_OpenLogFile(const char* name)
 { 
-    // CLOSE PREVIOUS LOG FILE PLEASE!
-    if (-1 != m_file)
-        return false;  
-
-    m_file = ::open(name, O_RDWR | O_CREAT | O_APPEND, 0644);
-    if (-1 == m_file)
-        return false;
-
-    struct stat st;
-    fstat(m_file, &st);
-    m_offset  = st.st_size; // for append
-
-    ::ftruncate(m_file, DEFAULT_LOGFILESIZE);
-    m_pMemory = (char* )::mmap(0, DEFAULT_LOGFILESIZE, PROT_WRITE, MAP_SHARED, m_file, 0);
-    return (char*)-1 != m_pMemory;
+    return  m_file.OpenForWrite(name, true);
 }
 
-bool Logger::_CloseLogFile()
+void Logger::_CloseLogFile()
 {
-    if (-1 != m_file)
-    {
-        ::munmap(m_pMemory, DEFAULT_LOGFILESIZE);
-        ::ftruncate(m_file, m_offset);
-        ::close(m_file);
-
-        m_pMemory   = 0;
-        m_offset    = 0;
-        m_file      = -1;
-    }
-
-    return true;
+    return m_file.Close();
 }
 
 
@@ -149,27 +125,27 @@ void Logger::Flush(enum LogLevel level)
     switch(level)  
     {
     case logINFO:
-        strncpy(m_tmpBuffer + PREFIX_TIME_LEN, "[INF]:", PREFIX_LEVEL_LEN);
+        memcpy(m_tmpBuffer + PREFIX_TIME_LEN, "[INF]:", PREFIX_LEVEL_LEN);
         break;
 
     case logDEBUG:
-        strncpy(m_tmpBuffer + PREFIX_TIME_LEN, "[DBG]:", PREFIX_LEVEL_LEN);
+        memcpy(m_tmpBuffer + PREFIX_TIME_LEN, "[DBG]:", PREFIX_LEVEL_LEN);
         break;
 
     case logWARN:
-        strncpy(m_tmpBuffer + PREFIX_TIME_LEN, "[WRN]:", PREFIX_LEVEL_LEN);
+        memcpy(m_tmpBuffer + PREFIX_TIME_LEN, "[WRN]:", PREFIX_LEVEL_LEN);
         break;
 
     case logERROR:
-        strncpy(m_tmpBuffer + PREFIX_TIME_LEN, "[ERR]:", PREFIX_LEVEL_LEN);
+        memcpy(m_tmpBuffer + PREFIX_TIME_LEN, "[ERR]:", PREFIX_LEVEL_LEN);
         break;
 
     case logUSR:
-        strncpy(m_tmpBuffer + PREFIX_TIME_LEN, "[USR]:", PREFIX_LEVEL_LEN);
+        memcpy(m_tmpBuffer + PREFIX_TIME_LEN, "[USR]:", PREFIX_LEVEL_LEN);
         break;
 
     default:    
-        strncpy(m_tmpBuffer + PREFIX_TIME_LEN, "[???]:", PREFIX_LEVEL_LEN);
+        memcpy(m_tmpBuffer + PREFIX_TIME_LEN, "[???]:", PREFIX_LEVEL_LEN);
         break;
     }
 
@@ -178,33 +154,25 @@ void Logger::Flush(enum LogLevel level)
 
     // Format: level info, length info, log msg
     int logLevel = level;
-    if (m_backBytes == 0 &&
-        m_buffer.PushDataAt(&logLevel, sizeof logLevel) && 
-        m_buffer.PushDataAt(&m_pos, sizeof m_pos, sizeof logLevel) && 
-        m_buffer.PushDataAt(m_tmpBuffer, m_pos, sizeof logLevel + sizeof m_pos))
-    {
-        m_buffer.AdjustWritePtr(sizeof logLevel + sizeof m_pos + m_pos);
-    }
-    else
-    {
-        ScopeMutex   lock(m_backBufLock);
-        m_backBuf.PushData(&logLevel, sizeof logLevel);
-        m_backBuf.PushData(&m_pos, sizeof m_pos);
-        m_backBuf.PushData(m_tmpBuffer, m_pos);
 
-        m_backBytes = m_backBuf.ReadableSize();
+    BufferSequence  contents;
+    contents.count = 3;
 
-        _Color(NORMAL_COLOR);
-       // std::cerr << "push bytes to back buffer " << m_pos << std::endl;
-        //std::cerr << "push content to back buffer " << m_tmpBuffer << std::endl;
-    }
+    contents.buffers[0].iov_base = &logLevel;
+    contents.buffers[0].iov_len  = sizeof logLevel;
+    contents.buffers[1].iov_base = &m_pos;
+    contents.buffers[1].iov_len  = sizeof m_pos;
+    contents.buffers[2].iov_base = m_tmpBuffer;
+    contents.buffers[2].iov_len  = m_pos;
+
+    m_file.AsyncWrite(contents);
 
     _Reset();
 }
 
 void Logger::_Color(unsigned int color)
 {
-    static const char* colorstrings[COLOR_MAX] = {
+    const char* colorstrings[COLOR_MAX] = {
         "",
         "\033[1;31;40m",
         "\033[1;32;40m",
@@ -216,16 +184,6 @@ void Logger::_Color(unsigned int color)
     };
 
     fprintf(stdout, "%s", colorstrings[color]);
-}
-
-bool Logger::_MakeDir(const char* pDir)
-{
-    if (pDir && 0 != mkdir(pDir, 0755))
-    {
-        if (EEXIST != errno)
-            return false;
-    }
-    return true;
 }
 
 Logger&  Logger::operator<< (const char* msg)
@@ -429,58 +387,31 @@ void   Logger::_Reset()
     m_pos  = PREFIX_LEVEL_LEN + PREFIX_TIME_LEN ;
 }
 
-bool Logger::Update()
+size_t  Logger::_LogHook(const char* data, size_t dataLen)
 {
-    if (m_buffer.IsEmpty())
+    const size_t minLogSize = sizeof(int) + sizeof(size_t);
+
+    size_t   nOffset = 0;
+    while (nOffset + minLogSize < dataLen)
     {
-        bool  hasLog = false;
-        if (m_backBytes > 0 && m_backBufLock.TryLock())
+        int  level = *(int*)(data + nOffset);
+        size_t len = *(size_t* )(data + nOffset + sizeof(int));
+        if (dataLen < nOffset + minLogSize + len)
         {
-            hasLog = true;
-
-            while (!m_backBuf.IsEmpty())
-            {
-            int level = 0;
-            m_backBuf.PeekData(&level, sizeof level);
-
-            decltype(m_pos)  nLen = 0;
-            m_backBuf.PeekData(&nLen, sizeof nLen);
-
-            assert (nLen && level);
-            _WriteLog(level, nLen, m_backBuf.ReadAddr());
-
-            m_backBuf.AdjustReadPtr(nLen);
-            }
-
-            m_backBytes = 0;
-            UnboundedBuffer().Swap(m_backBuf);
-            m_backBufLock.Unlock();
+            std::cerr << "_WriteLog skip 0!!!\n ";
+            break;
         }
 
-        return  hasLog;
+        _WriteLog(level, len, data + nOffset + minLogSize);
+        nOffset += minLogSize + len;
     }
 
-    while (!m_buffer.IsEmpty())
-    {
-        int level = 0;
-        m_buffer.PeekDataAt(&level, sizeof level);
-        m_buffer.AdjustReadPtr(sizeof level);
+    return  nOffset;
+}
 
-        decltype(m_pos) nLen = 0;
-        m_buffer.PeekDataAt(&nLen, sizeof nLen);
-        m_buffer.AdjustReadPtr(sizeof nLen);
-
-        BufferSequence  bf;
-        m_buffer.GetDatum(bf, nLen);
-        assert (nLen == bf.TotalBytes());
-
-        AttachedBuffer   content(bf);
-        _WriteLog(level, nLen, content.ReadAddr());
-
-        m_buffer.AdjustReadPtr(nLen);
-    }
-
-    return true;
+bool Logger::Update()
+{
+    return  m_file.Flush();
 }
 
 void Logger::_WriteLog(int level, size_t nLen, const char* data)
@@ -524,17 +455,15 @@ void Logger::_WriteLog(int level, size_t nLen, const char* data)
     {
         while (_CheckChangeFile())
         {
-            if (!_CloseLogFile() || !_OpenLogFile(_MakeFileName().c_str()))
+            _CloseLogFile();
+            if (!_OpenLogFile(_MakeFileName().c_str()))
             {   //OOPS!!! IMPOSSIBLE!
                 break;
             }
         }
 
-        if (m_pMemory && m_pMemory != (char*)-1)
-        {
-            ::memcpy(m_pMemory + m_offset, data, nLen);
-            m_offset += nLen;
-        }
+        assert (m_file.IsOpen());
+        m_file.Write(data, nLen);
     }
 }
 
@@ -566,11 +495,10 @@ LogManager::LogManager()
 
 LogManager::~LogManager()
 {
-    LOG_SET::iterator it(m_logs.begin());
-    for ( ; it != m_logs.end(); ++ it)
+    for (auto log : m_logs)
     {
-        (*it)->Update();
-        delete *it;    
+        if (log->Update())  std::cerr << "update when exit\n";
+        delete log;    
     }
 }
 
@@ -578,8 +506,6 @@ Logger*  LogManager::CreateLog(unsigned int level ,
                unsigned int dest ,
                const char* pDir)
 {
-    //assert (!m_logThread->IsAlive() && "You can not create log after log-thread running");
-
     Logger*  pLog(new Logger);
     if (!pLog->Init(level, dest, pDir))
     {
@@ -597,13 +523,17 @@ Logger*  LogManager::CreateLog(unsigned int level ,
 
 bool LogManager::StartLog()
 {
-    assert (!m_logThread->IsAlive());
     std::cout << "start log thread\n";
+
+    assert (!m_logThread->IsAlive());
+    m_logThread->SetAlive();
+
     return ThreadPool::Instance().ExecuteTask(m_logThread);
 }
 
 void LogManager::StopLog()
 {
+    std::cout << "stop log thread\n";
     m_logThread->Stop();
 }
 
@@ -627,7 +557,6 @@ bool LogManager::Update()
 
 void  LogManager::LogThread::Run()
 {
-    m_alive = true;
     while (IsAlive())
     {
         if (!LogManager::Instance().Update())

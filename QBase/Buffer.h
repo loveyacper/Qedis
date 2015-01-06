@@ -82,7 +82,7 @@ public:
     void AdjustReadPtr(std::size_t size);
 
     std::size_t ReadableSize()  const {  return (m_writePos - m_readPos) & (m_maxSize - 1);  }
-    std::size_t WritableSize()  const {  return m_maxSize - ReadableSize();  }
+    std::size_t WritableSize()  const {  return m_maxSize - ReadableSize() - 1;  }
 
     void Clear() {  AtomicSet(&m_readPos, m_writePos);  }
 
@@ -215,7 +215,7 @@ bool CircularBuffer<BUFFER>::PushDataAt(const void* pData, std::size_t nSize, st
     if (!pData || 0 == nSize)
         return true;
 
-    if (offset + nSize + 1 > WritableSize())
+    if (offset + nSize > WritableSize())
         return false;
 
     const std::size_t readPos = m_readPos;

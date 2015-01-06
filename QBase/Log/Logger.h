@@ -4,9 +4,7 @@
 #include <string>
 #include <set>
 
-#include "../Threads/Thread.h"
-#include "../Buffer.h"
-#include "../UnboundedBuffer.h"
+#include "AsyncOutputFile.h"
 
 enum LogLevel
 {
@@ -61,8 +59,6 @@ public:
     bool   Update();
 
 private:
-    //NONCOPYABLE(Logger);
-
     Logger();
    ~Logger();
 
@@ -73,10 +69,6 @@ private:
     
     THREAD_ID       m_thread;
 
-    Mutex           m_backBufLock;
-    std::size_t     m_backBytes;
-    UnboundedBuffer m_backBuf;
-
     unsigned int    m_level;
     std::string     m_directory;
     unsigned int    m_dest;
@@ -84,19 +76,17 @@ private:
 
     unsigned int    m_curLevel;
 
-    char*           m_pMemory;
-    std::size_t     m_offset;
-    int             m_file;
+    AsyncOutputFile m_file;
+
+    std::size_t _LogHook(const char* data, std::size_t len);
 
     bool    _CheckChangeFile();
     const std::string& _MakeFileName();
     bool    _OpenLogFile(const char* name);
-    bool    _CloseLogFile();
+    void    _CloseLogFile();
     void    _WriteLog(int level, std::size_t nLen, const char* data);
     void    _Color(unsigned int color);
     void    _Reset();
-
-    static bool _MakeDir(const char* pDir);
 };
 
 
@@ -120,7 +110,7 @@ public:
 
     ~LogManager();
     
-    LogManager(const LogManager& )     = delete;
+    LogManager(const LogManager& ) = delete;
     void operator=(const LogManager& ) = delete;
 
     Logger*  CreateLog(unsigned int level = logDEBUG,
@@ -148,6 +138,7 @@ private:
     public:
         LogThread() : m_alive(false) {}
         
+        void  SetAlive() { m_alive = true; }
         bool  IsAlive() const { return m_alive; }
         void  Stop() {  m_alive = false; }
         
@@ -160,18 +151,17 @@ private:
 };
 
 
-
 #undef INF
 #undef DBG
 #undef WRN
 #undef ERR
 #undef USR
 
-#define  LOG_INF(x)      (LogHelper(logINFO))=(g_log ? g_log : LogManager::Instance().NullLog())->SetCurLevel(logINFO)
-#define  LOG_DBG      LOG_INF
-#define  LOG_WRN      LOG_INF
-#define  LOG_ERR      LOG_INF
-#define  LOG_USR      LOG_INF
+#define  LOG_INF(x)      (LogHelper(logINFO))=(x ? x : LogManager::Instance().NullLog())->SetCurLevel(logINFO)
+#define  LOG_DBG(x)      (LogHelper(logDEBUG))=(x ? x : LogManager::Instance().NullLog())->SetCurLevel(logDEBUG)
+#define  LOG_WRN(x)      (LogHelper(logWARN))=(x ? x : LogManager::Instance().NullLog())->SetCurLevel(logWARN)
+#define  LOG_ERR(x)      (LogHelper(logERROR))=(x ? x : LogManager::Instance().NullLog())->SetCurLevel(logERROR)
+#define  LOG_USR(x)      (LogHelper(logUSR))=(x ? x : LogManager::Instance().NullLog())->SetCurLevel(logUSR)
 
 #define  INF      (LogHelper(logINFO))=(g_log ? g_log : LogManager::Instance().NullLog())->SetCurLevel(logINFO)
 #define  DBG      (LogHelper(logDEBUG))=(g_log ? g_log : LogManager::Instance().NullLog())->SetCurLevel(logDEBUG)

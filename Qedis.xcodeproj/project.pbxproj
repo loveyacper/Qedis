@@ -13,6 +13,8 @@
 		BA6C336D19EA77B200AC1800 /* QGlobRegex.h in Headers */ = {isa = PBXBuildFile; fileRef = BA6C336B19EA77B200AC1800 /* QGlobRegex.h */; };
 		BA6C336F19EA77C100AC1800 /* QGlobRegex_unittest.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA6C336E19EA77C100AC1800 /* QGlobRegex_unittest.cc */; };
 		BA6C337119EC0D9900AC1800 /* QPubsub.h in Headers */ = {isa = PBXBuildFile; fileRef = BA6C337019EC0D9900AC1800 /* QPubsub.h */; };
+		BABCB0791A5B5D2900E09ED0 /* AsyncOutputFile.cc in Sources */ = {isa = PBXBuildFile; fileRef = BABCB0771A5B5D2900E09ED0 /* AsyncOutputFile.cc */; };
+		BABCB07A1A5B5D2900E09ED0 /* AsyncOutputFile.h in Headers */ = {isa = PBXBuildFile; fileRef = BABCB0781A5B5D2900E09ED0 /* AsyncOutputFile.h */; };
 		BAD0C5FE19E7A02C005B3784 /* IntSet.h in Headers */ = {isa = PBXBuildFile; fileRef = BAD0C5E219E7A02C005B3784 /* IntSet.h */; };
 		BAD0C5FF19E7A02C005B3784 /* QClient.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAD0C5E319E7A02C005B3784 /* QClient.cc */; };
 		BAD0C60019E7A02C005B3784 /* QClient.h in Headers */ = {isa = PBXBuildFile; fileRef = BAD0C5E419E7A02C005B3784 /* QClient.h */; };
@@ -158,6 +160,8 @@
 		BA6C336B19EA77B200AC1800 /* QGlobRegex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QGlobRegex.h; path = QedisLib/QGlobRegex.h; sourceTree = SOURCE_ROOT; };
 		BA6C336E19EA77C100AC1800 /* QGlobRegex_unittest.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QGlobRegex_unittest.cc; sourceTree = "<group>"; };
 		BA6C337019EC0D9900AC1800 /* QPubsub.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = QPubsub.h; path = QedisLib/QPubsub.h; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		BABCB0771A5B5D2900E09ED0 /* AsyncOutputFile.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AsyncOutputFile.cc; sourceTree = "<group>"; };
+		BABCB0781A5B5D2900E09ED0 /* AsyncOutputFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AsyncOutputFile.h; sourceTree = "<group>"; };
 		BABEBED519C4474900010636 /* Qedis */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Qedis; sourceTree = BUILT_PRODUCTS_DIR; };
 		BAD0C5D919E79FF7005B3784 /* libqedislib.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libqedislib.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		BAD0C5E119E7A02C005B3784 /* IntSet.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IntSet.cc; path = QedisLib/IntSet.cc; sourceTree = SOURCE_ROOT; };
@@ -404,6 +408,8 @@
 		BAFC840F19C44AFD00C18B22 /* Log */ = {
 			isa = PBXGroup;
 			children = (
+				BABCB0771A5B5D2900E09ED0 /* AsyncOutputFile.cc */,
+				BABCB0781A5B5D2900E09ED0 /* AsyncOutputFile.h */,
 				BAFC841019C44AFD00C18B22 /* Logger.cc */,
 				BAFC841119C44AFD00C18B22 /* Logger.h */,
 			);
@@ -488,6 +494,7 @@
 				BAFC849619C44AFD00C18B22 /* MakeShared.h in Headers */,
 				BAFC849719C44AFD00C18B22 /* SharedPtr.h in Headers */,
 				BAFC849519C44AFD00C18B22 /* EnableShareMe.h in Headers */,
+				BABCB07A1A5B5D2900E09ED0 /* AsyncOutputFile.h in Headers */,
 				BAFC849F19C44AFD00C18B22 /* WeakPtr.h in Headers */,
 				BAFC847819C44AFD00C18B22 /* EPoller.h in Headers */,
 				BAFC849019C44AFD00C18B22 /* Poller.h in Headers */,
@@ -655,6 +662,7 @@
 				BAFC84C019C44AFD00C18B22 /* Thread.cc in Sources */,
 				BAFC84C219C44AFD00C18B22 /* ThreadPool.cc in Sources */,
 				BAFC847919C44AFD00C18B22 /* Kqueue.cc in Sources */,
+				BABCB0791A5B5D2900E09ED0 /* AsyncOutputFile.cc in Sources */,
 				BAFC849119C44AFD00C18B22 /* Server.cc in Sources */,
 				BAFC848E19C44AFD00C18B22 /* NetThreadPool.cc in Sources */,
 				BAFC84B719C44AFD00C18B22 /* Socket.cc in Sources */,
