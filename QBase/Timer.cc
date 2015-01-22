@@ -116,7 +116,7 @@ static const char* YEAR[] = { "2015", "2016", "2017", "2018",
      nullptr,
 };
 
-const char* Time::FormatTime(char* buf, int maxSize) const
+std::size_t Time::FormatTime(char* buf) const
 {
     static char NUMBER[60][2] = {""};
 
@@ -132,35 +132,32 @@ const char* Time::FormatTime(char* buf, int maxSize) const
         }
     }
 
-    if (buf && maxSize > 1)
-    {
-        _UpdateTm();
+    _UpdateTm();
+    
 #if  1
-        memcpy(buf, YEAR[m_tm.tm_year + 1900 - 2015], 4);
-        buf[4] = '-';
-        memcpy(buf + 5, NUMBER[m_tm.tm_mon + 1], 2);
-        buf[7] = '-';
-        memcpy(buf + 8, NUMBER[m_tm.tm_mday], 2);
-        buf[10] = '[';
-        memcpy(buf + 11, NUMBER[m_tm.tm_hour], 2);
-        buf[13] = ':';
-        memcpy(buf + 14, NUMBER[m_tm.tm_min], 2);
-        buf[16] = ':';
-        memcpy(buf + 17, NUMBER[m_tm.tm_sec], 2);
-        buf[19] = '.';
-        snprintf(buf + 20, 4, "%03d", static_cast<int>(m_ms % 1000));
-        memcpy(buf + 23, "]", 2);
+    memcpy(buf, YEAR[m_tm.tm_year + 1900 - 2015], 4);
+    buf[4] = '-';
+    memcpy(buf + 5, NUMBER[m_tm.tm_mon + 1], 2);
+    buf[7] = '-';
+    memcpy(buf + 8, NUMBER[m_tm.tm_mday], 2);
+    buf[10] = '[';
+    memcpy(buf + 11, NUMBER[m_tm.tm_hour], 2);
+    buf[13] = ':';
+    memcpy(buf + 14, NUMBER[m_tm.tm_min], 2);
+    buf[16] = ':';
+    memcpy(buf + 17, NUMBER[m_tm.tm_sec], 2);
+    buf[19] = '.';
+    snprintf(buf + 20, 4, "%03d", static_cast<int>(m_ms % 1000));
+        memcpy(buf + 23, "]", 1);
 #else
-        snprintf(buf, static_cast<size_t>(maxSize), "%04d-%02d-%02d[%02d:%02d:%02d.%03d]", 
-                m_tm.tm_year+1900, m_tm.tm_mon+1, m_tm.tm_mday,
-                m_tm.tm_hour, m_tm.tm_min, m_tm.tm_sec,
-                static_cast<int>(m_ms % 1000));
+    
+    snprintf(buf, 25, "%04d-%02d-%02d[%02d:%02d:%02d.%03d]",
+             m_tm.tm_year+1900, m_tm.tm_mon+1, m_tm.tm_mday,
+             m_tm.tm_hour, m_tm.tm_min, m_tm.tm_sec,
+             static_cast<int>(m_ms % 1000));
 #endif
-
-        return buf;
-    }
-        
-    return NULL;
+    
+    return 24;
 }
 
 void Time::AddDelay(uint64_t delay)

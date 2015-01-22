@@ -88,7 +88,6 @@ struct SocketAddr
 
 namespace Internal
 {
-class RecvThread;
 class SendThread;
 }
 
@@ -96,7 +95,6 @@ class SendThread;
 class Socket : public EnableShareMe<Socket>
 {
     friend class Internal::SendThread;
-    friend class Internal::RecvThread;
 
 public:
     virtual ~Socket();

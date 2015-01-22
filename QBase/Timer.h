@@ -20,7 +20,7 @@ public:
 
     void        Now();
     uint64_t    MilliSeconds() const { return m_ms; }
-    const char* FormatTime(char* buf, int size) const;
+    std::size_t FormatTime(char* buf) const;
     void        AddDelay(uint64_t delay);
 
     int GetYear()   const { _UpdateTm(); return m_tm.tm_year + 1900;  } 

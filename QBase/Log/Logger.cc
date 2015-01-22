@@ -28,14 +28,11 @@ static const size_t DEFAULT_LOGFILESIZE = 32 * 1024 * 1024;
 static const size_t PREFIX_LEVEL_LEN    = 6;
 static const size_t PREFIX_TIME_LEN     = 24;
 
-Logger::Logger() : m_buffer(1 * 1024 * 1024),
-                   m_level(0),
+Logger::Logger() : m_level(0),
                    m_dest(0)
 {
     m_thread = Thread::GetCurrentThreadId();
     _Reset();
-
-    m_file.SetFlushHook(std::bind(&Logger::_LogHook, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 Logger::~Logger()
@@ -58,7 +55,7 @@ bool Logger::Init(unsigned int level, unsigned int dest, const char* pDir)
     if (m_dest & logFILE)
     {
         if (m_directory == "." ||
-            AsyncOutputFile::MakeDir(m_directory.c_str()))
+            MemoryFile::MakeDir(m_directory.c_str()))
         {
             _OpenLogFile(_MakeFileName().c_str());
             return true;
@@ -88,7 +85,8 @@ const std::string& Logger::_MakeFileName()
 {
     char   name[32];
     Time   now;
-    now.FormatTime(name, sizeof(name) - 1);
+    size_t len = now.FormatTime(name);
+    name[len] = '\0';
 
     m_fileName  = m_directory + "/" + name;
     m_fileName += ".log";
@@ -98,7 +96,7 @@ const std::string& Logger::_MakeFileName()
 
 bool Logger::_OpenLogFile(const char* name)
 { 
-    return  m_file.OpenForWrite(name, true);
+    return  m_file.Open(name, true);
 }
 
 void Logger::_CloseLogFile()
@@ -120,7 +118,7 @@ void Logger::Flush(enum LogLevel level)
     assert (m_thread == Thread::GetCurrentThreadId());
     
     g_now.Now();
-    g_now.FormatTime(m_tmpBuffer, PREFIX_TIME_LEN + 1);
+    g_now.FormatTime(m_tmpBuffer);
 
     switch(level)  
     {
@@ -165,7 +163,7 @@ void Logger::Flush(enum LogLevel level)
     contents.buffers[2].iov_base = m_tmpBuffer;
     contents.buffers[2].iov_len  = m_pos;
 
-    m_file.AsyncWrite(contents);
+    m_buffer.AsyncWrite(contents);
 
     _Reset();
 }
@@ -380,6 +378,17 @@ Logger&  Logger::operator<< (long long a)
     return  *this;
 }
 
+bool Logger::Update()
+{
+    BufferSequence  data;
+    m_buffer.ProcessBuffer(data);
+    
+    AttachedBuffer  abf(data);
+    size_t nWritten = _Log(abf.ReadAddr(), abf.ReadableSize());
+    m_buffer.Skip(nWritten);
+    
+    return nWritten != 0;
+}
 
 void   Logger::_Reset()
 {
@@ -387,7 +396,7 @@ void   Logger::_Reset()
     m_pos  = PREFIX_LEVEL_LEN + PREFIX_TIME_LEN ;
 }
 
-size_t  Logger::_LogHook(const char* data, size_t dataLen)
+size_t  Logger::_Log(const char* data, size_t dataLen)
 {
     const size_t minLogSize = sizeof(int) + sizeof(size_t);
 
@@ -409,10 +418,7 @@ size_t  Logger::_LogHook(const char* data, size_t dataLen)
     return  nOffset;
 }
 
-bool Logger::Update()
-{
-    return  m_file.Flush();
-}
+
 
 void Logger::_WriteLog(int level, size_t nLen, const char* data)
 {

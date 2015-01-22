@@ -4,7 +4,9 @@
 #include <string>
 #include <set>
 
-#include "AsyncOutputFile.h"
+#include "Thread.h"
+#include "OutputBuffer.h"
+#include "MemoryFile.h"
 
 enum LogLevel
 {
@@ -65,7 +67,6 @@ private:
     static const size_t MAXLINE_LOG = 2048; // TODO
     char            m_tmpBuffer[MAXLINE_LOG];
     std::size_t     m_pos;
-    Buffer          m_buffer;
     
     THREAD_ID       m_thread;
 
@@ -76,9 +77,10 @@ private:
 
     unsigned int    m_curLevel;
 
-    AsyncOutputFile m_file;
+    OutputBuffer    m_buffer;
+    MemoryFile      m_file;
 
-    std::size_t _LogHook(const char* data, std::size_t len);
+    std::size_t     _Log(const char* data, std::size_t len);
 
     bool    _CheckChangeFile();
     const std::string& _MakeFileName();
