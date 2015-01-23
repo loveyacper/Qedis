@@ -68,7 +68,13 @@ void  OutputBuffer::ProcessBuffer(BufferSequence& data)
 {
     data.count = 0;
     
-    if (!m_buffer.IsEmpty())
+    if (!m_tmpBuf.IsEmpty())
+    {
+        data.count = 1;
+        data.buffers[0].iov_base = m_tmpBuf.ReadAddr();
+        data.buffers[0].iov_len  = m_tmpBuf.ReadableSize();
+    }
+    else if (!m_buffer.IsEmpty())
     {
         size_t nLen = m_buffer.ReadableSize();
 
@@ -94,8 +100,11 @@ void  OutputBuffer::Skip(size_t  size)
 {
     if (!m_tmpBuf.IsEmpty())
     {
-        assert(size == m_tmpBuf.ReadableSize());
-        UnboundedBuffer().Swap(m_tmpBuf);
+        assert(size <= m_tmpBuf.ReadableSize());
+        m_tmpBuf.AdjustReadPtr(size);
+        
+        if (m_tmpBuf.IsEmpty())
+            m_tmpBuf.Shrink();
     }
     else
     {
