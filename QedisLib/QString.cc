@@ -15,7 +15,7 @@ static QObject  CreateString(const QString&  value)
     {
         obj.encoding = QEncode_int;
         obj.value.SetIntValue(val);
-        LOG_DBG(g_logger) << "set int value " << val;
+        LOG_DBG(g_log) << "set int value " << val;
     }
     else
     {
@@ -338,7 +338,7 @@ QError  bitcount(const vector<QString>& params, UnboundedBuffer& reply)
 
     if (params.size() != 2 && params.size() != 4)
     {
-        LOG_ERR(g_logger) << "bitcount wrong params size = " << params.size();
+        LOG_ERR(g_log) << "bitcount wrong params size = " << params.size();
         ReplyError(QError_param, reply);
         return QError_param;
     }
@@ -361,7 +361,7 @@ QError  bitcount(const vector<QString>& params, UnboundedBuffer& reply)
     size_t cnt = 0;
     if (end >= start)
     {
-        LOG_DBG(g_logger) << "start = " << start << ", end = " << end << ", size = " << str->size();
+        LOG_DBG(g_log) << "start = " << start << ", end = " << end << ", size = " << str->size();
         cnt = BitCount((const uint8_t*)str->data() + start,  end - start + 1);
     }
 
@@ -399,7 +399,7 @@ QError  getbit(const vector<QString>& params, UnboundedBuffer& reply)
     size_t  bytesOffset = offset / 8;
     size_t  bitsOffset  = offset % 8;
     uint8_t byte = buf[bytesOffset];
-    LOG_DBG(g_logger) << "bytes offset " << bytesOffset << ", bitsOff " << bitsOffset << ", byte = " << byte;
+    LOG_DBG(g_log) << "bytes offset " << bytesOffset << ", bitsOff " << bitsOffset << ", byte = " << byte;
     if (byte & (0x1 << bitsOffset))
         Format1(reply);
     else

@@ -9,8 +9,8 @@
 /* Begin PBXBuildFile section */
 		BA1250711A6D43D500A0532D /* MemoryFile.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA12506F1A6D43D500A0532D /* MemoryFile.cc */; };
 		BA1250721A6D43D500A0532D /* MemoryFile.h in Headers */ = {isa = PBXBuildFile; fileRef = BA1250701A6D43D500A0532D /* MemoryFile.h */; };
-		BA1250791A7132CD00A0532D /* OutputBuffer.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA1250771A7132CD00A0532D /* OutputBuffer.cc */; };
-		BA12507A1A7132CD00A0532D /* OutputBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = BA1250781A7132CD00A0532D /* OutputBuffer.h */; };
+		BA1250811A7338CD00A0532D /* OutputBuffer.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA12507F1A7338CD00A0532D /* OutputBuffer.cc */; };
+		BA1250821A7338CD00A0532D /* OutputBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = BA1250801A7338CD00A0532D /* OutputBuffer.h */; };
 		BA29C44E19FB2CEE00796E3A /* QMulti.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA29C44C19FB2CEE00796E3A /* QMulti.cc */; };
 		BA29C44F19FB2CEE00796E3A /* QMulti.h in Headers */ = {isa = PBXBuildFile; fileRef = BA29C44D19FB2CEE00796E3A /* QMulti.h */; };
 		BA6C336C19EA77B200AC1800 /* QGlobRegex.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA6C336A19EA77B200AC1800 /* QGlobRegex.cc */; };
@@ -158,8 +158,8 @@
 /* Begin PBXFileReference section */
 		BA12506F1A6D43D500A0532D /* MemoryFile.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MemoryFile.cc; sourceTree = "<group>"; };
 		BA1250701A6D43D500A0532D /* MemoryFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MemoryFile.h; sourceTree = "<group>"; };
-		BA1250771A7132CD00A0532D /* OutputBuffer.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = OutputBuffer.cc; sourceTree = "<group>"; };
-		BA1250781A7132CD00A0532D /* OutputBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OutputBuffer.h; sourceTree = "<group>"; };
+		BA12507F1A7338CD00A0532D /* OutputBuffer.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = OutputBuffer.cc; path = QBase/OutputBuffer.cc; sourceTree = "<group>"; };
+		BA1250801A7338CD00A0532D /* OutputBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OutputBuffer.h; path = QBase/OutputBuffer.h; sourceTree = "<group>"; };
 		BA29C44C19FB2CEE00796E3A /* QMulti.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QMulti.cc; path = QedisLib/QMulti.cc; sourceTree = SOURCE_ROOT; };
 		BA29C44D19FB2CEE00796E3A /* QMulti.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QMulti.h; path = QedisLib/QMulti.h; sourceTree = SOURCE_ROOT; };
 		BA6C336A19EA77B200AC1800 /* QGlobRegex.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QGlobRegex.cc; path = QedisLib/QGlobRegex.cc; sourceTree = SOURCE_ROOT; };
@@ -289,6 +289,8 @@
 		BAA158B219C44A0F007713F9 /* QBase */ = {
 			isa = PBXGroup;
 			children = (
+				BA12507F1A7338CD00A0532D /* OutputBuffer.cc */,
+				BA1250801A7338CD00A0532D /* OutputBuffer.h */,
 				BAFC840219C44AFD00C18B22 /* Buffer.h */,
 				BAFC840419C44AFD00C18B22 /* ClientSocket.cc */,
 				BAFC840519C44AFD00C18B22 /* ClientSocket.h */,
@@ -412,8 +414,6 @@
 		BAFC840F19C44AFD00C18B22 /* Log */ = {
 			isa = PBXGroup;
 			children = (
-				BA1250771A7132CD00A0532D /* OutputBuffer.cc */,
-				BA1250781A7132CD00A0532D /* OutputBuffer.h */,
 				BA12506F1A6D43D500A0532D /* MemoryFile.cc */,
 				BA1250701A6D43D500A0532D /* MemoryFile.h */,
 				BAFC841019C44AFD00C18B22 /* Logger.cc */,
@@ -494,7 +494,6 @@
 				BAFC847419C44AFD00C18B22 /* ClientSocket.h in Headers */,
 				BAFC847E19C44AFD00C18B22 /* Logger.h in Headers */,
 				BAFC847A19C44AFD00C18B22 /* Kqueue.h in Headers */,
-				BA12507A1A7132CD00A0532D /* OutputBuffer.h in Headers */,
 				BAFC84B819C44AFD00C18B22 /* Socket.h in Headers */,
 				BAFC848F19C44AFD00C18B22 /* NetThreadPool.h in Headers */,
 				BAFC847219C44AFD00C18B22 /* Buffer.h in Headers */,
@@ -502,6 +501,7 @@
 				BAFC849719C44AFD00C18B22 /* SharedPtr.h in Headers */,
 				BAFC849519C44AFD00C18B22 /* EnableShareMe.h in Headers */,
 				BA1250721A6D43D500A0532D /* MemoryFile.h in Headers */,
+				BA1250821A7338CD00A0532D /* OutputBuffer.h in Headers */,
 				BAFC849F19C44AFD00C18B22 /* WeakPtr.h in Headers */,
 				BAFC847819C44AFD00C18B22 /* EPoller.h in Headers */,
 				BAFC849019C44AFD00C18B22 /* Poller.h in Headers */,
@@ -674,10 +674,10 @@
 				BAFC848E19C44AFD00C18B22 /* NetThreadPool.cc in Sources */,
 				BAFC84B719C44AFD00C18B22 /* Socket.cc in Sources */,
 				BAFC847319C44AFD00C18B22 /* ClientSocket.cc in Sources */,
-				BA1250791A7132CD00A0532D /* OutputBuffer.cc in Sources */,
 				BAFC847719C44AFD00C18B22 /* EPoller.cc in Sources */,
 				BAFC847B19C44AFD00C18B22 /* ListenSocket.cc in Sources */,
 				BAFC84C619C44AFD00C18B22 /* UnboundedBuffer.cc in Sources */,
+				BA1250811A7338CD00A0532D /* OutputBuffer.cc in Sources */,
 				BAFC84BB19C44AFD00C18B22 /* TaskManager.cc in Sources */,
 				BAFC84B919C44AFD00C18B22 /* StreamSocket.cc in Sources */,
 				BAFC84C419C44AFD00C18B22 /* Timer.cc in Sources */,

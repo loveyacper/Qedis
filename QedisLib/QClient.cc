@@ -71,7 +71,7 @@ HEAD_LENGTH_T QClient::_HandleHead(AttachedBuffer& buf, BODY_LENGTH_T* bodyLen)
         m_stat.Begin();
         if (*ptr != '*')
         {
-            LOG_ERR(g_logger) << "InitState: expect *, wrong char " << (int)*ptr;
+            LOG_ERR(g_log) << "InitState: expect *, wrong char " << (int)*ptr;
             OnError();
             assert (false);
             return 0;
@@ -95,7 +95,7 @@ HEAD_LENGTH_T QClient::_HandleHead(AttachedBuffer& buf, BODY_LENGTH_T* bodyLen)
 
         if (!Strtol(ptr, static_cast<int>(crlf - ptr), &m_multibulk))
         {
-            LOG_ERR(g_logger) << "Can not get args number";
+            LOG_ERR(g_log) << "Can not get args number";
             OnError();
             assert (false);
             return 0;
@@ -120,7 +120,7 @@ HEAD_LENGTH_T QClient::_HandleHead(AttachedBuffer& buf, BODY_LENGTH_T* bodyLen)
         DBG << "Got multibulk " << m_multibulk;
         if (m_multibulk < 0 || m_multibulk > 1024)
         {
-            LOG_ERR(g_logger) << "Abnormal m_multibulk " << m_multibulk;
+            LOG_ERR(g_log) << "Abnormal m_multibulk " << m_multibulk;
             OnError();
             assert (false);
             return 0;
@@ -136,7 +136,7 @@ HEAD_LENGTH_T QClient::_HandleHead(AttachedBuffer& buf, BODY_LENGTH_T* bodyLen)
         }
         else
         {
-            LOG_ERR(g_logger) << "ProcessDollarState: expect $, wrong char " << (int)*ptr;
+            LOG_ERR(g_log) << "ProcessDollarState: expect $, wrong char " << (int)*ptr;
             OnError();
             assert (false);
             return 0;
@@ -152,7 +152,7 @@ HEAD_LENGTH_T QClient::_HandleHead(AttachedBuffer& buf, BODY_LENGTH_T* bodyLen)
 
         if (!crlf) 
         {
-            LOG_INF(g_logger) << "ProcessArglenState can not find crlf, break";
+            LOG_INF(g_log) << "ProcessArglenState can not find crlf, break";
             return 0;
         }
         else
@@ -162,7 +162,7 @@ HEAD_LENGTH_T QClient::_HandleHead(AttachedBuffer& buf, BODY_LENGTH_T* bodyLen)
 
         if (!Strtol(ptr, static_cast<int>(crlf - ptr), &m_paramLen))
         {
-            LOG_ERR(g_logger) << "Can not get arg len";
+            LOG_ERR(g_log) << "Can not get arg len";
             OnError();
             assert (false);
             return 0;
@@ -188,7 +188,7 @@ HEAD_LENGTH_T QClient::_HandleHead(AttachedBuffer& buf, BODY_LENGTH_T* bodyLen)
         m_state = ProcessArgState;
         if (m_paramLen < 0 || m_paramLen > 1024 * 1024)
         {
-            LOG_ERR(g_logger) << "Got wrong argLen " << m_paramLen;
+            LOG_ERR(g_log) << "Got wrong argLen " << m_paramLen;
             OnError();
             assert (false);
             return 0;
@@ -225,7 +225,7 @@ void QClient::_HandlePacket(AttachedBuffer& buf)
 
         if (!crlf) 
         {
-            LOG_ERR(g_logger) << "Why can not find crlf?";
+            LOG_ERR(g_log) << "Why can not find crlf?";
             OnError();
             assert (false);
         }
@@ -234,7 +234,7 @@ void QClient::_HandlePacket(AttachedBuffer& buf)
 
         if (crlf - start != m_paramLen)
         {
-            LOG_ERR(g_logger) << "param len said " << m_paramLen << ", but actual get " << (crlf - start);
+            LOG_ERR(g_log) << "param len said " << m_paramLen << ", but actual get " << (crlf - start);
             OnError();
             return ;
         }
@@ -260,7 +260,7 @@ void QClient::_HandlePacket(AttachedBuffer& buf)
     assert (succ);
     m_stat.End(PARSE_STATE);
 
-    LOG_INF(g_logger) << "client " << GetID() << ", cmd " << m_params[0].c_str();
+    LOG_INF(g_log) << "client " << GetID() << ", cmd " << m_params[0].c_str();
     
     const QCommandInfo* info = QCommandTable::GetCommandInfo(m_params[0]);
     // if is multi state,  GetCmdInfo, CheckParamsCount;

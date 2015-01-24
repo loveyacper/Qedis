@@ -3,8 +3,8 @@
 
 #include <mutex>
 
-#include "../Buffer.h"
-#include "../UnboundedBuffer.h"
+#include "Buffer.h"
+#include "UnboundedBuffer.h"
 
 class OutputBuffer
 {

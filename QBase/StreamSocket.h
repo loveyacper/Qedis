@@ -2,11 +2,9 @@
 #ifndef BERT_STREAMSOCKET_H
 #define BERT_STREAMSOCKET_H
 
-#include "Buffer.h"
-#include "UnboundedBuffer.h"
+#include "OutputBuffer.h"
 #include "Socket.h"
 #include "Threads/IPC.h"
-#include "Timer.h"
 #include <sys/types.h>
 #include <sys/socket.h>
 
@@ -43,11 +41,8 @@ public:
 
     void  SetReconn(bool retry) { m_retry = retry; }
     
-    // main and timer call it, return true if back buf is empty;
-    bool  MoveToSendBuffer();
     // send thread
     bool  Send();
-
 
 private:
     bool   m_retry;
@@ -69,18 +64,7 @@ private:
     };
 
     Buffer   m_recvBuf;
-
-    class SendTimer : public Timer
-    {
-    public:
-        WeakPtr<StreamSocket>  m_sock;
-
-        SendTimer();
-        bool _OnTimer();
-    };
-    Buffer   m_sendBuf;
-    UnboundedBuffer  m_backBuf;
-    SharedPtr<SendTimer> m_timer;
+    OutputBuffer   m_sendBuf;
 };
 
 template <int N>

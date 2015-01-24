@@ -8,7 +8,7 @@
 void QStore::QExpiresDB::SetExpire(const QString& key, uint64_t when)
 {
     m_expireKeys[key] = when;
-    LOG_INF(g_logger) << "Set timeout key " << key.c_str() << ", timeout is " << when;
+    LOG_INF(g_log) << "Set timeout key " << key.c_str() << ", timeout is " << when;
 }
 
 int64_t  QStore::QExpiresDB::TTL(const QString& key, uint64_t now) const
@@ -20,7 +20,7 @@ int64_t  QStore::QExpiresDB::TTL(const QString& key, uint64_t now) const
     if (it != m_expireKeys.end())
         ret =static_cast<int64_t>(it->second - now);
 
-    LOG_WRN(g_logger) << "Get TTL " << key.c_str() << ", timeout " << ret;
+    LOG_WRN(g_log) << "Get TTL " << key.c_str() << ", timeout " << ret;
 
     return ret;
 }
@@ -39,7 +39,7 @@ bool QStore::QExpiresDB::ExpireIfNeed(const QString& key, uint64_t now)
         if (it->second > now)
             return false; // not expire
         
-        LOG_WRN(g_logger) << "Delete timeout key " << key.c_str() << ", timeout is " << it->second;
+        LOG_WRN(g_log) << "Delete timeout key " << key.c_str() << ", timeout is " << it->second;
         m_expireKeys.erase(it);
         return true;
     }
@@ -61,7 +61,7 @@ int   QStore::QExpiresDB::LoopCheck(uint64_t now)
         if (it->second <= now)
         {
             // time to delete
-            LOG_WRN(g_logger) << "LoopCheck try delete key " << it->first.c_str() << ", " << ::Now();
+            LOG_WRN(g_log) << "LoopCheck try delete key " << it->first.c_str() << ", " << ::Now();
             QSTORE.DeleteKey(it->first);
 
             m_expireKeys.erase(it ++);

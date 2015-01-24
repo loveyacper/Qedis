@@ -129,7 +129,7 @@ std::pair<QString, long> QSortedSet::GetMemberByRank(size_t  rank) const
             {
             }
             
-            LOG_DBG(g_logger) << "Get rank " << rank << ", name " << itMem->c_str();
+            LOG_DBG(g_log) << "Get rank " << rank << ", name " << itMem->c_str();
             return std::make_pair(*itMem, score);
         }
     }

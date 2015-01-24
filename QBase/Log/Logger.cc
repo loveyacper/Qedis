@@ -503,8 +503,12 @@ LogManager::~LogManager()
 {
     for (auto log : m_logs)
     {
-        if (log->Update())  std::cerr << "update when exit\n";
-        delete log;    
+        int i = 0;
+        while (log->Update())
+        {
+            std::cerr << i++ << " when exit update log ptr " << (void*)log << std::endl;
+        }
+        delete log;
     }
 }
 

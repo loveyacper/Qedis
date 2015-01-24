@@ -1,13 +1,10 @@
 #ifndef BERT_QCOMMON_H
 #define BERT_QCOMMON_H
 
-//#include "QString.h"
 #include <cstddef>
 
 #define QEDIS static_cast<Qedis* >(Server::Instance())
 
-class   Logger;
-extern  Logger*  g_logger;
 
 enum QType
 {

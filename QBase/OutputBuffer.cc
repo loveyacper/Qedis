@@ -23,14 +23,21 @@ OutputBuffer::~OutputBuffer()
 
 void   OutputBuffer::AsyncWrite(const void* data, size_t len)
 {
-    if (m_backBytes > 0 || !m_buffer.PushData(data, len))
+    if (m_backBytes > 0 || m_buffer.WritableSize() < len)
     {
         std::lock_guard<std::mutex>  guard(m_backBufLock);
-     
-        m_backBuf.PushData(data, len);
-        m_backBytes += len;
-        assert (m_backBytes == m_backBuf.ReadableSize());
+        
+        if (m_backBytes > 0 || m_buffer.WritableSize() < len)
+        {
+            m_backBuf.PushData(data, len);
+            m_backBytes += len;
+            assert (m_backBytes == m_backBuf.ReadableSize());
+            return;
+        }
     }
+    
+    bool succ = m_buffer.PushData(data, len);
+    assert(succ);
 }
 
 void   OutputBuffer::AsyncWrite(const BufferSequence& data)
@@ -104,7 +111,7 @@ void  OutputBuffer::Skip(size_t  size)
         m_tmpBuf.AdjustReadPtr(size);
         
         if (m_tmpBuf.IsEmpty())
-            m_tmpBuf.Shrink();
+            ;//m_tmpBuf.Shrink();
     }
     else
     {

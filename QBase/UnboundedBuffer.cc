@@ -76,8 +76,8 @@ void UnboundedBuffer::_AssureSpace(std::size_t nSize)
         
     if (m_readPos > 0)
     {
-        std::cout << "Move buffer from " << m_readPos << std::endl;
         std::size_t dataSize = ReadableSize();
+        std::cout << dataSize << " bytes moved from " << m_readPos << std::endl;
         ::memmove(&m_buffer[0], &m_buffer[m_readPos], dataSize);
         m_readPos  = 0;
         m_writePos = dataSize;
