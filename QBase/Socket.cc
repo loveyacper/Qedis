@@ -16,17 +16,18 @@
 #include "NetThreadPool.h"
 #include "Log/Logger.h"
 
-unsigned int Socket::sm_id = 0;
+std::atomic<std::size_t> Socket::sm_id;
 
 Socket::Socket() : m_localSock(INVALID_SOCKET),
                    m_epollOut(false),
-                   m_invalid(0)
+                   m_invalid(false)
 {
-    AtomicChange(&sm_id, 1);
-    if (sm_id == 0)
-        AtomicChange(&sm_id, 1);
+    ++ sm_id;
+    
+    std::size_t expect = 0;
+    sm_id.compare_exchange_strong(expect, 1);
                    
-    m_id = AtomicGet(&sm_id);
+    m_id = sm_id;
 }
 
 Socket::~Socket()
@@ -41,7 +42,8 @@ int Socket::CreateUDPSocket()
 
 bool Socket::OnError()   
 {
-    if (0 == AtomicTestAndSet(&m_invalid, 0, 1))
+    bool expect = false;
+    if (m_invalid.compare_exchange_strong(expect, true))
     {
         //CloseSocket(m_localSock);
         return true;
@@ -59,8 +61,8 @@ void Socket::CloseSocket(int& sock)
 {
     if (sock != INVALID_SOCKET)
     {
-        TEMP_FAILURE_RETRY(::shutdown(sock, SHUT_RDWR));
-        TEMP_FAILURE_RETRY(::close(sock));
+        ::shutdown(sock, SHUT_RDWR);
+        ::close(sock);
         USR << "CloseSocket " << sock;
         sock = INVALID_SOCKET;
     }

@@ -16,8 +16,8 @@ OutputBuffer::OutputBuffer(size_t size) : m_buffer(size),
 
 OutputBuffer::~OutputBuffer()
 {
-    assert (m_buffer.IsEmpty());
-    assert (m_backBytes == 0);
+  //  assert (m_buffer.IsEmpty());
+   // assert (m_backBytes == 0);
 }
 
 
@@ -42,7 +42,7 @@ void   OutputBuffer::AsyncWrite(const void* data, size_t len)
 
 void   OutputBuffer::AsyncWrite(const BufferSequence& data)
 {
-    size_t len = data.TotalBytes();
+    auto len = data.TotalBytes();
 
     if (m_backBytes > 0 || m_buffer.WritableSize() < len)
     {
@@ -83,7 +83,7 @@ void  OutputBuffer::ProcessBuffer(BufferSequence& data)
     }
     else if (!m_buffer.IsEmpty())
     {
-        size_t nLen = m_buffer.ReadableSize();
+        auto nLen = m_buffer.ReadableSize();
 
         m_buffer.GetDatum(data, nLen);
         assert (nLen == data.TotalBytes());
@@ -109,9 +109,6 @@ void  OutputBuffer::Skip(size_t  size)
     {
         assert(size <= m_tmpBuf.ReadableSize());
         m_tmpBuf.AdjustReadPtr(size);
-        
-        if (m_tmpBuf.IsEmpty())
-            ;//m_tmpBuf.Shrink();
     }
     else
     {

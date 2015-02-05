@@ -11,7 +11,7 @@ __thread  Logger*  g_log;
 __thread  int      g_logLevel;
 __thread  int      g_logDest;
     
-Thread::Thread(const SharedPtr<Runnable>& runnable) :
+Thread::Thread(const std::shared_ptr<Runnable>& runnable) :
 m_runnable(runnable),
 m_handle(INVALID_HANDLE_VALUE),
 m_tid(0),

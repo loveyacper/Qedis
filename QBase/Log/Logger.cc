@@ -32,6 +32,7 @@ Logger::Logger() : m_level(0),
                    m_dest(0)
 {
     m_thread = Thread::GetCurrentThreadId();
+    m_lastLogMSecond = m_lastLogSecond = -1;
     _Reset();
 }
 
@@ -117,10 +118,29 @@ void Logger::Flush(enum LogLevel level)
 
     assert (m_thread == Thread::GetCurrentThreadId());
     
-    g_now.Now();
-    g_now.FormatTime(m_tmpBuffer);
+    m_time.Now();
+#if 0
+    m_time.FormatTime(m_tmpBuffer);
+#else
+    auto seconds = m_time.MilliSeconds() / 1000;
+    if (seconds != m_lastLogSecond)
+    {
+        m_time.FormatTime(m_tmpBuffer);
+        m_lastLogSecond = seconds;
+    }
+    else
+    {
+        auto msec = m_time.MilliSeconds() % 1000;
+        if (msec != m_lastLogMSecond)
+        {
+            snprintf(m_tmpBuffer + 20, 4, "%03d", static_cast<int>(msec));
+            m_tmpBuffer[23] = ']';
+            m_lastLogMSecond = msec;
+        }
+    }
+#endif
 
-    switch(level)  
+    switch(level)
     {
     case logINFO:
         memcpy(m_tmpBuffer + PREFIX_TIME_LEN, "[INF]:", PREFIX_LEVEL_LEN);
@@ -170,6 +190,7 @@ void Logger::Flush(enum LogLevel level)
 
 void Logger::_Color(unsigned int color)
 {
+#if defined(__gnu_linux__)
     const char* colorstrings[COLOR_MAX] = {
         "",
         "\033[1;31;40m",
@@ -182,6 +203,7 @@ void Logger::_Color(unsigned int color)
     };
 
     fprintf(stdout, "%s", colorstrings[color]);
+#endif
 }
 
 Logger&  Logger::operator<< (const char* msg)
@@ -191,7 +213,7 @@ Logger&  Logger::operator<< (const char* msg)
         return *this;
     }
 
-    const size_t len = strlen(msg);
+    const auto len = strlen(msg);
     if (m_pos + len >= MAXLINE_LOG)  
     {
         return *this;
@@ -218,7 +240,7 @@ Logger&  Logger::operator<< (void* ptr)
     if (m_pos + 18 < MAXLINE_LOG)
     {  
         unsigned long ptrValue = (unsigned long)ptr;
-        int nbytes = snprintf(m_tmpBuffer + m_pos, MAXLINE_LOG - m_pos, "%#018lx", ptrValue);
+        auto nbytes = snprintf(m_tmpBuffer + m_pos, MAXLINE_LOG - m_pos, "%#018lx", ptrValue);
         if (nbytes > 0) m_pos += nbytes;
     }
 
@@ -235,7 +257,7 @@ Logger&  Logger::operator<< (unsigned char a)
 
     if (m_pos + 3 < MAXLINE_LOG)
     {
-        int  nbytes = snprintf(m_tmpBuffer + m_pos, MAXLINE_LOG - m_pos, "%hhd", a);
+        auto nbytes = snprintf(m_tmpBuffer + m_pos, MAXLINE_LOG - m_pos, "%hhd", a);
         if (nbytes > 0) m_pos += nbytes;
     }
 
@@ -251,7 +273,7 @@ Logger&  Logger::operator<< (char a)
     }
     if (m_pos + 3 < MAXLINE_LOG)
     {
-        int  nbytes = snprintf(m_tmpBuffer + m_pos, MAXLINE_LOG - m_pos, "%hhu", a);
+        auto nbytes = snprintf(m_tmpBuffer + m_pos, MAXLINE_LOG - m_pos, "%hhu", a);
         if (nbytes > 0) m_pos += nbytes;
     }
 
@@ -266,7 +288,7 @@ Logger&  Logger::operator<< (unsigned short a)
     }
     if (m_pos + 5 < MAXLINE_LOG)
     {
-        int  nbytes = snprintf(m_tmpBuffer + m_pos, MAXLINE_LOG - m_pos, "%hu", a);
+        auto nbytes = snprintf(m_tmpBuffer + m_pos, MAXLINE_LOG - m_pos, "%hu", a);
         if (nbytes > 0) m_pos += nbytes;
     }
 
@@ -281,7 +303,7 @@ Logger&  Logger::operator<< (short a)
     }
     if (m_pos + 5 < MAXLINE_LOG)
     {
-        int  nbytes = snprintf(m_tmpBuffer + m_pos, MAXLINE_LOG - m_pos, "%hd", a);
+        auto nbytes = snprintf(m_tmpBuffer + m_pos, MAXLINE_LOG - m_pos, "%hd", a);
         if (nbytes > 0) m_pos += nbytes;
     }
 
@@ -296,7 +318,7 @@ Logger&  Logger::operator<< (unsigned int a)
     }
     if (m_pos + 10 < MAXLINE_LOG)
     {
-        int  nbytes = snprintf(m_tmpBuffer + m_pos, MAXLINE_LOG - m_pos, "%u", a);
+        auto nbytes = snprintf(m_tmpBuffer + m_pos, MAXLINE_LOG - m_pos, "%u", a);
         if (nbytes > 0) m_pos += nbytes;
     }
 
@@ -311,7 +333,7 @@ Logger&  Logger::operator<< (int a)
     }
     if (m_pos + 10 < MAXLINE_LOG)
     {
-        int  nbytes = snprintf(m_tmpBuffer + m_pos, MAXLINE_LOG - m_pos, "%d", a);
+        auto nbytes = snprintf(m_tmpBuffer + m_pos, MAXLINE_LOG - m_pos, "%d", a);
         if (nbytes > 0) m_pos += nbytes;
     }
 
@@ -326,7 +348,7 @@ Logger&  Logger::operator<< (unsigned long a)
     }
     if (m_pos + 20 < MAXLINE_LOG)
     {
-        int  nbytes = snprintf(m_tmpBuffer + m_pos, MAXLINE_LOG - m_pos, "%lu", a);
+        auto nbytes = snprintf(m_tmpBuffer + m_pos, MAXLINE_LOG - m_pos, "%lu", a);
         if (nbytes > 0) m_pos += nbytes;
     }
 
@@ -341,7 +363,7 @@ Logger&  Logger::operator<< (long a)
     }
     if (m_pos + 20 < MAXLINE_LOG)
     {
-        int  nbytes = snprintf(m_tmpBuffer + m_pos, MAXLINE_LOG - m_pos, "%ld", a);
+        auto nbytes = snprintf(m_tmpBuffer + m_pos, MAXLINE_LOG - m_pos, "%ld", a);
         if (nbytes > 0) m_pos += nbytes;
     }
 
@@ -356,7 +378,7 @@ Logger&  Logger::operator<< (unsigned long long a)
     }
     if (m_pos + 20 < MAXLINE_LOG)
     {
-        int  nbytes = snprintf(m_tmpBuffer + m_pos, MAXLINE_LOG - m_pos, "%llu", a);
+        auto nbytes = snprintf(m_tmpBuffer + m_pos, MAXLINE_LOG - m_pos, "%llu", a);
         if (nbytes > 0) m_pos += nbytes;
     }
 
@@ -371,7 +393,7 @@ Logger&  Logger::operator<< (long long a)
     }
     if (m_pos + 20 < MAXLINE_LOG)
     {
-        int  nbytes = snprintf(m_tmpBuffer + m_pos, MAXLINE_LOG - m_pos, "%lld", a);
+        auto nbytes = snprintf(m_tmpBuffer + m_pos, MAXLINE_LOG - m_pos, "%lld", a);
         if (nbytes > 0) m_pos += nbytes;
     }
 
@@ -384,7 +406,7 @@ bool Logger::Update()
     m_buffer.ProcessBuffer(data);
     
     AttachedBuffer  abf(data);
-    size_t nWritten = _Log(abf.ReadAddr(), abf.ReadableSize());
+    auto nWritten = _Log(abf.ReadAddr(), abf.ReadableSize());
     m_buffer.Skip(nWritten);
     
     return nWritten != 0;
@@ -398,7 +420,7 @@ void   Logger::_Reset()
 
 size_t  Logger::_Log(const char* data, size_t dataLen)
 {
-    const size_t minLogSize = sizeof(int) + sizeof(size_t);
+    const auto minLogSize = sizeof(int) + sizeof(size_t);
 
     size_t   nOffset = 0;
     while (nOffset + minLogSize < dataLen)
@@ -496,7 +518,7 @@ LogManager& LogManager::Instance()
 LogManager::LogManager()
 {
     m_nullLog.Init(0);
-    m_logThread.Reset(new LogThread);
+    m_logThread.reset(new LogThread);
 }
 
 LogManager::~LogManager()
@@ -524,7 +546,7 @@ Logger*  LogManager::CreateLog(unsigned int level ,
     }
     else
     {
-        ScopeMutex  guard(m_logsMutex);
+        std::lock_guard<std::mutex>  guard(m_logsMutex);
         m_logs.insert(pLog);
     }
 
@@ -551,7 +573,7 @@ bool LogManager::Update()
 {
     bool busy = false;
     
-    ScopeMutex  guard(m_logsMutex);
+    std::lock_guard<std::mutex>  guard(m_logsMutex);
   
     for (auto log : m_logs)
     {

@@ -16,7 +16,7 @@ void  QMulti::Watch(QClient* client, const QString& key)
     if (client->Watch(key))
     {
         Clients& cls = m_clients[key];
-        cls.push_back(client->ShareMe());
+        cls.push_back(std::static_pointer_cast<QClient>(client->shared_from_this()));
     }
 }
 
@@ -58,7 +58,7 @@ void  QMulti::NotifyDirty(const QString& key)
         for (Clients::iterator itCli(cls.begin());
              itCli != cls.end();  )
         {
-            SharedPtr<QClient>  client(itCli->Lock());
+            std::shared_ptr<QClient>  client(itCli->lock());
             if (!client)
             {
                 WRN << "erase not exist client ";

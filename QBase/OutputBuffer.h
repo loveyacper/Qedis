@@ -2,6 +2,7 @@
 #define BERT_OUTPUTBUFFER_H
 
 #include <mutex>
+#include <atomic>
 
 #include "Buffer.h"
 #include "UnboundedBuffer.h"
@@ -24,7 +25,7 @@ private:
     Buffer          m_buffer;
     
     std::mutex      m_backBufLock;
-    std::size_t     m_backBytes;
+    std::atomic<std::size_t>    m_backBytes;
     UnboundedBuffer m_backBuf;
     UnboundedBuffer m_tmpBuf;
 };

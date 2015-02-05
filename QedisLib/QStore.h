@@ -7,16 +7,16 @@
 #include "QHash.h"
 #include "QList.h"
 #include <map>
-#include "SmartPtr/SharedPtr.h"
+#include <memory>
 #include "Timer.h"
 
 #include <vector>
 
-typedef SharedPtr<QString>      PSTRING;
-typedef SharedPtr<QList>        PLIST;
-typedef SharedPtr<QSet>         PSET;
-typedef SharedPtr<QSortedSet>   PSSET;
-typedef SharedPtr<QHash>        PHASH;
+typedef std::shared_ptr<QString>      PSTRING;
+typedef std::shared_ptr<QList>        PLIST;
+typedef std::shared_ptr<QSet>         PSET;
+typedef std::shared_ptr<QSortedSet>   PSSET;
+typedef std::shared_ptr<QHash>        PHASH;
 
 struct  QObject
 {
@@ -25,7 +25,7 @@ struct  QObject
     unsigned int encoding: 4;
     unsigned int lru  : 22;
 
-    SharedPtr<void>  value;
+    std::shared_ptr<void>  value;
     
     explicit QObject(QType  t = QType_invalid) : type(t)
     {
@@ -34,11 +34,11 @@ struct  QObject
         lru   = 0;
     }
 
-    PSTRING  CastString()       const { return StaticPointerCast<QString>(value); }
-    PLIST    CastList()         const { return StaticPointerCast<QList>(value);   }
-    PSET     CastSet()          const { return StaticPointerCast<QSet>(value);    }
-    PSSET    CastSortedSet()    const { return StaticPointerCast<QSortedSet>(value); }
-    PHASH    CastHash()         const { return StaticPointerCast<QHash>(value);   }
+    PSTRING  CastString()       const { return std::static_pointer_cast<QString>(value); }
+    PLIST    CastList()         const { return std::static_pointer_cast<QList>(value);   }
+    PSET     CastSet()          const { return std::static_pointer_cast<QSet>(value);    }
+    PSSET    CastSortedSet()    const { return std::static_pointer_cast<QSortedSet>(value); }
+    PHASH    CastHash()         const { return std::static_pointer_cast<QHash>(value);   }
 };
 
 class QClient;
@@ -52,7 +52,7 @@ typedef std::unordered_map<QString, uint64_t,
         my_hash,
         std::equal_to<QString> >  Q_EXPIRE_DB;
 
-typedef std::unordered_map<QString, SharedPtr<QClient>,
+typedef std::unordered_map<QString, std::shared_ptr<QClient>,
         my_hash,
         std::equal_to<QString> >  QCLIENTS;
 #else
@@ -60,7 +60,7 @@ typedef std::tr1::unordered_map<QString, QObject>  QDB;
 
 typedef std::tr1::unordered_map<QString, uint64_t>  Q_EXPIRE_DB;
 
-typedef std::tr1::unordered_map<QString, SharedPtr<QClient> >  QCLIENTS;
+typedef std::tr1::unordered_map<QString, std::shared_ptr<QClient> >  QCLIENTS;
 #endif
 
 class ExpireTimer  : public Timer

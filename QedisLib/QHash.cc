@@ -30,7 +30,7 @@ QObject  CreateHash()
     }   \
     if (err == QError_notExist) { \
         QObject val(QType_hash);  \
-        val.value.Reset(new QHash);  \
+        val.value = std::make_shared<QHash>();  \
         value = QSTORE.SetValue(hashname, val);  \
     }
 

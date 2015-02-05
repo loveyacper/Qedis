@@ -27,7 +27,7 @@ using namespace std;
     }   \
     if (err == QError_notExist) { \
         QObject val(QType_set);  \
-        val.value.Reset(new QSet);  \
+        val.value = std::make_shared<QSet>();  \
         value = QSTORE.SetValue(setname, val);  \
     }
 
@@ -301,7 +301,7 @@ QError  sdiffstore(const vector<QString>& params, UnboundedBuffer& reply)
         FormatBulk(it->c_str(), it->size(), reply);
 
     QObject value(QType_set);
-    value.value.Reset(res);
+    value.value.reset(res);
     
     QSTORE.SetValue(params[1], value);
     return QError_ok;
@@ -343,7 +343,7 @@ QError  sinterstore(const vector<QString>& params, UnboundedBuffer& reply)
         FormatBulk(it->c_str(), it->size(), reply);
 
     QObject  value(QType_set);
-    value.value.Reset(res);
+    value.value.reset(res);
 
     QSTORE.SetValue(params[1], value);
     return QError_ok;
@@ -372,7 +372,7 @@ QError  sunionstore(const vector<QString>& params, UnboundedBuffer& reply)
         FormatBulk(it->c_str(), it->size(), reply);
     
     QObject  value(QType_set);
-    value.value.Reset(res);
+    value.value.reset(res);
     
     QSTORE.SetValue(params[1], value);
     return QError_ok;

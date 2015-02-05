@@ -7,7 +7,7 @@
 #include <limits>
 #include <iostream>
 #include <cassert>
-#include "SmartPtr/UniquePtr.h"
+#include <memory>
 #include "QSet.h"
 
 // small set, elem number is small, or will be slow
@@ -129,9 +129,9 @@ enum Encoding
 class  IntSet
 {
 private:
-    UniquePtr<IntSetImpl<int64_t> > m_set64;
-    UniquePtr<IntSetImpl<int32_t> > m_set32;
-    UniquePtr<IntSetImpl<int16_t> > m_set16;
+    std::unique_ptr<IntSetImpl<int64_t> > m_set64;
+    std::unique_ptr<IntSetImpl<int32_t> > m_set32;
+    std::unique_ptr<IntSetImpl<int16_t> > m_set16;
     Encoding             m_encoding;
 
     static std::size_t m_maxElem; // TODO from config

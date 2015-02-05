@@ -22,9 +22,9 @@ namespace Internal
 NetThread::NetThread() : m_running(true), m_newCnt(0)
 {
 #if defined(__gnu_linux__)
-    m_poller.Reset(new Epoller);
+    m_poller.reset(new Epoller);
 #else
-    m_poller.Reset(new Kqueue);
+    m_poller.reset(new Kqueue);
 #endif
 }
 
@@ -36,7 +36,7 @@ NetThread::~NetThread()
 
 void NetThread::AddSocket(PSOCKET task, uint32_t events)
 {
-    ScopeMutex    guard(m_mutex);
+    std::lock_guard<std::mutex>    guard(m_mutex);
     m_newTasks.push_back(std::make_pair(task, events)); 
     ++ m_newCnt;
 
@@ -45,7 +45,7 @@ void NetThread::AddSocket(PSOCKET task, uint32_t events)
 
 void NetThread::ModSocket(PSOCKET task, uint32_t events)
 {
-    m_poller->ModSocket(task->GetSocket(), events, task.Get());
+    m_poller->ModSocket(task->GetSocket(), events, task.get());
 }
 
 void NetThread::RemoveSocket(std::deque<PSOCKET >::iterator& iter)
@@ -56,12 +56,12 @@ void NetThread::RemoveSocket(std::deque<PSOCKET >::iterator& iter)
 
 void NetThread::_TryAddNewTasks()
 {
-    if (m_newCnt > 0 && m_mutex.TryLock()) 
+    if (m_newCnt > 0 && m_mutex.try_lock())
     { 
         NewTasks  tmp;
         m_newTasks.swap(tmp); 
         m_newCnt = 0; 
-        m_mutex.Unlock();
+        m_mutex.unlock();
 
         NewTasks::const_iterator iter(tmp.begin()),
                                  end (tmp.end());
@@ -73,7 +73,7 @@ void NetThread::_TryAddNewTasks()
 
 void NetThread::_AddSocket(PSOCKET task, uint32_t events)
 {
-    if (m_poller->AddSocket(task->GetSocket(), events, task.Get()))
+    if (m_poller->AddSocket(task->GetSocket(), events, task.get()))
         m_tasks.push_back(task);
 }
 
@@ -172,7 +172,7 @@ void SendThread::Run( )
         for (it = m_tasks.begin(); it != m_tasks.end(); )
         {
             Socket::SocketType  type  = (*it)->GetSocketType();
-            Socket*  pSock = (*it).Get();
+            Socket*  pSock = (*it).get();
             
             if (type == Socket::SocketType_Stream)
             {
@@ -251,8 +251,8 @@ bool NetThreadPool::AddSocket(PSOCKET sock, uint32_t  events)
 
 bool NetThreadPool::StartAllThreads()
 {
-    m_recvThread.Reset(new RecvThread);
-    m_sendThread.Reset(new SendThread);
+    m_recvThread.reset(new RecvThread);
+    m_sendThread.reset(new SendThread);
 
     if (!ThreadPool::Instance().ExecuteTask(m_recvThread) ||
         !ThreadPool::Instance().ExecuteTask(m_sendThread))
@@ -262,22 +262,22 @@ bool NetThreadPool::StartAllThreads()
 }
     
 
-void NetThreadPool::EnableRead(const SharedPtr<Socket>& sock)
+void NetThreadPool::EnableRead(const std::shared_ptr<Socket>& sock)
 {
     m_recvThread->ModSocket(sock, EventTypeRead);
 }
 
-void NetThreadPool::EnableWrite(const SharedPtr<Socket>& sock)
+void NetThreadPool::EnableWrite(const std::shared_ptr<Socket>& sock)
 {
     m_sendThread->ModSocket(sock, EventTypeWrite);
 }
    
-void NetThreadPool::DisableRead(const SharedPtr<Socket>& sock)
+void NetThreadPool::DisableRead(const std::shared_ptr<Socket>& sock)
 {
     m_recvThread->ModSocket(sock, 0);
 }
 
-void NetThreadPool::DisableWrite(const SharedPtr<Socket>& sock)
+void NetThreadPool::DisableWrite(const std::shared_ptr<Socket>& sock)
 {
     m_sendThread->ModSocket(sock, 0);
 }

@@ -14,7 +14,7 @@ TaskManager::~TaskManager()
      
 bool TaskManager::AddTask(PTCPSOCKET  task)    
 {   
-    ScopeMutex guard(m_lock);
+    std::lock_guard<std::mutex>  guard(m_lock);
     m_newTasks.push_back(task);
     ++ m_newCnt;
 
@@ -48,12 +48,12 @@ void TaskManager::_RemoveTask(std::map<int, PTCPSOCKET>::iterator& it)
 
 bool TaskManager::DoMsgParse()
 {
-    if (m_newCnt > 0 && m_lock.TryLock())
+    if (m_newCnt > 0 && m_lock.try_lock())
     {
         NEWTASKS_T  tmpNewTask;
         tmpNewTask.swap(m_newTasks);
         m_newCnt = 0;
-        m_lock.Unlock();
+        m_lock.unlock();
 
         for (NEWTASKS_T::iterator it(tmpNewTask.begin());
             it != tmpNewTask.end();

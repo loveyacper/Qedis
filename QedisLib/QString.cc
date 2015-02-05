@@ -14,13 +14,13 @@ static QObject  CreateString(const QString&  value)
     if (Strtol(value.c_str(), value.size(), &val))
     {
         obj.encoding = QEncode_int;
-        obj.value.SetIntValue(val);
-        LOG_DBG(g_log) << "set int value " << val;
+        obj.value.reset((void*)val, [](void* ) {});
+        LOG_DBG(g_log) << "set long value " << val;
     }
     else
     {
         obj.encoding = QEncode_raw;
-        obj.value.Reset(new QString(value));
+        obj.value = std::make_shared<QString>(value);
     }
 
     return obj;
@@ -34,7 +34,7 @@ static PSTRING GetDecodedString(QObject* value)
     }
     else if (value->encoding == QEncode_int)
     {
-        intptr_t val = value->value.GetIntValue();
+        intptr_t val = (intptr_t)value->value.get();
         
         char ret[32];
         snprintf(ret, sizeof ret - 1, "%ld",  val);
@@ -455,7 +455,7 @@ QError  setbit(const vector<QString>& params, UnboundedBuffer& reply)
         byte &= ~(0x1 << bits);
 
     value->encoding = QEncode_raw;
-    value->value.Reset(new QString(newVal));
+    value->value = std::make_shared<QString>(newVal);
 
     FormatInt((oldByte & (0x1 << bits)) ? 1 : 0, reply);
 
@@ -484,8 +484,8 @@ static QError  ChangeIntValue(const QString& key, long delta, UnboundedBuffer& r
         return QError_ok;
     }
 
-    intptr_t oldVal = value->value.GetIntValue();
-    value->value.SetIntValue(oldVal + delta);
+    intptr_t oldVal = (intptr_t)value->value.get();
+    value->value.reset((void*)(oldVal + delta), [](void* ) {} );
 
     FormatInt(oldVal + delta, reply);
 

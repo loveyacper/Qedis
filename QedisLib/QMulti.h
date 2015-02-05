@@ -4,7 +4,7 @@
 #include <map>
 #include <vector>
 #include "QString.h"
-#include "SmartPtr/WeakPtr.h"
+#include <memory>
 
 class QClient;
 class QMulti
@@ -25,7 +25,7 @@ public:
 private:
     QMulti() {}
 
-    typedef std::vector<WeakPtr<QClient> >   Clients;
+    typedef std::vector<std::weak_ptr<QClient> >   Clients;
     typedef std::map<QString, Clients>    WatchedClients;
     
     WatchedClients  m_clients;

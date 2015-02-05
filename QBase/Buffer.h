@@ -7,7 +7,7 @@
 #include <vector>
 #include <string>
 #include <sys/uio.h>
-#include "Threads/Atomic.h"
+#include <atomic>
 
 
 struct BufferSequence
@@ -29,7 +29,7 @@ struct BufferSequence
 };
 
 
-static const std::size_t  DEFAULT_BUFFER_SIZE = 4 * 1024;
+//static const std::size_t  DEFAULT_BUFFER_SIZE = 4 * 1024;
 
 inline std::size_t RoundUp2Power(std::size_t size)
 {
@@ -50,8 +50,7 @@ public:
     // Constructor  to be specialized
     explicit CircularBuffer(std::size_t size = 0) : m_maxSize(size),
     m_readPos(0),
-    m_writePos(0),
-    m_owned(false)
+    m_writePos(0)
     {
     }
     CircularBuffer(const BufferSequence& bf);
@@ -62,7 +61,7 @@ public:
     bool IsFull()  const { return ((m_writePos + 1) & (m_maxSize - 1)) == m_readPos; }
 
     // For gather write
-    void GetDatum(BufferSequence& buffer, std::size_t maxSize = DEFAULT_BUFFER_SIZE - 1, std::size_t offset = 0);
+    void GetDatum(BufferSequence& buffer, std::size_t maxSize, std::size_t offset = 0);
 
     // For scatter read
     void GetSpace(BufferSequence& buffer, std::size_t offset = 0);
@@ -108,15 +107,15 @@ protected:
 
 private:
     // The starting address can be read
-    volatile std::size_t m_readPos;
+    std::atomic<std::size_t> m_readPos;
 
     // The starting address can be write
-    volatile std::size_t m_writePos;
+    std::atomic<std::size_t> m_writePos;
 
     // The real internal buffer
     BUFFER m_buffer;
 
-    bool   m_owned;
+    bool   m_owned = false;
 };
 
 template <typename BUFFER>
@@ -313,7 +312,8 @@ inline void CircularBuffer<BUFFER>::AdjustWritePtr(std::size_t size)
     std::size_t writePos = m_writePos;
     writePos += size;
     writePos &= m_maxSize - 1;
-    AtomicSet(&m_writePos, writePos);
+    
+    m_writePos = writePos;
 }
 
 template <typename BUFFER>
@@ -322,7 +322,8 @@ inline void CircularBuffer<BUFFER>::AdjustReadPtr(std::size_t size)
     std::size_t readPos = m_readPos;
     readPos += size;
     readPos &= m_maxSize - 1;
-    AtomicSet(&m_readPos, readPos);
+    
+    m_readPos = readPos;
 }
 
 template <typename BUFFER>

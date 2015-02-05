@@ -4,9 +4,9 @@
 #include <deque>
 #include <vector>
 #include <unistd.h>
+#include <memory>
+#include <mutex>
 #include "Poller.h"
-#include "SmartPtr/SharedPtr.h"
-#include "SmartPtr/UniquePtr.h"
 #include "Threads/Thread.h"
 #include "Threads/ThreadPool.h"
 
@@ -16,7 +16,7 @@ inline long GetCpuNum()
 }
 
 class   Socket;
-typedef SharedPtr<Socket> PSOCKET;
+typedef std::shared_ptr<Socket> PSOCKET;
 
 namespace Internal
 {
@@ -36,7 +36,7 @@ public:
     void RemoveSocket(std::deque<PSOCKET>::iterator & iter);
 
 protected:
-    UniquePtr<Poller>        m_poller;
+    std::unique_ptr<Poller>        m_poller;
     std::vector<FiredEvent > m_firedEvents;    
     std::deque<PSOCKET>      m_tasks;
     void  _TryAddNewTasks();
@@ -44,8 +44,8 @@ protected:
 private:
     volatile bool m_running;
 
-    Mutex        m_mutex; 
-    typedef std::vector<std::pair<SharedPtr<Socket>, uint32_t> >    NewTasks; 
+    std::mutex   m_mutex;
+    typedef std::vector<std::pair<std::shared_ptr<Socket>, uint32_t> >    NewTasks; 
     NewTasks     m_newTasks; 
     volatile int m_newCnt;
     void _AddSocket(PSOCKET , uint32_t  event);
@@ -67,18 +67,18 @@ public:
 ///////////////////////////////////////////////
 class NetThreadPool
 {
-    SharedPtr<RecvThread> m_recvThread;
-    SharedPtr<SendThread> m_sendThread;
+    std::shared_ptr<RecvThread> m_recvThread;
+    std::shared_ptr<SendThread> m_sendThread;
 
 public:
     bool AddSocket(PSOCKET , uint32_t event);
     bool StartAllThreads();
     void StopAllThreads();
     
-    void EnableRead(const SharedPtr<Socket>& sock);
-    void EnableWrite(const SharedPtr<Socket>& sock);
-    void DisableRead(const SharedPtr<Socket>& sock);
-    void DisableWrite(const SharedPtr<Socket>& sock);
+    void EnableRead(const std::shared_ptr<Socket>& sock);
+    void EnableWrite(const std::shared_ptr<Socket>& sock);
+    void DisableRead(const std::shared_ptr<Socket>& sock);
+    void DisableWrite(const std::shared_ptr<Socket>& sock);
 
     static NetThreadPool& Instance()
     {

@@ -4,7 +4,7 @@
 
 #include <arpa/inet.h>
 #include <string.h>
-#include "SmartPtr/EnableShareMe.h"
+#include <memory>
 
 #define INVALID_SOCKET  (int)(~0)
 #define SOCKET_ERROR    (-1)
@@ -92,7 +92,7 @@ class SendThread;
 }
 
 // Abstraction for a UDP/TCP socket
-class Socket : public EnableShareMe<Socket>
+class Socket : public std::enable_shared_from_this<Socket>
 {
     friend class Internal::SendThread;
 
@@ -108,7 +108,7 @@ public:
     };
 
     virtual SocketType GetSocketType() const { return SocketType_Invalid; }
-    bool Invalid() { return AtomicGet(&m_invalid); }
+    bool Invalid() const { return m_invalid; }
     
     int  GetSocket() const {   return m_localSock;   }
     int  GetID() const     {   return m_id;   }
@@ -137,9 +137,9 @@ protected:
     bool   m_epollOut;
 
 private:
-    volatile int    m_invalid;
-    unsigned int    m_id;
-    static unsigned int sm_id;
+    std::atomic<bool> m_invalid;
+    std::size_t    m_id;
+    static std::atomic<std::size_t> sm_id;
 };
 
 

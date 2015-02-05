@@ -2,7 +2,6 @@
 #include <cstdio>
 #include <cassert>
 #include "Timer.h"
-#include "Threads/Atomic.h"
 
 uint64_t Now()
 {
@@ -28,7 +27,6 @@ static int DaysOfMonth(int year, int month)
 }
 
 
-Time  g_now;
 
 Time::Time() : m_ms(0), m_valid(false)
 {
@@ -147,8 +145,7 @@ std::size_t Time::FormatTime(char* buf) const
     buf[16] = ':';
     memcpy(buf + 17, NUMBER[m_tm.tm_sec], 2);
     buf[19] = '.';
-    snprintf(buf + 20, 4, "%03d", static_cast<int>(m_ms % 1000));
-        memcpy(buf + 23, "]", 1);
+    snprintf(buf + 20, 5, "%03d]", static_cast<int>(m_ms % 1000));
 #else
     
     snprintf(buf, 25, "%04d-%02d-%02d[%02d:%02d:%02d.%03d]",
@@ -202,15 +199,15 @@ TimerManager::TimerManager() : m_count(0)
 {
     for (int i = 0; i < LIST1_SIZE; ++ i)
     {
-        m_list1[i].Reset(new Timer);
+        m_list1[i].reset(new Timer);
     }
 
     for (int i = 0; i < LIST_SIZE; ++ i)
     {
-        m_list2[i].Reset(new Timer);
-        m_list3[i].Reset(new Timer);
-        m_list4[i].Reset(new Timer);
-        m_list5[i].Reset(new Timer);
+        m_list2[i].reset(new Timer);
+        m_list3[i].reset(new Timer);
+        m_list4[i].reset(new Timer);
+        m_list5[i].reset(new Timer);
     }
 }
 
@@ -257,12 +254,12 @@ TimerManager&  TimerManager::Instance()
 
 bool TimerManager::UpdateTimers(const Time& now)
 {
-    if (AtomicGet(&m_count) > 0 && m_lock.TryLock())
+    if (m_count > 0 && m_lock.try_lock())
     {
         std::vector<PTIMER >  tmp;
         tmp.swap(m_timers);
         m_count = 0;
-        m_lock.Unlock();
+        m_lock.unlock();
 
         for (std::vector<PTIMER >::iterator it(tmp.begin());
              it != tmp.end();
@@ -344,10 +341,10 @@ void TimerManager::AddTimer(const PTIMER& pTimer)
 
 void    TimerManager::AsyncAddTimer(const PTIMER&  pTimer)
 {
-    ScopeMutex  guard(m_lock);
+    std::lock_guard<std::mutex>  guard(m_lock);
     m_timers.push_back(pTimer);
-    AtomicChange(&m_count, 1);
-    assert (m_count == static_cast<int>(m_timers.size()));
+    ++ m_count;
+    assert (m_count == m_timers.size());
 }
 
 void    TimerManager::ScheduleAt(const PTIMER& pTimer, const Time& triggerTime)
@@ -369,11 +366,11 @@ void TimerManager::KillTimer(const PTIMER& pTimer)
         if (pTimer->m_next)
         {
             pTimer->m_next->m_prev = pTimer->m_prev;
-            pTimer->m_next.Reset();
+            pTimer->m_next.reset();
         }
 
         if (pTimer->m_prev)
-            pTimer->m_prev.Reset();
+            pTimer->m_prev.reset();
     }
 }
 
@@ -391,15 +388,15 @@ bool TimerManager::_Cacsade(PTIMER pList[], int index)
         return false;
 
     PTIMER  tmpListHead = pList[index]->m_next;
-    pList[index]->m_next.Reset();
+    pList[index]->m_next.reset();
 
     while (tmpListHead != NULL)
     {
         PTIMER next = tmpListHead->m_next;
         if (tmpListHead->m_next)
-            tmpListHead->m_next.Reset();
+            tmpListHead->m_next.reset();
         if (tmpListHead->m_prev)
-            tmpListHead->m_prev.Reset();
+            tmpListHead->m_prev.reset();
         AddTimer(tmpListHead);
         tmpListHead = next;
     }

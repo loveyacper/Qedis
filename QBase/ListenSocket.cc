@@ -8,7 +8,6 @@
 #include "NetThreadPool.h"
 #include "ListenSocket.h"
 #include "Log/Logger.h"
-#include "SmartPtr/SharedPtr.h"
 
 namespace Internal
 {
@@ -59,7 +58,7 @@ bool ListenSocket::Bind(const SocketAddr& addr)
         return false;
     }
 
-    if (!NetThreadPool::Instance().AddSocket(ShareMe(), EventTypeRead))
+    if (!NetThreadPool::Instance().AddSocket(shared_from_this(), EventTypeRead))
         return false;
 
     INF << "CREATE LISTEN socket " << m_localSock << " on port " <<  m_localPort;

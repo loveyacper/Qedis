@@ -5,7 +5,7 @@
 #include <set>
 #include <vector>
 #include "QString.h"
-#include "SmartPtr/WeakPtr.h"
+#include <memory>
 
 class QClient;
 class QPubsub
@@ -33,7 +33,7 @@ public:
 private:
     QPubsub() {}
 
-    typedef std::set<WeakPtr<QClient> >   Clients;
+    typedef std::set<std::weak_ptr<QClient>, std::owner_less<std::weak_ptr<QClient> > >   Clients;
     typedef std::map<QString, Clients>  ChannelClients;
 
     ChannelClients   m_channels;

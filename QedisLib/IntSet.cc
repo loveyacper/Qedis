@@ -27,19 +27,19 @@ bool IntSet::InsertValue(int64_t  val)
         {
         case  Encoding16:
             if (m_set16 == NULL)
-                m_set16.Reset(new IntSetImpl<int16_t>());
+                m_set16.reset(new IntSetImpl<int16_t>());
 
             return m_set16->Size() < m_maxElem && m_set16->InsertValue(val);
 
         case  Encoding32:
             if (m_set32 == NULL)
-                m_set32.Reset(new IntSetImpl<int32_t>());
+                m_set32.reset(new IntSetImpl<int32_t>());
 
             return m_set32->Size() < m_maxElem && m_set32->InsertValue(val);
 
         case  Encoding64:
             if (m_set64 == NULL)
-                m_set64.Reset(new IntSetImpl<int64_t>());
+                m_set64.reset(new IntSetImpl<int64_t>());
 
             return m_set64->Size() < m_maxElem && m_set64->InsertValue(val);
 
@@ -57,13 +57,13 @@ bool IntSet::InsertValue(int64_t  val)
             switch (newEnc)
             {
             case Encoding32:
-                m_set32.Reset(new IntSetImpl<int32_t>());
+                m_set32.reset(new IntSetImpl<int32_t>());
                 m_set16->MoveTo(*m_set32);
                 m_set32->InsertValue(val);
                 break;
 
             case Encoding64:
-                m_set64.Reset(new IntSetImpl<int64_t>());
+                m_set64.reset(new IntSetImpl<int64_t>());
                 m_set16->MoveTo(*m_set64);
                 m_set64->InsertValue(val);
                 break;
@@ -78,7 +78,7 @@ bool IntSet::InsertValue(int64_t  val)
                 return false;
 
             assert (newEnc == Encoding64);
-            m_set64.Reset(new IntSetImpl<int64_t>());
+            m_set64.reset(new IntSetImpl<int64_t>());
             m_set32->MoveTo(*m_set64);
 
             m_set64->InsertValue(val);

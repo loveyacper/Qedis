@@ -7,7 +7,8 @@
 #include <sys/time.h>
 #include <stdint.h>
 #include "Threads/IPC.h"
-#include "SmartPtr/SharedPtr.h"
+#include <memory>
+#include <mutex>
 
 uint64_t Now();
 
@@ -42,10 +43,8 @@ private:
 };
 
 
-extern Time  g_now;
-
 class Timer;
-typedef SharedPtr<Timer>  PTIMER;
+typedef std::shared_ptr<Timer>  PTIMER;
 
 class Timer
 {
@@ -99,8 +98,8 @@ private:
     PTIMER m_list5[LIST_SIZE];  // 64 * 64 * 64 * 64 * 256ms = 49d
 
     // async add
-    Mutex        m_lock;
-    volatile int m_count;
+    std::mutex               m_lock;
+    std::atomic<std::size_t> m_count;
     std::vector<PTIMER >  m_timers;
 };
 

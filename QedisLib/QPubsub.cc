@@ -22,7 +22,7 @@ size_t QPubsub::Subscribe(QClient* client, const QString& channel)
 
         assert (it != m_channels.end());
 
-        bool succ = it->second.insert(client->ShareMe()).second;
+        bool succ = it->second.insert(std::static_pointer_cast<QClient>(client->shared_from_this())).second;
         assert (succ);
         return 1;
     }
@@ -40,7 +40,7 @@ std::size_t QPubsub::UnSubscribe(QClient* client, const QString& channel)
 
         Clients& clientSet = it->second;
 
-        std::size_t n = clientSet.erase(client->ShareMe());
+        std::size_t n = clientSet.erase(std::static_pointer_cast<QClient>(client->shared_from_this()));
         assert (n == 1);
 
         if (clientSet.empty())
@@ -78,7 +78,7 @@ size_t QPubsub::PSubscribe(QClient* client, const QString& channel)
 
         assert (it != m_patternChannels.end());
 
-        bool succ = it->second.insert(client->ShareMe()).second;
+        bool succ = it->second.insert(std::static_pointer_cast<QClient>(client->shared_from_this())).second;
         assert (succ);
         return 1;
     }
@@ -96,7 +96,7 @@ std::size_t QPubsub::PUnSubscribe(QClient* client, const QString& channel)
 
         Clients& clientSet = it->second;
 
-        std::size_t n = clientSet.erase(client->ShareMe());
+        std::size_t n = clientSet.erase(std::static_pointer_cast<QClient>(client->shared_from_this()));
         assert (n == 1);
 
         if (clientSet.empty())
@@ -137,7 +137,7 @@ std::size_t QPubsub::PublishMsg(const QString& channel, const QString& msg)
                                itCli != clientSet.end();
             )
         {
-            SharedPtr<QClient>  cli = itCli->Lock();
+            std::shared_ptr<QClient>  cli = itCli->lock();
             if (!cli)
             {
                 clientSet.erase(itCli ++);
@@ -174,7 +174,7 @@ std::size_t QPubsub::PublishMsg(const QString& channel, const QString& msg)
                                    itCli != clientSet.end();
                 )
             {
-                SharedPtr<QClient>  cli = itCli->Lock();
+                std::shared_ptr<QClient>  cli = itCli->lock();
                 if (!cli)
                 {
                     clientSet.erase(itCli ++);
@@ -223,7 +223,7 @@ void QPubsub::_RecycleClients(ChannelClients& channels, QString& start)
                 itCli != cls.end();
                 )
         {
-            if (itCli->Expired())
+            if (itCli->expired())
             {
                 LOG_INF(g_log) << "erase client";
                 cls.erase(itCli ++);

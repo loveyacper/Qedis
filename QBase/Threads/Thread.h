@@ -2,9 +2,8 @@
 #define BERT_THREAD_H
 
 #include  <string>
-#include  "Atomic.h"
 #include  "IPC.h"
-#include  "../SmartPtr/SharedPtr.h"
+#include  <memory>
 
 #if defined(__gnu_linux__) || defined(__APPLE__)
     #include <pthread.h>
@@ -33,7 +32,7 @@ extern __thread int      g_logDest;
 
 class Thread
 {
-    SharedPtr<Runnable> m_runnable;
+    std::shared_ptr<Runnable> m_runnable;
 
     THREAD_HANDLE m_handle;
     THREAD_ID     m_tid;
@@ -49,10 +48,10 @@ class Thread
     static  void * ThreadFunc(void* );
 
 public:
-    explicit Thread(const SharedPtr<Runnable>& = SharedPtr<Runnable>());
+    explicit Thread(const std::shared_ptr<Runnable>& = std::shared_ptr<Runnable>());
     ~Thread();
 
-    void   SetTask(const SharedPtr<Runnable>& r)  { m_runnable = r; }
+    void   SetTask(const std::shared_ptr<Runnable>& r)  { m_runnable = r; }
 
     THREAD_ID     GetThreadID()     { return m_tid; }
     THREAD_HANDLE GetThreadHandle() { return m_handle; }

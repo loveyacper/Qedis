@@ -1,5 +1,3 @@
-#include <cstdlib>
-#include <cstring>
 #include <errno.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -7,7 +5,6 @@
 
 #include "StreamSocket.h"
 #include "Server.h"
-#include "Timer.h"
 #include "NetThreadPool.h"
 #include "Log/Logger.h"
 
@@ -43,7 +40,7 @@ int StreamSocket::Recv()
 {
     if (m_recvBuf.Capacity() == 0)
     {
-        m_recvBuf.InitCapacity(DEFAULT_BUFFER_SIZE); // First recv data, allocate buffer
+        m_recvBuf.InitCapacity(64 * 1024); // First recv data, allocate buffer
         INF << "First expand recv buffer, capacity " << m_recvBuf.Capacity();
     }
     
@@ -70,7 +67,7 @@ int StreamSocket::Recv()
 
 int StreamSocket::_Send(const BufferSequence& bf)
 {
-    size_t  total = bf.TotalBytes();
+    auto  total = bf.TotalBytes();
     if (total == 0)
         return 0;
 
@@ -119,7 +116,7 @@ bool  StreamSocket::OnReadable()
     if (nBytes < 0)
     {
         ERR << "socket " << m_localSock <<", OnReadable error, nBytes = " << nBytes << ", errno " << errno;
-        Internal::NetThreadPool::Instance().DisableRead(ShareMe());
+        Internal::NetThreadPool::Instance().DisableRead(shared_from_this());
         return false;
     }
 
@@ -146,7 +143,7 @@ bool StreamSocket::Send()
         
     if (m_epollOut)
     {
-        Internal::NetThreadPool::Instance().EnableWrite(ShareMe());
+        Internal::NetThreadPool::Instance().EnableWrite(shared_from_this());
         INF << __FUNCTION__ << ": epoll out = true, socket = " << m_localSock;
     }
     
@@ -175,7 +172,7 @@ bool StreamSocket::OnWritable()
     if (!m_epollOut)
     {  
         INF << __FUNCTION__ << ": epoll out = false, socket = " << m_localSock;
-        Internal::NetThreadPool::Instance().DisableWrite(ShareMe());
+        Internal::NetThreadPool::Instance().DisableWrite(shared_from_this());
     }
 
     return  nSent >= 0;
@@ -202,13 +199,13 @@ bool StreamSocket::DoMsgParse()
     while (!m_recvBuf.IsEmpty())
     {
         BufferSequence  datum;
-        m_recvBuf.GetDatum(datum);
+        m_recvBuf.GetDatum(datum, m_recvBuf.ReadableSize());
 
         AttachedBuffer af(datum);
 
         if (m_bodyLen == -1)
         {
-            const HEAD_LENGTH_T headLen = _HandleHead(af, &m_bodyLen);
+            const auto headLen = _HandleHead(af, &m_bodyLen);
             if (headLen < 0 || static_cast<size_t>(headLen + 1) >= m_recvBuf.Capacity())
             {
                 OnError();

@@ -56,7 +56,7 @@ bool ClientSocket::Connect(const SocketAddr& dst)
         {
             INF << "EINPROGRESS : client socket " << m_localSock <<", connected to " << dst.GetIP() << ":" << m_peerAddr.GetPort();
             
-            Internal::NetThreadPool::Instance().AddSocket(ShareMe(), EventTypeWrite);
+            Internal::NetThreadPool::Instance().AddSocket(shared_from_this(), EventTypeWrite);
             m_epollOut = true;
             return true;
         }

@@ -2,7 +2,7 @@
 #include "ThreadPool.h"
 #include "../Log/Logger.h"
 
-bool ThreadPool::ExecuteTask(const SharedPtr<Runnable>& toRun)
+bool ThreadPool::ExecuteTask(const std::shared_ptr<Runnable>& toRun)
 {
     if (!toRun || m_shutdown)
         return false;
@@ -10,7 +10,7 @@ bool ThreadPool::ExecuteTask(const SharedPtr<Runnable>& toRun)
     Thread* thread = NULL;
     bool newThread = false;
 
-    ScopeMutex  guard(m_threadsLock);
+    std::lock_guard<std::mutex>  guard(m_threadsLock);
 
     if (m_shutdown)
         return false;
@@ -54,11 +54,11 @@ bool ThreadPool::ExecuteTask(const SharedPtr<Runnable>& toRun)
 
 void ThreadPool::StopAllThreads()
 {
-    m_threadsLock.Lock();
+    m_threadsLock.lock();
     m_shutdown = true;
     ThreadContainer  tmp(m_threads);
     m_threads.clear();
-    m_threadsLock.Unlock();
+    m_threadsLock.unlock();
 
     for (ThreadIterator it(tmp.begin()); it != tmp.end(); ++ it)
     {

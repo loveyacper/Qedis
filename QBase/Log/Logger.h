@@ -3,10 +3,12 @@
 
 #include <string>
 #include <set>
+#include <memory>
 
 #include "Thread.h"
 #include "OutputBuffer.h"
 #include "MemoryFile.h"
+#include "Timer.h"
 
 enum LogLevel
 {
@@ -68,6 +70,7 @@ private:
     char            m_tmpBuffer[MAXLINE_LOG];
     std::size_t     m_pos;
     
+    Time            m_time;
     THREAD_ID       m_thread;
 
     unsigned int    m_level;
@@ -79,7 +82,11 @@ private:
 
     OutputBuffer    m_buffer;
     MemoryFile      m_file;
-
+    
+    // for optimization
+    uint64_t        m_lastLogSecond;
+    uint64_t        m_lastLogMSecond;
+    
     std::size_t     _Log(const char* data, std::size_t len);
 
     bool    _CheckChangeFile();
@@ -130,9 +137,8 @@ private:
 
     Logger  m_nullLog;
 
-    typedef std::set<Logger* >  LOG_SET;
-    Mutex   m_logsMutex;
-    LOG_SET m_logs;
+    std::mutex          m_logsMutex;
+    std::set<Logger* >  m_logs;
     
 
     class LogThread : public Runnable
@@ -149,7 +155,7 @@ private:
         volatile bool m_alive;
     };
     
-    SharedPtr<LogThread>  m_logThread;
+    std::shared_ptr<LogThread>  m_logThread;
 };
 
 

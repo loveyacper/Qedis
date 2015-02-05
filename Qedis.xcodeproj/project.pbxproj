@@ -69,20 +69,12 @@
 		BAFC849019C44AFD00C18B22 /* Poller.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC842C19C44AFD00C18B22 /* Poller.h */; };
 		BAFC849119C44AFD00C18B22 /* Server.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC842D19C44AFD00C18B22 /* Server.cc */; };
 		BAFC849219C44AFD00C18B22 /* Server.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC842E19C44AFD00C18B22 /* Server.h */; };
-		BAFC849319C44AFD00C18B22 /* CounterBase.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC843319C44AFD00C18B22 /* CounterBase.h */; };
-		BAFC849419C44AFD00C18B22 /* CounterImpl.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC843419C44AFD00C18B22 /* CounterImpl.h */; };
-		BAFC849519C44AFD00C18B22 /* EnableShareMe.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC843519C44AFD00C18B22 /* EnableShareMe.h */; };
-		BAFC849619C44AFD00C18B22 /* MakeShared.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC843619C44AFD00C18B22 /* MakeShared.h */; };
-		BAFC849719C44AFD00C18B22 /* SharedPtr.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC843719C44AFD00C18B22 /* SharedPtr.h */; };
-		BAFC849E19C44AFD00C18B22 /* UniquePtr.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC844119C44AFD00C18B22 /* UniquePtr.h */; };
-		BAFC849F19C44AFD00C18B22 /* WeakPtr.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC844219C44AFD00C18B22 /* WeakPtr.h */; };
 		BAFC84B719C44AFD00C18B22 /* Socket.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC846019C44AFD00C18B22 /* Socket.cc */; };
 		BAFC84B819C44AFD00C18B22 /* Socket.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC846119C44AFD00C18B22 /* Socket.h */; };
 		BAFC84B919C44AFD00C18B22 /* StreamSocket.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC846219C44AFD00C18B22 /* StreamSocket.cc */; };
 		BAFC84BA19C44AFD00C18B22 /* StreamSocket.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC846319C44AFD00C18B22 /* StreamSocket.h */; };
 		BAFC84BB19C44AFD00C18B22 /* TaskManager.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC846419C44AFD00C18B22 /* TaskManager.cc */; };
 		BAFC84BC19C44AFD00C18B22 /* TaskManager.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC846519C44AFD00C18B22 /* TaskManager.h */; };
-		BAFC84BD19C44AFD00C18B22 /* Atomic.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC846719C44AFD00C18B22 /* Atomic.h */; };
 		BAFC84BE19C44AFD00C18B22 /* IPC.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC846819C44AFD00C18B22 /* IPC.cc */; };
 		BAFC84BF19C44AFD00C18B22 /* IPC.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFC846919C44AFD00C18B22 /* IPC.h */; };
 		BAFC84C019C44AFD00C18B22 /* Thread.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAFC846A19C44AFD00C18B22 /* Thread.cc */; };
@@ -225,20 +217,12 @@
 		BAFC842C19C44AFD00C18B22 /* Poller.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Poller.h; path = QBase/Poller.h; sourceTree = "<group>"; };
 		BAFC842D19C44AFD00C18B22 /* Server.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Server.cc; path = QBase/Server.cc; sourceTree = "<group>"; };
 		BAFC842E19C44AFD00C18B22 /* Server.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Server.h; path = QBase/Server.h; sourceTree = "<group>"; };
-		BAFC843319C44AFD00C18B22 /* CounterBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CounterBase.h; sourceTree = "<group>"; };
-		BAFC843419C44AFD00C18B22 /* CounterImpl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CounterImpl.h; sourceTree = "<group>"; };
-		BAFC843519C44AFD00C18B22 /* EnableShareMe.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EnableShareMe.h; sourceTree = "<group>"; };
-		BAFC843619C44AFD00C18B22 /* MakeShared.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MakeShared.h; sourceTree = "<group>"; };
-		BAFC843719C44AFD00C18B22 /* SharedPtr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SharedPtr.h; sourceTree = "<group>"; };
-		BAFC844119C44AFD00C18B22 /* UniquePtr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UniquePtr.h; sourceTree = "<group>"; };
-		BAFC844219C44AFD00C18B22 /* WeakPtr.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WeakPtr.h; sourceTree = "<group>"; };
 		BAFC846019C44AFD00C18B22 /* Socket.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = Socket.cc; path = QBase/Socket.cc; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		BAFC846119C44AFD00C18B22 /* Socket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = Socket.h; path = QBase/Socket.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		BAFC846219C44AFD00C18B22 /* StreamSocket.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = StreamSocket.cc; path = QBase/StreamSocket.cc; sourceTree = "<group>"; };
 		BAFC846319C44AFD00C18B22 /* StreamSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = StreamSocket.h; path = QBase/StreamSocket.h; sourceTree = "<group>"; };
 		BAFC846419C44AFD00C18B22 /* TaskManager.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TaskManager.cc; path = QBase/TaskManager.cc; sourceTree = "<group>"; };
 		BAFC846519C44AFD00C18B22 /* TaskManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TaskManager.h; path = QBase/TaskManager.h; sourceTree = "<group>"; };
-		BAFC846719C44AFD00C18B22 /* Atomic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Atomic.h; sourceTree = "<group>"; };
 		BAFC846819C44AFD00C18B22 /* IPC.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = IPC.cc; sourceTree = "<group>"; };
 		BAFC846919C44AFD00C18B22 /* IPC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IPC.h; sourceTree = "<group>"; };
 		BAFC846A19C44AFD00C18B22 /* Thread.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Thread.cc; sourceTree = "<group>"; };
@@ -309,7 +293,6 @@
 				BAFC842C19C44AFD00C18B22 /* Poller.h */,
 				BAFC842D19C44AFD00C18B22 /* Server.cc */,
 				BAFC842E19C44AFD00C18B22 /* Server.h */,
-				BAFC843219C44AFD00C18B22 /* SmartPtr */,
 				BAFC846019C44AFD00C18B22 /* Socket.cc */,
 				BAFC846119C44AFD00C18B22 /* Socket.h */,
 				BAFC846219C44AFD00C18B22 /* StreamSocket.cc */,
@@ -423,25 +406,9 @@
 			path = QBase/Log;
 			sourceTree = "<group>";
 		};
-		BAFC843219C44AFD00C18B22 /* SmartPtr */ = {
-			isa = PBXGroup;
-			children = (
-				BAFC843319C44AFD00C18B22 /* CounterBase.h */,
-				BAFC843419C44AFD00C18B22 /* CounterImpl.h */,
-				BAFC843519C44AFD00C18B22 /* EnableShareMe.h */,
-				BAFC843619C44AFD00C18B22 /* MakeShared.h */,
-				BAFC843719C44AFD00C18B22 /* SharedPtr.h */,
-				BAFC844119C44AFD00C18B22 /* UniquePtr.h */,
-				BAFC844219C44AFD00C18B22 /* WeakPtr.h */,
-			);
-			name = SmartPtr;
-			path = QBase/SmartPtr;
-			sourceTree = "<group>";
-		};
 		BAFC846619C44AFD00C18B22 /* Threads */ = {
 			isa = PBXGroup;
 			children = (
-				BAFC846719C44AFD00C18B22 /* Atomic.h */,
 				BAFC846819C44AFD00C18B22 /* IPC.cc */,
 				BAFC846919C44AFD00C18B22 /* IPC.h */,
 				BAFC846A19C44AFD00C18B22 /* Thread.cc */,
@@ -484,11 +451,8 @@
 			files = (
 				BAFC84BC19C44AFD00C18B22 /* TaskManager.h in Headers */,
 				BAFC84C519C44AFD00C18B22 /* Timer.h in Headers */,
-				BAFC84BD19C44AFD00C18B22 /* Atomic.h in Headers */,
 				BAFC84C719C44AFD00C18B22 /* UnboundedBuffer.h in Headers */,
 				BAFC84BA19C44AFD00C18B22 /* StreamSocket.h in Headers */,
-				BAFC849419C44AFD00C18B22 /* CounterImpl.h in Headers */,
-				BAFC849319C44AFD00C18B22 /* CounterBase.h in Headers */,
 				BAFC84BF19C44AFD00C18B22 /* IPC.h in Headers */,
 				BAFC84C319C44AFD00C18B22 /* ThreadPool.h in Headers */,
 				BAFC847419C44AFD00C18B22 /* ClientSocket.h in Headers */,
@@ -497,17 +461,12 @@
 				BAFC84B819C44AFD00C18B22 /* Socket.h in Headers */,
 				BAFC848F19C44AFD00C18B22 /* NetThreadPool.h in Headers */,
 				BAFC847219C44AFD00C18B22 /* Buffer.h in Headers */,
-				BAFC849619C44AFD00C18B22 /* MakeShared.h in Headers */,
-				BAFC849719C44AFD00C18B22 /* SharedPtr.h in Headers */,
-				BAFC849519C44AFD00C18B22 /* EnableShareMe.h in Headers */,
 				BA1250721A6D43D500A0532D /* MemoryFile.h in Headers */,
 				BA1250821A7338CD00A0532D /* OutputBuffer.h in Headers */,
-				BAFC849F19C44AFD00C18B22 /* WeakPtr.h in Headers */,
 				BAFC847819C44AFD00C18B22 /* EPoller.h in Headers */,
 				BAFC849019C44AFD00C18B22 /* Poller.h in Headers */,
 				BAFC849219C44AFD00C18B22 /* Server.h in Headers */,
 				BAFC847C19C44AFD00C18B22 /* ListenSocket.h in Headers */,
-				BAFC849E19C44AFD00C18B22 /* UniquePtr.h in Headers */,
 				BAFC84C119C44AFD00C18B22 /* Thread.h in Headers */,
 				BAFC847619C44AFD00C18B22 /* ConfigParser.h in Headers */,
 			);

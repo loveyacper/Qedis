@@ -3,8 +3,8 @@
 
 #include <vector>
 #include <map>
-#include "./Threads/IPC.h"
-#include "./SmartPtr/SharedPtr.h"
+#include <mutex>
+#include <memory>
 
 class StreamSocket;
 
@@ -13,7 +13,7 @@ namespace Internal
 
 class TaskManager 
 {
-    typedef SharedPtr<StreamSocket>     PTCPSOCKET;
+    typedef std::shared_ptr<StreamSocket>     PTCPSOCKET;
     typedef std::vector<PTCPSOCKET>     NEWTASKS_T;
 
 public:
@@ -36,9 +36,9 @@ private:
     std::map<int, PTCPSOCKET>  m_tcpSockets;
 
     // Lock for new tasks
-    Mutex           m_lock;
+    std::mutex      m_lock;
     NEWTASKS_T      m_newTasks; 
-    volatile  int   m_newCnt; // vector::empty() is not thread-safe !!!
+    std::atomic<int> m_newCnt; // vector::empty() is not thread-safe !!!
 };
 
 }

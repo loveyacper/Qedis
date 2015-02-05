@@ -27,7 +27,7 @@ private:
     {
         USR << " : OnTimer reconnect to " << m_peer.GetIP();
 
-        SharedPtr<ClientSocket>  pClient(new ClientSocket);
+        std::shared_ptr<ClientSocket>  pClient(new ClientSocket);
         pClient->Connect(m_peer);
 
         return false;
@@ -70,7 +70,7 @@ bool Server::TCPBind(const SocketAddr& addr)
 {
     using Internal::ListenSocket;
 
-    SharedPtr<ListenSocket> pServerSocket(new ListenSocket);
+    std::shared_ptr<ListenSocket> pServerSocket(new ListenSocket);
 
     return  pServerSocket->Bind(addr);
 }
@@ -79,7 +79,7 @@ bool Server::TCPBind(const SocketAddr& addr)
 void Server::TCPReconnect(const SocketAddr& peer)
 {
     INF << __FUNCTION__ << peer.GetIP();
-    SharedPtr<ReconnTimer>  pTimer(new ReconnTimer(2 * 1000));  // TODO : flexible
+    std::shared_ptr<ReconnTimer>  pTimer(new ReconnTimer(2 * 1000));  // TODO : flexible
     pTimer->m_peer = peer;
 
     TimerManager::Instance().AsyncAddTimer(pTimer);
@@ -141,10 +141,10 @@ void Server::MainLoop()
 }
 
 
-SharedPtr<StreamSocket>   Server::_OnNewConnection(int tcpsock)
+std::shared_ptr<StreamSocket>   Server::_OnNewConnection(int tcpsock)
 {
     WRN << "implement your tcp accept, now close socket " << tcpsock;
-    return SharedPtr<StreamSocket>((StreamSocket* )0);
+    return std::shared_ptr<StreamSocket>((StreamSocket* )0);
 }
 
 void  Server::NewConnection(int  sock, bool needReconn)
@@ -152,7 +152,7 @@ void  Server::NewConnection(int  sock, bool needReconn)
     if (sock == INVALID_SOCKET)
         return;
 
-    SharedPtr<StreamSocket>  pNewTask = _OnNewConnection(sock);
+    std::shared_ptr<StreamSocket>  pNewTask = _OnNewConnection(sock);
     
     if (!pNewTask)
     {

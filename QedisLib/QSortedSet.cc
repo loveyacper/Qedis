@@ -204,7 +204,7 @@ std::vector<std::pair<QString, long> > QSortedSet::RangeByScore(long minScore, l
     }   \
     if (err == QError_notExist) { \
         QObject val(QType_sortedSet);  \
-        val.value.Reset(new QSortedSet);  \
+        val.value.reset(new QSortedSet);  \
         value = QSTORE.SetValue(name, val);  \
     }
 

@@ -27,7 +27,7 @@ static QError  push(const vector<QString>& params, UnboundedBuffer& reply, ListP
         else if (createIfNotExist)
         {
             QObject  list(QType_list);
-            list.value.Reset(new QList());
+            list.value = std::make_shared<QList>();
 
             value = QSTORE.SetValue(params[1], list);
         }
@@ -529,7 +529,7 @@ QError  rpoplpush(const vector<QString>& params, UnboundedBuffer& reply)
             return err;
         }
         QObject  dstObj(QType_list);
-        dstObj.value.Reset(new QList());
+        dstObj.value = std::make_shared<QList>();
         dst = QSTORE.SetValue(params[2], dstObj);
     }
     

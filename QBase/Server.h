@@ -37,10 +37,10 @@ public:
     static void IntHandler(int sig);
     static void HupHandler(int sig);
 
-    SharedPtr<StreamSocket>  FindTCP(unsigned int id) const { return m_tasks.FindTCP(id); }
+    std::shared_ptr<StreamSocket>  FindTCP(unsigned int id) const { return m_tasks.FindTCP(id); }
 
 private:
-    virtual SharedPtr<StreamSocket>   _OnNewConnection(int tcpsock);
+    virtual std::shared_ptr<StreamSocket>   _OnNewConnection(int tcpsock);
 
     volatile bool m_bTerminate;
     Internal::TaskManager   m_tasks;

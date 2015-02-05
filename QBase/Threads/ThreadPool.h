@@ -6,7 +6,7 @@
 
 #include <set>
 #include <vector>
-#include "IPC.h"
+#include <mutex>
 
 class Thread;
 class Runnable;
@@ -19,7 +19,7 @@ public:
         return  pool;
     }
 
-    bool ExecuteTask(const SharedPtr<Runnable>& );
+    bool ExecuteTask(const std::shared_ptr<Runnable>& );
 
     void StopAllThreads();
 
@@ -29,7 +29,7 @@ private:
     typedef std::vector<Thread* > ThreadContainer;
     typedef ThreadContainer::iterator ThreadIterator;
 
-    Mutex               m_threadsLock;
+    std::mutex          m_threadsLock;
     ThreadContainer     m_threads;
     volatile bool       m_shutdown;
 

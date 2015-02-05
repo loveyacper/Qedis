@@ -22,7 +22,7 @@ public:
     ~Qedis();
     
 private:
-    SharedPtr<StreamSocket>   _OnNewConnection(int fd);
+    std::shared_ptr<StreamSocket>   _OnNewConnection(int fd);
     bool    _Init();
     bool    _RunLogic();
     void    _Recycle();
@@ -38,14 +38,14 @@ Qedis::~Qedis()
 }
 
 
-SharedPtr<StreamSocket>   Qedis::_OnNewConnection(int connfd)
+std::shared_ptr<StreamSocket>   Qedis::_OnNewConnection(int connfd)
 {
     SocketAddr  peer;
     Socket::GetPeerAddr(connfd,  peer);
 
-    SharedPtr<QClient>    pNewTask(new QClient());
+    std::shared_ptr<QClient>    pNewTask(new QClient());
     if (!pNewTask->Init(connfd))
-        pNewTask.Reset();
+        pNewTask.reset();
     
     return  pNewTask;
 }
@@ -66,7 +66,7 @@ bool Qedis::_Init()
     
     return true;
 }
-
+Time  g_now;
 bool Qedis::_RunLogic()
 {
     g_now.Now();
