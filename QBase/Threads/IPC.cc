@@ -29,7 +29,7 @@ Semaphore::Semaphore(long lInit, long lMaxForWindows)
 #elif defined(__APPLE__)
 
     ++ m_id;
-    snprintf(m_name, sizeof(m_name), "defaultSem%d", m_id.load());
+    snprintf(m_name, sizeof(m_name), "defaultSem%lu", m_id.load());
 
     m_sem = ::sem_open(m_name, O_CREAT | O_EXCL, S_IRUSR | S_IWUSR, lInit);
     sem_unlink(m_name);

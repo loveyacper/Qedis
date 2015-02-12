@@ -13,6 +13,10 @@
 		BA1250821A7338CD00A0532D /* OutputBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = BA1250801A7338CD00A0532D /* OutputBuffer.h */; };
 		BA29C44E19FB2CEE00796E3A /* QMulti.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA29C44C19FB2CEE00796E3A /* QMulti.cc */; };
 		BA29C44F19FB2CEE00796E3A /* QMulti.h in Headers */ = {isa = PBXBuildFile; fileRef = BA29C44D19FB2CEE00796E3A /* QMulti.h */; };
+		BA6A75371A85F05100AD21E8 /* QVarInt.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA6A75351A85F05100AD21E8 /* QVarInt.cc */; };
+		BA6A75381A85F05100AD21E8 /* QVarInt.h in Headers */ = {isa = PBXBuildFile; fileRef = BA6A75361A85F05100AD21E8 /* QVarInt.h */; };
+		BA6A753B1A85F07600AD21E8 /* QZipList.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA6A75391A85F07600AD21E8 /* QZipList.cc */; };
+		BA6A753C1A85F07600AD21E8 /* QZipList.h in Headers */ = {isa = PBXBuildFile; fileRef = BA6A753A1A85F07600AD21E8 /* QZipList.h */; };
 		BA6C336C19EA77B200AC1800 /* QGlobRegex.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA6C336A19EA77B200AC1800 /* QGlobRegex.cc */; };
 		BA6C336D19EA77B200AC1800 /* QGlobRegex.h in Headers */ = {isa = PBXBuildFile; fileRef = BA6C336B19EA77B200AC1800 /* QGlobRegex.h */; };
 		BA6C336F19EA77C100AC1800 /* QGlobRegex_unittest.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA6C336E19EA77C100AC1800 /* QGlobRegex_unittest.cc */; };
@@ -154,6 +158,10 @@
 		BA1250801A7338CD00A0532D /* OutputBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OutputBuffer.h; path = QBase/OutputBuffer.h; sourceTree = "<group>"; };
 		BA29C44C19FB2CEE00796E3A /* QMulti.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QMulti.cc; path = QedisLib/QMulti.cc; sourceTree = SOURCE_ROOT; };
 		BA29C44D19FB2CEE00796E3A /* QMulti.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QMulti.h; path = QedisLib/QMulti.h; sourceTree = SOURCE_ROOT; };
+		BA6A75351A85F05100AD21E8 /* QVarInt.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QVarInt.cc; path = QedisLib/QVarInt.cc; sourceTree = SOURCE_ROOT; };
+		BA6A75361A85F05100AD21E8 /* QVarInt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QVarInt.h; path = QedisLib/QVarInt.h; sourceTree = SOURCE_ROOT; };
+		BA6A75391A85F07600AD21E8 /* QZipList.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QZipList.cc; path = QedisLib/QZipList.cc; sourceTree = SOURCE_ROOT; };
+		BA6A753A1A85F07600AD21E8 /* QZipList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QZipList.h; path = QedisLib/QZipList.h; sourceTree = SOURCE_ROOT; };
 		BA6C336A19EA77B200AC1800 /* QGlobRegex.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QGlobRegex.cc; path = QedisLib/QGlobRegex.cc; sourceTree = SOURCE_ROOT; };
 		BA6C336B19EA77B200AC1800 /* QGlobRegex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QGlobRegex.h; path = QedisLib/QGlobRegex.h; sourceTree = SOURCE_ROOT; };
 		BA6C336E19EA77C100AC1800 /* QGlobRegex_unittest.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QGlobRegex_unittest.cc; sourceTree = "<group>"; };
@@ -333,6 +341,10 @@
 		BABEBED719C4474900010636 /* QedisLib */ = {
 			isa = PBXGroup;
 			children = (
+				BA6A75391A85F07600AD21E8 /* QZipList.cc */,
+				BA6A753A1A85F07600AD21E8 /* QZipList.h */,
+				BA6A75351A85F05100AD21E8 /* QVarInt.cc */,
+				BA6A75361A85F05100AD21E8 /* QVarInt.h */,
 				BA29C44C19FB2CEE00796E3A /* QMulti.cc */,
 				BA29C44D19FB2CEE00796E3A /* QMulti.h */,
 				BA6C336A19EA77B200AC1800 /* QGlobRegex.cc */,
@@ -431,6 +443,7 @@
 				BAD0C60919E7A02C005B3784 /* QList.h in Headers */,
 				BA6C336D19EA77B200AC1800 /* QGlobRegex.h in Headers */,
 				BAD0C61519E7A02C005B3784 /* QString.h in Headers */,
+				BA6A75381A85F05100AD21E8 /* QVarInt.h in Headers */,
 				BAD0C5FE19E7A02C005B3784 /* IntSet.h in Headers */,
 				BAD0C60D19E7A02C005B3784 /* QSet.h in Headers */,
 				BAD0C60419E7A02C005B3784 /* QCommon.h in Headers */,
@@ -439,6 +452,7 @@
 				BAD0C61119E7A02C005B3784 /* QStat.h in Headers */,
 				BAD0C60619E7A02C005B3784 /* QHash.h in Headers */,
 				BAD0C61319E7A02C005B3784 /* QStore.h in Headers */,
+				BA6A753C1A85F07600AD21E8 /* QZipList.h in Headers */,
 				BA29C44F19FB2CEE00796E3A /* QMulti.h in Headers */,
 				BAD0C60019E7A02C005B3784 /* QClient.h in Headers */,
 				BA6C337119EC0D9900AC1800 /* QPubsub.h in Headers */,
@@ -554,7 +568,7 @@
 		BABEBECD19C4474900010636 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0500;
+				LastUpgradeCheck = 0610;
 				ORGANIZATIONNAME = "Bert Young";
 			};
 			buildConfigurationList = BABEBED019C4474900010636 /* Build configuration list for PBXProject "Qedis" */;
@@ -590,9 +604,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BA6A753B1A85F07600AD21E8 /* QZipList.cc in Sources */,
 				BAD0C61619E7A02C005B3784 /* util.cc in Sources */,
 				BA6C336C19EA77B200AC1800 /* QGlobRegex.cc in Sources */,
 				BAD0C61219E7A02C005B3784 /* QStore.cc in Sources */,
+				BA6A75371A85F05100AD21E8 /* QVarInt.cc in Sources */,
 				BAD0C60C19E7A02C005B3784 /* QSet.cc in Sources */,
 				BAD0C60A19E7A02C005B3784 /* QPubsub.cc in Sources */,
 				BAD0C60519E7A02C005B3784 /* QHash.cc in Sources */,
@@ -773,6 +789,7 @@
 		BAD0C5DB19E79FF7005B3784 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				EXECUTABLE_PREFIX = lib;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
@@ -790,6 +807,7 @@
 		BAD0C5DC19E79FF7005B3784 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				EXECUTABLE_PREFIX = lib;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -831,6 +849,7 @@
 		BAFC83FF19C44AE800C18B22 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				EXECUTABLE_PREFIX = lib;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
@@ -843,6 +862,7 @@
 		BAFC840019C44AE800C18B22 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				EXECUTABLE_PREFIX = lib;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};

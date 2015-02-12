@@ -111,7 +111,7 @@ public:
     bool Invalid() const { return m_invalid; }
     
     int  GetSocket() const {   return m_localSock;   }
-    int  GetID() const     {   return m_id;   }
+    std::size_t GetID() const     {   return m_id;   }
 
     virtual bool OnReadable() { return false; }
     virtual bool OnWritable() { return false; }

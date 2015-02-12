@@ -32,6 +32,11 @@ bool StreamSocket::Init(int fd)
     USR << "Init new fd = " << m_localSock
         << ", peer addr = " << m_peerAddr.GetIP()
         << ", peer port = " << m_peerAddr.GetPort();
+    
+#if defined(__APPLE__)
+    int set = 1;
+    setsockopt(m_localSock, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
+#endif
 
     return  true;
 }
