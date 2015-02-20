@@ -47,6 +47,24 @@ bool MemoryFile::_ExtendFileSize(size_t  size)
     return   m_pMemory != kInvalidAddr;
 }
 
+bool MemoryFile::_MapReadOnly()
+{
+    assert (m_file != kInvalidFile);
+    assert (m_size == 0);
+
+    struct stat st;
+    fstat(m_file, &st);
+    m_size = st.st_size;
+
+    m_pMemory = (char* )::mmap(0, m_size, PROT_READ, MAP_SHARED, m_file, 0);
+
+    if (m_pMemory == kInvalidAddr)
+        perror("mmap readonly failed ");
+    
+    return   m_pMemory != kInvalidAddr;
+}
+
+
 bool  MemoryFile::Open(const std::string&  file, bool bAppend)
 {
     return Open(file.c_str(), bAppend);
@@ -80,6 +98,23 @@ bool  MemoryFile::Open(const char* file, bool bAppend)
     return true;
 }
 
+bool  MemoryFile::OpenForRead(const char* file)
+{
+    Close();
+
+    m_file = ::open(file, O_RDONLY);
+
+    if (m_file == kInvalidFile)
+    {
+        char err[128];
+        snprintf(err, sizeof err - 1, "OpenForRead %s failed\n", file);
+        perror(err);
+        return false;
+    }
+
+    return _MapReadOnly();
+}
+
 void  MemoryFile::Close()
 {
     if (m_file != kInvalidFile)
@@ -93,6 +128,22 @@ void  MemoryFile::Close()
         m_pMemory   = kInvalidAddr;
         m_offset    = 0;
     }
+}
+
+std::size_t MemoryFile::Read(const void*& data, size_t& len)
+{
+    if (m_offset + len > m_size)
+        len = m_size - m_offset;
+
+    data = m_pMemory + m_offset;
+
+    return  len;
+}
+
+void MemoryFile::Skip(size_t len)
+{
+    m_offset += len;
+    assert (m_offset <= m_size);
 }
 
 // consumer
@@ -129,4 +180,5 @@ bool MemoryFile::MakeDir(const char* pDir)
 
     return true;
 }
+
 

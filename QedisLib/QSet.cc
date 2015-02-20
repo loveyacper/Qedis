@@ -27,6 +27,7 @@ using namespace std;
     }   \
     if (err == QError_notExist) { \
         QObject val(QType_set);  \
+        val.encoding = QEncode_set; \
         val.value = std::make_shared<QSet>();  \
         value = QSTORE.SetValue(setname, val);  \
     }

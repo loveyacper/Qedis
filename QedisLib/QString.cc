@@ -183,7 +183,7 @@ QError  setrange(const vector<QString>& params, UnboundedBuffer& reply)
 static void AddReply(QObject* value, UnboundedBuffer& reply)
 {
     const PSTRING& str = GetDecodedString(value);
-    FormatSingle(str->c_str(), str->size(), reply);
+    FormatBulk(str->c_str(), str->size(), reply);
 }
 
 QError  get(const vector<QString>& params, UnboundedBuffer& reply)

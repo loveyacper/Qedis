@@ -15,6 +15,9 @@
 #include "QPubsub.h"
 #include "QCommand.h"
 
+#include "QDB.h"
+#include <unistd.h>
+
 class Qedis : public Server
 {
 public:
@@ -75,6 +78,20 @@ bool Qedis::_RunLogic()
     if (!Server::_RunLogic()) 
         Thread::YieldCPU();
     
+    // RDB TEST
+    static int i = 0;
+    if ( ++ i % 100000 == 0)
+    {
+        int ret = fork();
+        if (ret == 0)
+        {
+            QDBSaver  saver;
+            saver.Save();
+            std::cerr << "child save rdb\n";
+            exit(0);
+        }
+    }
+    
     return  true;
 }
 
@@ -89,7 +106,7 @@ void    Qedis::_Recycle()
 int main()
 {
     g_log = LogManager::Instance().NullLog();
-    g_log = LogManager::Instance().CreateLog(logALL, logALL, "./qedis_log");
+   //g_log = LogManager::Instance().CreateLog(logALL, logALL, "./qedis_log");
     
     //daemon(1, 0);
 

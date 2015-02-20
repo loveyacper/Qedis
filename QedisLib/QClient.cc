@@ -82,26 +82,6 @@ HEAD_LENGTH_T QClient::_HandleHead(AttachedBuffer& buf, BODY_LENGTH_T* bodyLen)
         break;
 
     case ProcessMultiBulkState:
-#if 0
-        if (bytes - static_cast<int>(ptr - start) > 2)
-        {
-            crlf = SearchCRLF(ptr, bytes - static_cast<int>(ptr - start));
-        }
-
-        if (!crlf) 
-            return static_cast<int>(ptr - start);
-        else
-            assert (crlf[0] == 13 && crlf[1] == 10);
-
-        if (!Strtol(ptr, static_cast<int>(crlf - ptr), &m_multibulk))
-        {
-            LOG_ERR(g_log) << "Can not get args number";
-            OnError();
-            assert (false);
-            return 0;
-        }
-        ptr = crlf + 2;
-#else
         parseIntRet = GetIntUntilCRLF(ptr, start + bytes - ptr, m_multibulk);
         if (parseIntRet == QParseInt_waitCrlf)
         {
@@ -115,7 +95,6 @@ HEAD_LENGTH_T QClient::_HandleHead(AttachedBuffer& buf, BODY_LENGTH_T* bodyLen)
 
         assert (ptr[0] == 13 && ptr[1] == 10);
         ptr += 2;
-#endif
             
         DBG << "Got multibulk " << m_multibulk;
         if (m_multibulk < 0 || m_multibulk > 1024)
@@ -144,32 +123,6 @@ HEAD_LENGTH_T QClient::_HandleHead(AttachedBuffer& buf, BODY_LENGTH_T* bodyLen)
         break;
 
     case ProcessArglenState:
-#if 0
-        if (bytes - static_cast<int>(ptr - start) > 2)
-        {
-            crlf = SearchCRLF(ptr, bytes - static_cast<int>(ptr - start));
-        }
-
-        if (!crlf) 
-        {
-            LOG_INF(g_log) << "ProcessArglenState can not find crlf, break";
-            return 0;
-        }
-        else
-        {
-            assert (crlf[0] == 13 && crlf[1] == 10);
-        }
-
-        if (!Strtol(ptr, static_cast<int>(crlf - ptr), &m_paramLen))
-        {
-            LOG_ERR(g_log) << "Can not get arg len";
-            OnError();
-            assert (false);
-            return 0;
-        }
-            
-        ptr = crlf + 2;
-#else
         parseIntRet = GetIntUntilCRLF(ptr, start + bytes - ptr, m_paramLen);
         if (parseIntRet == QParseInt_waitCrlf)
         {
@@ -184,7 +137,7 @@ HEAD_LENGTH_T QClient::_HandleHead(AttachedBuffer& buf, BODY_LENGTH_T* bodyLen)
 
         assert (ptr[0] == 13 && ptr[1] == 10);
         ptr += 2;
-#endif
+
         m_state = ProcessArgState;
         if (m_paramLen < 0 || m_paramLen > 1024 * 1024)
         {
@@ -239,7 +192,7 @@ void QClient::_HandlePacket(AttachedBuffer& buf)
             return ;
         }
 
-        m_params.push_back(QString(ptr, crlf - start));
+        m_params.emplace_back(QString(ptr, crlf - start));
         if (m_params.size() == static_cast<size_t>(m_multibulk))
         {
             m_state = ReadyState;
@@ -392,7 +345,7 @@ bool QClient::Exec()
     }
     
     PreFormatMultiBulk(m_queueCmds.size(), m_reply);
-    for (std::vector<std::vector<QString> >::const_iterator it(m_queueCmds.begin());
+    for (auto it(m_queueCmds.begin());
          it != m_queueCmds.end();
          ++ it)
     {

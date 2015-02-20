@@ -11,9 +11,12 @@ public:
 
     bool        Open(const std::string& file, bool bAppend = true);
     bool        Open(const char* file, bool bAppend = true);
+    bool        OpenForRead(const char* file);
     void        Close();
 
     void        Write(const void* data, std::size_t len); //  WriteHook
+    std::size_t Read(const void*& data, std::size_t& len);
+    void        Skip(std::size_t len);
 
     bool        IsOpen() const { return m_file != kInvalidFile; }
     std::size_t Offset() const { return m_offset; }
@@ -24,6 +27,7 @@ public:
     static char* const kInvalidAddr;
 
 private:
+    bool            _MapReadOnly();
     bool            _ExtendFileSize(std::size_t  size);
     bool            _AssureSpace(std::size_t  size);
 

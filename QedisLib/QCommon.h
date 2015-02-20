@@ -25,12 +25,11 @@ enum QEncode
     QEncode_int, // string as int
 
     QEncode_list,
-    QEncode_ziplist,
-
+    
+    QEncode_set,
     QEncode_hash,
-
-    QEncode_intset,
-    QEncode_zipmap,
+    
+    QEncode_sset,
 };
 
 enum QError

@@ -1,7 +1,8 @@
 #include "QCommon.h"
 #include "UnboundedBuffer.h"
 #include <limits>
-#include <cstdlib>
+#include <stdlib.h>
+#include <errno.h>
 #include <algorithm>
 
 
@@ -63,18 +64,16 @@ bool Str2Long(const char* ptr, size_t nBytes, long& val)
 
 bool Strtol(const char* ptr, size_t nBytes, long* outVal)
 {
-    if (nBytes == 0)
+    if (nBytes == 0 || nBytes > 21)
         return false;
 
     char* pEnd = 0;
     long ret = strtol(ptr, &pEnd, 0);
 
-    // TODO : bug fix
-    if (ret > std::numeric_limits<long>::max() ||
-        ret < std::numeric_limits<long>::min())
+    if (errno == ERANGE ||
+        errno == EINVAL)
         return false;
 
-    //if (ret > INT32_MAX || ret < INT32_MIN)  return false;
     *outVal = ret;
     return pEnd == ptr + nBytes;
 }

@@ -6,33 +6,21 @@
 #include <map>
 #include <set>
 #include <vector>
-
-#if defined(__APPLE__)
 #include <unordered_map>
-
-#else
-#include <tr1/unordered_map>
-
-#endif
 
 class QSortedSet
 {
 public:
     typedef std::set<QString> Members;
     typedef std::map<long, Members>  Score2Members;
-#if defined(__APPLE__)
+
     typedef std::unordered_map<QString, long,
             my_hash,
             std::equal_to<QString> >   Member2Score;
 
-#else
-    typedef std::tr1::unordered_map<QString, long,
-            my_hash,
-            std::equal_to<QString> >   Member2Score;
-
-#endif
-
     Member2Score::iterator FindMember(const QString& member);
+    Member2Score::const_iterator begin() const {  return m_members.begin(); };
+    Member2Score::iterator begin() {  return m_members.begin(); };
     Member2Score::const_iterator end() const {  return m_members.end(); };
     Member2Score::iterator end() {  return m_members.end(); };
     void    AddMember   (const QString& member, long score);

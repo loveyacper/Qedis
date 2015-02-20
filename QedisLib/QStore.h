@@ -29,7 +29,29 @@ struct  QObject
     
     explicit QObject(QType  t = QType_invalid) : type(t)
     {
-        encoding = QEncode_invalid;
+        switch (type)
+        {
+            case QType_list:
+                encoding = QEncode_list;
+                break;
+                
+            case QType_hash:
+                encoding = QEncode_hash;
+                break;
+                
+            case QType_set:
+                encoding = QEncode_set;
+                break;
+
+            case QType_sortedSet:
+                encoding = QEncode_sset;
+                break;
+                
+            default:
+                encoding = QEncode_invalid;
+                break;
+        }
+        
         nouse = 0;
         lru   = 0;
     }
