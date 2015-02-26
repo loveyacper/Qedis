@@ -14,9 +14,8 @@
 #include "QStore.h"
 #include "QPubsub.h"
 #include "QCommand.h"
-
 #include "QDB.h"
-#include <unistd.h>
+
 
 class Qedis : public Server
 {
@@ -67,6 +66,9 @@ bool Qedis::_Init()
     QSTORE.InitExpireTimer();
     QPubsub::Instance().InitPubsubTimer();
     
+    QDBLoader  loader;
+    loader.Load(g_qdbFile);
+    
     return true;
 }
 Time  g_now;
@@ -75,23 +77,32 @@ bool Qedis::_RunLogic()
     g_now.Now();
     TimerManager::Instance().UpdateTimers(g_now);
     
-    if (!Server::_RunLogic()) 
-        Thread::YieldCPU();
-    
-    // RDB TEST
-    static int i = 0;
-    if ( ++ i % 100000 == 0)
+    if (g_qdbPid != -1)
     {
-        int ret = fork();
-        if (ret == 0)
+        int    statloc;
+        
+        pid_t pid = wait3(&statloc,WNOHANG,NULL);
+        if (pid != 0 && pid != -1)
         {
-            QDBSaver  saver;
-            saver.Save();
-            std::cerr << "child save rdb\n";
-            exit(0);
+            int exitcode = WEXITSTATUS(statloc);
+            int bysignal = 0;
+
+            if (WIFSIGNALED(statloc)) bysignal = WTERMSIG(statloc);
+            
+            if (pid == g_qdbPid)
+            {
+                QDBSaver::SaveDoneHandler(exitcode, bysignal);
+            }
+            else
+            {
+                ERR << pid << " is not rdb process " << g_qdbPid;
+            }
         }
     }
     
+    if (!Server::_RunLogic())
+        Thread::YieldCPU();
+
     return  true;
 }
 
@@ -105,8 +116,8 @@ void    Qedis::_Recycle()
 
 int main()
 {
-    g_log = LogManager::Instance().NullLog();
-   //g_log = LogManager::Instance().CreateLog(logALL, logALL, "./qedis_log");
+   // g_log = LogManager::Instance().NullLog();
+    g_log = LogManager::Instance().CreateLog(logALL, logALL, "./qedis_log");
     
     //daemon(1, 0);
 

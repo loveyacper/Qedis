@@ -4,21 +4,13 @@
 #include "QString.h"
 #include "util.h"
 
-#if defined(__APPLE__)
-
 #include <unordered_map>
 typedef std::unordered_map<QString, QString,
         my_hash,
         std::equal_to<QString> >  QHash;
 
-#else
 
-#include <tr1/unordered_map>
-typedef std::tr1::unordered_map<QString, QString,
-        my_hash,
-        std::equal_to<QString> >  QHash;
-
-#endif
+QObject  CreateHashObject();
 
 
 #endif

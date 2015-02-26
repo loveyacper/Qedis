@@ -6,10 +6,10 @@
 
 using namespace std;
 
-QObject  CreateHash()
+QObject  CreateHashObject()
 {
     QObject obj(QType_hash);
-    obj.encoding = QEncode_hash;
+    obj.value = std::make_shared<QHash>();
     return  obj;
 }
 
@@ -29,8 +29,7 @@ QObject  CreateHash()
         return err;  \
     }   \
     if (err == QError_notExist) { \
-        QObject val(QType_hash);  \
-        val.value = std::make_shared<QHash>();  \
+        QObject val(CreateHashObject());  \
         value = QSTORE.SetValue(hashname, val);  \
     }
 

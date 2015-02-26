@@ -23,6 +23,7 @@ struct QErrorInfo  g_errorInfo[] = {
     {sizeof "-EXECABORT Transaction discarded because of previous errors.\r\n"-1, "-EXECABORT Transaction discarded because of previous errors.\r\n"},
     {sizeof "-WATCH inside MULTI is not allowed\r\n"-1, "-WATCH inside MULTI is not allowed\r\n"},
     {sizeof "-EXEC without MULTI\r\n"-1, "-EXEC without MULTI\r\n"},
+    {sizeof "-ERR invalid DB index\r\n"-1, "-ERR invalid DB index\r\n"}
 };
 
 int Int2Str(char* ptr, size_t nBytes, long val)
@@ -74,6 +75,22 @@ bool Strtol(const char* ptr, size_t nBytes, long* outVal)
         errno == EINVAL)
         return false;
 
+    *outVal = ret;
+    return pEnd == ptr + nBytes;
+}
+
+bool Strtoll(const char* ptr, size_t nBytes, long long* outVal)
+{
+    if (nBytes == 0 || nBytes > 21)
+        return false;
+    
+    char* pEnd = 0;
+    long long ret = strtoll(ptr, &pEnd, 0);
+    
+    if (errno == ERANGE ||
+        errno == EINVAL)
+        return false;
+    
     *outVal = ret;
     return pEnd == ptr + nBytes;
 }

@@ -6,5 +6,7 @@
 
 typedef std::list<QString>  QList;
 
+QObject  CreateListObject();
+
 #endif
 

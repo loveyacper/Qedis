@@ -6,7 +6,7 @@
 
 using namespace std;
 
-static QObject  CreateString(const QString&  value)
+QObject  CreateStringObject(const QString&  value)
 {
     QObject   obj(QType_string);
 
@@ -23,6 +23,17 @@ static QObject  CreateString(const QString&  value)
         obj.value = std::make_shared<QString>(value);
     }
 
+    return obj;
+}
+
+QObject  CreateStringObject(long val)
+{
+    QObject   obj(QType_string);
+    
+    obj.encoding = QEncode_int;
+    obj.value.reset((void*)val, [](void* ) {});
+    DBG << "set long val " << val;
+    
     return obj;
 }
 
@@ -59,7 +70,7 @@ static bool SetValue(const QString& key, const QString& value, bool exclusive = 
         }
     }
 
-    const QObject& obj = CreateString(value);
+    const QObject& obj = CreateStringObject(value);
 
     QSTORE.ClearExpire(key); // clear key's old ttl
     QSTORE.SetValue(key, obj);
@@ -94,7 +105,7 @@ QError  mset(const vector<QString>& params, UnboundedBuffer& reply)
 
     for (size_t i = 1; i < params.size(); i += 2)
     {
-        QSTORE.SetValue(params[i], CreateString(params[i + 1]));
+        QSTORE.SetValue(params[i], CreateStringObject(params[i + 1]));
     }
     
     FormatOK(reply);
@@ -138,7 +149,7 @@ QError  setex(const vector<QString>& params, UnboundedBuffer& reply)
         return QError_nan;
     }
 
-    QSTORE.SetValue(params[1], CreateString(params[3]));
+    QSTORE.SetValue(params[1], CreateStringObject(params[3]));
     // TODO set expire
 
     FormatOK(reply);
@@ -160,7 +171,7 @@ QError  setrange(const vector<QString>& params, UnboundedBuffer& reply)
     {
         if (err == QError_notExist)
         {
-            value = QSTORE.SetValue(params[1], CreateString(""));
+            value = QSTORE.SetValue(params[1], CreateStringObject(""));
         }
         else
         {
@@ -272,7 +283,7 @@ QError  getset(const vector<QString>& params, UnboundedBuffer& reply)
     switch (err)
     {
     case QError_notExist:
-        value = QSTORE.SetValue(params[1], CreateString(""));  
+        value = QSTORE.SetValue(params[1], CreateStringObject(""));
         // fall through
 
     case QError_ok:
@@ -307,7 +318,7 @@ QError  append(const vector<QString>& params, UnboundedBuffer& reply)
         break;
 
     case QError_notExist:
-        value = QSTORE.SetValue(params[1], CreateString(params[2]));
+        value = QSTORE.SetValue(params[1], CreateStringObject(params[2]));
         break;
 
     default:
@@ -414,7 +425,7 @@ QError  setbit(const vector<QString>& params, UnboundedBuffer& reply)
     QError err = QSTORE.GetValueByType(params[1], value, QType_string);
     if (err == QError_notExist)
     {
-        value = QSTORE.SetValue(params[1], CreateString("0"));
+        value = QSTORE.SetValue(params[1], CreateStringObject("0"));
         err = QError_ok;
     }
 
@@ -468,7 +479,7 @@ static QError  ChangeIntValue(const QString& key, long delta, UnboundedBuffer& r
     QError err = QSTORE.GetValueByType(key, value, QType_string);
     if (err == QError_notExist)
     {
-        value = QSTORE.SetValue(key, CreateString("0"));
+        value = QSTORE.SetValue(key, CreateStringObject("0"));
         err = QError_ok;
     }
 

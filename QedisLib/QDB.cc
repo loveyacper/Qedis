@@ -1,15 +1,20 @@
 
 #include "QDB.h"
-#include <assert.h>
+#include "Logger.h"
 #include <iostream>
+#include <sstream>
 
 extern "C"
 {
 #include "lzf.h"
+#include "redisZipList.h"
 }
 
 extern "C"
 uint64_t crc64(uint64_t crc, const unsigned char *s, uint64_t l);
+
+time_t  g_lastQDBSave = 0;
+pid_t   g_qdbPid = -1;
 
 
 // encoding
@@ -20,7 +25,7 @@ static const int8_t kTypeZSet   = 3;
 static const int8_t kTypeHash   = 4;
 
 static const int8_t kTypeZipMap = 9;
-static const int8_t kTYpeZipList=10;
+static const int8_t kTypeZipList=10;
 static const int8_t kTypeIntSet =11;
 static const int8_t kTypeZSetZipList = 12;
 static const int8_t kTypeHashZipList = 13;
@@ -42,12 +47,12 @@ static const int8_t  kEnc16Bits = 1;
 static const int8_t  kEnc32Bits = 2;
 static const int8_t  kEncLZF    = 3;
 
-// not support expire, TODOx
+const char* const g_qdbFile = "dump.qdb.rdb";
+// not support expire, TODO
 void  QDBSaver::Save()
 {
-    const char* const fileName = "dump.qdb.rdb";
-    if (!m_qdb.Open(fileName, false))
-        assert (false);
+    if (!m_qdb.Open(g_qdbFile, false))
+        assert (false); //exit(- __LINE__);
     
     char buf[16];
     snprintf(buf, sizeof buf, "REDIS%04d", kQDBVersion);
@@ -56,6 +61,9 @@ void  QDBSaver::Save()
     for (int dbno = 0; dbno < 16; ++ dbno)
     {
         QSTORE.SelectDB(dbno);
+        if (QSTORE.DBSize() == 0)
+            continue;  // But redis will save empty db
+        
         m_qdb.Write(&kSelectDB, 1);
         SaveLength(dbno);
             
@@ -71,16 +79,13 @@ void  QDBSaver::Save()
     
     // crc 8 bytes
     MemoryFile  file;
-    file.OpenForRead(fileName);
+    file.OpenForRead(g_qdbFile);
     
-    const void* data;
     size_t  len = m_qdb.Offset();
-    file.Read(data, len);
+    const char* data = file.Read(len);
     
     const uint64_t  crc = crc64(0, (const unsigned char* )data, len);
     m_qdb.Write(&crc, sizeof crc);
-    
-    std::cerr << "rdb saved\n";
 }
 
 void QDBSaver::SaveType(const QObject& obj)
@@ -89,23 +94,23 @@ void QDBSaver::SaveType(const QObject& obj)
     {
         case QEncode_raw:
         case QEncode_int:
-            SaveLength(kTypeString);
+            m_qdb.Write(&kTypeString, 1);
             break;
                 
         case QEncode_list:
-            SaveLength(kTypeList);
+            m_qdb.Write(&kTypeList, 1);
             break;
                 
         case QEncode_hash:
-            SaveLength(kTypeHash);
+            m_qdb.Write(&kTypeHash, 1);
             break;
             
         case QEncode_set:
-            SaveLength(kTypeSet);
+            m_qdb.Write(&kTypeSet, 1);
             break;
             
         case QEncode_sset:
-            SaveLength(kTypeZSet);
+            m_qdb.Write(&kTypeZSet, 1);
             break;
             
         default:
@@ -173,7 +178,7 @@ void  QDBSaver::_SaveDoubleValue(double val)
         len = 1;
         buf[0] = (val < 0) ? 255 : 254;
     } else {
-        snprintf((char*)buf+1,sizeof(buf)-1,"%.17g",val);
+        snprintf((char*)buf+1,sizeof(buf)-1,"%.6g",val);
         buf[0] = strlen((char*)buf+1);
         len = buf[0]+1;
     }
@@ -302,26 +307,654 @@ void QDBSaver::SaveString(int64_t intVal)
 
 bool QDBSaver::SaveLZFString(const QString& str)
 {
-    if (str.size() < 5)
+    if (str.size() < 20)
         return false;
         
-    size_t outlen = str.size() - 4;
+    auto outlen = str.size() - 4;
     std::unique_ptr<char []> outBuf(new char[outlen + 1]);
         
-    uint32_t compressLen = lzf_compress((const void*)str.data(), str.size(),
-                                            outBuf.get(), outlen);
+    auto compressLen = lzf_compress((const void*)str.data(), str.size(),
+                                        outBuf.get(), outlen);
     
     if (compressLen == 0)
+    {
+        std::cerr << "compress len = 0\n";
         return false;
-        
-    uint8_t specialByte = kSpecial << 6 | kEncLZF;
+    }
+    
+    int8_t specialByte = (kSpecial << 6) | kEncLZF;
+    m_qdb.Write(&specialByte, 1);
     
     // compress len + raw len + str data;
     SaveLength(compressLen);
     SaveLength(str.size());
     m_qdb.Write(outBuf.get(), compressLen);
-        
+    
+    std::cerr << "compress len " << compressLen << ", raw len " << str.size() << std::endl;
+    
     return  true;
 }
 
 
+void QDBSaver::SaveDoneHandler(int exitcode, int bysignal)
+{
+    if (exitcode == 0 && bysignal == 0)
+    {
+        INF << "save rdb success";
+        g_lastQDBSave = time(NULL);
+        g_qdbPid = -1;
+    }
+    else
+    {
+        ERR << "save rdb failed with exitcode " << exitcode << ", signal " << bysignal;
+    }
+}
+
+
+int  QDBLoader::Load(const char *filename)
+{
+    if (!m_qdb.OpenForRead(filename))
+    {
+        return - __LINE__;
+    }
+    
+    // check the magic string "REDIS" and version number
+    size_t len = 9;
+    const char* data = m_qdb.Read(len);
+    
+    if (len != 9)
+    {
+        return - __LINE__;
+    }
+    
+    long qdbversion;
+    if (!Strtol(data + 5, 4, &qdbversion) ||
+        qdbversion < 6)
+    {
+        return - 123;
+    }
+    m_qdb.Skip(9);
+    
+    //  SELECTDB + dbno
+    //  type1 + key + obj
+    //  EOF + crc
+
+    bool eof = false;
+    while (!eof)
+    {
+        int8_t indicator = m_qdb.Read<int8_t>();
+        
+        switch (indicator)
+        {
+            case kEOF:
+                std::cerr << "encounter EOF\n";
+                eof = true;
+                m_qdb.Skip(1);
+                break;
+                
+            case kSelectDB:
+            {
+                bool special;
+                auto dbno = LoadLength(special);
+                assert(!special);
+                QSTORE.SelectDB(static_cast<int>(dbno));
+                std::cerr << "encounter Select DB " << dbno << std::endl;
+                break;
+            }
+                
+            case kTypeString:
+            case kTypeList:
+            case kTypeZipList:
+            case kTypeSet:
+            case kTypeIntSet:
+            case kTypeHash:
+            case kTypeHashZipList:
+            case kTypeZipMap:
+            case kTypeZSet:
+            case kTypeZSetZipList:
+            {
+                std::cerr << "encounter type " << (int)indicator << std::endl;
+                QString key = LoadKey();
+                std::cerr << "encounter key " << key << std::endl;
+                QObject obj = LoadObject(indicator);
+                QSTORE.SetValue(key, obj);
+                std::cerr << "obj.encoding = " << obj.encoding << std::endl;
+                break;
+            }
+                
+            default:
+                break;
+        }
+    }
+    
+    return 0;
+}
+
+size_t  QDBLoader::LoadLength(bool& special)
+{
+    size_t  len = 1;
+    const char* byte = m_qdb.Read(len);
+    assert(len == 1);
+    m_qdb.Skip(len);
+    
+    special = false;
+    size_t  lenResult = 0;
+    
+    switch ((*byte & 0xC0) >> 6)
+    {
+        case k6Bits:
+        {
+            lenResult = *byte & kLow6Bits;
+            break;
+        }
+            
+        case k14bits:
+        {
+            lenResult = *byte & kLow6Bits; // high 6 bits;
+            lenResult <<= 8;
+            
+            len = 1;
+            const char* bytelow = m_qdb.Read(len);
+            assert(len == 1);
+            m_qdb.Skip(len);
+            
+            lenResult |= *bytelow;
+            break;
+        }
+            
+        case k32bits:
+        {
+            len = 4;
+            const char* fourbytes = m_qdb.Read(len);
+            assert(len == 4);
+            m_qdb.Skip(len);
+            
+            lenResult = ntohl(*(uint32_t* )fourbytes);
+            break;
+        }
+            
+        case kSpecial:
+        {
+            special = true;
+            lenResult = *byte & kLow6Bits;
+            break;
+        }
+            
+        default:
+        {
+            assert(false);
+        }
+    }
+
+    return lenResult;
+}
+
+
+QObject  QDBLoader::LoadSpecialStringObject(size_t  specialVal)
+{
+    bool isInt = true;
+    long val;
+    
+    switch (specialVal)
+    {
+        case kEnc8Bits:
+        {
+            size_t len = 1;
+            const char* data = m_qdb.Read(len);
+            assert(len == 1);
+            val = *data;
+            m_qdb.Skip(len);
+            
+            break;
+        }
+            
+        case kEnc16Bits:
+        {
+            size_t len = 2;
+            const char* data = m_qdb.Read(len);
+            assert(len == 2);
+            val = *(uint16_t* )data;
+            m_qdb.Skip(len);
+            
+            break;
+        }
+            
+        case kEnc32Bits:
+        {
+            size_t len = 4;
+            const char* data = m_qdb.Read(len);
+            assert(len == 4);
+            val = *(uint32_t* )data;
+            m_qdb.Skip(len);
+            
+            break;
+        }
+            
+        case kEncLZF:
+        {
+            isInt = false;
+            break;
+        }
+            
+        default:
+            assert(false);
+    }
+    
+    if (isInt)
+        return CreateStringObject(val);
+    else
+        return CreateStringObject(LoadLZFString());
+}
+
+QString  QDBLoader::LoadString(size_t strLen)
+{
+    const char* str = m_qdb.Read(strLen);
+    m_qdb.Skip(strLen);
+    
+    return QString(str, strLen);
+}
+
+
+QString  QDBLoader::LoadLZFString()
+{
+    bool  special;
+    size_t compressLen = LoadLength(special);
+    assert(!special);
+    
+    size_t rawLen = LoadLength(special);
+    assert(!special);
+    
+    const char* compressStr = m_qdb.Read(compressLen);
+    
+    QString  val;
+    val.resize(rawLen);
+    if (lzf_decompress(compressStr, compressLen,
+                       &val[0], rawLen) == 0)
+    {
+        std::cerr << "decompress error\n";
+        return  QString();
+    }
+
+    m_qdb.Skip(compressLen);
+    return  val;
+}
+
+QString QDBLoader::LoadKey()
+{
+    return  _LoadGenericString();
+}
+
+
+QObject  QDBLoader::LoadObject(int8_t type)
+{
+    switch (type)
+    {
+        case kTypeString:
+        {
+            bool special;
+            size_t len = LoadLength(special);
+
+            if (special)
+            {
+                return LoadSpecialStringObject(len);
+            }
+            else
+            {
+                return CreateStringObject(LoadString(len));
+            }
+        }
+        case kTypeList:
+        {
+            return _LoadList();
+        }
+        case kTypeZipList:
+        {
+            return _LoadZipList(kTypeZipList);
+            break;
+        }
+        case kTypeSet:
+        {
+            return _LoadSet();
+        }
+        case kTypeIntSet:
+        {
+            break;
+        }
+        case kTypeHash:
+        {
+            return _LoadHash();
+        }
+        case kTypeHashZipList:
+        {
+            return _LoadZipList(kTypeHashZipList);
+        }
+        case kTypeZipMap:
+        {
+            break;
+        }
+        case kTypeZSet:
+        {
+            return _LoadSSet();
+        }
+        case kTypeZSetZipList:
+        {
+            return _LoadZipList(kTypeZSetZipList);
+        }
+            
+        default:
+            break;
+    }
+    
+    assert(false);
+    return QObject();
+}
+
+
+QString QDBLoader::_LoadGenericString()
+{
+    bool   special;
+    size_t len = LoadLength(special);
+    
+    if (special)
+    {
+        QObject obj = LoadSpecialStringObject(len);
+        return  std::move(*(obj.CastString()));
+    }
+    else
+    {
+        return LoadString(len);
+    }
+}
+
+QObject QDBLoader::_LoadList()
+{
+    bool special;
+    const auto len = LoadLength(special);
+    assert(!special);
+    std::cerr << "list length = " << len << std::endl;
+    
+    QObject obj(CreateListObject());
+    PLIST  list(obj.CastList());
+    for (size_t i = 0; i < len; ++ i)
+    {
+        const auto elemLen = LoadLength(special);
+        QString  elem;
+        if (special)
+        {
+            QObject str = LoadSpecialStringObject(elemLen);
+            elem = *str.CastString();
+        }
+        else
+        {
+            elem = LoadString(elemLen);
+        }
+        
+        list->push_back(elem);
+        std::cerr << "list elem : " << elem.c_str() << std::endl;
+    }
+    
+    return obj;
+}
+
+QObject QDBLoader::_LoadSet()
+{
+    bool special;
+    const auto len = LoadLength(special);
+    assert(!special);
+    std::cerr << "set length = " << len << std::endl;
+    
+    QObject obj(CreateSetObject());
+    PSET  set(obj.CastSet());
+    for (size_t i = 0; i < len; ++ i)
+    {
+        const auto elemLen = LoadLength(special);
+        QString  elem;
+        if (special)
+        {
+            QObject str = LoadSpecialStringObject(elemLen);
+            elem = *str.CastString();
+        }
+        else
+        {
+            elem = LoadString(elemLen);
+        }
+        
+        set->insert(elem);
+        std::cerr << "set elem : " << elem.c_str() << std::endl;
+    }
+    
+    return obj;
+}
+
+QObject QDBLoader::_LoadHash()
+{
+    bool special;
+    const auto len = LoadLength(special);
+    assert(!special);
+    std::cerr << "hash length = " << len << std::endl;
+    
+    QObject obj(CreateHashObject());
+    PHASH  hash(obj.CastHash());
+    for (size_t i = 0; i < len; ++ i)
+    {
+        const auto keyLen = LoadLength(special);
+        QString  key;
+        if (special)
+        {
+            QObject str = LoadSpecialStringObject(keyLen);
+            key = *str.CastString();
+        }
+        else
+        {
+            key = LoadString(keyLen);
+        }
+        
+        const auto valLen = LoadLength(special);
+        QString  val;
+        if (special)
+        {
+            QObject str = LoadSpecialStringObject(valLen);
+            val = *str.CastString();
+        }
+        else
+        {
+            val = LoadString(valLen);
+        }
+        
+        hash->insert(QHash::value_type(key, val));
+        std::cerr << "hash key : " << key.c_str() << " val : " << val.c_str() << std::endl;
+    }
+    
+    return obj;
+}
+
+
+QObject    QDBLoader::_LoadSSet()
+{
+    bool special;
+    const auto len = LoadLength(special);
+    assert(!special);
+    std::cerr << "sset length = " << len << std::endl;
+    
+    QObject obj(CreateSSetObject());
+    PSSET  sset(obj.CastSortedSet());
+    for (size_t i = 0; i < len; ++ i)
+    {
+        const auto memberLen = LoadLength(special);
+        QString  member;
+        if (special)
+        {
+            QObject str = LoadSpecialStringObject(memberLen);
+            member = *str.CastString();
+        }
+        else
+        {
+            member = LoadString(memberLen);
+        }
+        
+        const auto score = _LoadDoubleValue();
+        sset->AddMember(member, static_cast<long>(score));
+        std::cerr << "sset member : " << member.c_str() << " score : " << score << std::endl;
+    }
+    
+    return obj;
+}
+
+double  QDBLoader::_LoadDoubleValue()
+{
+    size_t len = 1;
+    const char* byte1st = m_qdb.Read(len);
+    assert(len == 1);
+    
+    m_qdb.Skip(1);
+
+    double  dvalue;
+    switch ((uint8_t)*byte1st)
+    {
+        case 253:
+        {
+            dvalue = NAN;
+            break;
+        }
+            
+        case 254:
+        {
+            dvalue = INFINITY;
+            break;
+        }
+            
+        case 255:
+        {
+            dvalue = INFINITY;
+            break;
+        }
+            
+        default:
+        {
+            len = *byte1st;
+            const char* val = m_qdb.Read(len);
+            assert(len == *byte1st);
+            m_qdb.Skip(len);
+            
+            std::istringstream  is(std::string(val, len));
+            is >> dvalue;
+            
+            break;
+        }
+    }
+    
+    std::cerr << "double value " << dvalue << std::endl;
+    
+    return  dvalue;
+}
+
+//unsigned int ziplistGet(unsigned char *p, unsigned char **sval, unsigned int *slen, long long *lval);
+
+struct ZipListElement
+{
+    unsigned char* sval;
+    unsigned int   slen;
+    
+    long long      lval;
+    
+    QString ToString()
+    {
+        if (sval)
+        {
+            const QString str((const char* )sval, QString::size_type(slen));
+            std::cerr << "string zip list element " << str << std::endl;
+            return str;
+        }
+        else
+            return  LongToString();
+    }
+    
+    QString LongToString()
+    {
+        assert(!sval);
+
+        QString  str(16, 0);
+        int len = Int2Str(&str[0], 16, lval);
+        str.resize(len);
+        
+        std::cerr << "long zip list element " << str << std::endl;
+        return str;
+    }
+};
+
+QObject     QDBLoader::_LoadZipList(int8_t type)
+{
+    QString str = _LoadGenericString();
+    
+    unsigned char* zlist = (unsigned char* )&str[0];
+    size_t         nElem = ziplistLen(zlist);
+    
+    std::vector<ZipListElement>  elements;
+    elements.resize(nElem);
+    
+    for (size_t i = 0; i < nElem; ++ i)
+    {
+        unsigned char* elem = ziplistIndex(zlist, i);
+        
+        int succ = ziplistGet(elem, &elements[i].sval, &elements[i].slen,
+                                    &elements[i].lval);
+        assert (succ);
+    }
+    
+    switch (type)
+    {
+        case kTypeZipList:
+        {
+            QObject  obj(CreateListObject());
+            PLIST    list(obj.CastList());
+            
+            for (auto it(elements.begin()); it != elements.end(); ++ it)
+            {
+                list->push_back(it->ToString());
+            }
+            
+            return obj;
+        }
+            
+        case kTypeHashZipList:
+        {
+            QObject  obj(CreateHashObject());
+            PHASH    hash(obj.CastHash());
+            
+            assert(elements.size() % 2 == 0);
+            
+            for (auto it(elements.begin()); it != elements.end(); ++ it)
+            {
+                hash->insert(QHash::value_type(it->ToString(),
+                                               (++ it)->ToString()));
+            }
+            
+            return obj;
+        }
+            
+        case kTypeZSetZipList:
+        {
+            QObject  obj(CreateSSetObject());
+            PSSET    sset(obj.CastSortedSet());
+            
+            assert(elements.size() % 2 == 0);
+            
+            for (auto it(elements.begin()); it != elements.end(); ++ it)
+            {
+                const QString& member = it->ToString();
+                long score = (++ it)->lval;
+                assert(it->sval == 0);
+                
+                sset->AddMember(member, score);
+            }
+            
+            return obj;
+        }
+            
+        default:
+            assert(0);
+            break;
+    }
+    
+    return QObject();
+}

@@ -130,14 +130,12 @@ void  MemoryFile::Close()
     }
 }
 
-std::size_t MemoryFile::Read(const void*& data, size_t& len)
+const char* MemoryFile::Read(std::size_t& len)
 {
     if (m_offset + len > m_size)
         len = m_size - m_offset;
 
-    data = m_pMemory + m_offset;
-
-    return  len;
+    return  m_pMemory + m_offset;
 }
 
 void MemoryFile::Skip(size_t len)

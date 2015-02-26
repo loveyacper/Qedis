@@ -15,8 +15,11 @@ public:
     void        Close();
 
     void        Write(const void* data, std::size_t len); //  WriteHook
-    std::size_t Read(const void*& data, std::size_t& len);
+    const char* Read(std::size_t& len);
     void        Skip(std::size_t len);
+    
+    template <typename T>
+    T           Read();
 
     bool        IsOpen() const { return m_file != kInvalidFile; }
     std::size_t Offset() const { return m_offset; }
@@ -36,6 +39,17 @@ private:
     std::size_t     m_offset;
     std::size_t     m_size;
 };
+
+
+template <typename T>
+inline T  MemoryFile::Read()
+{
+    T res(*reinterpret_cast<T* >(m_pMemory + m_offset));
+    m_offset += sizeof(T);
+   // assert (m_offset <= m_size);
+    
+    return res;
+}
 
 #endif
 

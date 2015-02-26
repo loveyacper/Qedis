@@ -8,6 +8,9 @@
 #include <vector>
 #include <unordered_map>
 
+
+QObject  CreateSSetObject();
+
 class QSortedSet
 {
 public:

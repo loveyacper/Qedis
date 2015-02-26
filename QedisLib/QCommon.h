@@ -45,6 +45,7 @@ enum QError
     QError_dirtyExec = 8,
     QError_watch     = 9,
     QError_noMulti   = 10,
+    QError_invalidDB = 11,
     QError_max,
 };
 
@@ -57,6 +58,7 @@ extern struct QErrorInfo
 int         Int2Str(char* ptr, std::size_t nBytes, long val);
 bool        Str2Long(const char* ptr, std::size_t nBytes, long& val); // only for decimal
 bool        Strtol(const char* ptr, std::size_t nBytes, long* outVal);
+bool        Strtoll(const char* ptr, std::size_t nBytes, long long* outVal);
 bool        Strtof(const char* ptr, std::size_t nBytes, float* outVal);
 const char* Strstr(const char* ptr, std::size_t nBytes, const char* pattern, std::size_t nBytes2);
 const char* SearchCRLF(const char* ptr, std::size_t nBytes);

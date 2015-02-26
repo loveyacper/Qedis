@@ -6,6 +6,15 @@
 
 using namespace std;
 
+
+QObject  CreateListObject()
+{
+    QObject  list(QType_list);
+    list.value = std::make_shared<QList>();
+
+    return std::move(list);
+}
+
 enum ListPosition
 {
     ListPosition_head,

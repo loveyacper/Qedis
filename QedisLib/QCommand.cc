@@ -22,6 +22,11 @@ const QCommandInfo QCommandTable::s_info[] =
     // server
     {"select",      QAttr_read,                2,  &select},
     {"dbsize",      QAttr_read,                1,  &dbsize},
+    {"bgsave",      QAttr_read,                1,  &bgsave},
+    {"save",        QAttr_read,                1,  &save},
+    {"lastsave",    QAttr_read,                1,  &lastsave},
+    {"flushdb",     QAttr_write,               1,  &flushdb},
+    {"flushall",    QAttr_write,               1,  &flushall},
     
     // string
     {"strlen",      QAttr_read,                2,  &strlen},

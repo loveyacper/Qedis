@@ -7,6 +7,14 @@
 using namespace std;
 
 
+QObject  CreateSetObject()
+{
+    QObject  set(QType_set);
+    set.value = std::make_shared<QSet>();
+
+    return std::move(set);
+}
+
 #define GET_SET(setname)  \
     QObject* value;  \
     QError err = QSTORE.GetValueByType(setname, value, QType_set);  \
@@ -26,9 +34,7 @@ using namespace std;
         return err;  \
     }   \
     if (err == QError_notExist) { \
-        QObject val(QType_set);  \
-        val.encoding = QEncode_set; \
-        val.value = std::make_shared<QSet>();  \
+        QObject val(CreateSetObject());  \
         value = QSTORE.SetValue(setname, val);  \
     }
 

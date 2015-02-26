@@ -34,6 +34,11 @@ QCommandHandler  randomkey;
 // server commands
 QCommandHandler  select;
 QCommandHandler  dbsize;
+QCommandHandler  bgsave;
+QCommandHandler  save;
+QCommandHandler  lastsave;
+QCommandHandler  flushdb;
+QCommandHandler  flushall;
 
 // string commands
 QCommandHandler  set;

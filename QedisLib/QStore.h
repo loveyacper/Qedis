@@ -55,7 +55,20 @@ struct  QObject
         nouse = 0;
         lru   = 0;
     }
+    
+    QObject(const QObject& obj) = default;
+    QObject& operator= (const QObject& obj) =  default;
 
+    QObject(QObject&& obj)
+    {
+        type = obj.type;
+        nouse = obj.nouse;
+        encoding = obj.encoding;
+        lru = obj.lru;
+        
+        value = std::move(obj.value);
+    }
+    
     PSTRING  CastString()       const { return std::static_pointer_cast<QString>(value); }
     PLIST    CastList()         const { return std::static_pointer_cast<QList>(value);   }
     PSET     CastSet()          const { return std::static_pointer_cast<QSet>(value);    }
@@ -135,6 +148,10 @@ public:
     bool    ExpireIfNeed(const QString& key, uint64_t now);
     int     LoopCheck(uint64_t now);
     void    InitExpireTimer();
+    
+    // danger cmd
+    void    ClearCurrentDB() { m_db->clear(); }
+    void    ClearAllDB()     { std::vector<QDB>(16).swap(m_store); }
 
 private:
     class QExpiresDB

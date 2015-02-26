@@ -89,6 +89,8 @@
 		BAFFCB5C1A9244B200C47F92 /* lzf.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFFCB581A9244B200C47F92 /* lzf.h */; };
 		BAFFCB5D1A9244B200C47F92 /* lzfP.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFFCB591A9244B200C47F92 /* lzfP.h */; };
 		BAFFCB5F1A9423DC00C47F92 /* crc64.c in Sources */ = {isa = PBXBuildFile; fileRef = BAFFCB5E1A9423DC00C47F92 /* crc64.c */; };
+		BAFFCB621A9EA0AC00C47F92 /* redisZipList.c in Sources */ = {isa = PBXBuildFile; fileRef = BAFFCB601A9EA0AC00C47F92 /* redisZipList.c */; };
+		BAFFCB631A9EA0AC00C47F92 /* redisZipList.h in Headers */ = {isa = PBXBuildFile; fileRef = BAFFCB611A9EA0AC00C47F92 /* redisZipList.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -241,6 +243,8 @@
 		BAFFCB581A9244B200C47F92 /* lzf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lzf.h; path = QBase/lzf/lzf.h; sourceTree = "<group>"; };
 		BAFFCB591A9244B200C47F92 /* lzfP.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lzfP.h; path = QBase/lzf/lzfP.h; sourceTree = "<group>"; };
 		BAFFCB5E1A9423DC00C47F92 /* crc64.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = crc64.c; path = QedisLib/crc64.c; sourceTree = SOURCE_ROOT; };
+		BAFFCB601A9EA0AC00C47F92 /* redisZipList.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = redisZipList.c; path = QedisLib/redisZipList.c; sourceTree = SOURCE_ROOT; };
+		BAFFCB611A9EA0AC00C47F92 /* redisZipList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = redisZipList.h; path = QedisLib/redisZipList.h; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -342,6 +346,8 @@
 		BABEBED719C4474900010636 /* QedisLib */ = {
 			isa = PBXGroup;
 			children = (
+				BAFFCB601A9EA0AC00C47F92 /* redisZipList.c */,
+				BAFFCB611A9EA0AC00C47F92 /* redisZipList.h */,
 				BAFFCB5E1A9423DC00C47F92 /* crc64.c */,
 				BAFFCB511A8F09CA00C47F92 /* QDB.cc */,
 				BAFFCB521A8F09CA00C47F92 /* QDB.h */,
@@ -457,6 +463,7 @@
 				BAD0C60219E7A02C005B3784 /* QCommand.h in Headers */,
 				BAD0C61119E7A02C005B3784 /* QStat.h in Headers */,
 				BAD0C60619E7A02C005B3784 /* QHash.h in Headers */,
+				BAFFCB631A9EA0AC00C47F92 /* redisZipList.h in Headers */,
 				BAFFCB541A8F09CA00C47F92 /* QDB.h in Headers */,
 				BAD0C61319E7A02C005B3784 /* QStore.h in Headers */,
 				BA29C44F19FB2CEE00796E3A /* QMulti.h in Headers */,
@@ -621,6 +628,7 @@
 				BAD0C60A19E7A02C005B3784 /* QPubsub.cc in Sources */,
 				BAD0C60519E7A02C005B3784 /* QHash.cc in Sources */,
 				BAD0C60319E7A02C005B3784 /* QCommon.cc in Sources */,
+				BAFFCB621A9EA0AC00C47F92 /* redisZipList.c in Sources */,
 				BAD0C5FF19E7A02C005B3784 /* QClient.cc in Sources */,
 				BAD0C61419E7A02C005B3784 /* QString.cc in Sources */,
 				BAD0C60719E7A02C005B3784 /* QKeyCommand.cc in Sources */,

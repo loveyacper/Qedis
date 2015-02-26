@@ -186,6 +186,13 @@ std::vector<std::pair<QString, long> > QSortedSet::RangeByScore(long minScore, l
     return  res;
 }
 
+QObject  CreateSSetObject()
+{
+    QObject obj(QType_sortedSet);
+    obj.value = std::make_shared<QSortedSet>();
+    return std::move(obj);
+}
+
 // commands
 #define GET_SORTEDSET(name)  \
     QObject* value;  \
@@ -203,8 +210,7 @@ std::vector<std::pair<QString, long> > QSortedSet::RangeByScore(long minScore, l
         return err;  \
     }   \
     if (err == QError_notExist) { \
-        QObject val(QType_sortedSet);  \
-        val.value.reset(new QSortedSet);  \
+        QObject val(CreateSSetObject());  \
         value = QSTORE.SetValue(name, val);  \
     }
 
