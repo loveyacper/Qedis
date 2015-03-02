@@ -857,7 +857,7 @@ struct ZipListElement
     
     long long      lval;
     
-    QString ToString()
+    QString ToString() const
     {
         if (sval)
         {
@@ -869,7 +869,7 @@ struct ZipListElement
             return  LongToString();
     }
     
-    QString LongToString()
+    QString LongToString() const
     {
         assert(!sval);
 
@@ -908,9 +908,9 @@ QObject     QDBLoader::_LoadZipList(int8_t type)
             QObject  obj(CreateListObject());
             PLIST    list(obj.CastList());
             
-            for (auto it(elements.begin()); it != elements.end(); ++ it)
+            for (const auto& elem : elements)
             {
-                list->push_back(it->ToString());
+                list->push_back(elem.ToString());
             }
             
             return obj;
@@ -936,15 +936,25 @@ QObject     QDBLoader::_LoadZipList(int8_t type)
         {
             QObject  obj(CreateSSetObject());
             PSSET    sset(obj.CastSortedSet());
-            
+
             assert(elements.size() % 2 == 0);
             
             for (auto it(elements.begin()); it != elements.end(); ++ it)
             {
                 const QString& member = it->ToString();
-                long score = (++ it)->lval;
-                assert(it->sval == 0);
+                ++ it;
                 
+                double  score;
+                if (it->sval)
+                {
+                    Strtod((const char* )it->sval, it->slen, &score);
+                }
+                else
+                {
+                    score = it->lval;
+                }
+
+                std::cerr << "BERT member " << member << ", score " << score << std::endl;
                 sset->AddMember(member, score);
             }
             

@@ -31,6 +31,12 @@ int Int2Str(char* ptr, size_t nBytes, long val)
     return snprintf(ptr, nBytes - 1, "%ld",  val);
 }
 
+
+int Double2Str(char* ptr, std::size_t nBytes, double val)
+{
+    return snprintf(ptr, nBytes - 1, "%.6g", val);
+}
+
 bool Str2Long(const char* ptr, size_t nBytes, long& val)
 {
     bool negtive = false;
@@ -102,6 +108,16 @@ bool Strtof(const char* ptr, size_t nBytes, float* outVal)
 
     char* pEnd = 0;
     *outVal = strtof(ptr, &pEnd);
+    return pEnd == ptr + nBytes;
+}
+
+bool Strtod(const char* ptr, size_t nBytes, double* outVal)
+{
+    if (nBytes == 0)
+        return false;
+    
+    char* pEnd = 0;
+    *outVal = strtod(ptr, &pEnd);
     return pEnd == ptr + nBytes;
 }
 

@@ -10,7 +10,7 @@ QSortedSet::Member2Score::iterator  QSortedSet::FindMember(const QString& member
     return  m_members.find(member);
 }
 
-void  QSortedSet::AddMember(const QString& member, long score)
+void  QSortedSet::AddMember(const QString& member, double score)
 {
     assert (FindMember(member) == m_members.end());
         
@@ -18,10 +18,10 @@ void  QSortedSet::AddMember(const QString& member, long score)
     m_scores[score].insert(member);
 }
 
-long    QSortedSet::UpdateMember(const Member2Score::iterator& itMem, long delta)
+double    QSortedSet::UpdateMember(const Member2Score::iterator& itMem, double delta)
 {
-    long oldScore = itMem->second;
-    long newScore = oldScore + delta;
+    auto oldScore = itMem->second;
+    auto newScore = oldScore + delta;
     itMem->second = newScore;
 
     Score2Members::iterator  itScore(m_scores.find(oldScore));
@@ -38,7 +38,7 @@ long    QSortedSet::UpdateMember(const Member2Score::iterator& itMem, long delta
 
 int     QSortedSet::Rank(const QString& member) const
 {
-    long    score;
+    double    score;
     Member2Score::const_iterator  itMem(m_members.find(member));
     if (itMem != m_members.end())
     {
@@ -50,9 +50,9 @@ int     QSortedSet::Rank(const QString& member) const
     }
 
     int  rank = 0;
-    for (Score2Members::const_iterator it(m_scores.begin());
-                                       it != m_scores.end();
-                                       rank += it->second.size(), ++ it)
+    for (auto it(m_scores.begin());
+              it != m_scores.end();
+              rank += it->second.size(), ++ it)
     {
         if (it->first == score)
         {
@@ -83,7 +83,7 @@ int  QSortedSet::RevRank(const QString& member) const
 
 bool  QSortedSet::DelMember(const QString& member)
 {
-    long  score = 0;
+    double  score = 0;
     Member2Score::const_iterator  itMem(m_members.find(member));
     if (itMem != m_members.end())
     {
@@ -104,18 +104,19 @@ bool  QSortedSet::DelMember(const QString& member)
     return  true;
 }
 
-std::pair<QString, long> QSortedSet::GetMemberByRank(size_t  rank) const
+QSortedSet::Member2Score::value_type
+QSortedSet::GetMemberByRank(size_t  rank) const
 {
     if (rank >= m_members.size())
         rank = m_members.size() - 1;
 
-    long    score = 0;
+    double  score = 0;
     QString member;
 
     size_t  iterRank = 0;
-    Score2Members::const_iterator   it(m_scores.begin());
+   // Score2Members::const_iterator   it(m_scores.begin());
 
-    for ( ;
+    for ( auto it(m_scores.begin());
           it != m_scores.end();
           iterRank += it->second.size(), ++ it)
     {
@@ -144,16 +145,17 @@ size_t QSortedSet::Size() const
 }
 
 
-std::vector<std::pair<QString, long> > QSortedSet::RangeByRank(long start, long end) const
+std::vector<QSortedSet::Member2Score::value_type >
+QSortedSet::RangeByRank(long start, long end) const
 {
     AdjustIndex(start, end, Size());
     if (start > end)
     {
-        return   std::vector<std::pair<QString, long> >();
+        return   std::vector<Member2Score::value_type >();
         
     }
     
-    std::vector<std::pair<QString, long> >  res;
+    std::vector<Member2Score::value_type >  res;
     
     for (long rank = start; rank <= end; ++ rank)
     {
@@ -163,16 +165,17 @@ std::vector<std::pair<QString, long> > QSortedSet::RangeByRank(long start, long 
     return res;
 }
 
-std::vector<std::pair<QString, long> > QSortedSet::RangeByScore(long minScore, long maxScore)
+std::vector<QSortedSet::Member2Score::value_type >
+QSortedSet::RangeByScore(double minScore, double maxScore)
 {
     if (minScore > maxScore)
-        return std::vector<std::pair<QString, long> >();
+        return std::vector<Member2Score::value_type >();
     
     Score2Members::const_iterator  itMin = m_scores.lower_bound(minScore);
     if (itMin == m_scores.end())
-        return std::vector<std::pair<QString, long> >();
+        return std::vector<Member2Score::value_type >();
     
-    std::vector<std::pair<QString, long> >  res;
+    std::vector<Member2Score::value_type>  res;
     Score2Members::const_iterator  itMax = m_scores.upper_bound(maxScore);
     for (; itMin != itMax; ++ itMin)
     {
@@ -228,8 +231,8 @@ QError  zadd(const vector<QString>& params, UnboundedBuffer& reply)
     const PSSET& sset = value->CastSortedSet();
     for (size_t i = 2; i < params.size(); i += 2)
     {
-        long    score = 0;
-        if (!Strtol(params[i].c_str(), params[i].size(), &score))
+        double    score = 0;
+        if (!Strtod(params[i].c_str(), params[i].size(), &score))
         {
             ReplyError(QError_nan, reply);
             return QError_nan;
@@ -308,14 +311,14 @@ QError  zincrby(const vector<QString>& params, UnboundedBuffer& reply)
 {
     GET_OR_SET_SORTEDSET(params[1]);
 
-    long  delta;
-    if (!Strtol(params[2].c_str(), params[2].size(), &delta))
+    double  delta;
+    if (!Strtod(params[2].c_str(), params[2].size(), &delta))
     {
         ReplyError(QError_nan, reply);
         return QError_nan;
     }
     
-    long newScore = delta;
+    double newScore = delta;
     const PSSET& sset = value->CastSortedSet();
     const QSortedSet::Member2Score::iterator& itMem = sset->FindMember(params[3]);
     if (itMem == sset->end())
@@ -375,7 +378,7 @@ static QError GenericRange(const vector<QString>& params, UnboundedBuffer& reply
     
     const PSSET& sset = value->CastSortedSet();
     
-    std::vector<std::pair<QString, long> > res(sset->RangeByRank(start, end));
+    auto res(sset->RangeByRank(start, end));
     if (res.empty())
     {
         FormatNull(reply);
@@ -387,7 +390,7 @@ static QError GenericRange(const vector<QString>& params, UnboundedBuffer& reply
     
     if (!reverse)
     {
-        for (std::vector<std::pair<QString, long> >::const_iterator it(res.begin());
+        for (auto it(res.begin());
              it != res.end();
              ++ it)
         {
@@ -395,7 +398,7 @@ static QError GenericRange(const vector<QString>& params, UnboundedBuffer& reply
             if (withScore)
             {
                 char score[64];
-                int  len = Int2Str(score, sizeof score, it->second);
+                int  len = Double2Str(score, sizeof score, it->second);
             
                 FormatSingle(score, len, reply);
             }
@@ -403,7 +406,7 @@ static QError GenericRange(const vector<QString>& params, UnboundedBuffer& reply
     }
     else
     {
-        for (std::vector<std::pair<QString, long> >::reverse_iterator it(res.rbegin());
+        for (auto it(res.rbegin());
              it != res.rend();
              ++ it)
         {
@@ -411,7 +414,7 @@ static QError GenericRange(const vector<QString>& params, UnboundedBuffer& reply
             if (withScore)
             {
                 char score[64];
-                int  len = Int2Str(score, sizeof score, it->second);
+                int  len = Double2Str(score, sizeof score, it->second);
                 
                 FormatSingle(score, len, reply);
             }
@@ -459,7 +462,7 @@ static QError GenericScoreRange(const vector<QString>& params, UnboundedBuffer& 
     
     const PSSET& sset = value->CastSortedSet();
     
-    std::vector<std::pair<QString, long> > res(sset->RangeByScore(minScore, maxScore));
+    auto res(sset->RangeByScore(minScore, maxScore));
     if (res.empty())
     {
         FormatNull(reply);
@@ -471,7 +474,7 @@ static QError GenericScoreRange(const vector<QString>& params, UnboundedBuffer& 
     
     if (!reverse)
     {
-        for (std::vector<std::pair<QString, long> >::const_iterator it(res.begin());
+        for (auto it(res.begin());
              it != res.end();
              ++ it)
         {
@@ -487,7 +490,7 @@ static QError GenericScoreRange(const vector<QString>& params, UnboundedBuffer& 
     }
     else
     {
-        for (std::vector<std::pair<QString, long> >::reverse_iterator it(res.rbegin());
+        for (auto it(res.rbegin());
              it != res.rend();
              ++ it)
         {
@@ -519,21 +522,22 @@ static QError GenericRemRange(const vector<QString>& params, UnboundedBuffer& re
 {
     GET_SORTEDSET(params[1]);
     
-    long start, end;
-    if (!Strtol(params[2].c_str(), params[2].size(), &start) ||
-        !Strtol(params[3].c_str(), params[3].size(), &end))
+    double start, end;
+    if (!Strtod(params[2].c_str(), params[2].size(), &start) ||
+        !Strtod(params[3].c_str(), params[3].size(), &end))
     {
         ReplyError(QError_nan, reply);
         return  QError_nan;
     }
     
-    
-    std::vector<std::pair<QString, long> > res;
+    std::vector<QSortedSet::Member2Score::value_type> res;
     const PSSET& sset = value->CastSortedSet();
     if (useRank)
     {
-        AdjustIndex(start, end, sset->Size());
-        res = sset->RangeByRank(start, end);
+        long lstart = static_cast<long>(start);
+        long lend   = static_cast<long>(end);
+        AdjustIndex(lstart, lend, sset->Size());
+        res = sset->RangeByRank(lstart, lend);
     }
     else
     {
@@ -546,7 +550,7 @@ static QError GenericRemRange(const vector<QString>& params, UnboundedBuffer& re
         return QError_ok;
     }
     
-    for (std::vector<std::pair<QString, long> >::const_iterator it(res.begin());
+    for (auto it(res.begin());
              it != res.end();
              ++ it)
     {

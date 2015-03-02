@@ -40,7 +40,6 @@ public:
 
     size_t  LoadLength(bool& special);
     QObject LoadSpecialStringObject(size_t  specialVal);
-   // QString LoadSpecialString(size_t  specialVal, QString& str, long& val);
     QString LoadString(size_t strLen);
     QString LoadLZFString();
 

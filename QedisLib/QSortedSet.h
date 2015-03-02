@@ -15,9 +15,9 @@ class QSortedSet
 {
 public:
     typedef std::set<QString> Members;
-    typedef std::map<long, Members>  Score2Members;
+    typedef std::map<double, Members>  Score2Members;
 
-    typedef std::unordered_map<QString, long,
+    typedef std::unordered_map<QString, double,
             my_hash,
             std::equal_to<QString> >   Member2Score;
 
@@ -26,19 +26,19 @@ public:
     Member2Score::iterator begin() {  return m_members.begin(); };
     Member2Score::const_iterator end() const {  return m_members.end(); };
     Member2Score::iterator end() {  return m_members.end(); };
-    void    AddMember   (const QString& member, long score);
-    long    UpdateMember(const Member2Score::iterator& itMem, long delta);
+    void    AddMember   (const QString& member, double score);
+    double  UpdateMember(const Member2Score::iterator& itMem, double delta);
 
     int     Rank        (const QString& member) const;// 0-based
     int     RevRank     (const QString& member) const;// 0-based
     bool    DelMember   (const QString& member);
-    std::pair<QString, long>
+    Member2Score::value_type
         GetMemberByRank(std::size_t rank) const;
     
-    std::vector<std::pair<QString, long> > RangeByRank(long start, long end) const;
+    std::vector<Member2Score::value_type > RangeByRank(long start, long end) const;
 
-    std::vector<std::pair<QString, long> >
-        RangeByScore(long minScore, long maxScore);
+    std::vector<Member2Score::value_type >
+        RangeByScore(double minScore, double maxScore);
     std::size_t Size    ()  const;
 
 private:

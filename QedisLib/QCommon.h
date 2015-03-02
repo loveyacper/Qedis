@@ -56,10 +56,12 @@ extern struct QErrorInfo
 } g_errorInfo[] ;
 
 int         Int2Str(char* ptr, std::size_t nBytes, long val);
+int         Double2Str(char* ptr, std::size_t nBytes, double val);
 bool        Str2Long(const char* ptr, std::size_t nBytes, long& val); // only for decimal
 bool        Strtol(const char* ptr, std::size_t nBytes, long* outVal);
 bool        Strtoll(const char* ptr, std::size_t nBytes, long long* outVal);
 bool        Strtof(const char* ptr, std::size_t nBytes, float* outVal);
+bool        Strtod(const char* ptr, std::size_t nBytes, double* outVal);
 const char* Strstr(const char* ptr, std::size_t nBytes, const char* pattern, std::size_t nBytes2);
 const char* SearchCRLF(const char* ptr, std::size_t nBytes);
 
