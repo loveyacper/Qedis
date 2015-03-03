@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <algorithm>
+#include <iostream>
 
 
 using  std::size_t;
@@ -26,18 +27,13 @@ struct QErrorInfo  g_errorInfo[] = {
     {sizeof "-ERR invalid DB index\r\n"-1, "-ERR invalid DB index\r\n"}
 };
 
-int Int2Str(char* ptr, size_t nBytes, long val)
-{
-    return snprintf(ptr, nBytes - 1, "%ld",  val);
-}
-
 
 int Double2Str(char* ptr, std::size_t nBytes, double val)
 {
     return snprintf(ptr, nBytes - 1, "%.6g", val);
 }
 
-bool Str2Long(const char* ptr, size_t nBytes, long& val)
+bool TryStr2Long(const char* ptr, size_t nBytes, long& val)
 {
     bool negtive = false;
     size_t  i = 0;
@@ -56,8 +52,33 @@ bool Str2Long(const char* ptr, size_t nBytes, long& val)
     {
         if (!isdigit(ptr[i]))
             break;
+        
+        if (!negtive && val > std::numeric_limits<long>::max() / 10)
+        {
+            std::cerr << "long will overflow " << val << std::endl;
+            return false;
+        }
+        
+        if (negtive && val > (-(std::numeric_limits<long>::min() + 1)) / 10)
+        {
+            std::cerr << "long will underflow " << val << std::endl;
+            return false;
+        }
 
         val *= 10;
+        
+        if (!negtive && val > std::numeric_limits<long>::max() - ( ptr[i] - '0'))
+        {
+            std::cerr << "long will overflow " << val << std::endl;
+            return false;
+        }
+        
+        if (negtive && (val - 1) > (-(std::numeric_limits<long>::min() - 1)) - (ptr[i] - '0'))
+        {
+            std::cerr << "long will underflow " << val << std::endl;
+            return false;
+        }
+        
         val += ptr[i] - '0';
     }
 
@@ -71,53 +92,61 @@ bool Str2Long(const char* ptr, size_t nBytes, long& val)
 
 bool Strtol(const char* ptr, size_t nBytes, long* outVal)
 {
-    if (nBytes == 0 || nBytes > 21)
+    if (nBytes == 0 || nBytes > 20) // include the sign
         return false;
 
     char* pEnd = 0;
-    long ret = strtol(ptr, &pEnd, 0);
+    *outVal = strtol(ptr, &pEnd, 0);
 
     if (errno == ERANGE ||
         errno == EINVAL)
         return false;
 
-    *outVal = ret;
     return pEnd == ptr + nBytes;
 }
 
 bool Strtoll(const char* ptr, size_t nBytes, long long* outVal)
 {
-    if (nBytes == 0 || nBytes > 21)
+    if (nBytes == 0 || nBytes > 20)
         return false;
     
     char* pEnd = 0;
-    long long ret = strtoll(ptr, &pEnd, 0);
+    *outVal = strtoll(ptr, &pEnd, 0);
     
     if (errno == ERANGE ||
         errno == EINVAL)
         return false;
     
-    *outVal = ret;
     return pEnd == ptr + nBytes;
 }
 
 bool Strtof(const char* ptr, size_t nBytes, float* outVal)
 {
-    if (nBytes == 0)
+    if (nBytes == 0 || nBytes > 20)
         return false;
-
+    
     char* pEnd = 0;
     *outVal = strtof(ptr, &pEnd);
+    
+    if (errno == ERANGE ||
+        errno == EINVAL)
+        return false;
+    
     return pEnd == ptr + nBytes;
 }
 
 bool Strtod(const char* ptr, size_t nBytes, double* outVal)
 {
-    if (nBytes == 0)
+    if (nBytes == 0 || nBytes > 20)
         return false;
     
     char* pEnd = 0;
     *outVal = strtod(ptr, &pEnd);
+    
+    if (errno == ERANGE ||
+        errno == EINVAL)
+        return false;
+    
     return pEnd == ptr + nBytes;
 }
 

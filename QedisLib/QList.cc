@@ -139,7 +139,7 @@ QError  lindex(const vector<QString>& params, UnboundedBuffer& reply)
     
     const PLIST&    list   = value->CastList();
     long idx;
-    if (!Str2Long(params[2].c_str(), params[2].size(), idx))
+    if (!TryStr2Long(params[2].c_str(), params[2].size(), idx))
     {
         ReplyError(QError_nan, reply);
         return  QError_nan;
@@ -195,7 +195,7 @@ QError  lset(const vector<QString>& params, UnboundedBuffer& reply)
     
     const PLIST&    list = value->CastList();
     long idx;
-    if (!Str2Long(params[2].c_str(), params[2].size(), idx))
+    if (!TryStr2Long(params[2].c_str(), params[2].size(), idx))
     {
         ReplyError(QError_param, reply);
         return  QError_notExist;

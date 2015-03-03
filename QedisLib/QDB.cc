@@ -389,7 +389,6 @@ int  QDBLoader::Load(const char *filename)
             case kEOF:
                 std::cerr << "encounter EOF\n";
                 eof = true;
-                m_qdb.Skip(1);
                 break;
                 
             case kSelectDB:
@@ -432,51 +431,42 @@ int  QDBLoader::Load(const char *filename)
 
 size_t  QDBLoader::LoadLength(bool& special)
 {
-    size_t  len = 1;
-    const char* byte = m_qdb.Read(len);
-    assert(len == 1);
-    m_qdb.Skip(len);
+    const int8_t byte = m_qdb.Read<int8_t>();
     
     special = false;
     size_t  lenResult = 0;
     
-    switch ((*byte & 0xC0) >> 6)
+    switch ((byte & 0xC0) >> 6)
     {
         case k6Bits:
         {
-            lenResult = *byte & kLow6Bits;
+            lenResult = byte & kLow6Bits;
             break;
         }
             
         case k14bits:
         {
-            lenResult = *byte & kLow6Bits; // high 6 bits;
+            lenResult = byte & kLow6Bits; // high 6 bits;
             lenResult <<= 8;
             
-            len = 1;
-            const char* bytelow = m_qdb.Read(len);
-            assert(len == 1);
-            m_qdb.Skip(len);
+            const int8_t bytelow = m_qdb.Read<int8_t>();
             
-            lenResult |= *bytelow;
+            lenResult |= bytelow;
             break;
         }
             
         case k32bits:
         {
-            len = 4;
-            const char* fourbytes = m_qdb.Read(len);
-            assert(len == 4);
-            m_qdb.Skip(len);
+            const int32_t fourbytes = m_qdb.Read<int32_t>();
             
-            lenResult = ntohl(*(uint32_t* )fourbytes);
+            lenResult = ntohl(fourbytes);
             break;
         }
             
         case kSpecial:
         {
             special = true;
-            lenResult = *byte & kLow6Bits;
+            lenResult = byte & kLow6Bits;
             break;
         }
             
@@ -499,34 +489,19 @@ QObject  QDBLoader::LoadSpecialStringObject(size_t  specialVal)
     {
         case kEnc8Bits:
         {
-            size_t len = 1;
-            const char* data = m_qdb.Read(len);
-            assert(len == 1);
-            val = *data;
-            m_qdb.Skip(len);
-            
+            val = m_qdb.Read<uint8_t>();
             break;
         }
             
         case kEnc16Bits:
         {
-            size_t len = 2;
-            const char* data = m_qdb.Read(len);
-            assert(len == 2);
-            val = *(uint16_t* )data;
-            m_qdb.Skip(len);
-            
+            val = m_qdb.Read<uint16_t>();
             break;
         }
             
         case kEnc32Bits:
         {
-            size_t len = 4;
-            const char* data = m_qdb.Read(len);
-            assert(len == 4);
-            val = *(uint32_t* )data;
-            m_qdb.Skip(len);
-            
+            val = m_qdb.Read<uint32_t>();
             break;
         }
             
@@ -802,14 +777,10 @@ QObject    QDBLoader::_LoadSSet()
 
 double  QDBLoader::_LoadDoubleValue()
 {
-    size_t len = 1;
-    const char* byte1st = m_qdb.Read(len);
-    assert(len == 1);
-    
-    m_qdb.Skip(1);
+    const int8_t byte1st = m_qdb.Read<int8_t>();
 
     double  dvalue;
-    switch ((uint8_t)*byte1st)
+    switch (byte1st)
     {
         case 253:
         {
@@ -831,9 +802,9 @@ double  QDBLoader::_LoadDoubleValue()
             
         default:
         {
-            len = *byte1st;
+            size_t len = byte1st;
             const char* val = m_qdb.Read(len);
-            assert(len == *byte1st);
+            assert(len == byte1st);
             m_qdb.Skip(len);
             
             std::istringstream  is(std::string(val, len));
@@ -843,7 +814,7 @@ double  QDBLoader::_LoadDoubleValue()
         }
     }
     
-    std::cerr << "double value " << dvalue << std::endl;
+    std::cerr << "load double value " << dvalue << std::endl;
     
     return  dvalue;
 }
@@ -874,7 +845,7 @@ struct ZipListElement
         assert(!sval);
 
         QString  str(16, 0);
-        int len = Int2Str(&str[0], 16, lval);
+        int len = Number2Str(&str[0], 16, lval);
         str.resize(len);
         
         std::cerr << "long zip list element " << str << std::endl;

@@ -482,7 +482,7 @@ static QError GenericScoreRange(const vector<QString>& params, UnboundedBuffer& 
             if (withScore)
             {
                 char score[64];
-                int  len = Int2Str(score, sizeof score, it->second);
+                int  len = Double2Str(score, sizeof score, it->second);
                 
                 FormatSingle(score, len, reply);
             }
@@ -498,7 +498,7 @@ static QError GenericScoreRange(const vector<QString>& params, UnboundedBuffer& 
             if (withScore)
             {
                 char score[64];
-                int  len = Int2Str(score, sizeof score, it->second);
+                int  len = Double2Str(score, sizeof score, it->second);
                 
                 FormatSingle(score, len, reply);
             }
