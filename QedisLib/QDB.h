@@ -54,6 +54,7 @@ private:
     QObject _LoadSSet();
     double  _LoadDoubleValue();
     QObject _LoadZipList(int8_t type);
+    QObject _LoadIntset();
     
     MemoryFile m_qdb;
 };

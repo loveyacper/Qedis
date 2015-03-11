@@ -13,11 +13,11 @@
 // 345 CR LF
 
 // temp
-enum QParseInt
+enum class QParseInt : int8_t
 {
-    QParseInt_ok,
-    QParseInt_waitCrlf,
-    QParseInt_error,
+    ok,
+    waitCrlf,
+    error,
 };
 
 static inline QParseInt  GetIntUntilCRLF(const char*& ptr, std::size_t nBytes, int& val)
@@ -36,22 +36,60 @@ static inline QParseInt  GetIntUntilCRLF(const char*& ptr, std::size_t nBytes, i
         else
         {
             if (i == 0 || ptr[i] != '\r' || (i+1 < nBytes && ptr[i+1] != '\n'))
-                return QParseInt_error;
+                return QParseInt::error;
 
             if (i+1 == nBytes)
-                return QParseInt_waitCrlf;
+                return QParseInt::waitCrlf;
 
             break;
         }
     }
 
     ptr += i;
-    return QParseInt_ok;
+    return QParseInt::ok;
 }
 
 
 QClient*  QClient::s_pCurrentClient = 0;
+
+void QClient::_ProcessInlineCmd(const char* buf, size_t bytes, BODY_LENGTH_T* bodyLen)
+{
+    if (bytes < 2)
+        return;
     
+    size_t cursor = bytes - 1;
+    for (; cursor > 0; -- cursor)
+    {
+        if (buf[cursor] == '\n' && buf[cursor-1] == '\r')
+        {
+            *bodyLen = cursor + 1;
+            m_state = ParseCmdState::Ready;
+            break;
+        }
+    }
+    
+    if (m_state == ParseCmdState::Ready)
+    {
+        QString   param;
+        for (size_t i = 0; i + 2 < cursor; ++ i)
+        {
+            if (isblank(buf[i]))
+            {
+                if (!param.empty())
+                {
+                    INF << "inline cmd param " << param.c_str();
+                    m_params.emplace_back(param);
+                    param.clear();
+                }
+            }
+            else
+            {
+                param.push_back(buf[i]);
+            }
+        }
+    }
+}
+
 HEAD_LENGTH_T QClient::_HandleHead(AttachedBuffer& buf, BODY_LENGTH_T* bodyLen)
 {
     const size_t   bytes = buf.ReadableSize();
@@ -59,35 +97,34 @@ HEAD_LENGTH_T QClient::_HandleHead(AttachedBuffer& buf, BODY_LENGTH_T* bodyLen)
 
     const char* ptr  = start;
 
-    QParseInt parseIntRet = QParseInt_ok;
+    QParseInt parseIntRet = QParseInt::ok;
     bool  parseBody = false;
     while (static_cast<size_t>(ptr - start) < bytes && !parseBody)
     {
 
     switch (m_state)
     {
-    case InitState:
+    case ParseCmdState::Init:
         assert (m_multibulk == 0);
         m_stat.Begin();
         if (*ptr != '*')
         {
-            ERR << "InitState: expect *, wrong char " << (int)*ptr;
-            OnError();
-            assert (false);
+            INF << "Try process inline cmd first char " << (int)*ptr;
+            _ProcessInlineCmd(ptr, bytes, bodyLen);
             return 0;
         }
 
-        m_state = ProcessMultiBulkState;
+        m_state = ParseCmdState::MultiBulk;
         ++ ptr;
         break;
 
-    case ProcessMultiBulkState:
+    case ParseCmdState::MultiBulk:
         parseIntRet = GetIntUntilCRLF(ptr, start + bytes - ptr, m_multibulk);
-        if (parseIntRet == QParseInt_waitCrlf)
+        if (parseIntRet == QParseInt::waitCrlf)
         {
             return static_cast<int>(ptr - start);
         }
-        else if (parseIntRet == QParseInt_error)
+        else if (parseIntRet == QParseInt::error)
         {
             OnError();
             return 0;
@@ -100,49 +137,47 @@ HEAD_LENGTH_T QClient::_HandleHead(AttachedBuffer& buf, BODY_LENGTH_T* bodyLen)
         {
             ERR << "Abnormal m_multibulk " << m_multibulk;
             OnError();
-            assert (false);
             return 0;
         }
-        m_state = ProcessDollarState;
+        
+        m_state = ParseCmdState::Dollar;
         break;
 
-    case ProcessDollarState:
+    case ParseCmdState::Dollar:
         if (*ptr == '$')
         {
             ++ ptr;
-            m_state = ProcessArglenState;
+            m_state = ParseCmdState::Arglen;
         }
         else
         {
             ERR << "ProcessDollarState: expect $, wrong char " << (int)*ptr;
             OnError();
-            assert (false);
             return 0;
         }
         break;
 
-    case ProcessArglenState:
+    case ParseCmdState::Arglen:
         parseIntRet = GetIntUntilCRLF(ptr, start + bytes - ptr, m_paramLen);
-        if (parseIntRet == QParseInt_waitCrlf)
+        if (parseIntRet == QParseInt::waitCrlf)
         {
             return static_cast<int>(ptr - start);
         }
-        else if (parseIntRet == QParseInt_error)
+        else if (parseIntRet == QParseInt::error)
         {
             OnError();
-            assert (false);
+            ERR << "ProcessArglenState: parseIntError";
             return 0;
         }
 
         assert (ptr[0] == 13 && ptr[1] == 10);
         ptr += 2;
 
-        m_state = ProcessArgState;
+        m_state = ParseCmdState::Arg;
         if (m_paramLen < 0 || m_paramLen > 1024 * 1024)
         {
             ERR << "Got wrong argLen " << m_paramLen;
             OnError();
-            assert (false);
             return 0;
         }
 
@@ -171,7 +206,7 @@ void QClient::_HandlePacket(AttachedBuffer& buf)
     const char* ptr  = start;
     const char* crlf = 0;
 
-    if (m_state == ProcessArgState)
+    if (m_state ==  ParseCmdState::Arg)
     {
         crlf = SearchCRLF(start, bytes);
 
@@ -179,10 +214,8 @@ void QClient::_HandlePacket(AttachedBuffer& buf)
         {
             ERR << "Why can not find crlf?";
             OnError();
-            assert (false);
+            return;
         }
-        else
-            assert (crlf[0] == 13 && crlf[1] == 10);
 
         if (crlf - start != m_paramLen)
         {
@@ -194,22 +227,21 @@ void QClient::_HandlePacket(AttachedBuffer& buf)
         m_params.emplace_back(QString(ptr, crlf - start));
         if (m_params.size() == static_cast<size_t>(m_multibulk))
         {
-            m_state = ReadyState;
+            m_state =  ParseCmdState::Ready;
         }
         else
         {
-            m_state = ProcessDollarState;
+            m_state =  ParseCmdState::Dollar;
             return;
         }
     }
 
-    assert (m_state = ReadyState);
+    assert (m_state == ParseCmdState::Ready);
 
     QString& cmd = m_params[0];
     std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::tolower);
 
-    bool succ = (QSTORE.SelectDB(m_db) >= 0);
-    assert (succ);
+    QSTORE.SelectDB(m_db);
     m_stat.End(PARSE_STATE);
 
     INF << "client " << GetID() << ", cmd " << m_params[0].c_str();
@@ -226,7 +258,6 @@ void QClient::_HandlePacket(AttachedBuffer& buf)
         {
             if (!info || !info->CheckParamsCount(static_cast<int>(m_params.size())))
             {
-                
                 ERR << "queue failed: cmd " << cmd.c_str() << " has params " << m_params.size();
                 ReplyError(info ? QError_param : QError_unknowCmd, m_reply);
                 SendPacket(m_reply.ReadAddr(), m_reply.ReadableSize());
@@ -234,7 +265,9 @@ void QClient::_HandlePacket(AttachedBuffer& buf)
             }
             else
             {
-                m_queueCmds.push_back(m_params);
+                if (!IsFlagOn(ClientFlag_wrongExec))
+                    m_queueCmds.push_back(m_params);
+                
                 SendPacket("+QUEUED\r\n", 9);
                 INF << "queue cmd " << cmd.c_str();
             }
@@ -291,7 +324,7 @@ void QClient::_Reset()
 {
     s_pCurrentClient = 0;
 
-    m_state     = InitState;
+    m_state     = ParseCmdState::Init;
     m_multibulk = 0;
     m_paramLen  = 0;
     m_params.clear();
@@ -324,6 +357,11 @@ bool QClient::NotifyDirty(const QString& key)
         SetFlag(ClientFlag_dirty);
         return true;
     }
+    else
+    {
+        ERR << "BUG: Dirty key is not exist " << key.c_str();
+        assert(0);
+    }
     
     return false;
 }
@@ -343,8 +381,8 @@ bool QClient::Exec()
     
     PreFormatMultiBulk(m_queueCmds.size(), m_reply);
     for (auto it(m_queueCmds.begin());
-         it != m_queueCmds.end();
-         ++ it)
+              it != m_queueCmds.end();
+              ++ it)
     {
         INF << "EXEC " << (*it)[0].c_str();
         const QCommandInfo* info = QCommandTable::GetCommandInfo((*it)[0]);

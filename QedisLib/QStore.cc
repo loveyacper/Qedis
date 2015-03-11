@@ -8,43 +8,57 @@
 void QStore::QExpiresDB::SetExpire(const QString& key, uint64_t when)
 {
     m_expireKeys[key] = when;
-    LOG_INF(g_log) << "Set timeout key " << key.c_str() << ", timeout is " << when;
+    INF << "Set timeout key " << key.c_str() << ", timeout is " << when;
 }
 
-int64_t  QStore::QExpiresDB::TTL(const QString& key, uint64_t now) const
+int64_t  QStore::QExpiresDB::TTL(const QString& key, uint64_t now)
 {
-    Q_EXPIRE_DB::const_iterator it(m_expireKeys.find(key));
+    if (!QSTORE.ExistsKey(key))
+    {
+        return -2; // not exist key
+    }
     
-    int64_t  ret = -1;
-
-    if (it != m_expireKeys.end())
-        ret =static_cast<int64_t>(it->second - now);
-
-    LOG_WRN(g_log) << "Get TTL " << key.c_str() << ", timeout " << ret;
-
-    return ret;
+    auto    it(m_expireKeys.find(key));
+    
+    switch (ExpireIfNeed(it, now))
+    {
+        case ExpireResult::expired:
+            return -2;
+            
+        case ExpireResult::persist:
+            return -1;
+            
+        default:
+            break;
+    }
+    
+    return static_cast<int64_t>(it->second - now);
 }
 
 bool QStore::QExpiresDB::ClearExpire(const QString& key)
 {
-    return ExpireIfNeed(key, std::numeric_limits<uint64_t>::max());
+    return ExpireResult::expired == ExpireIfNeed(key, std::numeric_limits<uint64_t>::max());
 }
 
-bool QStore::QExpiresDB::ExpireIfNeed(const QString& key, uint64_t now)
+QStore::ExpireResult QStore::QExpiresDB::ExpireIfNeed(Q_EXPIRE_DB::iterator& it, uint64_t now)
 {
-    Q_EXPIRE_DB::iterator it(m_expireKeys.find(key));
     if (it != m_expireKeys.end())
     {
-        // check if expire first
         if (it->second > now)
-            return false; // not expire
+            return ExpireResult::notExpire; // not expire
         
-        LOG_WRN(g_log) << "Delete timeout key " << key.c_str() << ", timeout is " << it->second;
+        WRN << "Delete timeout key " << it->first.c_str() << ", timeout is " << it->second;
         m_expireKeys.erase(it);
-        return true;
+        return ExpireResult::expired;
     }
     
-    return  false;
+    return  ExpireResult::persist;
+}
+
+QStore::ExpireResult  QStore::QExpiresDB::ExpireIfNeed(const QString& key, uint64_t now)
+{
+    auto    it(m_expireKeys.find(key));
+    return  ExpireIfNeed(it, now);
 }
 
 int   QStore::QExpiresDB::LoopCheck(uint64_t now)
@@ -54,16 +68,16 @@ int   QStore::QExpiresDB::LoopCheck(uint64_t now)
     int  nDel = 0;
     int  nLoop = 0;
 
-    for (Q_EXPIRE_DB::iterator  it = m_expireKeys.begin();
-                                it!= m_expireKeys.end() && nDel < MAX_DEL && nLoop < MAX_CHECK;
-         ++ nLoop)
+    for (auto  it = m_expireKeys.begin();
+               it!= m_expireKeys.end() && nDel < MAX_DEL && nLoop < MAX_CHECK;
+               ++ nLoop)
     {
         if (it->second <= now)
         {
             // time to delete
-            LOG_WRN(g_log) << "LoopCheck try delete key " << it->first.c_str() << ", " << ::Now();
+            WRN << "LoopCheck try delete key " << it->first.c_str() << ", " << ::Now();
+            
             QSTORE.DeleteKey(it->first);
-
             m_expireKeys.erase(it ++);
 
             ++ nDel;
@@ -162,8 +176,9 @@ QError  QStore::GetValue(const QString& key, QObject*& value)
 
 QError  QStore::GetValueByType(const QString& key, QObject*& value, QType type)
 {
-    //if (ExpireIfNeed(key, ::Now()))
+    if (_ExpireIfNeed(key, ::Now()) == ExpireResult::expired)
     {
+        return QError_notExist;
     }
     
     QDB::iterator    it(m_db->find(key));
@@ -212,17 +227,17 @@ void    QStore::SetExpire(const QString& key, uint64_t when)
 }
 
 
-int64_t QStore::TTL(const QString& key, uint64_t now) const
+int64_t QStore::TTL(const QString& key, uint64_t now)
 {
     return  m_expiresDb[m_dbno].TTL(key, now);
 }
 
 bool    QStore::ClearExpire(const QString& key)
 {
-    return  m_expiresDb[m_dbno].ClearExpire(key);
+    return m_expiresDb[m_dbno].ClearExpire(key);
 }
 
-bool    QStore::ExpireIfNeed(const QString& key, uint64_t now)
+QStore::ExpireResult QStore::_ExpireIfNeed(const QString& key, uint64_t now)
 {
     return  m_expiresDb[m_dbno].ExpireIfNeed(key, now);
 }
@@ -232,5 +247,3 @@ void    QStore::InitExpireTimer()
     for (int i = 0; i < static_cast<int>(m_expiresDb.size()); ++ i)
         TimerManager::Instance().AddTimer(PTIMER(new ExpireTimer(i)));
 }
-
-

@@ -8,14 +8,14 @@
 #include "QStat.h"
 #include <set>
 
-enum  ParseCmdState
+enum  class ParseCmdState : std::int8_t
 {
-    InitState,
-    ProcessMultiBulkState,
-    ProcessDollarState,
-    ProcessArglenState,
-    ProcessArgState,
-    ReadyState,
+    Init,
+    MultiBulk,
+    Dollar,
+    Arglen,
+    Arg,
+    Ready,
 };
 
 enum ClientFlag
@@ -77,6 +77,7 @@ public:
     std::size_t     PatternChannelCount() const { return m_patternChannels.size(); }
 
 private:
+    void        _ProcessInlineCmd(const char* , size_t , BODY_LENGTH_T* );
     void        _Reset();
 
     ParseCmdState  m_state;

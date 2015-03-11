@@ -8,6 +8,7 @@ extern "C"
 {
 #include "lzf.h"
 #include "redisZipList.h"
+#include "redisIntset.h"
 }
 
 extern "C"
@@ -31,8 +32,8 @@ static const int8_t kTypeZSetZipList = 12;
 static const int8_t kTypeHashZipList = 13;
 
 static const int8_t kQDBVersion = 6;
-static const int8_t kExipreMs   = 0xFC;
-static const int8_t kExipre     = 0xFD;
+static const int8_t kExpireMs   = 0xFC;
+static const int8_t kExpire     = 0xFD;
 static const int8_t kSelectDB   = 0xFE;
 static const int8_t kEOF        = 0xFF;
 
@@ -66,9 +67,23 @@ void  QDBSaver::Save()
         
         m_qdb.Write(&kSelectDB, 1);
         SaveLength(dbno);
-            
+        
+        uint64_t now = ::Now();
         for (auto kv(QSTORE.begin()); kv != QSTORE.end(); ++ kv)
         {
+            int64_t ttl = QSTORE.TTL(kv->first, now);
+            if (ttl > 0)
+            {
+                m_qdb.Write(&kExpireMs, 1);
+                
+                ttl += now;
+                m_qdb.Write(&ttl, sizeof ttl);
+                std::cerr << now << " save ttl key " << kv->first << " time " << ttl << std::endl;
+            }
+            else if (ttl == -2)
+            {
+                continue;
+            }
             SaveType(kv->second);
             SaveKey(kv->first);
             SaveObject(kv->second);
@@ -379,6 +394,7 @@ int  QDBLoader::Load(const char *filename)
     //  type1 + key + obj
     //  EOF + crc
 
+    int64_t absTimeout = 0;
     bool eof = false;
     while (!eof)
     {
@@ -401,6 +417,15 @@ int  QDBLoader::Load(const char *filename)
                 break;
             }
                 
+            case kExpireMs:
+                absTimeout = m_qdb.Read<int64_t>();
+                break;
+                
+            case kExpire:
+                absTimeout = m_qdb.Read<int64_t>();
+                absTimeout *= 1000;
+                break;
+                
             case kTypeString:
             case kTypeList:
             case kTypeZipList:
@@ -412,12 +437,31 @@ int  QDBLoader::Load(const char *filename)
             case kTypeZSet:
             case kTypeZSetZipList:
             {
-                std::cerr << "encounter type " << (int)indicator << std::endl;
                 QString key = LoadKey();
-                std::cerr << "encounter key " << key << std::endl;
                 QObject obj = LoadObject(indicator);
-                QSTORE.SetValue(key, obj);
-                std::cerr << "obj.encoding = " << obj.encoding << std::endl;
+                std::cerr << "encounter key = " << key << ", obj.encoding = " << obj.encoding << std::endl;
+
+                assert(absTimeout >= 0);
+                
+                if (absTimeout == 0)
+                {
+                    QSTORE.SetValue(key, obj);
+                }
+                else if (absTimeout > 0)
+                {
+                    if (absTimeout > ::Now())
+                    {
+                        std::cerr << key << " load timeout " << absTimeout << std::endl;
+                        QSTORE.SetValue(key, obj);
+                        QSTORE.SetExpire(key, absTimeout);
+                    }
+                    else
+                    {
+                        std::cerr << key << " is already time out\n";
+                    }
+                    
+                    absTimeout = 0;
+                }
                 break;
             }
                 
@@ -585,7 +629,6 @@ QObject  QDBLoader::LoadObject(int8_t type)
         case kTypeZipList:
         {
             return _LoadZipList(kTypeZipList);
-            break;
         }
         case kTypeSet:
         {
@@ -593,7 +636,7 @@ QObject  QDBLoader::LoadObject(int8_t type)
         }
         case kTypeIntSet:
         {
-            break;
+            return _LoadIntset();
         }
         case kTypeHash:
         {
@@ -605,6 +648,7 @@ QObject  QDBLoader::LoadObject(int8_t type)
         }
         case kTypeZipMap:
         {
+            std::cerr << "!!!zipmap should be replaced with ziplist\n";
             break;
         }
         case kTypeZSet:
@@ -938,4 +982,33 @@ QObject     QDBLoader::_LoadZipList(int8_t type)
     }
     
     return QObject();
+}
+
+
+QObject     QDBLoader::_LoadIntset()
+{
+    QString str = _LoadGenericString();
+    
+    intset* iset  = (intset* )&str[0];
+    size_t nElem  = intsetLen(iset);
+    
+    std::vector<int64_t>  elements;
+    elements.resize(nElem);
+    
+    for (size_t i = 0; i < nElem; ++ i)
+    {
+        intsetGet(iset, i, &elements[i]);
+    }
+    
+    QObject  obj(CreateSetObject());
+    PSET     set(obj.CastSet());
+    
+    for (auto v : elements)
+    {
+        char buf[64];
+        int bytes = Number2Str<int64_t>(buf, sizeof buf, v);
+        set->insert(QString(buf, bytes));
+    }
+
+    return obj;
 }

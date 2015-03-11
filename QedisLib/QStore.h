@@ -143,9 +143,8 @@ public:
 
     // for expire key
     void    SetExpire(const QString& key, uint64_t when);
-    int64_t TTL(const QString& key, uint64_t now) const;
+    int64_t TTL(const QString& key, uint64_t now);
     bool    ClearExpire(const QString& key);
-    bool    ExpireIfNeed(const QString& key, uint64_t now);
     int     LoopCheck(uint64_t now);
     void    InitExpireTimer();
     
@@ -154,13 +153,22 @@ public:
     void    ClearAllDB()     { std::vector<QDB>(16).swap(m_store); }
 
 private:
+    enum class ExpireResult : std::int8_t
+    {
+        notExpire=  0,
+        persist  = -1,
+        expired  = -2,
+    };
+    ExpireResult    _ExpireIfNeed(const QString& key, uint64_t now);
+    
     class QExpiresDB
     {
     public:
         void    SetExpire(const QString& key, uint64_t when);
-        int64_t TTL(const QString& key, uint64_t now) const;
+        int64_t TTL(const QString& key, uint64_t now);
         bool    ClearExpire(const QString& key);
-        bool    ExpireIfNeed(const QString& key, uint64_t now);
+        ExpireResult    ExpireIfNeed(const QString& key, uint64_t now);
+        ExpireResult    ExpireIfNeed(Q_EXPIRE_DB::iterator& it, uint64_t now);
 
         int     LoopCheck(uint64_t now);
         

@@ -38,13 +38,13 @@ public:
 	void Print()
 	{
         std::cout << "//////////////////"<< std::endl;
-		std::map<std::string, std::string>::const_iterator it = m_data.begin();
-		while (it != m_data.end())
-		{
-			std::cout << it->first << ":" << it->second << "\n";
-			++ it;
-		}
-	}
+        std::map<std::string, std::string>::const_iterator it = m_data.begin();
+        while (it != m_data.end())
+        {
+            std::cout << it->first << ":" << it->second << "\n";
+            ++ it;
+        }
+    }
 #endif
 
 private:
@@ -66,38 +66,37 @@ private:
 template <typename T>
 inline  T  ConfigParser::_ToType(const std::string& data) const
 {
-	T        t;
-	std::istringstream  os(data);
-	os >> t;
-	return  t;
+    T        t;
+    std::istringstream  os(data);
+    os >> t;
+    return  t;
 }
 
 
 template <typename T>
 inline  T  ConfigParser::GetData(const char* key, const T& default_) const
 {
-	std::map<std::string, std::string>::const_iterator it = m_data.find(key);
-	if (it == m_data.end())
-		return default_;
+    std::map<std::string, std::string>::const_iterator it = m_data.find(key);
+    if (it == m_data.end())
+        return default_;
 
-	return  _ToType<T>(it->second);
+    return  _ToType<T>(it->second);
 }
 
 template <>
 inline  const char*  ConfigParser::GetData(const char* key, const char* const& default_) const
 {
-	std::map<std::string, std::string>::const_iterator it = m_data.find(key);
-	if (it == m_data.end())
-		return default_;
+    std::map<std::string, std::string>::const_iterator it = m_data.find(key);
+    if (it == m_data.end())
+        return default_;
 
-	return  it->second.c_str();
+    return  it->second.c_str();
 }
 
 template <>
 inline  char*  ConfigParser::GetData(const char* key, char* const& default_) const
 {
-	return  const_cast<char*>(GetData<const char*>(key, default_));
+    return  const_cast<char*>(GetData<const char*>(key, default_));
 }
 
 #endif
-

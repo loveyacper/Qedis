@@ -61,16 +61,11 @@ QError  del(const vector<QString>& params, UnboundedBuffer& reply)
     for (size_t i = 1; i < params.size(); ++ i)
     {
         const QString&  key = params[i];
-        if (QSTORE.ClearExpire(key))
+    
+        if (QSTORE.DeleteKey(key))
         {
-            bool succ = QSTORE.DeleteKey(key);
-            assert(succ);
+            QSTORE.ClearExpire(key);
             ++ nDel;
-        }
-        else
-        {
-            if (QSTORE.DeleteKey(key))
-                ++ nDel;
         }
     }
     
