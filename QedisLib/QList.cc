@@ -1,5 +1,6 @@
 #include "QList.h"
 #include "QStore.h"
+#include "QClient.h"
 #include "Log/Logger.h"
 #include <iostream>
 #include <cassert>
@@ -48,6 +49,7 @@ static QError  push(const vector<QString>& params, UnboundedBuffer& reply, ListP
     }
 
     const PLIST& list = value->CastList();
+    bool mayReady = list->empty();
     for (size_t i = 2; i < params.size(); ++ i)
     {
         if (pos == ListPosition_head)
@@ -56,16 +58,21 @@ static QError  push(const vector<QString>& params, UnboundedBuffer& reply, ListP
             list->push_back(params[i]);
     }
     
+    if (mayReady && !list->empty())
+    {
+        QSTORE.ServeClient(params[1], list);
+    }
+    
     FormatInt(static_cast<long>(list->size()), reply);
     return   QError_ok;
 }
 
 
-static QError  pop(const vector<QString>& params, UnboundedBuffer& reply, ListPosition pos)
+static QError  pop(const QString& key, UnboundedBuffer& reply, ListPosition pos, bool withKey = false)
 {
     QObject* value;
     
-    QError err = QSTORE.GetValueByType(params[1], value, QType_list);
+    QError err = QSTORE.GetValueByType(key, value, QType_list);
     if (err != QError_ok)
     {
         FormatNull(reply);
@@ -73,24 +80,38 @@ static QError  pop(const vector<QString>& params, UnboundedBuffer& reply, ListPo
     }
     
     const PLIST&    list   = value->CastList();
-    assert (!list->empty());
+    if (list->empty())
+    {
+        QSTORE.DeleteKey(key);
+        return QError_notExist;
+    }
 
     if (pos == ListPosition_head)
     {
         const QString& result = list->front();
+        if (withKey)
+        {
+            PreFormatMultiBulk(2, reply);
+            FormatSingle(key.c_str(), key.size(), reply);
+        }
         FormatSingle(result.c_str(), result.size(), reply);
         list->pop_front();
     }
     else
     {
         const QString& result = list->back();
+        if (withKey)
+        {
+            PreFormatMultiBulk(2, reply);
+            FormatSingle(key.c_str(), key.size(), reply);
+        }
         FormatSingle(result.c_str(), result.size(), reply);
         list->pop_back();
     }
     
     if (list->empty())
     {
-        QSTORE.DeleteKey(params[1]);
+        QSTORE.DeleteKey(key);
     }
     
     return   QError_ok;
@@ -118,12 +139,54 @@ QError  rpushx(const vector<QString>& params, UnboundedBuffer& reply)
 
 QError  lpop(const vector<QString>& params, UnboundedBuffer& reply)
 {
-    return pop(params, reply, ListPosition_head);
+    return pop(params[1], reply, ListPosition_head);
 }
 
 QError  rpop(const vector<QString>& params, UnboundedBuffer& reply)
 {
-    return pop(params, reply, ListPosition_tail);
+    return pop(params[1], reply, ListPosition_tail);
+}
+
+QError  blpop(const vector<QString>& params, UnboundedBuffer& reply)
+{
+    assert(params.size() > 2);
+    
+    long timeout = 0;
+    if (!Strtol(params[params.size() - 1].c_str(),
+                params[params.size() - 1].size(),
+                &timeout))
+    {
+        ReplyError(QError_param, reply);
+        return  QError_param;
+    }
+    
+    timeout *= 1000;
+    
+    // if not blocked
+    for (size_t i = 1; i < params.size() - 1; ++ i)
+    {
+        QError ret = pop(params[i], reply, ListPosition_head, true);
+        if (ret == QError_ok)
+        {
+            return ret;
+        }
+        else if (ret == QError_type)
+        {
+            reply.Clear();
+            ReplyError(QError_type, reply);
+            return QError_type;
+        }
+    }
+    
+    reply.Clear();
+    // put client to the waitlist;
+    auto now = ::Now();
+    for (size_t i = 1; i < params.size() - 1; ++ i)
+    {
+        QSTORE.BlockClient(params[i], QClient::Current(),
+                           timeout ? timeout + now : std::numeric_limits<uint64_t>::max());
+    }
+    return QError_ok;
 }
 
 QError  lindex(const vector<QString>& params, UnboundedBuffer& reply)

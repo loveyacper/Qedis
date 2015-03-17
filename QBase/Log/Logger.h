@@ -42,6 +42,7 @@ public:
 
     Logger&  operator<<(const char* msg);
     Logger&  operator<<(const unsigned char* msg);
+    Logger&  operator<<(const std::string& msg);
     Logger&  operator<<(void* );
     Logger&  operator<<(unsigned char a);
     Logger&  operator<<(char a);

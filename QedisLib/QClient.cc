@@ -303,7 +303,7 @@ QClient*  QClient::Current()
     return s_pCurrentClient;
 }
 
-QClient::QClient() : m_db(0), m_flag(0)
+QClient::QClient() : m_db(0), m_flag(0), m_name("clientxxx")
 {
     SelectDB(0);
     _Reset();

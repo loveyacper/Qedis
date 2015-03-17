@@ -76,6 +76,7 @@ QCommandHandler  lrange;
 QCommandHandler  linsert;
 QCommandHandler  lrem;
 QCommandHandler  rpoplpush;
+QCommandHandler  blpop;
 
 // hash commands
 QCommandHandler  hget;

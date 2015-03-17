@@ -230,6 +230,11 @@ Logger&  Logger::operator<< (const unsigned char* msg)
     return operator<<(reinterpret_cast<const char*>(msg));
 }
 
+Logger&  Logger::operator<< (const std::string& msg)
+{
+    return operator<<(msg.c_str());
+}
+
 Logger&  Logger::operator<< (void* ptr)
 {
     if (IsLevelForbid(m_curLevel))

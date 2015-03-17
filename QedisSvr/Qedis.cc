@@ -64,6 +64,7 @@ bool Qedis::_Init()
 
     QCommandTable::Init();
     QSTORE.InitExpireTimer();
+    QSTORE.InitBlockedTimer();
     QPubsub::Instance().InitPubsubTimer();
     
     QDBLoader  loader;
@@ -116,7 +117,7 @@ void    Qedis::_Recycle()
 
 int main()
 {
-   // g_log = LogManager::Instance().NullLog();
+    //g_log = LogManager::Instance().NullLog();
     g_log = LogManager::Instance().CreateLog(logALL, logALL, "./qedis_log");
     
     //daemon(1, 0);

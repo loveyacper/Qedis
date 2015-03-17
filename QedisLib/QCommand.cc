@@ -64,6 +64,7 @@ const QCommandInfo QCommandTable::s_info[] =
     {"linsert",     QAttr_write,               5,  &linsert},
     {"lrem",        QAttr_write,               4,  &lrem},
     {"rpoplpush",   QAttr_write,               3,  &rpoplpush},
+    {"blpop",       QAttr_write,              -3,  &blpop},
     
     
     // hash

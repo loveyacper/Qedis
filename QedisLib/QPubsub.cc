@@ -57,10 +57,10 @@ std::size_t QPubsub::UnSubscribeAll(QClient* client)
     if (!client)  return 0;
 
     std::size_t  n = 0;
-    const std::set<QString>& channels = client->GetChannels();
-    for (std::set<QString>::const_iterator it(channels.begin());
-            it != channels.end();
-            ++ it)
+    const auto& channels = client->GetChannels();
+    for (auto it(channels.begin());
+              it != channels.end();
+              ++ it)
     {
         n += UnSubscribe(client, *it);
     }
@@ -113,12 +113,10 @@ std::size_t QPubsub::PUnSubscribeAll(QClient* client)
     if (!client)  return 0;
 
     std::size_t  n = 0;
-    const std::set<QString>& channels = client->GetPatternChannels();
-    for (std::set<QString>::const_iterator it(channels.begin());
-            it != channels.end();
-            ++ it)
+    const auto& channels = client->GetPatternChannels();
+    for (const auto& channel : channels)
     {
-        n += PUnSubscribe(client, *it);
+        n += PUnSubscribe(client, channel);
     }
 
     return n;
@@ -363,10 +361,10 @@ QError  unsubscribe(const vector<QString>& params, UnboundedBuffer& reply)
 
     if (params.size() == 1)
     {
-        const set<QString>& channels = client->GetChannels();
-        for (set<QString>::const_iterator it(channels.begin());
-                it != channels.end();
-                ++ it)
+        const auto& channels = client->GetChannels();
+        for (auto it(channels.begin());
+                  it != channels.end();
+                  ++ it)
         {
             FormatSingle(it->c_str(), it->size(), reply);
         }
@@ -408,12 +406,10 @@ QError  punsubscribe(const vector<QString>& params, UnboundedBuffer& reply)
 
     if (params.size() == 1)
     {
-        const set<QString>& channels = client->GetPatternChannels();
-        for (set<QString>::const_iterator it(channels.begin());
-                it != channels.end();
-                ++ it)
+        const auto& channels = client->GetPatternChannels();
+        for (const auto& channel : channels)
         {
-            FormatSingle(it->c_str(), it->size(), reply);
+            FormatSingle(channel.c_str(), channel.size(), reply);
         }
         
         QPubsub::Instance().PUnSubscribeAll(client);

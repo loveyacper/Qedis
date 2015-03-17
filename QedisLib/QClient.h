@@ -6,7 +6,7 @@
 #include "QString.h"
 
 #include "QStat.h"
-#include <set>
+#include <unordered_set>
 
 enum  class ParseCmdState : std::int8_t
 {
@@ -71,11 +71,19 @@ public:
         return m_patternChannels.erase(channel);
     }
 
-    const std::set<QString>&    GetChannels() const { return m_channels; }
-    const std::set<QString>&    GetPatternChannels() const { return m_patternChannels; }
+    const std::unordered_set<QString>&  GetChannels() const { return m_channels; }
+    const std::unordered_set<QString>&  GetPatternChannels() const { return m_patternChannels; }
     std::size_t     ChannelCount() const { return m_channels.size(); }
     std::size_t     PatternChannelCount() const { return m_patternChannels.size(); }
 
+    
+    bool  WaitFor(const QString& key)  { return m_waitingKeys.insert(key).second; }
+    const std::unordered_set<QString>  WaitingKeys() const { return m_waitingKeys; }
+    void  ClearWaitingKeys()    { return m_waitingKeys.clear(); }
+    
+    void    SetName(const QString& name) { m_name = name; }
+    const   QString&    GetName() const { return m_name; }
+    
 private:
     void        _ProcessInlineCmd(const char* , size_t , BODY_LENGTH_T* );
     void        _Reset();
@@ -89,12 +97,18 @@ private:
 
     int   m_db;
 
-    std::set<QString>  m_channels;
-    std::set<QString>  m_patternChannels;
+    std::unordered_set<QString>  m_channels;
+    std::unordered_set<QString>  m_patternChannels;
     
     unsigned m_flag;
-    std::set<QString>  m_watchKeys;
+    std::unordered_set<QString>  m_watchKeys;
     std::vector<std::vector<QString> > m_queueCmds;
+    
+    // blocked list
+    std::unordered_set<QString> m_waitingKeys;
+    
+    // name
+    std::string m_name;
     
     QStat  m_stat;
     static  QClient*  s_pCurrentClient;

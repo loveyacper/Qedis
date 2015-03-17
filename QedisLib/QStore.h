@@ -78,25 +78,11 @@ struct  QObject
 
 class QClient;
 
-#ifdef __APPLE__
 typedef std::unordered_map<QString, QObject,
         my_hash,
         std::equal_to<QString> >  QDB;
 
-typedef std::unordered_map<QString, uint64_t,
-        my_hash,
-        std::equal_to<QString> >  Q_EXPIRE_DB;
 
-typedef std::unordered_map<QString, std::shared_ptr<QClient>,
-        my_hash,
-        std::equal_to<QString> >  QCLIENTS;
-#else
-typedef std::tr1::unordered_map<QString, QObject>  QDB;
-
-typedef std::tr1::unordered_map<QString, uint64_t>  Q_EXPIRE_DB;
-
-typedef std::tr1::unordered_map<QString, std::shared_ptr<QClient> >  QCLIENTS;
-#endif
 
 class ExpireTimer  : public Timer
 {
@@ -110,13 +96,27 @@ private:
     bool _OnTimer();
 };
 
+class BlockedListTimer  : public Timer
+{
+public:
+    BlockedListTimer(int db) : Timer(3)
+    {
+        m_dbno = db;
+    }
+private:
+    int  m_dbno;
+    bool _OnTimer();
+};
 
 class QStore
 {
 public:
     static QStore& Instance();
 
-    QStore(int dbNum = 16) : m_store(dbNum), m_expiresDb(dbNum), m_dbno(0)
+    QStore(int dbNum = 16) : m_store(dbNum),
+                             m_expiresDb(dbNum),
+                             m_blockedClients(dbNum),
+                             m_dbno(0)
     {
         m_db   = &m_store[0];
     }
@@ -145,13 +145,21 @@ public:
     void    SetExpire(const QString& key, uint64_t when);
     int64_t TTL(const QString& key, uint64_t now);
     bool    ClearExpire(const QString& key);
-    int     LoopCheck(uint64_t now);
+    int     LoopCheckExpire(uint64_t now);
     void    InitExpireTimer();
     
     // danger cmd
     void    ClearCurrentDB() { m_db->clear(); }
     void    ClearAllDB()     { std::vector<QDB>(16).swap(m_store); }
-
+    
+    // for blocked list
+    bool    BlockClient(const QString& key, QClient* client, uint64_t timeout);
+    size_t  UnblockClient(QClient* client);
+    size_t  ServeClient(const QString& key, const PLIST& list);
+    
+    int     LoopCheckBlocked(uint64_t now);
+    void    InitBlockedTimer();
+    
 private:
     enum class ExpireResult : std::int8_t
     {
@@ -161,25 +169,44 @@ private:
     };
     ExpireResult    _ExpireIfNeed(const QString& key, uint64_t now);
     
-    class QExpiresDB
+    class ExpiresDB
     {
     public:
         void    SetExpire(const QString& key, uint64_t when);
         int64_t TTL(const QString& key, uint64_t now);
         bool    ClearExpire(const QString& key);
         ExpireResult    ExpireIfNeed(const QString& key, uint64_t now);
-        ExpireResult    ExpireIfNeed(Q_EXPIRE_DB::iterator& it, uint64_t now);
 
         int     LoopCheck(uint64_t now);
         
     private:
+        typedef std::unordered_map<QString, uint64_t,
+                                    my_hash,
+                                    std::equal_to<QString> >
+                               Q_EXPIRE_DB;
         Q_EXPIRE_DB            m_expireKeys;  // all the keys to be expired, unorder.
+    };
+    
+    class BlockedClients
+    {
+    public:
+        bool    BlockClient(const QString& key, QClient* client, uint64_t timeout);
+        size_t  UnblockClient(QClient* client);
+        size_t  ServeClient(const QString& key, const PLIST& list);
+        
+        int    LoopCheck(uint64_t now);
+    private:
+        typedef std::list<std::pair<std::weak_ptr<QClient>, uint64_t> >   Clients;
+        typedef std::unordered_map<QString, Clients>  WaitingList;
+        
+        WaitingList  m_blockedClients;
     };
 
     QError  _SetValue(const QString& key, QObject& value, bool exclusive = false);
 
     std::vector<QDB>  m_store;
-    std::vector<QExpiresDB> m_expiresDb;
+    std::vector<ExpiresDB> m_expiresDb;
+    std::vector<BlockedClients> m_blockedClients;
     int               m_dbno;
     QDB              *m_db;
 };
