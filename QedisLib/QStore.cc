@@ -96,16 +96,20 @@ bool ExpireTimer::_OnTimer()
     return  true;
 }
 
-bool QStore::BlockedClients::BlockClient(const QString& key, QClient* client, uint64_t timeout)
+bool QStore::BlockedClients::BlockClient(const QString& key,
+                                         QClient* client,
+                                         uint64_t timeout,
+                                         ListPosition pos,
+                                         const QString* target)
 {
-    if (!client->WaitFor(key))
+    if (!client->WaitFor(key, target))
     {
         ERR << key << " is already waited by " << client->GetName();
         return  false;
     }
         
     Clients& clients = m_blockedClients[key];
-    clients.push_back(Clients::value_type(std::static_pointer_cast<QClient>(client->shared_from_this()), timeout));
+    clients.push_back(Clients::value_type(std::static_pointer_cast<QClient>(client->shared_from_this()), timeout, pos));
     INF << key << " is waited by " << client->GetName() << ", timeout " << timeout;
     return true;
 }
@@ -120,26 +124,18 @@ size_t QStore::BlockedClients::UnblockClient(QClient* client)
         Clients&  clients = m_blockedClients[key];
         assert(!clients.empty());
         
-        bool  found = false;
-        for (Clients::iterator it(clients.begin()); it != clients.end(); ++ it)
+        for (auto it(clients.begin()); it != clients.end(); ++ it)
         {
-            auto  cli(it->first.lock());
+            auto  cli(std::get<0>(*it).lock());
             if (cli && cli.get() == client)
             {
                 INF << "unblock " << client->GetName() << " for key " << key;
                 clients.erase(it);
                 
-              //  if (clients.empty())
-                //    m_blockedClients.erase(key);
-                
                 ++ n;
-                found = true;
                 break;
             }
         }
-    
-        if (!found)
-            ERR << "FAILED: unblock " << client->GetName() << " for key " << key;
     }
     
     client->ClearWaitingKeys();
@@ -161,23 +157,85 @@ size_t  QStore::BlockedClients::ServeClient(const QString& key, const PLIST& lis
     
     size_t nServed = 0;
         
-    while (!list->empty())
+    while (!list->empty() && !clients.empty())
     {
-        auto cli(clients.begin()->first.lock());
+        auto  cli(std::get<0>(clients.front()).lock());
+        auto  pos(std::get<2>(clients.front()));
+
         if (cli)
         {
-            UnboundedBuffer reply;
+            bool  errorTarget     = false;
+            const QString& target = cli->GetTarget();
             
-            PreFormatMultiBulk(2, reply);
-            FormatBulk(key.c_str(), key.size(), reply);
-            FormatBulk(list->begin()->c_str(), list->begin()->size(), reply);
+            QObject*  dst = nullptr;
+
+            if (!target.empty())
+            {
+                INF << list->front() << " is try lpush to target list " << target;
                 
-            cli->SendPacket(reply.ReadAddr(), reply.ReadableSize());
-            list->pop_front();
-            INF << "server client " << cli->GetName() << " list member " << *(list->begin());
+                // check target list
+                QError  err = QSTORE.GetValueByType(target, dst, QType_list);
+                if (err != QError_ok)
+                {
+                    if (err != QError_notExist)
+                    {
+                        // !!!
+                        UnboundedBuffer  reply;
+                        ReplyError(err, reply);
+                        cli->SendPacket(reply.ReadAddr(), reply.ReadableSize());
+                        errorTarget = true;
+                    }
+                    else
+                    {
+                        QObject  dstObj(QType_list);
+                        dstObj.value = std::make_shared<QList>();
+                        dst = QSTORE.SetValue(target, dstObj);
+                    }
+                }
+            }
+            
+            if (!errorTarget)
+            {
+                if (dst)
+                {
+                    const PLIST& dstlist = dst->CastList();
+                    dstlist->push_front(list->back());
+                    INF << list->front() << " success lpush to target list " << target;
+                }
+                
+                UnboundedBuffer reply;
+            
+                if (!dst)
+                {
+                    PreFormatMultiBulk(2, reply);
+                    FormatBulk(key.c_str(), key.size(), reply);
+                }
+            
+                
+               // QString  result
+                //GenericPop(const QString& key, ListPosition pos, QString& result);
+                
+                if (pos == ListPosition::head)
+                {
+                    FormatBulk(list->front().c_str(), list->front().size(), reply);
+                    list->pop_front();
+                }
+                else
+                {
+                    FormatBulk(list->back().c_str(), list->back().size(), reply);
+                    list->pop_back();
+                }
+                
+                cli->SendPacket(reply.ReadAddr(), reply.ReadableSize());
+                INF << "server client " << cli->GetName() << " list member " <<  list->front();
+            }
             
             UnblockClient(cli.get());
             ++ nServed;
+        }
+        else
+        {
+            clients.pop_front();
         }
     }
     
@@ -186,23 +244,28 @@ size_t  QStore::BlockedClients::ServeClient(const QString& key, const PLIST& lis
     
 int QStore::BlockedClients::LoopCheck(uint64_t now)
 {
-    int n = 0;
-    for (auto it(m_blockedClients.begin()); it != m_blockedClients.end() && n < 100; )
+    int  n = 0;
+
+    for (auto  it(m_blockedClients.begin());
+         it != m_blockedClients.end() && n < 100;
+         )
     {
-        Clients& clients = it->second;
+        Clients&  clients = it->second;
         for (auto cli(clients.begin()); cli != clients.end(); )
         {
-            if (cli->second < now) // timeout
+            if (std::get<1>(*cli) < now) // timeout
             {
-                INF << "client blocked is timeout";
                 ++ n;
                 
-                auto scli(cli->first.lock());
-                if (scli)
+                const QString&  key = it->first;
+                auto  scli(std::get<0>(*cli).lock());
+                if (scli && scli->WaitingKeys().count(key))
                 {
-                    UnboundedBuffer reply;
+                    INF << scli->GetName() << " is timeout for waiting key " << key;
+                    UnboundedBuffer  reply;
                     FormatNull(reply);
                     scli->SendPacket(reply.ReadAddr(), reply.ReadableSize());
+                    scli->ClearWaitingKeys();
                 }
 
                 clients.erase(cli ++);
@@ -388,9 +451,9 @@ void    QStore::InitExpireTimer()
         TimerManager::Instance().AddTimer(PTIMER(new ExpireTimer(i)));
 }
 
-bool    QStore::BlockClient(const QString& key, QClient* client, uint64_t timeout)
+bool    QStore::BlockClient(const QString& key, QClient* client, uint64_t timeout, ListPosition pos, const QString* dstList)
 {
-    return m_blockedClients[m_dbno].BlockClient(key, client, timeout);
+    return m_blockedClients[m_dbno].BlockClient(key, client, timeout, pos, dstList);
 }
 size_t  QStore::UnblockClient(QClient* client)
 {

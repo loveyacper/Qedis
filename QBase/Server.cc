@@ -101,6 +101,7 @@ void Server::MainLoop()
     sigaction(SIGPIPE, &sig, NULL);
 
     ::srand(static_cast<unsigned int>(time(NULL)));
+    ::srandom(static_cast<unsigned int>(time(NULL)));
 
     // set the max fd number
     struct rlimit   rlim; 

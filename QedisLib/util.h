@@ -25,11 +25,11 @@ inline typename HASH::const_local_iterator RandomHashMember(const HASH& containe
     
     while (true)
     {
-        size_t bucket = rand() % container.bucket_count();
+        size_t bucket = random() % container.bucket_count();
         if (container.bucket_size(bucket) == 0)
             continue;
         
-        int lucky = rand() % container.bucket_size(bucket);
+        long lucky = random() % container.bucket_size(bucket);
         typename HASH::const_local_iterator it = container.begin(bucket);
         while (lucky > 0)
         {

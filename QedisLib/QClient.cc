@@ -410,3 +410,22 @@ void QClient::ClearMulti()
 }
 
 
+bool  QClient::WaitFor(const QString& key, const QString* target)
+{
+    bool  succ = m_waitingKeys.insert(key).second;
+    
+    if (succ && target)
+    {
+        if (!m_target.empty())
+        {
+            ERR << "Wait failed for key " << key << ", because old target " << m_target;
+            m_waitingKeys.erase(key);
+            return false;
+        }
+        
+        m_target = *target;
+    }
+    
+    return succ;
+}
+

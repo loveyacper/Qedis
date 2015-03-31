@@ -73,7 +73,8 @@ bool TryStr2Long(const char* ptr, size_t nBytes, long& val)
             return false;
         }
         
-        if (negtive && (val - 1) > (-(std::numeric_limits<long>::min() - 1)) - (ptr[i] - '0'))
+        
+        if (negtive && (val - 1) > (-(std::numeric_limits<long>::min() + 1)) - (ptr[i] - '0'))
         {
             std::cerr << "long will underflow " << val << std::endl;
             return false;

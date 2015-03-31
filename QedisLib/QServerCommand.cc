@@ -99,5 +99,94 @@ QError  lastsave(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
+QError  client(const vector<QString>& params, UnboundedBuffer& reply)
+{
+    // getname   setname    kill  list
+    assert (params[0] == "client");
+    
+    QError   err = QError_ok;
+    
+    if (params[1] == "getname")
+    {
+        if (params.size() != 2)
+            ReplyError(err = QError_param, reply);
+        else
+            FormatBulk(QClient::Current()->GetName().c_str(),
+                       QClient::Current()->GetName().size(),
+                       reply);
+    }
+    else if (params[1] == "setname")
+    {
+        if (params.size() != 3)
+        {
+            ReplyError(err = QError_param, reply);
+        }
+        else
+        {
+            QClient::Current()->SetName(params[2]);
+            FormatOK(reply);
+        }
+    }
+    else if (params[1] == "kill")
+    {
+        // only kill current client
+        QClient::Current()->OnError();
+        FormatOK(reply);
+    }
+    else if (params[1] == "list")
+    {
+        FormatOK(reply);
+    }
+    else
+    {
+        ReplyError(err = QError_param, reply);
+    }
+    
+    return   err;
+}
 
+static int Suicide()
+{
+    int* ptr = nullptr;
+    *ptr = 0;
+    
+    return *ptr;
+}
 
+QError  debug(const vector<QString>& params, UnboundedBuffer& reply)
+{
+    // SEGFAULT   OBJECT
+    assert (params[0] == "debug");
+    
+    QError err = QError_ok;
+    
+    if (strcasecmp(params[1].c_str(), "segfault") == 0 && params.size() == 2)
+    {
+        Suicide();
+        assert (false);
+    }
+    else if (strcasecmp(params[1].c_str(), "object") == 0 && params.size() == 3)
+    {
+        QObject* obj = nullptr;
+        err = QSTORE.GetValue(params[2], obj);
+        
+        if (err != QError_ok)
+        {
+            ReplyError(err, reply);
+        }
+        else
+        {
+            // ref count,  encoding
+            char buf[512];
+            int len = snprintf(buf, sizeof buf, "ref count:%d, encoding:%s", obj->value.use_count(), EncodingStringInfo(obj->encoding));
+            FormatBulk(buf, len, reply);
+        }
+    }
+    else
+    {
+        ReplyError(err = QError_param, reply);
+    }
+    
+    return   err;
+    
+}

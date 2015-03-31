@@ -153,7 +153,11 @@ public:
     void    ClearAllDB()     { std::vector<QDB>(16).swap(m_store); }
     
     // for blocked list
-    bool    BlockClient(const QString& key, QClient* client, uint64_t timeout);
+    bool    BlockClient(const QString& key,
+                        QClient* client,
+                        uint64_t timeout,
+                        ListPosition pos,
+                        const QString* dstList = 0);
     size_t  UnblockClient(QClient* client);
     size_t  ServeClient(const QString& key, const PLIST& list);
     
@@ -190,13 +194,17 @@ private:
     class BlockedClients
     {
     public:
-        bool    BlockClient(const QString& key, QClient* client, uint64_t timeout);
+        bool    BlockClient(const QString& key,
+                            QClient* client,
+                            uint64_t timeout,
+                            ListPosition  pos,
+                            const QString* dstList = 0);
         size_t  UnblockClient(QClient* client);
         size_t  ServeClient(const QString& key, const PLIST& list);
         
         int    LoopCheck(uint64_t now);
     private:
-        typedef std::list<std::pair<std::weak_ptr<QClient>, uint64_t> >   Clients;
+        typedef std::list<std::tuple<std::weak_ptr<QClient>, uint64_t, ListPosition> >   Clients;
         typedef std::unordered_map<QString, Clients>  WaitingList;
         
         WaitingList  m_blockedClients;

@@ -39,6 +39,8 @@ QCommandHandler  save;
 QCommandHandler  lastsave;
 QCommandHandler  flushdb;
 QCommandHandler  flushall;
+QCommandHandler  client;
+QCommandHandler  debug;
 
 // string commands
 QCommandHandler  set;
@@ -77,6 +79,8 @@ QCommandHandler  linsert;
 QCommandHandler  lrem;
 QCommandHandler  rpoplpush;
 QCommandHandler  blpop;
+QCommandHandler  brpop;
+QCommandHandler  brpoplpush;
 
 // hash commands
 QCommandHandler  hget;

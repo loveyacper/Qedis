@@ -77,16 +77,18 @@ public:
     std::size_t     PatternChannelCount() const { return m_patternChannels.size(); }
 
     
-    bool  WaitFor(const QString& key)  { return m_waitingKeys.insert(key).second; }
+    bool  WaitFor(const QString& key, const QString* target = nullptr);
+    
     const std::unordered_set<QString>  WaitingKeys() const { return m_waitingKeys; }
-    void  ClearWaitingKeys()    { return m_waitingKeys.clear(); }
+    void  ClearWaitingKeys()    {  m_waitingKeys.clear(), m_target.clear(); }
+    const QString&  GetTarget() const { return m_target; }
     
     void    SetName(const QString& name) { m_name = name; }
     const   QString&    GetName() const { return m_name; }
     
 private:
-    void        _ProcessInlineCmd(const char* , size_t , BODY_LENGTH_T* );
-    void        _Reset();
+    void    _ProcessInlineCmd(const char* , size_t , BODY_LENGTH_T* );
+    void    _Reset();
 
     ParseCmdState  m_state;
     int   m_multibulk;
@@ -106,6 +108,7 @@ private:
     
     // blocked list
     std::unordered_set<QString> m_waitingKeys;
+    QString m_target;
     
     // name
     std::string m_name;

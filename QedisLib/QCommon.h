@@ -33,6 +33,35 @@ enum QEncode
     QEncode_sset,
 };
 
+inline const char* EncodingStringInfo(unsigned encode)
+{
+    switch (encode)
+    {
+        case QEncode_raw:
+            return "raw";
+            
+        case QEncode_int:
+            return "int";
+            
+        case QEncode_list:
+            return "list";
+            
+        case QEncode_set:
+            return "set";
+            
+        case QEncode_hash:
+            return "hash";
+            
+        case QEncode_sset:
+            return "sset";
+            
+        default:
+            break;
+    }
+    
+    return "unknown";
+}
+
 enum QError
 {
     QError_ok        = 0,

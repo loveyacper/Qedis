@@ -27,6 +27,8 @@ const QCommandInfo QCommandTable::s_info[] =
     {"lastsave",    QAttr_read,                1,  &lastsave},
     {"flushdb",     QAttr_write,               1,  &flushdb},
     {"flushall",    QAttr_write,               1,  &flushall},
+    {"client",      QAttr_read,               -2,  &client },
+    {"debug",       QAttr_read,               -2,  &debug},
     
     // string
     {"strlen",      QAttr_read,                2,  &strlen},
@@ -65,8 +67,9 @@ const QCommandInfo QCommandTable::s_info[] =
     {"lrem",        QAttr_write,               4,  &lrem},
     {"rpoplpush",   QAttr_write,               3,  &rpoplpush},
     {"blpop",       QAttr_write,              -3,  &blpop},
-    
-    
+    {"brpop",       QAttr_write,              -3,  &brpop},
+    {"brpoplpush",  QAttr_write,               4,  &brpoplpush},
+
     // hash
     {"hget",        QAttr_read,                3,  &hget},
     {"hgetall",     QAttr_read,                2,  &hgetall},
