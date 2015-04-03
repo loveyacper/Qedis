@@ -3,6 +3,7 @@
 #include "Log/Logger.h"
 #include "QCommand.h"
 #include "QMulti.h"
+#include "QAOF.h"
 
 // *3  CR LF
 // $4  CR LF
@@ -276,7 +277,6 @@ void QClient::_HandlePacket(AttachedBuffer& buf)
             return;
         }
     }
-    // return;
     
     m_stat.Begin();
     QError err = QCommandTable::ExecuteCmd(m_params, info, m_reply);
@@ -292,6 +292,7 @@ void QClient::_HandlePacket(AttachedBuffer& buf)
     if (err == QError_ok && (info->attr & QAttr_write))
     {
         QMulti::Instance().NotifyDirty(m_params[1]);
+        QAOFFile::Instance().SaveCommand(m_params);
     }
     
     _Reset();
@@ -394,6 +395,7 @@ bool QClient::Exec()
         if (err == QError_ok && (info->attr & QAttr_write))
         {
             QMulti::Instance().NotifyDirty((*it)[1]);
+            QAOFFile::Instance().SaveCommand(*it);
         }
     }
     

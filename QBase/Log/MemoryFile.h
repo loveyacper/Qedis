@@ -13,8 +13,12 @@ public:
     bool        Open(const char* file, bool bAppend = true);
     bool        OpenForRead(const char* file);
     void        Close();
+    bool        Sync();
 
-    void        Write(const void* data, std::size_t len); //  WriteHook
+    void        Write(const void* data, std::size_t len);
+    template <typename T>
+    size_t      Write(const T& t);
+    
     const char* Read(std::size_t& len);
     void        Skip(std::size_t len);
     
@@ -38,8 +42,17 @@ private:
     char*           m_pMemory;
     std::size_t     m_offset;
     std::size_t     m_size;
+    
+    std::size_t     m_syncPos;
 };
 
+
+template <typename T>
+inline size_t   MemoryFile::Write(const T& t)
+{
+    this->Write(&t, sizeof t);
+    return  sizeof t;
+}
 
 template <typename T>
 inline T  MemoryFile::Read()

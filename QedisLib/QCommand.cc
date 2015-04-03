@@ -29,6 +29,7 @@ const QCommandInfo QCommandTable::s_info[] =
     {"flushall",    QAttr_write,               1,  &flushall},
     {"client",      QAttr_read,               -2,  &client },
     {"debug",       QAttr_read,               -2,  &debug},
+    {"shutdown",    QAttr_read,                1,  &shutdown},
     
     // string
     {"strlen",      QAttr_read,                2,  &strlen},

@@ -1,52 +1,66 @@
 #ifndef BERT_QAOF_H
 #define BERT_QAOF_H
 
+#include <memory>
 #include "MemoryFile.h"
 #include "OutputBuffer.h"
-#include "QStore.h"
+#include "QString.h"
+#include "Thread.h"
 
-extern const char* const g_aofFile;
-class QAOF
+extern const char* const g_aofFileName;
+
+class QAOFFile
 {
 public:
-    ~QAOF();
+    ~QAOFFile();
+    
+    static  QAOFFile& Instance();
 
+    bool    Open(const char* );
     void    SaveCommand(const std::vector<QString>& params);
     bool    Loop();
-    static  void SaveDoneHandler(int exitcode, int bysignal);
+    bool    Sync();
+    static  void  SaveDoneHandler(int exitcode, int bysignal);
 
 private:
-    MemoryFile      m_qdb;
-    OutputBuffer    m_buf;
+    QAOFFile();
+    
+    MemoryFile     m_file;
+    OutputBuffer   m_buf;
 };
 
-extern time_t g_lastQDBSave;
-extern pid_t  g_qdbPid;
 
-class QAOFLoader
+class  QAOFThread
 {
 public:
-    int Load(const char* filename);
-
-    size_t  LoadLength(bool& special);
-    QObject LoadSpecialStringObject(size_t  specialVal);
-    QString LoadString(size_t strLen);
-    QString LoadLZFString();
-
-    QString LoadKey();
-    QObject LoadObject(int8_t type);
-
-private:
-    QString _LoadGenericString();
-    QObject _LoadList();
-    QObject _LoadSet();
-    QObject _LoadHash();
-    QObject _LoadSSet();
-    double  _LoadDoubleValue();
-    QObject _LoadZipList(int8_t type);
-    QObject _LoadIntset();
+    static QAOFThread&  Instance();
     
-    MemoryFile m_qdb;
+    void  Start();
+    void  Stop();
+    bool  Update();
+    
+private:
+    QAOFThread() {}
+    
+    class AOFThread : public Runnable
+    {
+    public:
+        AOFThread() : m_alive(false) {}
+        
+        void  SetAlive()      {  m_alive = true; }
+        bool  IsAlive() const {  return m_alive; }
+        void  Stop()          {  m_alive = false; }
+    
+        virtual void Run();
+    
+    private:
+        std::atomic<bool>   m_alive;
+    };
+    
+    std::shared_ptr<AOFThread>  m_aofThread;
 };
+
+extern pid_t  g_aofPid;
+
 
 #endif

@@ -1,6 +1,7 @@
 #include "QStore.h"
 #include "QClient.h"
 #include "Log/Logger.h"
+#include "Server.h"
 #include <iostream>
 #include <cassert>
 #include <unistd.h>
@@ -188,5 +189,13 @@ QError  debug(const vector<QString>& params, UnboundedBuffer& reply)
     }
     
     return   err;
+}
+
+
+QError  shutdown(const vector<QString>& params, UnboundedBuffer& reply)
+{
+    assert (params[0] == "shutdown");
     
+    Server::Instance()->Terminate();
+    return   QError_ok;
 }

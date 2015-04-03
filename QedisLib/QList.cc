@@ -684,6 +684,14 @@ QError  rpoplpush(const vector<QString>& params, UnboundedBuffer& reply)
         return err;
     }
     
+    const PLIST& srclist = src->CastList();
+    if (srclist->empty())
+    {
+        QSTORE.DeleteKey(params[1]);
+        FormatNull(reply);
+        return QError_notExist;
+    }
+    
     QObject* dst;
     
     err = QSTORE.GetValueByType(params[2], dst, QType_list);
@@ -699,11 +707,7 @@ QError  rpoplpush(const vector<QString>& params, UnboundedBuffer& reply)
         dst = QSTORE.SetValue(params[2], dstObj);
     }
     
-    const PLIST& srclist = src->CastList();
     const PLIST& dstlist = dst->CastList();
-    
-    assert (!srclist->empty());
-    
     dstlist->splice(dstlist->begin(), *srclist, (++ srclist->rbegin()).base());
     
     FormatBulk(dstlist->begin()->c_str(),

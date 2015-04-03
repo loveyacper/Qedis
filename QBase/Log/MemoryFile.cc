@@ -18,7 +18,8 @@ char* const MemoryFile::kInvalidAddr = reinterpret_cast<char*>(-1);
 MemoryFile::MemoryFile() : m_file(kInvalidFile),
                            m_pMemory(kInvalidAddr),
                            m_offset(0),
-                           m_size(0)
+                           m_size(0),
+                           m_syncPos(0)
 {
 }
 
@@ -92,9 +93,10 @@ bool  MemoryFile::Open(const char* file, bool bAppend)
     }
     else
     {
+        ::ftruncate(m_file, 0);
         m_offset  = 0;
     }
-
+    
     return true;
 }
 
@@ -127,7 +129,18 @@ void  MemoryFile::Close()
         m_size      = 0;
         m_pMemory   = kInvalidAddr;
         m_offset    = 0;
+        m_syncPos   = 0;
     }
+}
+
+bool    MemoryFile::Sync()
+{
+    if (m_syncPos >= m_offset)
+        return false;
+    
+    ::msync(m_pMemory + m_syncPos, m_offset - m_syncPos, MS_SYNC);
+    m_syncPos = m_offset;
+    return true;
 }
 
 const char* MemoryFile::Read(std::size_t& len)

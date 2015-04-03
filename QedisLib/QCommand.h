@@ -41,6 +41,7 @@ QCommandHandler  flushdb;
 QCommandHandler  flushall;
 QCommandHandler  client;
 QCommandHandler  debug;
+QCommandHandler  shutdown;
 
 // string commands
 QCommandHandler  set;

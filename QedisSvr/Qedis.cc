@@ -15,6 +15,7 @@
 #include "QPubsub.h"
 #include "QCommand.h"
 #include "QDB.h"
+#include "QAOF.h"
 
 
 class Qedis : public Server
@@ -67,22 +68,27 @@ bool Qedis::_Init()
     QSTORE.InitBlockedTimer();
     QPubsub::Instance().InitPubsubTimer();
     
+    //  USE AOF RECOVERY FIRST, IF FAIL, THEN RDB
     QDBLoader  loader;
     loader.Load(g_qdbFile);
     
+    QAOFThread::Instance().Start();
+    
     return true;
 }
+
 Time  g_now;
+
 bool Qedis::_RunLogic()
 {
     g_now.Now();
     TimerManager::Instance().UpdateTimers(g_now);
     
-    if (g_qdbPid != -1)
+    if (g_qdbPid != -1 || g_aofPid != -1)
     {
         int    statloc;
-        
-        pid_t pid = wait3(&statloc,WNOHANG,NULL);
+
+        pid_t  pid = wait3(&statloc,WNOHANG,NULL);
         if (pid != 0 && pid != -1)
         {
             int exitcode = WEXITSTATUS(statloc);
@@ -94,9 +100,14 @@ bool Qedis::_RunLogic()
             {
                 QDBSaver::SaveDoneHandler(exitcode, bysignal);
             }
+            else if (pid == g_aofPid)
+            {
+                INF << pid << " aof process success done.";
+            }
             else
             {
-                ERR << pid << " is not rdb process " << g_qdbPid;
+                ERR << pid << " is not rdb or aof process ";
+                assert (false);
             }
         }
     }
@@ -110,6 +121,7 @@ bool Qedis::_RunLogic()
 
 void    Qedis::_Recycle()
 {
+    QAOFThread::Instance().Stop();
     QStat::Output(PARSE_STATE);
     QStat::Output(PROCESS_STATE);
     QStat::Output(SEND_STATE);
