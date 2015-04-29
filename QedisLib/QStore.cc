@@ -316,6 +316,11 @@ int  QStore::LoopCheckBlocked(uint64_t now)
 
 int QStore::SelectDB(int dbno)
 {
+    if (dbno == m_dbno)
+    {
+        return  m_dbno;
+    }
+    
     if (dbno >= 0 && dbno < static_cast<int>(m_store.size()))
     {
         int oldDb = m_dbno;
@@ -328,6 +333,10 @@ int QStore::SelectDB(int dbno)
     return  -1;
 }
 
+int  QStore::GetDB() const
+{
+    return  m_dbno;
+}
 
 bool QStore::DeleteKey(const QString& key)
 {

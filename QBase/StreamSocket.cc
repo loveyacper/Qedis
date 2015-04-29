@@ -98,7 +98,7 @@ int StreamSocket::_Send(const BufferSequence& bf)
 bool StreamSocket::SendPacket(const char* pData, size_t nBytes)
 {
     if (pData && nBytes > 0)
-        m_sendBuf.AsyncWrite(pData, nBytes);
+        m_sendBuf.Write(pData, nBytes);
 
     return true;
 }

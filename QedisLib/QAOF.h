@@ -8,59 +8,78 @@
 #include "Thread.h"
 
 extern const char* const g_aofFileName;
+extern const char* const g_aofTmp;
 
-class QAOFFile
+class  QAOFThreadController
 {
 public:
-    ~QAOFFile();
-    
-    static  QAOFFile& Instance();
-
-    bool    Open(const char* );
-    void    SaveCommand(const std::vector<QString>& params);
-    bool    Loop();
-    bool    Sync();
-    static  void  SaveDoneHandler(int exitcode, int bysignal);
-
-private:
-    QAOFFile();
-    
-    MemoryFile     m_file;
-    OutputBuffer   m_buf;
-};
-
-
-class  QAOFThread
-{
-public:
-    static QAOFThread&  Instance();
+    static QAOFThreadController&  Instance();
     
     void  Start();
+    void  SaveCommand(const std::vector<QString>& params, int db);
     void  Stop();
     bool  Update();
     
-private:
-    QAOFThread() {}
+    void  Join();
     
+    bool  ProcessTmpBuffer(BufferSequence& bf);
+    void  SkipTmpBuffer(size_t  n);
+    /*
+     MemoryFile  file;
+     select db first;
+     savedata(const string& key, const qobject& obj);
+     set expired;
+     savelist;  // rpush key elem;
+     savestring;  // set key val;
+     saveset; // sadd key elem;
+     savesset;  // zadd key score member
+     savehash;  // hset key key value
+     static void  Rewrite();
+     */
+    static void  SaveDoneHandler(int exitcode, int bysignal);
+    
+private:
+    QAOFThreadController() : m_lastDb(-1) {}
+
+    /* when thread starting, the file is open first.
+     * when exiting, file will be closed and sync.
+     */
     class AOFThread : public Runnable
     {
+        friend class QAOFThreadController;
     public:
-        AOFThread() : m_alive(false) {}
+        AOFThread() : m_alive(false) { }
+        ~AOFThread();
         
         void  SetAlive()      {  m_alive = true; }
         bool  IsAlive() const {  return m_alive; }
         void  Stop()          {  m_alive = false; }
+        
+        bool  Open(const char* file) { return m_file.Open(file); }
+        void  Close()  {    m_file.Close(); }
+        void  SaveCommand(const std::vector<QString>& params);
+        
+        bool  Flush();
     
         virtual void Run();
-    
-    private:
+        
         std::atomic<bool>   m_alive;
+
+        MemoryFile          m_file;
+        OutputBuffer        m_buf;
+        
+        Semaphore           m_sem;
     };
     
+    void _WriteSelectDB(int db, const QString& cmd, OutputBuffer& dst);
+    
     std::shared_ptr<AOFThread>  m_aofThread;
+    OutputBuffer                m_aofBuffer; // when rewrite, thread is stopped
+    int                         m_lastDb;
+    
+public:
+    static  pid_t               sm_aofPid;
 };
-
-extern pid_t  g_aofPid;
 
 
 #endif

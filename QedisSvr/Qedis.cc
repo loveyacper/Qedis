@@ -72,7 +72,7 @@ bool Qedis::_Init()
     QDBLoader  loader;
     loader.Load(g_qdbFile);
     
-    QAOFThread::Instance().Start();
+    QAOFThreadController::Instance().Start();
     
     return true;
 }
@@ -84,7 +84,7 @@ bool Qedis::_RunLogic()
     g_now.Now();
     TimerManager::Instance().UpdateTimers(g_now);
     
-    if (g_qdbPid != -1 || g_aofPid != -1)
+    if (g_qdbPid != -1 || QAOFThreadController::sm_aofPid != -1)
     {
         int    statloc;
 
@@ -100,7 +100,7 @@ bool Qedis::_RunLogic()
             {
                 QDBSaver::SaveDoneHandler(exitcode, bysignal);
             }
-            else if (pid == g_aofPid)
+            else if (pid == QAOFThreadController::sm_aofPid )
             {
                 INF << pid << " aof process success done.";
             }
@@ -121,7 +121,8 @@ bool Qedis::_RunLogic()
 
 void    Qedis::_Recycle()
 {
-    QAOFThread::Instance().Stop();
+    QAOFThreadController::Instance().Stop();
+    
     QStat::Output(PARSE_STATE);
     QStat::Output(PROCESS_STATE);
     QStat::Output(SEND_STATE);

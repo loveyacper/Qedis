@@ -42,6 +42,7 @@ QCommandHandler  flushall;
 QCommandHandler  client;
 QCommandHandler  debug;
 QCommandHandler  shutdown;
+QCommandHandler  bgrewriteaof;
 
 // string commands
 QCommandHandler  set;

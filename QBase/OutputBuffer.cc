@@ -21,7 +21,7 @@ OutputBuffer::~OutputBuffer()
 }
 
 
-void   OutputBuffer::AsyncWrite(const void* data, size_t len)
+void   OutputBuffer::Write(const void* data, size_t len)
 {
     if (m_backBytes > 0 || m_buffer.WritableSize() < len)
     {
@@ -40,7 +40,7 @@ void   OutputBuffer::AsyncWrite(const void* data, size_t len)
     assert(succ);
 }
 
-void   OutputBuffer::AsyncWrite(const BufferSequence& data)
+void   OutputBuffer::Write(const BufferSequence& data)
 {
     auto len = data.TotalBytes();
 

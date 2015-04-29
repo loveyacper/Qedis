@@ -292,7 +292,7 @@ void QClient::_HandlePacket(AttachedBuffer& buf)
     if (err == QError_ok && (info->attr & QAttr_write))
     {
         QMulti::Instance().NotifyDirty(m_params[1]);
-        QAOFFile::Instance().SaveCommand(m_params);
+        QAOFThreadController::Instance().SaveCommand(m_params, QSTORE.GetDB());
     }
     
     _Reset();
@@ -395,7 +395,7 @@ bool QClient::Exec()
         if (err == QError_ok && (info->attr & QAttr_write))
         {
             QMulti::Instance().NotifyDirty((*it)[1]);
-            QAOFFile::Instance().SaveCommand(*it);
+            QAOFThreadController::Instance().SaveCommand(*it, QSTORE.GetDB());
         }
     }
     

@@ -122,6 +122,7 @@ public:
     }
 
     int SelectDB(int dbno);
+    int GetDB() const;
   
     // Key operation
     bool DeleteKey(const QString& key);

@@ -30,6 +30,7 @@ const QCommandInfo QCommandTable::s_info[] =
     {"client",      QAttr_read,               -2,  &client },
     {"debug",       QAttr_read,               -2,  &debug},
     {"shutdown",    QAttr_read,                1,  &shutdown},
+    {"bgrewriteaof",QAttr_read,                1,  &bgrewriteaof},
     
     // string
     {"strlen",      QAttr_read,                2,  &strlen},

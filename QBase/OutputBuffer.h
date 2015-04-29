@@ -14,8 +14,8 @@ public:
     OutputBuffer(std::size_t  size = 1 * 1024 * 1024);
    ~OutputBuffer();
 
-    void        AsyncWrite(const void* data, std::size_t len);
-    void        AsyncWrite(const BufferSequence& data);
+    void        Write(const void* data, std::size_t len);
+    void        Write(const BufferSequence& data);
 
     void        ProcessBuffer(BufferSequence& data);
     void        Skip(std::size_t  size);

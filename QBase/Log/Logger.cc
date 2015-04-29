@@ -183,7 +183,7 @@ void Logger::Flush(enum LogLevel level)
     contents.buffers[2].iov_base = m_tmpBuffer;
     contents.buffers[2].iov_len  = m_pos;
 
-    m_buffer.AsyncWrite(contents);
+    m_buffer.Write(contents);
 
     _Reset();
 }
