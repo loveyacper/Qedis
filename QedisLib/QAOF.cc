@@ -14,11 +14,11 @@ const char* const g_aofFileName = "qedis_appendonly.aof";
 const char* const g_aofTmp = "qedis_appendonly.aof.tmp";
 
 
-/*
- when after fork(), the parent stop aof thread, which means
- the coming aof data will be write to the tmp buffer, not to
- aof file.
- */
+/*****************************************************
+ * when after fork(), the parent stop aof thread, which means
+ * the coming aof data will be write to the tmp buffer, not to
+ * aof file.
+ ****************************************************/
 
 template <typename DEST>
 static void  WriteBulkString(const char* str, size_t strLen, DEST& dst)
@@ -38,6 +38,13 @@ static void  WriteBulkString(const QString& str, DEST& dst)
     WriteBulkString(str.data(), str.size(), dst);
 }
 
+template <typename DEST>
+static void  WriteMultiBulkLong(long val, DEST& dst)
+{
+    char    tmp[32];
+    size_t  n = snprintf(tmp, sizeof tmp, "*%lu\n", val);
+    dst.Write(tmp, n);
+}
 
 template <typename DEST>
 static void  WriteBulkLong(long val, DEST& dst)
@@ -112,10 +119,7 @@ void   QAOFThreadController::Stop()
 template <typename DEST>
 static  void SaveCommand(const std::vector<QString>& params, DEST& dst)
 {
-    char    buf[32];
-    size_t  n = snprintf(buf, sizeof buf, "*%lu\n", params.size());
-    
-    dst.Write(buf, n);
+    WriteMultiBulkLong(params.size(), dst);
     
     for (size_t i = 0; i < params.size(); ++ i)
     {
@@ -123,22 +127,15 @@ static  void SaveCommand(const std::vector<QString>& params, DEST& dst)
     }
 }
 // main thread call this
-void   QAOFThreadController::_WriteSelectDB(int db,
-                                            const QString& cmd,
-                                            OutputBuffer& dst)
+void   QAOFThreadController::_WriteSelectDB(int db, OutputBuffer& dst)
 {
     if (db == m_lastDb)
         return;
 
     m_lastDb = db;
-
-    bool  isSelect = (cmd.size() == 6 &&
-                      memcmp(cmd.data(), "select", 6) == 0);
-    if (!isSelect)
-    {
-        WriteBulkString("select", 6, dst);
-        WriteBulkLong(db, dst);
-    }
+    
+    WriteBulkString("select", 6, dst);
+    WriteBulkLong(db, dst);
 }
 
 void   QAOFThreadController::SaveCommand(const std::vector<QString>& params, int db)
@@ -154,7 +151,7 @@ void   QAOFThreadController::SaveCommand(const std::vector<QString>& params, int
         dst = &m_aofBuffer;
     }
     
-    _WriteSelectDB(db, params[0], *dst);
+    _WriteSelectDB(db, *dst);
     ::SaveCommand(params, *dst);
 }
 
@@ -215,6 +212,50 @@ void  QAOFThreadController::Join()
     m_aofThread->m_sem.Wait();
 }
 
+static void SaveExpire(const QString& key, uint64_t absMs, MemoryFile& file)
+{
+    WriteBulkLong(3, file);
+    WriteBulkString("expire", 6, file);
+    WriteBulkString(key, file);
+    WriteBulkLong(absMs, file);
+}
+
+// child  save the db to tmp file
+static void SaveObject(const QString& key, const QObject& obj, MemoryFile& file);
+static void RewriteProcess()
+{
+    MemoryFile  file;
+    if (!file.Open(g_aofTmp, false))
+    {
+        perror("open tmp failed");
+        std::cerr << "open aof tmp failed\n";
+        exit(-1);
+    }
+
+    for (int dbno = 0; dbno < 16; ++ dbno)
+    {
+        QSTORE.SelectDB(dbno);
+        if (QSTORE.DBSize() == 0)
+            continue;
+        // select db;
+        WriteMultiBulkLong(2, file);
+        WriteBulkString("select", 6, file);
+        WriteBulkLong(dbno, file);
+
+        uint64_t  now = ::Now();
+        for (auto kv(QSTORE.begin()); kv != QSTORE.end(); ++ kv)
+        {
+            int64_t ttl = QSTORE.TTL(kv->first, now);
+            if (ttl == -2)
+                continue;
+
+            SaveObject(kv->first, kv->second, file);
+            if (ttl > 0)
+                SaveExpire(kv->first, ttl + now, file);
+        }
+    }
+}
+
 QError bgrewriteaof(const std::vector<QString>& params, UnboundedBuffer& reply)
 {
     if (QAOFThreadController::sm_aofPid != -1)
@@ -227,16 +268,8 @@ QError bgrewriteaof(const std::vector<QString>& params, UnboundedBuffer& reply)
         switch (QAOFThreadController::sm_aofPid)
         {
             case 0:
-            {
-                // child  save the db to tmp file
-                MemoryFile  file;
-                if (file.Open(g_aofTmp, false))
-                {
-                    std::cerr << "open aof tmp failed\n";
-                    exit(-1);
-                }
-            }
-                break;
+                RewriteProcess();
+                exit(0);
                 
             case -1:
                 ERR << "fork aof process failed, errno = " << errno;
@@ -247,20 +280,103 @@ QError bgrewriteaof(const std::vector<QString>& params, UnboundedBuffer& reply)
         }
     }
     
+    QAOFThreadController::Instance().Stop();
+    FormatOK(reply);
     return QError_ok;
 }
 
 static void  SaveStringObject(const QString& key, const QObject& obj, MemoryFile& file)
 {
+    WriteMultiBulkLong(3, file);
     WriteBulkString("set", 3, file);
     WriteBulkString(key, file);
     
-    const PSTRING& pstr = obj.CastString();
-    WriteBulkString(*pstr, file);
+    const PSTRING& str = obj.CastString();
+    if (obj.encoding == QEncode_raw)
+    {
+        WriteBulkString(*str, file);
+    }
+    else
+    {
+        intptr_t val = (intptr_t)str.get();
+        WriteBulkLong(val, file);
+    }
+}
+
+static void  SaveListObject(const QString& key, const QObject& obj, MemoryFile& file)
+{
+    const PLIST&  list = obj.CastList();
+    if (list->empty())
+        return;
+
+    WriteMultiBulkLong(list->size() + 2, file); // rpush listname + elems
+    WriteBulkString("rpush", 5, file);
+    WriteBulkString(key, file);
+
+    for (const auto& elem : *list)
+    {
+        WriteBulkString(elem, file);
+    }
+}
+
+static void  SaveSetObject(const QString& key, const QObject& obj, MemoryFile& file)
+{
+    const PSET& set = obj.CastSet();
+    if (set->empty())
+        return;
+
+    WriteMultiBulkLong(set->size() + 2, file); // sadd set_name + elems
+    WriteBulkString("sadd", 4, file);
+    WriteBulkString(key, file);
+
+    for (const auto& elem : *set)
+    {
+        WriteBulkString(elem, file);
+    }
+}
+
+static void  SaveZSetObject(const QString& key, const QObject& obj, MemoryFile& file)
+{
+    const PSSET& zset = obj.CastSortedSet();
+    if (zset->Size() == 0)
+        return;
+
+    WriteMultiBulkLong(2 * zset->Size() + 2, file); // zadd zset_name + (score + member)
+    WriteBulkString("zadd", 4, file);
+    WriteBulkString(key, file);
+
+    for (auto it(zset->begin()); it != zset->end(); ++ it)
+    {
+        const QString& member = it->first;
+        double score          = it->second;
+
+        char scoreStr[32];
+        int  len = Double2Str(scoreStr, sizeof scoreStr, score);
+
+        WriteBulkString(member, file);
+        WriteBulkString(scoreStr, len, file);
+    }
+}
+
+static void  SaveHashObject(const QString& key, const QObject& obj, MemoryFile& file)
+{
+    const PHASH& hash = obj.CastHash();
+    if (hash->empty())
+        return;
+
+    WriteMultiBulkLong(2* hash->size() + 2, file); // hmset hash_name + (key + value)
+    WriteBulkString("hmset", 5, file);
+    WriteBulkString(key, file);
+
+    for (const auto& pair : *hash)
+    {
+        WriteBulkString(pair.first, file);
+        WriteBulkString(pair.second, file);
+    }
 }
 
 
-void SaveObject(const QString& key, const QObject& obj, MemoryFile& file)
+static void SaveObject(const QString& key, const QObject& obj, MemoryFile& file)
 {
     // set key val
     switch (obj.type)
@@ -270,15 +386,19 @@ void SaveObject(const QString& key, const QObject& obj, MemoryFile& file)
             break;
             
         case QType_list:
+            SaveListObject(key, obj, file);
             break;
             
         case QType_set:
+            SaveSetObject(key, obj, file);
             break;
             
         case QType_sortedSet:
+            SaveZSetObject(key, obj, file);
             break;
             
         case QType_hash:
+            SaveHashObject(key, obj, file);
             break;
             
         default:

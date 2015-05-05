@@ -71,7 +71,7 @@ private:
         Semaphore           m_sem;
     };
     
-    void _WriteSelectDB(int db, const QString& cmd, OutputBuffer& dst);
+    void _WriteSelectDB(int db, OutputBuffer& dst);
     
     std::shared_ptr<AOFThread>  m_aofThread;
     OutputBuffer                m_aofBuffer; // when rewrite, thread is stopped
