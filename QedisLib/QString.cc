@@ -142,15 +142,16 @@ QError  msetnx(const vector<QString>& params, UnboundedBuffer& reply)
 
 QError  setex(const vector<QString>& params, UnboundedBuffer& reply)
 {
-    long    seconds;
+    long  seconds;
     if (!Strtol(params[2].c_str(), params[2].size(), &seconds))
     {
         ReplyError(QError_nan, reply);
         return QError_nan;
     }
-
-    QSTORE.SetValue(params[1], CreateStringObject(params[3]));
-    // TODO set expire
+    
+    const auto& key = params[1];
+    QSTORE.SetValue(key, CreateStringObject(params[3]));
+    QSTORE.SetExpire(key, ::Now() + seconds * 1000);
 
     FormatOK(reply);
     return  QError_ok;

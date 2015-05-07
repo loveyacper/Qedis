@@ -51,37 +51,38 @@ void QMulti::Discard(QClient* client)
 void  QMulti::NotifyDirty(const QString& key)
 {
     INF << "Try NotifyDirty " << key.c_str();
-    WatchedClients::iterator it = m_clients.find(key);
-    if (it != m_clients.end())
+    auto it = m_clients.find(key);
+    if (it == m_clients.end())
+        return;
+    
+    Clients& cls = it->second;
+    for (auto itCli(cls.begin());
+              itCli != cls.end();
+         )
     {
-        Clients& cls = it->second;
-        for (Clients::iterator itCli(cls.begin());
-             itCli != cls.end();  )
+        auto client(itCli->lock());
+        if (!client)
         {
-            std::shared_ptr<QClient>  client(itCli->lock());
-            if (!client)
+            WRN << "erase not exist client ";
+            cls.erase(itCli ++);
+        }
+        else
+        {
+            if (!client->NotifyDirty(key))
             {
-                WRN << "erase not exist client ";
+                WRN << "erase dirty client ";
                 cls.erase(itCli ++);
             }
             else
             {
-                if (!client->NotifyDirty(key))
-                {
-                    WRN << "erase dirty client ";
-                    cls.erase(itCli ++);
-                }
-                else
-                {
-                    ++ itCli;
-                }
+                ++ itCli;
             }
         }
+    }
         
-        if (cls.empty())
-        {
-            m_clients.erase(it);
-        }
+    if (cls.empty())
+    {
+        m_clients.erase(it);
     }
 }
 

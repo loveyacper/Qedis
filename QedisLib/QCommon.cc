@@ -188,6 +188,10 @@ size_t  FormatSingle(const char* str, size_t len, UnboundedBuffer& reply)
     return reply.ReadableSize() - oldSize;
 }
 
+size_t  FormatSingle(const QString& str, UnboundedBuffer& reply)
+{
+    return  FormatSingle(str.c_str(), str.size(), reply);
+}
 
 size_t  FormatBulk(const char* str, size_t len, UnboundedBuffer& reply)
 {
@@ -206,6 +210,11 @@ size_t  FormatBulk(const char* str, size_t len, UnboundedBuffer& reply)
     reply.PushData(CRLF, 2);
     
     return reply.ReadableSize() - oldSize;
+}
+
+size_t  FormatBulk(const QString& str, UnboundedBuffer& reply)
+{
+    return  FormatBulk(str.c_str(), str.size(), reply);
 }
 
 size_t  PreFormatMultiBulk(size_t nBulk, UnboundedBuffer& reply)

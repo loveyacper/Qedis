@@ -62,7 +62,7 @@ QError  bgsave(const vector<QString>& params, UnboundedBuffer& reply)
     {
         {
         QDBSaver  qdb;
-        qdb.Save();
+        qdb.Save(g_qdbFile);
         std::cerr << "child save rdb\n";
         }
         exit(0);
@@ -85,7 +85,7 @@ QError  save(const vector<QString>& params, UnboundedBuffer& reply)
     assert (params[0] == "save");
     
     QDBSaver  qdb;
-    qdb.Save();
+    qdb.Save(g_qdbFile);
     g_lastQDBSave = time(NULL);
 
     FormatOK(reply);
@@ -112,8 +112,7 @@ QError  client(const vector<QString>& params, UnboundedBuffer& reply)
         if (params.size() != 2)
             ReplyError(err = QError_param, reply);
         else
-            FormatBulk(QClient::Current()->GetName().c_str(),
-                       QClient::Current()->GetName().size(),
+            FormatBulk(QClient::Current()->GetName(),
                        reply);
     }
     else if (params[1] == "setname")
@@ -156,7 +155,6 @@ static int Suicide()
 
 QError  debug(const vector<QString>& params, UnboundedBuffer& reply)
 {
-    // SEGFAULT   OBJECT
     assert (params[0] == "debug");
     
     QError err = QError_ok;
@@ -179,7 +177,9 @@ QError  debug(const vector<QString>& params, UnboundedBuffer& reply)
         {
             // ref count,  encoding
             char buf[512];
-            int len = snprintf(buf, sizeof buf, "ref count:%d, encoding:%s", obj->value.use_count(), EncodingStringInfo(obj->encoding));
+            int  len = snprintf(buf, sizeof buf, "ref count:%ld, encoding:%s",
+                                obj->value.use_count(),
+                                EncodingStringInfo(obj->encoding));
             FormatBulk(buf, len, reply);
         }
     }

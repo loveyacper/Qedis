@@ -153,8 +153,8 @@ QError  smembers(const vector<QString>& params, UnboundedBuffer& reply)
     const PSET& set = value->CastSet();
 
     PreFormatMultiBulk(set->size(), reply);
-    for (QSet::const_iterator it(set->begin()); it != set->end(); ++ it)
-        FormatBulk(it->c_str(), it->size(), reply);
+    for (const auto& member : *set)
+        FormatBulk(member, reply);
 
     return   QError_ok;
 }
@@ -304,8 +304,8 @@ QError  sdiffstore(const vector<QString>& params, UnboundedBuffer& reply)
     _set_operation(params, 2, *res, SetOperation_diff);
 
     PreFormatMultiBulk(res->size(), reply);
-    for (QSet::const_iterator it(res->begin()); it != res->end(); ++ it)
-        FormatBulk(it->c_str(), it->size(), reply);
+    for (const auto& elem : *res)
+        FormatBulk(elem, reply);
 
     QObject value(QType_set);
     value.value.reset(res);
@@ -320,8 +320,8 @@ QError  sdiff(const vector<QString>& params, UnboundedBuffer& reply)
     _set_operation(params, 1, res, SetOperation_diff);
     
     PreFormatMultiBulk(res.size(), reply);
-    for (QSet::const_iterator it(res.begin()); it != res.end(); ++ it)
-        FormatBulk(it->c_str(), it->size(), reply);
+    for (const auto& elem : res)
+        FormatBulk(elem, reply);
     
     return QError_ok;
 }
@@ -334,8 +334,8 @@ QError  sinter(const vector<QString>& params, UnboundedBuffer& reply)
     
     
     PreFormatMultiBulk(res.size(), reply);
-    for (QSet::const_iterator it(res.begin()); it != res.end(); ++ it)
-        FormatBulk(it->c_str(), it->size(), reply);
+    for (const auto& elem : res)
+        FormatBulk(elem, reply);
     
     return QError_ok;
 }
@@ -346,8 +346,8 @@ QError  sinterstore(const vector<QString>& params, UnboundedBuffer& reply)
     _set_operation(params, 2, *res, SetOperation_inter);
     
     PreFormatMultiBulk(res->size(), reply);
-    for (QSet::const_iterator it(res->begin()); it != res->end(); ++ it)
-        FormatBulk(it->c_str(), it->size(), reply);
+    for (const auto& elem : *res)
+        FormatBulk(elem, reply);
 
     QObject  value(QType_set);
     value.value.reset(res);
@@ -363,8 +363,8 @@ QError  sunion(const vector<QString>& params, UnboundedBuffer& reply)
     _set_operation(params, 1, res, SetOperation_union);
     
     PreFormatMultiBulk(res.size(), reply);
-    for (QSet::const_iterator it(res.begin()); it != res.end(); ++ it)
-        FormatBulk(it->c_str(), it->size(), reply);
+    for (const auto& elem : res)
+        FormatBulk(elem, reply);
     
     return QError_ok;
 }
@@ -375,8 +375,8 @@ QError  sunionstore(const vector<QString>& params, UnboundedBuffer& reply)
     _set_operation(params, 2, *res, SetOperation_union);
     
     PreFormatMultiBulk(res->size(), reply);
-    for (QSet::const_iterator it(res->begin()); it != res->end(); ++ it)
-        FormatBulk(it->c_str(), it->size(), reply);
+    for (const auto& elem : *res)
+        FormatBulk(elem, reply);
     
     QObject  value(QType_set);
     value.value.reset(res);

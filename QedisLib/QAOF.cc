@@ -55,7 +55,7 @@ static void  WriteBulkLong(long val, DEST& dst)
     WriteBulkString(tmp, n, dst);
 }
 
-void   QAOFThreadController::SaveDoneHandler(int exitcode, int bysignal)
+void   QAOFThreadController::AofRewriteDoneHandler(int exitcode, int bysignal)
 {
     if (exitcode == 0 && bysignal == 0)
     {

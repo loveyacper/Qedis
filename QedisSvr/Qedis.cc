@@ -103,7 +103,7 @@ bool Qedis::_RunLogic()
             else if (pid == QAOFThreadController::sm_aofPid )
             {
                 INF << pid << " aof process success done.";
-                QAOFThreadController::SaveDoneHandler(exitcode, bysignal);
+                QAOFThreadController::AofRewriteDoneHandler(exitcode, bysignal);
             }
             else
             {

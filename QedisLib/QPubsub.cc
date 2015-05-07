@@ -16,7 +16,7 @@ size_t QPubsub::Subscribe(QClient* client, const QString& channel)
 {
     if (client && client->Subscribe(channel))
     {
-        ChannelClients::iterator it(m_channels.find(channel));
+        auto it(m_channels.find(channel));
         if (it == m_channels.end())
             it = m_channels.insert(ChannelClients::value_type(channel, Clients())).first;
 
@@ -35,7 +35,7 @@ std::size_t QPubsub::UnSubscribe(QClient* client, const QString& channel)
 {
     if (client && client->UnSubscribe(channel))
     {
-        ChannelClients::iterator it(m_channels.find(channel));
+        auto it(m_channels.find(channel));
         assert (it != m_channels.end());
 
         Clients& clientSet = it->second;
@@ -58,11 +58,9 @@ std::size_t QPubsub::UnSubscribeAll(QClient* client)
 
     std::size_t  n = 0;
     const auto& channels = client->GetChannels();
-    for (auto it(channels.begin());
-              it != channels.end();
-              ++ it)
+    for (const auto& channel : channels)
     {
-        n += UnSubscribe(client, *it);
+        n += UnSubscribe(client, channel);
     }
 
     return n;
@@ -72,7 +70,7 @@ size_t QPubsub::PSubscribe(QClient* client, const QString& channel)
 {
     if (client && client->PSubscribe(channel))
     {
-        ChannelClients::iterator it(m_patternChannels.find(channel));
+        auto it(m_patternChannels.find(channel));
         if (it == m_patternChannels.end())
             it = m_patternChannels.insert(ChannelClients::value_type(channel, Clients())).first;
 
@@ -91,7 +89,7 @@ std::size_t QPubsub::PUnSubscribe(QClient* client, const QString& channel)
 {
     if (client && client->PUnSubscribe(channel))
     {
-        ChannelClients::iterator it(m_patternChannels.find(channel));
+        auto  it(m_patternChannels.find(channel));
         assert (it != m_patternChannels.end());
 
         Clients& clientSet = it->second;
@@ -127,15 +125,15 @@ std::size_t QPubsub::PublishMsg(const QString& channel, const QString& msg)
 {
     std::size_t n = 0;
 
-    ChannelClients::iterator it(m_channels.find(channel));
+    auto it(m_channels.find(channel));
     if (it != m_channels.end())
     {
         Clients&  clientSet = it->second;
-        for (Clients::iterator itCli(clientSet.begin());
-                               itCli != clientSet.end();
+        for (auto  itCli(clientSet.begin());
+                   itCli != clientSet.end();
             )
         {
-            std::shared_ptr<QClient>  cli = itCli->lock();
+            auto cli = itCli->lock();
             if (!cli)
             {
                 clientSet.erase(itCli ++);
@@ -149,8 +147,8 @@ std::size_t QPubsub::PublishMsg(const QString& channel, const QString& msg)
                 UnboundedBuffer   reply;
                 PreFormatMultiBulk(3, reply);
                 FormatSingle("message", 7, reply);
-                FormatSingle(channel.c_str(), channel.size(), reply);
-                FormatSingle(msg.c_str(), msg.size(), reply);
+                FormatSingle(channel, reply);
+                FormatSingle(msg, reply);
                 cli->SendPacket(reply.ReadAddr(), reply.ReadableSize());
 
                 ++ itCli;
@@ -160,19 +158,17 @@ std::size_t QPubsub::PublishMsg(const QString& channel, const QString& msg)
     }
 
     // TODO fuck me
-    for (ChannelClients::iterator it(m_patternChannels.begin());
-            it != m_patternChannels.end();
-            ++ it)
+    for (auto& pattern : m_patternChannels)
     {
-        if (glob_match(it->first, channel))
+        if (glob_match(pattern.first, channel))
         {
-            LOG_INF(g_log) << channel.c_str() << " match " << it->first.c_str();
-            Clients&  clientSet = it->second;
-            for (Clients::iterator itCli(clientSet.begin());
-                                   itCli != clientSet.end();
+            LOG_INF(g_log) << channel.c_str() << " match " << pattern.first.c_str();
+            Clients&  clientSet = pattern.second;
+            for (auto itCli(clientSet.begin());
+                      itCli != clientSet.end();
                 )
             {
-                std::shared_ptr<QClient>  cli = itCli->lock();
+                auto cli = itCli->lock();
                 if (!cli)
                 {
                     clientSet.erase(itCli ++);
@@ -186,9 +182,9 @@ std::size_t QPubsub::PublishMsg(const QString& channel, const QString& msg)
                     UnboundedBuffer   reply;
                     PreFormatMultiBulk(4, reply);
                     FormatSingle("pmessage", 8, reply);
-                    FormatSingle(it->first.c_str(), it->first.size(), reply);
-                    FormatSingle(channel.c_str(), channel.size(), reply);
-                    FormatSingle(msg.c_str(), msg.size(), reply);
+                    FormatSingle(pattern.first, reply);
+                    FormatSingle(channel, reply);
+                    FormatSingle(msg, reply);
                     cli->SendPacket(reply.ReadAddr(), reply.ReadableSize());
 
                     ++ itCli;
@@ -209,7 +205,7 @@ void QPubsub::RecycleClients(QString& startChannel, QString& startPattern)
 
 void QPubsub::_RecycleClients(ChannelClients& channels, QString& start)
 {
-    ChannelClients::iterator it(start.empty() ? channels.begin() : channels.find(start));
+    auto it(start.empty() ? channels.begin() : channels.find(start));
     if (it == channels.end())
         it = channels.begin();
 
@@ -217,9 +213,9 @@ void QPubsub::_RecycleClients(ChannelClients& channels, QString& start)
     while (it != channels.end() && n < 20)
     {
         Clients& cls = it->second;
-        for (Clients::iterator itCli(cls.begin());
-                itCli != cls.end();
-                )
+        for (auto itCli(cls.begin());
+                  itCli != cls.end();
+            )
         {
             if (itCli->expired())
             {
@@ -259,6 +255,7 @@ public:
 private:
     QString  m_startChannel;
     QString  m_startPattern;
+
     bool    _OnTimer()
     {
         QPubsub::Instance().RecycleClients(m_startChannel, m_startPattern);
@@ -275,13 +272,11 @@ void QPubsub::PubsubChannels(vector<QString>& res, const char* pattern) const
 {
     res.clear();
 
-    for (ChannelClients::const_iterator it(m_channels.begin());
-         it != m_channels.end();
-         ++ it)
+    for (const auto& elem : m_channels)
     {
-        if (!pattern || glob_match(pattern, it->first))
+        if (!pattern || glob_match(pattern, elem.first))
         {
-            res.push_back(it->first);
+            res.push_back(elem.first);
         }
     }
 }
@@ -289,7 +284,7 @@ void QPubsub::PubsubChannels(vector<QString>& res, const char* pattern) const
 
 size_t  QPubsub::PubsubNumsub(const QString& channel) const
 {
-    ChannelClients::const_iterator it = m_channels.find(channel);
+    auto it = m_channels.find(channel);
     
     if (it != m_channels.end())
         return it->second.size();
@@ -300,10 +295,10 @@ size_t  QPubsub::PubsubNumsub(const QString& channel) const
 size_t QPubsub::PubsubNumpat() const
 {
     std::size_t n = 0;
-    ChannelClients::const_iterator it(m_patternChannels.begin());
-    for (; it != m_patternChannels.end(); ++ it)
+    
+    for (const auto& elem : m_patternChannels)
     {
-        n += it->second.size();
+        n += elem.second.size();
     }
     
     return n;
@@ -320,7 +315,7 @@ QError  subscribe(const vector<QString>& params, UnboundedBuffer& reply)
         {
             PreFormatMultiBulk(3, reply);
             FormatSingle("subscribe", 9, reply);
-            FormatSingle(params[i].c_str(),  params[i].size(), reply);
+            FormatSingle(params[i], reply);
             FormatInt(client->ChannelCount(), reply);
 
             SocketAddr peer;
@@ -342,7 +337,7 @@ QError  psubscribe(const vector<QString>& params, UnboundedBuffer& reply)
         {
             PreFormatMultiBulk(3, reply);
             FormatSingle("psubscribe", 9, reply);
-            FormatSingle(params[i].c_str(),  params[i].size(), reply);
+            FormatSingle(params[i], reply);
             FormatInt(client->PatternChannelCount(), reply);
 
             SocketAddr peer;
@@ -362,11 +357,9 @@ QError  unsubscribe(const vector<QString>& params, UnboundedBuffer& reply)
     if (params.size() == 1)
     {
         const auto& channels = client->GetChannels();
-        for (auto it(channels.begin());
-                  it != channels.end();
-                  ++ it)
+        for (const auto& channel : channels)
         {
-            FormatSingle(it->c_str(), it->size(), reply);
+            FormatSingle(channel, reply);
         }
         
         QPubsub::Instance().UnSubscribeAll(client);
@@ -389,11 +382,9 @@ QError  unsubscribe(const vector<QString>& params, UnboundedBuffer& reply)
         }
 
         PreFormatMultiBulk(channels.size(), reply);
-        for (set<QString>::const_iterator it(channels.begin());
-                it != channels.end();
-                ++ it)
+        for (const auto& channel : channels)
         {
-            FormatSingle(it->c_str(), it->size(), reply);
+            FormatSingle(channel, reply);
         }
     }
 
@@ -409,7 +400,7 @@ QError  punsubscribe(const vector<QString>& params, UnboundedBuffer& reply)
         const auto& channels = client->GetPatternChannels();
         for (const auto& channel : channels)
         {
-            FormatSingle(channel.c_str(), channel.size(), reply);
+            FormatSingle(channel, reply);
         }
         
         QPubsub::Instance().PUnSubscribeAll(client);
@@ -432,11 +423,9 @@ QError  punsubscribe(const vector<QString>& params, UnboundedBuffer& reply)
         }
 
         PreFormatMultiBulk(channels.size(), reply);
-        for (set<QString>::const_iterator it(channels.begin());
-                it != channels.end();
-                ++ it)
+        for (const auto& channel : channels)
         {
-            FormatSingle(it->c_str(), it->size(), reply);
+            FormatSingle(channel, reply);
         }
     }
 
@@ -465,11 +454,9 @@ QError  pubsub(const vector<QString>& params, UnboundedBuffer& reply)
         vector<QString> res;
         QPubsub::Instance().PubsubChannels(res, params.size() == 3 ? params[2].c_str() : 0);
         PreFormatMultiBulk(res.size(), reply);
-        for (vector<QString>::const_iterator it(res.begin());
-             it != res.end();
-             ++ it)
+        for (const auto& channel : res)
         {
-            FormatSingle(it->c_str(), it->size(), reply);
+            FormatSingle(channel, reply);
         }
     }
     else if (params[1] == "numsub")
@@ -478,7 +465,7 @@ QError  pubsub(const vector<QString>& params, UnboundedBuffer& reply)
         for (size_t i = 2; i < params.size(); ++ i)
         {
             size_t n = QPubsub::Instance().PubsubNumsub(params[i]);
-            FormatSingle(params[i].c_str(), params[i].size(), reply);
+            FormatSingle(params[i], reply);
             FormatInt(n, reply);
         }
     }

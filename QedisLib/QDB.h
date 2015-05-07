@@ -8,7 +8,7 @@ extern const char* const g_qdbFile;
 class QDBSaver
 {
 public:
-    void    Save();
+    void    Save(const char* qdbFile);
     void    SaveType(const QObject& obj);
     void    SaveKey(const QString& key);
     void    SaveObject(const QObject& obj);

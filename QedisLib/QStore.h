@@ -143,6 +143,13 @@ public:
     bool    SetValueIfNotExist(const QString& key, const QObject& value);
 
     // for expire key
+    enum ExpireResult : std::int8_t
+    {
+        notExpire=  0,
+        persist  = -1,
+        expired  = -2,
+        notExist = -2,
+    };
     void    SetExpire(const QString& key, uint64_t when);
     int64_t TTL(const QString& key, uint64_t now);
     bool    ClearExpire(const QString& key);
@@ -166,12 +173,6 @@ public:
     void    InitBlockedTimer();
     
 private:
-    enum class ExpireResult : std::int8_t
-    {
-        notExpire=  0,
-        persist  = -1,
-        expired  = -2,
-    };
     ExpireResult    _ExpireIfNeed(const QString& key, uint64_t now);
     
     class ExpiresDB

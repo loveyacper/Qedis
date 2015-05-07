@@ -16,16 +16,15 @@ int64_t  QStore::ExpiresDB::TTL(const QString& key, uint64_t now)
 {
     if (!QSTORE.ExistsKey(key))
     {
-        return -2; // not exist key
+        return ExpireResult::notExist; // not exist key
     }
 
-    switch (ExpireIfNeed(key, now))
+    ExpireResult ret = ExpireIfNeed(key, now);
+    switch (ret)
     {
         case ExpireResult::expired:
-            return -2;
-            
         case ExpireResult::persist:
-            return -1;
+            return ret;
             
         default:
             break;

@@ -36,7 +36,7 @@ public:
      savehash;  // hset key key value
      static void  Rewrite();
      */
-    static void  SaveDoneHandler(int exitcode, int bysignal);
+    static void  AofRewriteDoneHandler(int exitcode, int bysignal);
     
 private:
     QAOFThreadController() : m_lastDb(-1) {}

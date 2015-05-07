@@ -3,6 +3,7 @@
 #include "Logger.h"
 #include <iostream>
 #include <sstream>
+#include <unistd.h>
 
 extern "C"
 {
@@ -49,13 +50,16 @@ static const int8_t  kEnc32Bits = 2;
 static const int8_t  kEncLZF    = 3;
 
 const char* const g_qdbFile = "dump.qdb.rdb";
-// not support expire, TODO
-void  QDBSaver::Save()
+
+void  QDBSaver::Save(const char* qdbFile)
 {
-    if (!m_qdb.Open(g_qdbFile, false))
-        assert (false); //exit(- __LINE__);
+    char     tmpFile[64] = "";
+    snprintf(tmpFile, sizeof tmpFile, "tmp_qdb_file_%d", getpid());
     
-    char buf[16];
+    if (!m_qdb.Open(tmpFile, false))
+        assert (false);
+    
+    char     buf[16];
     snprintf(buf, sizeof buf, "REDIS%04d", kQDBVersion);
     m_qdb.Write(buf, 9);
 
@@ -69,24 +73,24 @@ void  QDBSaver::Save()
         SaveLength(dbno);
         
         uint64_t now = ::Now();
-        for (auto kv(QSTORE.begin()); kv != QSTORE.end(); ++ kv)
+        for (const auto& kv : QSTORE)
         {
-            int64_t ttl = QSTORE.TTL(kv->first, now);
+            int64_t ttl = QSTORE.TTL(kv.first, now);
             if (ttl > 0)
             {
-                m_qdb.Write(&kExpireMs, 1);
-                
                 ttl += now;
+
+                m_qdb.Write(&kExpireMs, 1);
                 m_qdb.Write(&ttl, sizeof ttl);
-                std::cerr << now << " save ttl key " << kv->first << " time " << ttl << std::endl;
             }
-            else if (ttl == -2)
+            else if (ttl == QStore::ExpireResult::expired)
             {
                 continue;
             }
-            SaveType(kv->second);
-            SaveKey(kv->first);
-            SaveObject(kv->second);
+
+            SaveType(kv.second);
+            SaveKey(kv.first);
+            SaveObject(kv.second);
         }
     }
 
@@ -94,13 +98,19 @@ void  QDBSaver::Save()
     
     // crc 8 bytes
     MemoryFile  file;
-    file.OpenForRead(g_qdbFile);
+    file.OpenForRead(tmpFile);
     
-    size_t  len = m_qdb.Offset();
-    const char* data = file.Read(len);
+    auto  len  = m_qdb.Offset();
+    auto  data = file.Read(len);
     
     const uint64_t  crc = crc64(0, (const unsigned char* )data, len);
     m_qdb.Write(&crc, sizeof crc);
+    
+    if (::rename(tmpFile, g_qdbFile) != 0)
+    {
+        std::cerr << "rename error " << errno << std::endl;
+        assert (false);
+    }
 }
 
 void QDBSaver::SaveType(const QObject& obj)
