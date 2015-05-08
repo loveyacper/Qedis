@@ -64,7 +64,6 @@ void   QAOFThreadController::AofRewriteDoneHandler(int exitcode, int bysignal)
         
         QAOFThreadController::Instance().Join();
         ::rename(g_aofTmp, g_aofFileName);
-        // rename file;
         QAOFThreadController::Instance().Start();
     }
     else
@@ -237,7 +236,7 @@ static void RewriteProcess()
         QSTORE.SelectDB(dbno);
         if (QSTORE.DBSize() == 0)
             continue;
-        // select db;
+        // select db
         WriteMultiBulkLong(2, file);
         WriteBulkString("select", 6, file);
         WriteBulkLong(dbno, file);
@@ -378,7 +377,6 @@ static void  SaveHashObject(const QString& key, const QObject& obj, MemoryFile& 
 
 static void SaveObject(const QString& key, const QObject& obj, MemoryFile& file)
 {
-    // set key val
     switch (obj.type)
     {
         case QType_string:
@@ -461,6 +459,9 @@ QAOFLoader::QAOFLoader()
 
 bool  QAOFLoader::Load(const char* name)
 {
+    _Reset();
+
+    // load file to memory
     MemoryFile  file;
     if (!file.OpenForRead(name))
         return  false;
@@ -468,17 +469,16 @@ bool  QAOFLoader::Load(const char* name)
     size_t  maxLen = std::numeric_limits<size_t>::max();
     const char* content = file.Read(maxLen);
 
-    int   paramLen = 0;
-
+    // extract commands from file content
     const char* const end = content + maxLen;
     while (content < end)
     {
         switch (m_state)
         {
             case State::Init:
-                m_state = State::Multi;
                 m_cmds.resize(m_cmds.size() + 1);
 
+                m_state = State::Multi;
                 break;
 
             case Multi:
@@ -491,51 +491,45 @@ bool  QAOFLoader::Load(const char* name)
                     return false;
                 }
 
-                INF << "multi " << m_multi;
                 m_state = State::Param;
-
                 break;
 
             case Param:
                 assert (*content == '$');
                 ++ content;
-                
-                if (!GetIntUntilLN(content, end - content, paramLen))
-                {
-                    ERR << "get param len failed";
-                    return false;
-                }
-
-                if (content + paramLen > end)
-                {
-                    ERR << "can not get param, len " << paramLen;
-                    return false;
-                }
 
                 {
-                auto&  params = m_cmds.back();
-                params.push_back(QString(content, paramLen));
-                content += paramLen + 1;
-                if (params.size() == m_multi)
-                    m_state = Ready;
+                    int   paramLen = 0;
+                    if (!GetIntUntilLN(content, end - content, paramLen))
+                    {
+                        ERR << "get param len failed";
+                        return false;
+                    }
 
-                INF << "get param, " << params.back();
+                    if (content + paramLen > end)
+                    {
+                        ERR << "can not get param, len " << paramLen;
+                        return false;
+                    }
+
+                    auto&  params = m_cmds.back();
+                    params.push_back(QString(content, paramLen));
+                    content += paramLen + 1;
+
+                    if (params.size() == m_multi)
+                        m_state = Ready;
                 }
 
                 break;
 
             case Ready:
                 m_state = State::Init;
-                for (const auto& param : m_cmds.back())
-                    INF << "param : " << param;
                 break;
         }
     }
 
     if (m_state == State::Ready)
         m_state = State::AllReady;
-    else
-        m_cmds.pop_back();
 
     return m_state == State::AllReady;
 }
