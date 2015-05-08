@@ -24,11 +24,11 @@ template <typename DEST>
 static void  WriteBulkString(const char* str, size_t strLen, DEST& dst)
 {
     char    tmp[32];
-    size_t  n = snprintf(tmp, sizeof tmp, "$%lu\n", strLen);
+    size_t  n = snprintf(tmp, sizeof tmp, "$%lu\r\n", strLen);
     
     dst.Write(tmp, n);
     dst.Write(str, strLen);
-    dst.Write("\n", 1);
+    dst.Write("\r\n", 2);
 }
 
 
@@ -42,7 +42,7 @@ template <typename DEST>
 static void  WriteMultiBulkLong(long val, DEST& dst)
 {
     char    tmp[32];
-    size_t  n = snprintf(tmp, sizeof tmp, "*%lu\n", val);
+    size_t  n = snprintf(tmp, sizeof tmp, "*%lu\r\n", val);
     dst.Write(tmp, n);
 }
 
@@ -241,16 +241,16 @@ static void RewriteProcess()
         WriteBulkString("select", 6, file);
         WriteBulkLong(dbno, file);
 
-        uint64_t  now = ::Now();
-        for (auto kv(QSTORE.begin()); kv != QSTORE.end(); ++ kv)
+        const auto now = ::Now();
+        for (const auto& kv : QSTORE)
         {
-            int64_t ttl = QSTORE.TTL(kv->first, now);
-            if (ttl == -2)
+            int64_t ttl = QSTORE.TTL(kv.first, now);
+            if (ttl == QStore::ExpireResult::expired)
                 continue;
 
-            SaveObject(kv->first, kv->second, file);
+            SaveObject(kv.first, kv.second, file);
             if (ttl > 0)
-                SaveExpire(kv->first, ttl + now, file);
+                SaveExpire(kv.first, ttl + now, file);
         }
     }
 }
@@ -344,10 +344,10 @@ static void  SaveZSetObject(const QString& key, const QObject& obj, MemoryFile& 
     WriteBulkString("zadd", 4, file);
     WriteBulkString(key, file);
 
-    for (auto it(zset->begin()); it != zset->end(); ++ it)
+    for (const auto& pair : *zset)
     {
-        const QString& member = it->first;
-        double score          = it->second;
+        const QString& member = pair.first;
+        double score          = pair.second;
 
         char scoreStr[32];
         int  len = Double2Str(scoreStr, sizeof scoreStr, score);
@@ -405,52 +405,7 @@ static void SaveObject(const QString& key, const QObject& obj, MemoryFile& file)
     }
 }
 
-static bool GetIntUntilLN(const char*& ptr, size_t len, int& outVal)
-{
-    if (len < 2)
-        return false;
 
-    int  offset  = 0;
-    bool negtive = false;
-    if (!isdigit(ptr[0]))
-    {
-        if (ptr[0] == '-')
-        {
-            negtive = true;
-            ++ offset;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    for (outVal = 0; offset < len; ++ offset)
-    {
-        if (isdigit(ptr[offset]))
-        {
-            outVal *= 10;
-            outVal += ptr[offset] - '0';
-        }
-        else
-        {
-            if (ptr[offset] == '\n')
-            {
-                ptr += offset + 1;
-                if (negtive)
-                    outVal *= -1;
-
-                return true;
-            }
-            else
-            {
-                break;
-            }
-        }
-    }
-
-    return false;
-}
 
 QAOFLoader::QAOFLoader()
 {
@@ -485,7 +440,7 @@ bool  QAOFLoader::Load(const char* name)
                 assert (*content == '*');
                 ++ content;
                 
-                if (!GetIntUntilLN(content, end - content, m_multi))
+                if (QParseInt::ok != GetIntUntilCRLF(content, end - content, m_multi))
                 {
                     ERR << "get multi failed";
                     return false;
@@ -500,7 +455,7 @@ bool  QAOFLoader::Load(const char* name)
 
                 {
                     int   paramLen = 0;
-                    if (!GetIntUntilLN(content, end - content, paramLen))
+                    if (QParseInt::ok != GetIntUntilCRLF(content, end - content, paramLen))
                     {
                         ERR << "get param len failed";
                         return false;

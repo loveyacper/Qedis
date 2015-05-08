@@ -13,44 +13,6 @@
 // $3   CR LF
 // 345 CR LF
 
-// temp
-enum class QParseInt : int8_t
-{
-    ok,
-    waitCrlf,
-    error,
-};
-
-static inline QParseInt  GetIntUntilCRLF(const char*& ptr, std::size_t nBytes, int& val)
-{
-    assert (ptr && nBytes);
-
-    val = 0;
-    std::size_t i = 0;
-    for (i = 0; i < nBytes; ++ i)
-    {
-        if (isdigit(ptr[i]))
-        {
-            val *= 10;
-            val += ptr[i] - '0';
-        }
-        else
-        {
-            if (i == 0 || ptr[i] != '\r' || (i+1 < nBytes && ptr[i+1] != '\n'))
-                return QParseInt::error;
-
-            if (i+1 == nBytes)
-                return QParseInt::waitCrlf;
-
-            break;
-        }
-    }
-
-    ptr += i;
-    return QParseInt::ok;
-}
-
-
 QClient*  QClient::s_pCurrentClient = 0;
 
 void QClient::_ProcessInlineCmd(const char* buf, size_t bytes, BODY_LENGTH_T* bodyLen)

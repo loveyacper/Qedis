@@ -281,3 +281,46 @@ size_t Format0(UnboundedBuffer& reply)
     return reply.ReadableSize() - oldSize;
 }
 
+QParseInt  GetIntUntilCRLF(const char*& ptr, std::size_t nBytes, int& val)
+{
+    if (nBytes < 3)
+        return QParseInt::error;
+    
+    std::size_t i = 0;
+    bool negtive = false;
+    if (ptr[0] == '-')
+    {
+        negtive = true;
+        ++ i;
+    }
+    else if (ptr[0] == '+')
+    {
+        ++ i;
+    }
+    
+    val = 0;
+    for (; i < nBytes; ++ i)
+    {
+        if (isdigit(ptr[i]))
+        {
+            val *= 10;
+            val += ptr[i] - '0';
+        }
+        else
+        {
+            if (ptr[i] != '\r' || (i+1 < nBytes && ptr[i+1] != '\n'))
+                return QParseInt::error;
+            
+            if (i + 1 == nBytes)
+                return QParseInt::waitCrlf;
+            
+            break;
+        }
+    }
+    
+    if (negtive)
+        val *= -1;
+    
+    ptr += i;
+    return QParseInt::ok;
+}

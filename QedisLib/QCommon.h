@@ -168,5 +168,15 @@ inline void AdjustIndex(long& start, long& end, size_t  size)
     if (end >= static_cast<long>(size))  end = size - 1;
 }
 
+
+enum class QParseInt : int8_t
+{
+    ok,
+    waitCrlf,
+    error,
+};
+
+QParseInt  GetIntUntilCRLF(const char*& ptr, std::size_t nBytes, int& val);
+
 #endif
 
