@@ -133,6 +133,7 @@ void   QAOFThreadController::_WriteSelectDB(int db, OutputBuffer& dst)
 
     m_lastDb = db;
     
+    WriteMultiBulkLong(2, dst);
     WriteBulkString("select", 6, dst);
     WriteBulkLong(db, dst);
 }
@@ -415,6 +416,8 @@ QAOFLoader::QAOFLoader()
 bool  QAOFLoader::Load(const char* name)
 {
     _Reset();
+    
+    const int kCRLFLen = 2;
 
     // load file to memory
     MemoryFile  file;
@@ -445,6 +448,10 @@ bool  QAOFLoader::Load(const char* name)
                     ERR << "get multi failed";
                     return false;
                 }
+                else
+                {
+                    content += kCRLFLen;
+                }
 
                 m_state = State::Param;
                 break;
@@ -460,6 +467,10 @@ bool  QAOFLoader::Load(const char* name)
                         ERR << "get param len failed";
                         return false;
                     }
+                    else
+                    {
+                        content += kCRLFLen;
+                    }
 
                     if (content + paramLen > end)
                     {
@@ -469,7 +480,7 @@ bool  QAOFLoader::Load(const char* name)
 
                     auto&  params = m_cmds.back();
                     params.push_back(QString(content, paramLen));
-                    content += paramLen + 1;
+                    content += paramLen + kCRLFLen;
 
                     if (params.size() == m_multi)
                         m_state = Ready;
