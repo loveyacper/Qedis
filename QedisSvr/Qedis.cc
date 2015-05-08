@@ -69,8 +69,22 @@ bool Qedis::_Init()
     QPubsub::Instance().InitPubsubTimer();
     
     //  USE AOF RECOVERY FIRST, IF FAIL, THEN RDB
-    QDBLoader  loader;
-    loader.Load(g_qdbFile);
+    QAOFLoader aofLoader;
+    if (aofLoader.Load(g_aofFileName))
+    {
+        const auto& cmds = aofLoader.GetCmds();
+        for (const auto& cmd : cmds)
+        {
+            const QCommandInfo* info = QCommandTable::GetCommandInfo(cmd[0]);
+            UnboundedBuffer reply;
+            QCommandTable::ExecuteCmd(cmd, info, reply);
+        }
+    }
+    else
+    {
+        QDBLoader  loader;
+        loader.Load(g_qdbFile);
+    }
     
     QAOFThreadController::Instance().Start();
     

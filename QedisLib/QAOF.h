@@ -18,32 +18,17 @@ public:
     void  Start();
     void  SaveCommand(const std::vector<QString>& params, int db);
     void  Stop();
-    bool  Update();
     
     void  Join();
     
     bool  ProcessTmpBuffer(BufferSequence& bf);
     void  SkipTmpBuffer(size_t  n);
-    /*
-     MemoryFile  file;
-     select db first;
-     savedata(const string& key, const qobject& obj);
-     set expired;
-     savelist;  // rpush key elem;
-     savestring;  // set key val;
-     saveset; // sadd key elem;
-     savesset;  // zadd key score member
-     savehash;  // hset key key value
-     static void  Rewrite();
-     */
+
     static void  AofRewriteDoneHandler(int exitcode, int bysignal);
     
 private:
     QAOFThreadController() : m_lastDb(-1) {}
 
-    /* when thread starting, the file is open first.
-     * when exiting, file will be closed and sync.
-     */
     class AOFThread : public Runnable
     {
         friend class QAOFThreadController;
@@ -74,12 +59,42 @@ private:
     void _WriteSelectDB(int db, OutputBuffer& dst);
     
     std::shared_ptr<AOFThread>  m_aofThread;
-    OutputBuffer                m_aofBuffer; // when rewrite, thread is stopped
+    OutputBuffer                m_aofBuffer;
     int                         m_lastDb;
     
 public:
     static  pid_t               sm_aofPid;
 };
 
+
+class  QAOFLoader
+{
+public:
+    QAOFLoader();
+    
+    bool  Load(const char* name);
+    bool  IsReady() const  {  return m_state == State::AllReady; }
+
+    const std::vector<std::vector<QString> >& GetCmds() const
+    {
+        return m_cmds;
+    }
+
+private:
+    void _Reset();
+
+    enum State : int8_t
+    {
+        Init,
+        Multi,
+        Param,
+        Ready,
+        AllReady,
+    } ;
+
+    int                   m_multi;
+    std::vector<std::vector<QString> >  m_cmds;
+    int m_state;
+};
 
 #endif

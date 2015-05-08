@@ -16,10 +16,19 @@ QError  select(const vector<QString>& params, UnboundedBuffer& reply)
 
     int newDb = atoi(params[1].c_str());
     
-    if (QClient::Current()->SelectDB(newDb))
-        FormatOK(reply);
+    auto client = QClient::Current();
+    
+    if (client)
+    {
+        if (client->SelectDB(newDb))
+            FormatOK(reply);
+        else
+            ReplyError(QError_invalidDB, reply);
+    }
     else
-        ReplyError(QError_invalidDB, reply);
+    {
+        QSTORE.SelectDB(newDb);
+    }
 
     return   QError_ok;
 }

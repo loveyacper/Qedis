@@ -407,3 +407,143 @@ static void SaveObject(const QString& key, const QObject& obj, MemoryFile& file)
     }
 }
 
+static bool GetIntUntilLN(const char*& ptr, size_t len, int& outVal)
+{
+    if (len < 2)
+        return false;
+
+    int  offset  = 0;
+    bool negtive = false;
+    if (!isdigit(ptr[0]))
+    {
+        if (ptr[0] == '-')
+        {
+            negtive = true;
+            ++ offset;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    for (outVal = 0; offset < len; ++ offset)
+    {
+        if (isdigit(ptr[offset]))
+        {
+            outVal *= 10;
+            outVal += ptr[offset] - '0';
+        }
+        else
+        {
+            if (ptr[offset] == '\n')
+            {
+                ptr += offset + 1;
+                if (negtive)
+                    outVal *= -1;
+
+                return true;
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+
+    return false;
+}
+
+QAOFLoader::QAOFLoader()
+{
+    _Reset();
+}
+
+bool  QAOFLoader::Load(const char* name)
+{
+    MemoryFile  file;
+    if (!file.OpenForRead(name))
+        return  false;
+
+    size_t  maxLen = std::numeric_limits<size_t>::max();
+    const char* content = file.Read(maxLen);
+
+    int   paramLen = 0;
+
+    const char* const end = content + maxLen;
+    while (content < end)
+    {
+        switch (m_state)
+        {
+            case State::Init:
+                m_state = State::Multi;
+                m_cmds.resize(m_cmds.size() + 1);
+
+                break;
+
+            case Multi:
+                assert (*content == '*');
+                ++ content;
+                
+                if (!GetIntUntilLN(content, end - content, m_multi))
+                {
+                    ERR << "get multi failed";
+                    return false;
+                }
+
+                INF << "multi " << m_multi;
+                m_state = State::Param;
+
+                break;
+
+            case Param:
+                assert (*content == '$');
+                ++ content;
+                
+                if (!GetIntUntilLN(content, end - content, paramLen))
+                {
+                    ERR << "get param len failed";
+                    return false;
+                }
+
+                if (content + paramLen > end)
+                {
+                    ERR << "can not get param, len " << paramLen;
+                    return false;
+                }
+
+                {
+                auto&  params = m_cmds.back();
+                params.push_back(QString(content, paramLen));
+                content += paramLen + 1;
+                if (params.size() == m_multi)
+                    m_state = Ready;
+
+                INF << "get param, " << params.back();
+                }
+
+                break;
+
+            case Ready:
+                m_state = State::Init;
+                for (const auto& param : m_cmds.back())
+                    INF << "param : " << param;
+                break;
+        }
+    }
+
+    if (m_state == State::Ready)
+        m_state = State::AllReady;
+    else
+        m_cmds.pop_back();
+
+    return m_state == State::AllReady;
+}
+    
+void QAOFLoader::_Reset()
+{
+    m_state = State::Init;
+    m_multi = 0;
+    m_cmds.clear();
+}
+
