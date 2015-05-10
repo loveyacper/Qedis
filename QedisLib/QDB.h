@@ -27,7 +27,7 @@ private:
     void    _SaveHash(const PHASH& h);
     void    _SaveSSet(const PSSET& ss);
    
-    MemoryFile  m_qdb;
+    OutputMemoryFile  m_qdb;
 };
 
 extern time_t g_lastQDBSave;
@@ -56,7 +56,7 @@ private:
     QObject _LoadZipList(int8_t type);
     QObject _LoadIntset();
     
-    MemoryFile m_qdb;
+    InputMemoryFile m_qdb;
 };
 
 #endif

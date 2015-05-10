@@ -212,7 +212,7 @@ void  QAOFThreadController::Join()
     m_aofThread->m_sem.Wait();
 }
 
-static void SaveExpire(const QString& key, uint64_t absMs, MemoryFile& file)
+static void SaveExpire(const QString& key, uint64_t absMs, OutputMemoryFile& file)
 {
     WriteBulkLong(3, file);
     WriteBulkString("expire", 6, file);
@@ -221,10 +221,10 @@ static void SaveExpire(const QString& key, uint64_t absMs, MemoryFile& file)
 }
 
 // child  save the db to tmp file
-static void SaveObject(const QString& key, const QObject& obj, MemoryFile& file);
+static void SaveObject(const QString& key, const QObject& obj, OutputMemoryFile& file);
 static void RewriteProcess()
 {
-    MemoryFile  file;
+    OutputMemoryFile  file;
     if (!file.Open(g_aofTmp, false))
     {
         perror("open tmp failed");
@@ -285,7 +285,7 @@ QError bgrewriteaof(const std::vector<QString>& params, UnboundedBuffer& reply)
     return QError_ok;
 }
 
-static void  SaveStringObject(const QString& key, const QObject& obj, MemoryFile& file)
+static void  SaveStringObject(const QString& key, const QObject& obj, OutputMemoryFile& file)
 {
     WriteMultiBulkLong(3, file);
     WriteBulkString("set", 3, file);
@@ -303,7 +303,7 @@ static void  SaveStringObject(const QString& key, const QObject& obj, MemoryFile
     }
 }
 
-static void  SaveListObject(const QString& key, const QObject& obj, MemoryFile& file)
+static void  SaveListObject(const QString& key, const QObject& obj, OutputMemoryFile& file)
 {
     const PLIST&  list = obj.CastList();
     if (list->empty())
@@ -319,7 +319,7 @@ static void  SaveListObject(const QString& key, const QObject& obj, MemoryFile& 
     }
 }
 
-static void  SaveSetObject(const QString& key, const QObject& obj, MemoryFile& file)
+static void  SaveSetObject(const QString& key, const QObject& obj, OutputMemoryFile& file)
 {
     const PSET& set = obj.CastSet();
     if (set->empty())
@@ -335,7 +335,7 @@ static void  SaveSetObject(const QString& key, const QObject& obj, MemoryFile& f
     }
 }
 
-static void  SaveZSetObject(const QString& key, const QObject& obj, MemoryFile& file)
+static void  SaveZSetObject(const QString& key, const QObject& obj, OutputMemoryFile& file)
 {
     const PSSET& zset = obj.CastSortedSet();
     if (zset->Size() == 0)
@@ -358,7 +358,7 @@ static void  SaveZSetObject(const QString& key, const QObject& obj, MemoryFile& 
     }
 }
 
-static void  SaveHashObject(const QString& key, const QObject& obj, MemoryFile& file)
+static void  SaveHashObject(const QString& key, const QObject& obj, OutputMemoryFile& file)
 {
     const PHASH& hash = obj.CastHash();
     if (hash->empty())
@@ -376,7 +376,7 @@ static void  SaveHashObject(const QString& key, const QObject& obj, MemoryFile& 
 }
 
 
-static void SaveObject(const QString& key, const QObject& obj, MemoryFile& file)
+static void SaveObject(const QString& key, const QObject& obj, OutputMemoryFile& file)
 {
     switch (obj.type)
     {
@@ -419,9 +419,16 @@ bool  QAOFLoader::Load(const char* name)
     
     const int kCRLFLen = 2;
 
+    // truncate tail zero if aof terminated abnormally
+    {
+        OutputMemoryFile file;
+        file.Open(name);
+        file.TruncateTailZero();
+    }
+    
     // load file to memory
-    MemoryFile  file;
-    if (!file.OpenForRead(name))
+    InputMemoryFile  file;
+    if (!file.Open(name))
         return  false;
 
     size_t  maxLen = std::numeric_limits<size_t>::max();

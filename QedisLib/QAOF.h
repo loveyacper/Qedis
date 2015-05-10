@@ -50,7 +50,7 @@ private:
         
         std::atomic<bool>   m_alive;
 
-        MemoryFile          m_file;
+        OutputMemoryFile    m_file;
         OutputBuffer        m_buf;
         
         Semaphore           m_sem;

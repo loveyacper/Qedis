@@ -82,7 +82,7 @@ private:
     unsigned int    m_curLevel;
 
     OutputBuffer    m_buffer;
-    MemoryFile      m_file;
+    OutputMemoryFile m_file;
     
     // for optimization
     uint64_t        m_lastLogSecond;

@@ -4,6 +4,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <iostream>
+using namespace std;
 
 #if defined(__APPLE__)
 #include <unistd.h>
@@ -13,42 +14,22 @@
 
 using std::size_t;
     
-char* const MemoryFile::kInvalidAddr = reinterpret_cast<char*>(-1);
+static const int   kInvalidFile = -1;
+static char* const kInvalidAddr = reinterpret_cast<char*>(-1);
 
-MemoryFile::MemoryFile() : m_file(kInvalidFile),
-                           m_pMemory(kInvalidAddr),
-                           m_offset(0),
-                           m_size(0),
-                           m_syncPos(0)
+InputMemoryFile::InputMemoryFile() : m_file(kInvalidFile),
+                                     m_pMemory(kInvalidAddr),
+                                     m_offset(0),
+                                     m_size(0)
 {
 }
 
-MemoryFile::~MemoryFile()
+InputMemoryFile::~InputMemoryFile()
 {
     Close();
 }
 
-bool MemoryFile::_ExtendFileSize(size_t  size)
-{
-    assert (m_file != kInvalidFile);
-
-    if (m_size >= size)
-        return true;
-
-    if (m_size != 0)
-        ::munmap(m_pMemory, m_size);
-
-    ::ftruncate(m_file, size);
-    m_size = size;
-    m_pMemory = (char* )::mmap(0, size, PROT_WRITE, MAP_SHARED, m_file, 0);
-
-    if (m_pMemory == kInvalidAddr)
-        perror("mmap failed ");
-    
-    return   m_pMemory != kInvalidAddr;
-}
-
-bool MemoryFile::_MapReadOnly()
+bool InputMemoryFile::_MapReadOnly()
 {
     assert (m_file != kInvalidFile);
     assert (m_size == 0);
@@ -65,42 +46,7 @@ bool MemoryFile::_MapReadOnly()
     return   m_pMemory != kInvalidAddr;
 }
 
-
-bool  MemoryFile::Open(const std::string&  file, bool bAppend)
-{
-    return Open(file.c_str(), bAppend);
-}
-
-bool  MemoryFile::Open(const char* file, bool bAppend)
-{
-    Close();
-
-    m_file = ::open(file, O_RDWR | O_CREAT, 0644);
-
-    if (m_file == kInvalidFile)
-    {
-        char err[128];
-        snprintf(err, sizeof err - 1, "OpenWriteOnly %s failed\n", file);
-        perror(err);
-        return false;
-    }
-
-    if (bAppend)
-    {
-        struct stat st;
-        fstat(m_file, &st);
-        m_offset  = st.st_size;
-    }
-    else
-    {
-        ::ftruncate(m_file, 0);
-        m_offset  = 0;
-    }
-    
-    return true;
-}
-
-bool  MemoryFile::OpenForRead(const char* file)
+bool  InputMemoryFile::Open(const char* file)
 {
     Close();
 
@@ -114,10 +60,108 @@ bool  MemoryFile::OpenForRead(const char* file)
         return false;
     }
 
+    m_offset = 0;
     return _MapReadOnly();
 }
 
-void  MemoryFile::Close()
+void  InputMemoryFile::Close()
+{
+    if (m_file != kInvalidFile)
+    {
+        ::munmap(m_pMemory, m_size);
+        ::close(m_file);
+
+        m_file      = kInvalidFile;
+        m_size      = 0;
+        m_pMemory   = kInvalidAddr;
+        m_offset    = 0;
+    }
+}
+
+const char* InputMemoryFile::Read(std::size_t& len)
+{
+    if (m_size <= m_offset)
+        return 0;
+
+    if (m_offset + len > m_size)
+        len = m_size - m_offset;
+
+    return  m_pMemory + m_offset;
+}
+
+void InputMemoryFile::Skip(size_t len)
+{
+    m_offset += len;
+    assert (m_offset <= m_size);
+}
+
+bool InputMemoryFile::IsOpen() const
+{
+    return  m_file != kInvalidFile;
+}
+
+
+// OutputMemoryFile
+
+OutputMemoryFile::OutputMemoryFile() : m_file(kInvalidFile),
+                                       m_pMemory(kInvalidAddr),
+                                       m_offset(0),
+                                       m_size(0),
+                                       m_syncPos(0)
+{
+}
+
+OutputMemoryFile::~OutputMemoryFile()
+{
+    Close();
+}
+
+void OutputMemoryFile::_ExtendFileSize(size_t  size)
+{
+    assert (m_file != kInvalidFile);
+
+    if (size > m_size)
+        Truncate(size);
+}
+
+bool  OutputMemoryFile::Open(const std::string&  file, bool bAppend)
+{
+    return Open(file.c_str(), bAppend);
+}
+
+bool  OutputMemoryFile::Open(const char* file, bool bAppend)
+{
+    Close();
+
+    m_file = ::open(file, O_RDWR | O_CREAT, 0644);
+
+    if (m_file == kInvalidFile)
+    {
+        char err[128];
+        snprintf(err, sizeof err - 1, "OpenWriteOnly %s failed\n", file);
+        perror(err);
+        return false;
+    }
+
+    struct stat st;
+    fstat(m_file, &st);
+    m_size = st.st_size;
+    cerr << "open size " << m_size << endl;
+
+    if (bAppend)
+    {
+        m_offset = m_size;
+    }
+    else
+    {
+        ::ftruncate(m_file, 0);
+        m_offset  = 0;
+    }
+    
+    return _MapWriteOnly();
+}
+
+void  OutputMemoryFile::Close()
 {
     if (m_file != kInvalidFile)
     {
@@ -133,7 +177,7 @@ void  MemoryFile::Close()
     }
 }
 
-bool    MemoryFile::Sync()
+bool    OutputMemoryFile::Sync()
 {
     if (m_syncPos >= m_offset)
         return false;
@@ -143,22 +187,68 @@ bool    MemoryFile::Sync()
     return true;
 }
 
-const char* MemoryFile::Read(std::size_t& len)
+bool   OutputMemoryFile::_MapWriteOnly()
 {
-    if (m_offset + len > m_size)
-        len = m_size - m_offset;
+    if (m_size == 0 || m_file == kInvalidFile)
+        return false;
+        
+    ::munmap(m_pMemory, m_size);
 
-    return  m_pMemory + m_offset;
+    ::ftruncate(m_file, m_size);
+    m_pMemory = (char* )::mmap(0, m_size, PROT_WRITE, MAP_SHARED, m_file, 0);
+
+    if (m_pMemory == kInvalidAddr)
+        perror("mmap failed ");
+    
+    return (m_pMemory != kInvalidAddr);
 }
 
-void MemoryFile::Skip(size_t len)
+void    OutputMemoryFile::Truncate(std::size_t  size)
 {
-    m_offset += len;
-    assert (m_offset <= m_size);
+    if (size == m_size)
+        return;
+
+    cerr << "Truncate from " << m_size << " to " << size << endl;
+    if (m_size != 0)
+        ::munmap(m_pMemory, m_size);
+
+    ::ftruncate(m_file, size);
+    m_size = size;
+    m_pMemory = (char* )::mmap(0, size, PROT_WRITE, MAP_SHARED, m_file, 0);
+
+    if (m_offset > m_size)
+        m_offset = m_size;
+
+    if (m_pMemory == kInvalidAddr)
+        perror("mmap failed ");
+    
+    assert (m_pMemory != kInvalidAddr);
+}
+
+void    OutputMemoryFile::TruncateTailZero()
+{
+    if (m_file == kInvalidFile)
+        return;
+
+    cerr << "size " << m_size << ", offset " << m_offset << endl;;
+    size_t  tail = m_size;
+    while (tail > 0 && m_pMemory[--tail] == '\0')
+        ;
+
+    ++ tail;
+
+    cerr << "tail " << tail << endl;;
+
+    Truncate(tail);
+}
+
+bool  OutputMemoryFile::IsOpen() const
+{
+    return  m_file != kInvalidFile;
 }
 
 // consumer
-void   MemoryFile::Write(const void* data, size_t len)
+void   OutputMemoryFile::Write(const void* data, size_t len)
 {
     _AssureSpace(len);
         
@@ -167,7 +257,7 @@ void   MemoryFile::Write(const void* data, size_t len)
     assert(m_offset <= m_size);
 }
     
-bool   MemoryFile::_AssureSpace(size_t  size)
+void   OutputMemoryFile::_AssureSpace(size_t  size)
 {
     size_t  newSize = m_size;
     while (m_offset + size > newSize)
@@ -178,18 +268,6 @@ bool   MemoryFile::_AssureSpace(size_t  size)
             newSize <<= 1;
     }
 
-    return  _ExtendFileSize(newSize);
+    _ExtendFileSize(newSize);
 }
-
-bool MemoryFile::MakeDir(const char* pDir)
-{
-    if (mkdir(pDir, 0755) != 0)
-    {
-        if (EEXIST != errno)
-            return false;
-    }
-
-    return true;
-}
-
 

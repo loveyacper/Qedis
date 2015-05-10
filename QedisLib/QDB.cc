@@ -97,8 +97,8 @@ void  QDBSaver::Save(const char* qdbFile)
     m_qdb.Write(&kEOF, 1);
     
     // crc 8 bytes
-    MemoryFile  file;
-    file.OpenForRead(tmpFile);
+    InputMemoryFile  file;
+    file.Open(tmpFile);
     
     auto  len  = m_qdb.Offset();
     auto  data = file.Read(len);
@@ -378,7 +378,7 @@ void QDBSaver::SaveDoneHandler(int exitcode, int bysignal)
 
 int  QDBLoader::Load(const char *filename)
 {
-    if (!m_qdb.OpenForRead(filename))
+    if (!m_qdb.Open(filename))
     {
         return - __LINE__;
     }

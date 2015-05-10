@@ -5,6 +5,7 @@
 #include <cstring>
 #include <cstdarg>
 #include <errno.h>
+#include <sys/stat.h>
 
 
 enum LogColor
@@ -27,6 +28,17 @@ enum LogColor
 static const size_t DEFAULT_LOGFILESIZE = 32 * 1024 * 1024;
 static const size_t PREFIX_LEVEL_LEN    = 6;
 static const size_t PREFIX_TIME_LEN     = 24;
+
+static bool MakeDir(const char* pDir)
+{
+    if (mkdir(pDir, 0755) != 0)
+    {
+        if (EEXIST != errno)
+            return false;
+    }
+    
+    return true;
+}
 
 Logger::Logger() : m_level(0),
                    m_dest(0)
@@ -56,7 +68,7 @@ bool Logger::Init(unsigned int level, unsigned int dest, const char* pDir)
     if (m_dest & logFILE)
     {
         if (m_directory == "." ||
-            MemoryFile::MakeDir(m_directory.c_str()))
+            MakeDir(m_directory.c_str()))
         {
             _OpenLogFile(_MakeFileName().c_str());
             return true;
