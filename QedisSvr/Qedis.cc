@@ -16,6 +16,7 @@
 #include "QCommand.h"
 #include "QDB.h"
 #include "QAOF.h"
+#include "QConfig.h"
 
 
 class Qedis : public Server
@@ -55,7 +56,20 @@ std::shared_ptr<StreamSocket>   Qedis::_OnNewConnection(int connfd)
 
 bool Qedis::_Init()
 {
-    SocketAddr addr("0.0.0.0", 6379);
+    if (!LoadQedisConfig("qedis.conf", g_config))
+    {
+        std::cerr << "can not load qedis.conf\n";
+    }
+    
+    // daemon must be first, before descriptor open, threads create
+    if (g_config.daemonize)
+    {
+        daemon(1, 0);
+    }
+    
+    g_log = LogManager::Instance().CreateLog(logALL, logALL, "./qedislog/");
+    
+    SocketAddr addr("0.0.0.0", g_config.port);
     
     if (!Server::TCPBind(addr))
     {
@@ -64,6 +78,7 @@ bool Qedis::_Init()
     }
 
     QCommandTable::Init();
+    QSTORE.Init(g_config.databases);
     QSTORE.InitExpireTimer();
     QSTORE.InitBlockedTimer();
     QPubsub::Instance().InitPubsubTimer();
@@ -145,11 +160,6 @@ void    Qedis::_Recycle()
 
 int main()
 {
-    //g_log = LogManager::Instance().NullLog();
-    g_log = LogManager::Instance().CreateLog(logALL, logALL, "./qedis_log");
-    
-    //daemon(1, 0);
-
     Qedis  svr;
     svr.MainLoop();
     

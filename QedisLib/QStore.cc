@@ -178,7 +178,6 @@ size_t  QStore::BlockedClients::ServeClient(const QString& key, const PLIST& lis
                 {
                     if (err != QError_notExist)
                     {
-                        // !!!
                         UnboundedBuffer  reply;
                         ReplyError(err, reply);
                         cli->SendPacket(reply.ReadAddr(), reply.ReadableSize());
@@ -209,11 +208,7 @@ size_t  QStore::BlockedClients::ServeClient(const QString& key, const PLIST& lis
                     PreFormatMultiBulk(2, reply);
                     FormatBulk(key.c_str(), key.size(), reply);
                 }
-            
-                
-               // QString  result
-                //GenericPop(const QString& key, ListPosition pos, QString& result);
-                
+
                 if (pos == ListPosition::head)
                 {
                     FormatBulk(list->front().c_str(), list->front().size(), reply);
@@ -300,6 +295,17 @@ QStore& QStore::Instance()
 {
     static QStore  store;
     return store;
+}
+
+void  QStore::Init(int dbNum)
+{
+    assert (m_db == nullptr);
+    
+    m_store.resize(dbNum);
+    m_expiresDb.resize(dbNum);
+    m_blockedClients.resize(dbNum);
+    
+    m_db = &m_store[0];
 }
 
 int  QStore::LoopCheckExpire(uint64_t now)

@@ -1,7 +1,6 @@
 #ifndef BERT_CONFIGPARSER_H
 #define BERT_CONFIGPARSER_H
 
-#include <fstream>
 #include <map>
 #include <string>
 #include <sstream>
@@ -13,8 +12,6 @@
 class ConfigParser
 {
 public:
-    ~ConfigParser();
-
     bool Load(const char* FileName);
 #if 0
     bool Save(const char* FileName);
@@ -48,18 +45,10 @@ public:
 #endif
 
 private:
-    static const int SPACE;
-    static const int TAB;
-    static const int COMMENT;
-    static const int NEWLINE;
-
-    std::fstream			m_file;
     std::map<std::string, std::string> m_data;
 
 	template <typename T>
 	T  _ToType(const std::string& data) const;
-
-    void _SkipBlank();
 };
 
 
@@ -70,6 +59,18 @@ inline  T  ConfigParser::_ToType(const std::string& data) const
     std::istringstream  os(data);
     os >> t;
     return  t;
+}
+
+template <>
+inline  const char*  ConfigParser::_ToType<const char* >(const std::string& data) const
+{
+    return  data.c_str();
+}
+
+template <>
+inline  std::string  ConfigParser::_ToType<std::string >(const std::string& data) const
+{
+    return  data;
 }
 
 
@@ -83,20 +84,5 @@ inline  T  ConfigParser::GetData(const char* key, const T& default_) const
     return  _ToType<T>(it->second);
 }
 
-template <>
-inline  const char*  ConfigParser::GetData(const char* key, const char* const& default_) const
-{
-    std::map<std::string, std::string>::const_iterator it = m_data.find(key);
-    if (it == m_data.end())
-        return default_;
-
-    return  it->second.c_str();
-}
-
-template <>
-inline  char*  ConfigParser::GetData(const char* key, char* const& default_) const
-{
-    return  const_cast<char*>(GetData<const char*>(key, default_));
-}
-
 #endif
+

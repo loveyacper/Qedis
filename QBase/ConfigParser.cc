@@ -1,45 +1,54 @@
 #include <vector>
 #include "ConfigParser.h"
+#include "MemoryFile.h"
 
-const int ConfigParser::SPACE     = ' ';
-const int ConfigParser::TAB       = '\t';
-const int ConfigParser::NEWLINE   = '\n';
-const int ConfigParser::COMMENT   = '#';
+static const int  SPACE     = ' ';
+static const int  TAB       = '\t';
+static const int  NEWLINE   = '\n';
+static const int  COMMENT   = '#';
 
 
-ConfigParser::~ConfigParser()
+static size_t  SkipBlank(const char* data, size_t len, size_t off)
 {
-    if (m_file.is_open())
-        m_file.close();
+    while (++ off < len)
+    {
+        if (SPACE != data[off] && TAB != data[off])
+        {
+            -- off;
+            break;
+        }
+    }
+
+    return off;
 }
 
 bool ConfigParser::Load(const char* FileName)
 {
-    if (m_file.is_open())
-        m_file.close();
-
-    m_file.open(FileName, std::ios::in | std::ios::binary);
-    if (!m_file)
+    InputMemoryFile  file;
+    if (!file.Open(FileName))
         return false; // no such file
 
     m_data.clear();
+
+    size_t      maxLen = size_t(-1);
+    const char* data = file.Read(maxLen);
 
 	bool  bReadKey = true;
     std::string  key, value;
     key.reserve(64);
     value.reserve(64);
 
-    char ch   = 0;
-    while (m_file.get(ch))
+    size_t  off = 0;
+    while (off < maxLen)
     {
-        switch (ch)
+        switch (data[off])
         {
 			case COMMENT:
-				while (m_file.get(ch))
+                while (++ off < maxLen)
 				{
-					if (NEWLINE == ch)
+					if (NEWLINE == data[off])
                     {
-                        m_file.unget();
+                        -- off;
 						break;
                     }
 				}
@@ -53,7 +62,7 @@ bool ConfigParser::Load(const char* FileName)
                     if (m_data.count(key) > 0)
                     {
                         // duplicate key
-                        return false;
+                       // return false;
                     }
 
 					m_data[key] = value;
@@ -61,7 +70,7 @@ bool ConfigParser::Load(const char* FileName)
 					value.clear();
 				}
 
-                _SkipBlank();
+                off = SkipBlank(data, maxLen, off);
 				break;
 
             case SPACE:
@@ -70,10 +79,10 @@ bool ConfigParser::Load(const char* FileName)
                 if (bReadKey)
                 {
                     bReadKey = false;
-                    _SkipBlank(); // 跳过所有分界空格
+                    off = SkipBlank(data, maxLen, off); // 跳过所有分界空格
                 }
                 else
-					value += ch;
+					value += data[off];
                 break;
 
             case '\r':
@@ -81,15 +90,17 @@ bool ConfigParser::Load(const char* FileName)
 
             default:
 				if (bReadKey) 
-					key += ch;
+					key += data[off];
 				else
-					value += ch;
+					value += data[off];
 
 				break;
         }
+        
+        ++ off;
     }
 
-    m_file.close();
+    file.Close();
     return true;
 }
 
@@ -139,32 +150,14 @@ bool ConfigParser::Save(const char* FileName)
 }
 #endif
 
-
-void ConfigParser::_SkipBlank()
-{
-    char    ch;
-    while (m_file.get(ch))
-    {
-        if (SPACE != ch && TAB != ch)
-        {
-            m_file.unget();
-            break;
-        }
-    }
-}
-
 #ifdef CONFIG_DEBUG
 int main()
 {
 	ConfigParser   csv;
 	csv.Load("config");
 	csv.Print();
-    short age = csv.GetData<int>("age");
-    
-	std::cout << csv.GetData<int>("age") << std::endl;
-	std::cout << csv.GetData<const char* >("sex") << std::endl;
-	std::cout << csv.GetData<const char* >("self") << std::endl;
 
 	std::cout << "=====================" << std::endl;
 }
 #endif
+

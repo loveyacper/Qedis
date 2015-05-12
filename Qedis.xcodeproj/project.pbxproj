@@ -21,6 +21,8 @@
 		BA6C336D19EA77B200AC1800 /* QGlobRegex.h in Headers */ = {isa = PBXBuildFile; fileRef = BA6C336B19EA77B200AC1800 /* QGlobRegex.h */; };
 		BA6C336F19EA77C100AC1800 /* QGlobRegex_unittest.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA6C336E19EA77C100AC1800 /* QGlobRegex_unittest.cc */; };
 		BA6C337119EC0D9900AC1800 /* QPubsub.h in Headers */ = {isa = PBXBuildFile; fileRef = BA6C337019EC0D9900AC1800 /* QPubsub.h */; };
+		BA98F83D1B01B16600ABCBD9 /* QConfig.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA98F83B1B01B16600ABCBD9 /* QConfig.cc */; };
+		BA98F83E1B01B16600ABCBD9 /* QConfig.h in Headers */ = {isa = PBXBuildFile; fileRef = BA98F83C1B01B16600ABCBD9 /* QConfig.h */; };
 		BAD0C5FF19E7A02C005B3784 /* QClient.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAD0C5E319E7A02C005B3784 /* QClient.cc */; };
 		BAD0C60019E7A02C005B3784 /* QClient.h in Headers */ = {isa = PBXBuildFile; fileRef = BAD0C5E419E7A02C005B3784 /* QClient.h */; };
 		BAD0C60119E7A02C005B3784 /* QCommand.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAD0C5E519E7A02C005B3784 /* QCommand.cc */; };
@@ -172,6 +174,8 @@
 		BA6C336B19EA77B200AC1800 /* QGlobRegex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QGlobRegex.h; path = QedisLib/QGlobRegex.h; sourceTree = SOURCE_ROOT; };
 		BA6C336E19EA77C100AC1800 /* QGlobRegex_unittest.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QGlobRegex_unittest.cc; sourceTree = "<group>"; };
 		BA6C337019EC0D9900AC1800 /* QPubsub.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = QPubsub.h; path = QedisLib/QPubsub.h; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		BA98F83B1B01B16600ABCBD9 /* QConfig.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QConfig.cc; path = QedisLib/QConfig.cc; sourceTree = SOURCE_ROOT; };
+		BA98F83C1B01B16600ABCBD9 /* QConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QConfig.h; path = QedisLib/QConfig.h; sourceTree = SOURCE_ROOT; };
 		BABEBED519C4474900010636 /* Qedis */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Qedis; sourceTree = BUILT_PRODUCTS_DIR; };
 		BAD0C5D919E79FF7005B3784 /* libqedislib.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libqedislib.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		BAD0C5E319E7A02C005B3784 /* QClient.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = QClient.cc; path = QedisLib/QClient.cc; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
@@ -353,6 +357,8 @@
 		BABEBED719C4474900010636 /* QedisLib */ = {
 			isa = PBXGroup;
 			children = (
+				BA98F83B1B01B16600ABCBD9 /* QConfig.cc */,
+				BA98F83C1B01B16600ABCBD9 /* QConfig.h */,
 				BA3B0AD41ACBA9E1000D9399 /* QAOF.cc */,
 				BA3B0AD51ACBA9E1000D9399 /* QAOF.h */,
 				BA47763B1AB0773F00EDBB5D /* redisIntset.c */,
@@ -479,6 +485,7 @@
 				BAFFCB541A8F09CA00C47F92 /* QDB.h in Headers */,
 				BAD0C61319E7A02C005B3784 /* QStore.h in Headers */,
 				BA29C44F19FB2CEE00796E3A /* QMulti.h in Headers */,
+				BA98F83E1B01B16600ABCBD9 /* QConfig.h in Headers */,
 				BAD0C60019E7A02C005B3784 /* QClient.h in Headers */,
 				BA6C337119EC0D9900AC1800 /* QPubsub.h in Headers */,
 			);
@@ -636,6 +643,7 @@
 				BA6C336C19EA77B200AC1800 /* QGlobRegex.cc in Sources */,
 				BA3B0AD61ACBA9E1000D9399 /* QAOF.cc in Sources */,
 				BAD0C61219E7A02C005B3784 /* QStore.cc in Sources */,
+				BA98F83D1B01B16600ABCBD9 /* QConfig.cc in Sources */,
 				BAFFCB531A8F09CA00C47F92 /* QDB.cc in Sources */,
 				BAFFCB5F1A9423DC00C47F92 /* crc64.c in Sources */,
 				BAD0C60C19E7A02C005B3784 /* QSet.cc in Sources */,

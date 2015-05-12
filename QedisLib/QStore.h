@@ -113,13 +113,12 @@ class QStore
 public:
     static QStore& Instance();
 
-    QStore(int dbNum = 16) : m_store(dbNum),
-                             m_expiresDb(dbNum),
-                             m_blockedClients(dbNum),
-                             m_dbno(0)
+    QStore() : m_dbno(0),
+               m_db(nullptr)
     {
-        m_db   = &m_store[0];
     }
+    
+    void  Init(int dbNum = 16);
 
     int SelectDB(int dbno);
     int GetDB() const;

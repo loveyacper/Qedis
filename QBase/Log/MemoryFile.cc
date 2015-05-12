@@ -39,10 +39,6 @@ bool InputMemoryFile::_MapReadOnly()
     m_size = st.st_size;
 
     m_pMemory = (char* )::mmap(0, m_size, PROT_READ, MAP_SHARED, m_file, 0);
-
-    if (m_pMemory == kInvalidAddr)
-        perror("mmap readonly failed ");
-    
     return   m_pMemory != kInvalidAddr;
 }
 
@@ -155,6 +151,7 @@ bool  OutputMemoryFile::Open(const char* file, bool bAppend)
     else
     {
         ::ftruncate(m_file, 0);
+        m_size    = 0;
         m_offset  = 0;
     }
     
@@ -192,14 +189,10 @@ bool   OutputMemoryFile::_MapWriteOnly()
     if (m_size == 0 || m_file == kInvalidFile)
         return false;
         
-    ::munmap(m_pMemory, m_size);
+    if (m_pMemory != kInvalidAddr)
+        ::munmap(m_pMemory, m_size);
 
-    ::ftruncate(m_file, m_size);
     m_pMemory = (char* )::mmap(0, m_size, PROT_WRITE, MAP_SHARED, m_file, 0);
-
-    if (m_pMemory == kInvalidAddr)
-        perror("mmap failed ");
-    
     return (m_pMemory != kInvalidAddr);
 }
 
@@ -207,22 +200,14 @@ void    OutputMemoryFile::Truncate(std::size_t  size)
 {
     if (size == m_size)
         return;
-
-    cerr << "Truncate from " << m_size << " to " << size << endl;
-    if (m_size != 0)
-        ::munmap(m_pMemory, m_size);
-
-    ::ftruncate(m_file, size);
+    
     m_size = size;
-    m_pMemory = (char* )::mmap(0, size, PROT_WRITE, MAP_SHARED, m_file, 0);
-
+    ::ftruncate(m_file, size);
+    
     if (m_offset > m_size)
         m_offset = m_size;
-
-    if (m_pMemory == kInvalidAddr)
-        perror("mmap failed ");
     
-    assert (m_pMemory != kInvalidAddr);
+    _MapWriteOnly();
 }
 
 void    OutputMemoryFile::TruncateTailZero()
@@ -230,7 +215,6 @@ void    OutputMemoryFile::TruncateTailZero()
     if (m_file == kInvalidFile)
         return;
 
-    cerr << "size " << m_size << ", offset " << m_offset << endl;;
     size_t  tail = m_size;
     while (tail > 0 && m_pMemory[--tail] == '\0')
         ;
