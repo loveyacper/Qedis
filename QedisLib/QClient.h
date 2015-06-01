@@ -5,7 +5,7 @@
 #include "QCommon.h"
 #include "QString.h"
 
-#include "QStat.h"
+#include "QSlowLog.h"
 #include <unordered_set>
 
 enum  class ParseCmdState : std::int8_t
@@ -113,7 +113,6 @@ private:
     // name
     std::string m_name;
     
-    QStat  m_stat;
     static  QClient*  s_pCurrentClient;
 };
 

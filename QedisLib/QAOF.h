@@ -10,6 +10,8 @@
 extern const char* const g_aofFileName;
 extern const char* const g_aofTmp;
 
+extern pid_t             g_rewritePid;
+
 class  QAOFThreadController
 {
 public:
@@ -24,7 +26,7 @@ public:
     bool  ProcessTmpBuffer(BufferSequence& bf);
     void  SkipTmpBuffer(size_t  n);
 
-    static void  AofRewriteDoneHandler(int exitcode, int bysignal);
+    static void  RewriteDoneHandler(int exitcode, int bysignal);
     
 private:
     QAOFThreadController() : m_lastDb(-1) {}
@@ -61,9 +63,6 @@ private:
     std::shared_ptr<AOFThread>  m_aofThread;
     OutputBuffer                m_aofBuffer;
     int                         m_lastDb;
-    
-public:
-    static  pid_t               sm_aofPid;
 };
 
 

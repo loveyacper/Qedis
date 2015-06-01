@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <stdint.h>
 #include <stdio.h>
+#include <vector>
 #include "QString.h"
 
 #define QEDIS static_cast<Qedis* >(Server::Instance())
@@ -177,6 +178,8 @@ enum class QParseInt : int8_t
 };
 
 QParseInt  GetIntUntilCRLF(const char*& ptr, std::size_t nBytes, int& val);
+
+std::vector<QString>  SplitString(const QString& str, char seperator);
 
 #endif
 

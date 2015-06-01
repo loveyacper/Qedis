@@ -1,11 +1,12 @@
+#include <vector>
 #include "QConfig.h"
 #include "ConfigParser.h"
-
-extern  QConfig  g_config;
 
 #include <iostream>
 using namespace std;
 
+
+extern std::vector<QString>  SplitString(const QString& str, char seperator);
 
 QConfig  g_config;
 
@@ -66,11 +67,65 @@ bool  LoadQedisConfig(const char* cfgFile, QConfig& cfg)
     cfg.logfile  = parser.GetData<QString>("logfile");
     
     cfg.databases = parser.GetData<int>("databases");
-    if (cfg.databases <= 0)
+ 
+    
+    // load rdb config
+    std::vector<QString>  saveInfo = std::move(SplitString(parser.GetData<QString>("save"), ' '));
+    if (saveInfo.size() != 2)
     {
-        std::cerr << "wrong databases num " << cfg.databases << std::endl;
+        std::cerr << "bad format save rdb interval, bad string "
+                  << parser.GetData<QString>("save")
+                  << std::endl;
         return false;
     }
+    
+    cfg.saveseconds = std::stoi(saveInfo[0]);
+    cfg.savechanges = std::stoi(saveInfo[1]);
+    
+    cfg.rdbcompression = (parser.GetData<QString>("rdbcompression") == "yes");
+    cfg.rdbchecksum    = (parser.GetData<QString>("rdbchecksum") == "yes");
+    cfg.rdbfilename    = parser.GetData<QString>("dbfilename", "dump.rdb");
+    cfg.rdbdir         = parser.GetData<QString>("dir", "./");
+    
+    cfg.maxclients = parser.GetData<int>("maxclients", 10000);
+    cfg.appendonly = (parser.GetData<QString>("appendonly", "no") == "yes");
+    cfg.appendfilename = parser.GetData<const char* >("appendfilename", "appendonly.aof");
+
+    QString tmpfsync = parser.GetData<const char* >("appendfsync", "no");
+    if (tmpfsync == "everysec")
+    {
+    }
+    else if (tmpfsync == "always")
+    {
+    }
+    else
+    {
+    }
+    
+    cfg.slowlogtime = parser.GetData<int>("slowlog-log-slower-than", 999999999);
+    cfg.slowlogmaxlen = parser.GetData<int>("slowlog-max-len");
+    
+    cfg.hz = parser.GetData<int>("hz", 10);
+    cfg.includefile = parser.GetData<QString>("include"); //TODO multi files include
+    
+    return  cfg.CheckArgs();
+}
+
+bool  QConfig::CheckArgs() const
+{
+#define RETURN_IF_FAIL(cond)\
+    if (!(cond)) { \
+        std::cerr << #cond " failed\n"; \
+        return  false; \
+    }
+    
+    RETURN_IF_FAIL(port > 0);
+    RETURN_IF_FAIL(databases > 0);
+    RETURN_IF_FAIL(maxclients > 0);
+    RETURN_IF_FAIL(hz > 0 && hz < 500);
+    
+    
+#undef RETURN_IF_FALSE
     
     return  true;
 }

@@ -157,7 +157,7 @@ public:
     
     // danger cmd
     void    ClearCurrentDB() { m_db->clear(); }
-    void    ClearAllDB()     { std::vector<QDB>(16).swap(m_store); }
+    void    ClearAllDB()     { std::vector<QDB>(m_store.size()).swap(m_store); }
     
     // for blocked list
     bool    BlockClient(const QString& key,

@@ -324,3 +324,24 @@ QParseInt  GetIntUntilCRLF(const char*& ptr, std::size_t nBytes, int& val)
     ptr += i;
     return QParseInt::ok;
 }
+
+std::vector<QString>  SplitString(const QString& str, char seperator)
+{
+    std::vector<QString>  results;
+    
+    QString::size_type start = 0;
+    QString::size_type sep = str.find(seperator);
+    while (sep != QString::npos)
+    {
+        if (start < sep)
+            results.emplace_back(str.substr(start, sep - start));
+        
+        start = sep + 1;
+        sep   = str.find(seperator, start);
+    }
+    
+    if (start != str.size())
+        results.emplace_back(str.substr(start));
+    
+    return std::move(results);
+}

@@ -1,9 +1,13 @@
-#include "QClient.h"
-#include "QStore.h"
 #include "Log/Logger.h"
+
+#include "QStore.h"
 #include "QCommand.h"
 #include "QMulti.h"
 #include "QAOF.h"
+#include "QConfig.h"
+#include "QSlowLog.h"
+
+#include "QClient.h"
 
 // *3  CR LF
 // $4  CR LF
@@ -69,7 +73,6 @@ HEAD_LENGTH_T QClient::_HandleHead(AttachedBuffer& buf, BODY_LENGTH_T* bodyLen)
     {
     case ParseCmdState::Init:
         assert (m_multibulk == 0);
-        m_stat.Begin();
         if (*ptr != '*')
         {
             INF << "Try process inline cmd first char " << (int)*ptr;
@@ -205,7 +208,6 @@ void QClient::_HandlePacket(AttachedBuffer& buf)
     std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::tolower);
 
     QSTORE.SelectDB(m_db);
-    m_stat.End(PARSE_STATE);
 
     INF << "client " << GetID() << ", cmd " << m_params[0].c_str();
     
@@ -240,21 +242,21 @@ void QClient::_HandlePacket(AttachedBuffer& buf)
         }
     }
     
-    m_stat.Begin();
+    //m_stat.Begin();
+    QSlowLog::Instance().Begin();
     QError err = QCommandTable::ExecuteCmd(m_params, info, m_reply);
-    m_stat.End(PROCESS_STATE);
+    QSlowLog::Instance().EndAndStat(m_params);
 
     if (!m_reply.IsEmpty())
     {
-        m_stat.Begin();
         SendPacket(m_reply.ReadAddr(), m_reply.ReadableSize());
-        m_stat.End(SEND_STATE);
     }
     
     if (err == QError_ok && (info->attr & QAttr_write))
     {
         QMulti::Instance().NotifyDirty(m_params[1]);
-        QAOFThreadController::Instance().SaveCommand(m_params, QSTORE.GetDB());
+        if (g_config.appendonly)
+            QAOFThreadController::Instance().SaveCommand(m_params, QSTORE.GetDB());
     }
     
     _Reset();
@@ -357,7 +359,8 @@ bool QClient::Exec()
         if (err == QError_ok && (info->attr & QAttr_write))
         {
             QMulti::Instance().NotifyDirty((*it)[1]);
-            QAOFThreadController::Instance().SaveCommand(*it, QSTORE.GetDB());
+            if (g_config.appendonly)
+                QAOFThreadController::Instance().SaveCommand(*it, QSTORE.GetDB());
         }
     }
     

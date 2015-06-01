@@ -6,6 +6,7 @@
 #include <cassert>
 #include <unistd.h>
 #include "QDB.h"
+#include "QAOF.h"
 
 using namespace std;
 
@@ -65,6 +66,15 @@ QError  flushall(const vector<QString>& params, UnboundedBuffer& reply)
 QError  bgsave(const vector<QString>& params, UnboundedBuffer& reply)
 {
     assert (params[0] == "bgsave");
+    
+    if (g_qdbPid != -1 || g_rewritePid != -1)
+    {
+        FormatBulk("-ERR Background save or aof already in progress",
+                   sizeof "-ERR Background save or aof already in progress" - 1,
+                   reply);
+
+        return QError_ok;
+    }
    
     int ret = fork();
     if (ret == 0)
@@ -72,7 +82,7 @@ QError  bgsave(const vector<QString>& params, UnboundedBuffer& reply)
         {
         QDBSaver  qdb;
         qdb.Save(g_qdbFile);
-        std::cerr << "child save rdb\n";
+        std::cerr << "child save rdb done, exiting child\n";
         }
         exit(0);
     }
@@ -92,6 +102,15 @@ QError  bgsave(const vector<QString>& params, UnboundedBuffer& reply)
 QError  save(const vector<QString>& params, UnboundedBuffer& reply)
 {
     assert (params[0] == "save");
+    
+    if (g_qdbPid != -1 || g_rewritePid != -1)
+    {
+        FormatBulk("-ERR Background save or aof already in progress",
+                   sizeof "-ERR Background save or aof already in progress" - 1,
+                   reply);
+        
+        return QError_ok;
+    }
     
     QDBSaver  qdb;
     qdb.Save(g_qdbFile);

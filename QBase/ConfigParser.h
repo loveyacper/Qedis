@@ -18,7 +18,7 @@ public:
     bool Save(const char* FileName, const std::string& key, const std::string& value);
 #endif
 
-	template <typename T>
+    template <typename T>
     T   GetData(const char* key, const T& default_ = T()) const;
 
     typedef std::map<std::string, std::string>::iterator iterator;
@@ -32,8 +32,8 @@ public:
     }
 
 #ifdef CONFIG_DEBUG
-	void Print()
-	{
+    void Print()
+    {
         std::cout << "//////////////////"<< std::endl;
         std::map<std::string, std::string>::const_iterator it = m_data.begin();
         while (it != m_data.end())
@@ -47,8 +47,8 @@ public:
 private:
     std::map<std::string, std::string> m_data;
 
-	template <typename T>
-	T  _ToType(const std::string& data) const;
+    template <typename T>
+    T  _ToType(const std::string& data) const;
 };
 
 

@@ -40,6 +40,8 @@ struct QConfig
     QString   includefile;      // the template config
     
     QConfig();
+
+    bool      CheckArgs() const;
 };
 
 extern  QConfig  g_config;

@@ -33,7 +33,7 @@ bool ConfigParser::Load(const char* FileName)
     size_t      maxLen = size_t(-1);
     const char* data = file.Read(maxLen);
 
-	bool  bReadKey = true;
+    bool  bReadKey = true;
     std::string  key, value;
     key.reserve(64);
     value.reserve(64);
@@ -43,36 +43,36 @@ bool ConfigParser::Load(const char* FileName)
     {
         switch (data[off])
         {
-			case COMMENT:
+            case COMMENT:
                 while (++ off < maxLen)
-				{
-					if (NEWLINE == data[off])
+                {
+                    if (NEWLINE == data[off])
                     {
                         -- off;
-						break;
+                        break;
                     }
-				}
-				break;
+                }
+                break;
 
             case NEWLINE:
-				bReadKey = true;
+                bReadKey = true;
 
-				if (!key.empty())
-				{
+                if (!key.empty())
+                {
                     if (m_data.count(key) > 0)
                     {
                         // duplicate key
-                       // return false;
+                        // return false;
                     }
-
-					m_data[key] = value;
-					key.clear();
-					value.clear();
-				}
-
+					
+                    m_data[key] = value;
+                    key.clear();
+                    value.clear();
+                }
+                
                 off = SkipBlank(data, maxLen, off);
-				break;
-
+                break;
+            
             case SPACE:
             case TAB:
                 // 支持value中有空格
@@ -82,82 +82,38 @@ bool ConfigParser::Load(const char* FileName)
                     off = SkipBlank(data, maxLen, off); // 跳过所有分界空格
                 }
                 else
-					value += data[off];
+                {
+                    value += data[off];
+                }
                 break;
-
+            
             case '\r':
                 break;
-
+            
             default:
-				if (bReadKey) 
-					key += data[off];
-				else
-					value += data[off];
+                if (bReadKey)
+                    key += data[off];
+                else
+                    value += data[off];
 
-				break;
+                break;
         }
-        
+
         ++ off;
     }
-
+    
     file.Close();
     return true;
 }
 
-#if 0
-bool ConfigParser::Save(const char* FileName, const std::string& key, const std::string& value)
-{
-    if (m_file.is_open())
-        m_file.close();
-
-    m_file.open(FileName, std::ios::app | std::ios::out | std::ios::binary);
-
-    if (!m_file)
-        return false;
-
-    m_file.seekp(0, std::ios_base::end);
-
-    m_file.write(key.data(), key.size());
-    m_file.put(TAB);
-    m_file.write(value.data(), value.size());
-    m_file.put('\n');
-
-    return true;
-}
-
-bool ConfigParser::Save(const char* FileName)
-{
-    if (m_file.is_open())
-        m_file.close();
-
-    m_file.open(FileName, std::ios::out | std::ios::binary);
-
-    if (!m_file)
-        return false;
-
-    m_file.seekp(0);
-
-    std::map<std::string, std::string>::iterator  it(m_data.begin());
-    for (; it != m_data.end(); ++ it)
-    {
-        m_file.write(it->first.data(), it->first.size());
-        m_file.put(TAB);
-        m_file.write(it->second.data(), it->second.size());
-        m_file.put('\n');
-    }
-
-    return true;
-}
-#endif
-
 #ifdef CONFIG_DEBUG
 int main()
 {
-	ConfigParser   csv;
-	csv.Load("config");
-	csv.Print();
-
-	std::cout << "=====================" << std::endl;
+    ConfigParser   csv;
+    csv.Load("config");
+    csv.Print();
+	
+    std::cout << "=====================" << std::endl;
 }
 #endif
 

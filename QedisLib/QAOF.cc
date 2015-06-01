@@ -8,10 +8,10 @@
 #include <sstream>
 
 
-pid_t   QAOFThreadController::sm_aofPid = -1;
-
 const char* const g_aofFileName = "qedis_appendonly.aof";
 const char* const g_aofTmp = "qedis_appendonly.aof.tmp";
+
+pid_t             g_rewritePid = -1;
 
 
 /*****************************************************
@@ -55,12 +55,12 @@ static void  WriteBulkLong(long val, DEST& dst)
     WriteBulkString(tmp, n, dst);
 }
 
-void   QAOFThreadController::AofRewriteDoneHandler(int exitcode, int bysignal)
+void   QAOFThreadController::RewriteDoneHandler(int exitcode, int bysignal)
 {
     if (exitcode == 0 && bysignal == 0)
     {
         INF << "save aof success";
-        sm_aofPid = -1;
+        g_rewritePid = -1;
         
         QAOFThreadController::Instance().Join();
         ::rename(g_aofTmp, g_aofFileName);
@@ -109,10 +109,12 @@ void  QAOFThreadController::Start()
 // when fork(), parent call stop;
 void   QAOFThreadController::Stop()
 {
-    assert (m_aofThread);
+    if (!m_aofThread)
+        return;
     
     std::cout << "stop aof thread\n";
     m_aofThread->Stop();
+    m_aofThread = nullptr;
 }
 
 template <typename DEST>
@@ -258,14 +260,14 @@ static void RewriteProcess()
 
 QError bgrewriteaof(const std::vector<QString>& params, UnboundedBuffer& reply)
 {
-    if (QAOFThreadController::sm_aofPid != -1)
+    if (g_rewritePid != -1)
     {
         ReplyError(QError_exist, reply);
     }
     else
     {
-        QAOFThreadController::sm_aofPid = fork();
-        switch (QAOFThreadController::sm_aofPid)
+        g_rewritePid = fork();
+        switch (g_rewritePid)
         {
             case 0:
                 RewriteProcess();

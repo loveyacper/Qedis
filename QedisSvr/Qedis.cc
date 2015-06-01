@@ -7,16 +7,20 @@
 //
 
 #include <iostream>
+
 #include "Server.h"
 #include "Log/Logger.h"
 #include "Timer.h"
+
 #include "QClient.h"
 #include "QStore.h"
-#include "QPubsub.h"
 #include "QCommand.h"
+
+#include "QPubsub.h"
 #include "QDB.h"
 #include "QAOF.h"
 #include "QConfig.h"
+#include "QSlowLog.h"
 
 
 class Qedis : public Server
@@ -54,11 +58,33 @@ std::shared_ptr<StreamSocket>   Qedis::_OnNewConnection(int connfd)
     return  pNewTask;
 }
 
+static void LoadDbFromFile()
+{
+    //  USE AOF RECOVERY FIRST, IF FAIL, THEN RDB
+    QAOFLoader aofLoader;
+    if (aofLoader.Load(g_aofFileName))
+    {
+        const auto& cmds = aofLoader.GetCmds();
+        for (const auto& cmd : cmds)
+        {
+            const QCommandInfo* info = QCommandTable::GetCommandInfo(cmd[0]);
+            UnboundedBuffer reply;
+            QCommandTable::ExecuteCmd(cmd, info, reply);
+        }
+    }
+    else
+    {
+        QDBLoader  loader;
+        loader.Load(g_qdbFile);
+    }
+}
+
 bool Qedis::_Init()
 {
     if (!LoadQedisConfig("qedis.conf", g_config))
     {
         std::cerr << "can not load qedis.conf\n";
+        return false;
     }
     
     // daemon must be first, before descriptor open, threads create
@@ -83,27 +109,14 @@ bool Qedis::_Init()
     QSTORE.InitBlockedTimer();
     QPubsub::Instance().InitPubsubTimer();
     
-    //  USE AOF RECOVERY FIRST, IF FAIL, THEN RDB
-    QAOFLoader aofLoader;
-    if (aofLoader.Load(g_aofFileName))
-    {
-        const auto& cmds = aofLoader.GetCmds();
-        for (const auto& cmd : cmds)
-        {
-            const QCommandInfo* info = QCommandTable::GetCommandInfo(cmd[0]);
-            UnboundedBuffer reply;
-            QCommandTable::ExecuteCmd(cmd, info, reply);
-        }
-    }
-    else
-    {
-        QDBLoader  loader;
-        loader.Load(g_qdbFile);
-    }
-    
+    LoadDbFromFile();
+
     QAOFThreadController::Instance().Start();
     
-    return true;
+    // slow log
+    QSlowLog::Instance().SetThreshold(g_config.slowlogtime);
+    
+    return  true;
 }
 
 Time  g_now;
@@ -113,7 +126,7 @@ bool Qedis::_RunLogic()
     g_now.Now();
     TimerManager::Instance().UpdateTimers(g_now);
     
-    if (g_qdbPid != -1 || QAOFThreadController::sm_aofPid != -1)
+    if (g_qdbPid != -1 || g_rewritePid != -1)
     {
         int    statloc;
 
@@ -129,10 +142,10 @@ bool Qedis::_RunLogic()
             {
                 QDBSaver::SaveDoneHandler(exitcode, bysignal);
             }
-            else if (pid == QAOFThreadController::sm_aofPid )
+            else if (pid == g_rewritePid)
             {
                 INF << pid << " aof process success done.";
-                QAOFThreadController::AofRewriteDoneHandler(exitcode, bysignal);
+                QAOFThreadController::RewriteDoneHandler(exitcode, bysignal);
             }
             else
             {
@@ -152,10 +165,6 @@ bool Qedis::_RunLogic()
 void    Qedis::_Recycle()
 {
     QAOFThreadController::Instance().Stop();
-    
-    QStat::Output(PARSE_STATE);
-    QStat::Output(PROCESS_STATE);
-    QStat::Output(SEND_STATE);
 }
 
 int main()
