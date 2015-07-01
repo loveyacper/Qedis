@@ -2,9 +2,9 @@
 #define BERT_QCOMMON_H
 
 #include <cstddef>
-#include <stdint.h>
 #include <stdio.h>
 #include <vector>
+#include <algorithm>
 #include "QString.h"
 
 #define QEDIS static_cast<Qedis* >(Server::Instance())
@@ -89,39 +89,39 @@ extern struct QErrorInfo
 } g_errorInfo[] ;
 
 template <typename T>
-inline int Number2Str(char* ptr, std::size_t nBytes, T val);
+inline int Number2Str(char* ptr, std::size_t nBytes, T val)
+{
+    if (!ptr || !nBytes)
+        return 0;
 
-template <>
-inline int Number2Str<int16_t>(char* ptr, std::size_t nBytes, int16_t val)
-{
-    return snprintf(ptr, nBytes - 1, "%hd", val);
-}
-template <>
-inline int Number2Str<uint16_t>(char* ptr, std::size_t nBytes, uint16_t val)
-{
-    return snprintf(ptr, nBytes - 1, "%hu", val);
-}
+    bool negative = false;
+    if (val < 0)
+    {
+        negative = true;
+        val = -val;
+    }
 
-template <>
-inline int Number2Str<int32_t>(char* ptr, std::size_t nBytes, int32_t val)
-{
-    return snprintf(ptr, nBytes - 1, "%d", val);
-}
-template <>
-inline int Number2Str<uint32_t>(char* ptr, std::size_t nBytes, uint32_t val)
-{
-    return snprintf(ptr, nBytes - 1, "%u", val);
-}
+    int  off = 0;
+    while (val > 0)
+    {
+        if (off >= nBytes)
+            return 0;
 
-template <>
-inline int Number2Str<int64_t>(char* ptr, std::size_t nBytes, int64_t val)
-{
-    return snprintf(ptr, nBytes - 1, "%lld", val);
-}
-template <>
-inline int Number2Str<uint64_t>(char* ptr, std::size_t nBytes, uint64_t val)
-{
-    return snprintf(ptr, nBytes - 1, "%llu", val);
+        ptr[off ++] = val % 10 + '0';
+        val /= 10;
+    }
+
+    if (negative)
+    {
+        if (off >= nBytes)
+            return 0;
+
+        ptr[off ++] = '-';
+    }
+
+    std::reverse(ptr, ptr + off);
+
+    return off;
 }
 
 int         Double2Str(char* ptr, std::size_t nBytes, double val);

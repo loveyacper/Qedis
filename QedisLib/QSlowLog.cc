@@ -2,7 +2,7 @@
 #include <fstream>
 #include <sstream>
 
-#include "QSlowlog.h"
+#include "QSlowLog.h"
 
 
 QSlowLog& QSlowLog::Instance()
@@ -44,7 +44,7 @@ void QSlowLog::EndAndStat(const std::vector<QString>& cmds)
     
     timeval  end;
     gettimeofday(&end, 0);
-    unsigned int used = end.tv_sec * 1000000 + end.tv_usec - m_beginUs;
+    auto used = end.tv_sec * 1000000 + end.tv_usec - m_beginUs;
     
     if (used >= m_threshold)
     {

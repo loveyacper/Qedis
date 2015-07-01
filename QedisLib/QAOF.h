@@ -2,10 +2,10 @@
 #define BERT_QAOF_H
 
 #include <memory>
-#include "MemoryFile.h"
+#include "Log/MemoryFile.h"
 #include "OutputBuffer.h"
 #include "QString.h"
-#include "Thread.h"
+#include "Threads/Thread.h"
 
 extern const char* const g_aofFileName;
 extern const char* const g_aofTmp;

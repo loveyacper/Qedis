@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "Logger.h"
+#include "Log/Logger.h"
 #include "QString.h"
 
 class  QSlowLog
@@ -21,9 +21,7 @@ private:
     ~QSlowLog();
     
     unsigned int m_threshold;
-    
-    unsigned int m_beginUs;
-    
+    long long    m_beginUs;
     Logger*      m_logger;
 };
 

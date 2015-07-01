@@ -1,14 +1,13 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <assert.h>
+#include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <iostream>
-using namespace std;
-
-#if defined(__APPLE__)
 #include <unistd.h>
-#endif
+
+using namespace std;
 
 #include "MemoryFile.h"
 

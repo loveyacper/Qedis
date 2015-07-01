@@ -85,9 +85,7 @@ void RecvThread::Run()
     g_logDest  = logFILE;
     if (g_logLevel && g_logDest)
     {
-        char file[64];
-        snprintf(file, sizeof file - 1, "recvthread_log.%lu", (unsigned long)Thread::GetCurrentThreadId());
-        g_log = LogManager::Instance().CreateLog(g_logLevel, g_logDest, file);
+        g_log = LogManager::Instance().CreateLog(g_logLevel, g_logDest, "recvthread_log");
     }
 
     std::deque<PSOCKET >::iterator    it;
@@ -157,9 +155,7 @@ void SendThread::Run( )
     g_logDest  = logFILE;
     if (g_logLevel && g_logDest)
     {
-        char file[64];
-        snprintf(file, sizeof file - 1, "sendthread_log.%lu", (unsigned long)Thread::GetCurrentThreadId());
-        g_log = LogManager::Instance().CreateLog(g_logLevel, g_logDest, file);
+        g_log = LogManager::Instance().CreateLog(g_logLevel, g_logDest, "sendthread_log");
     }
     
     std::deque<PSOCKET >::iterator    it;

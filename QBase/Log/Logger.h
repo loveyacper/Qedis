@@ -5,10 +5,10 @@
 #include <set>
 #include <memory>
 
-#include "Thread.h"
-#include "OutputBuffer.h"
+#include "../Threads/Thread.h"
+#include "../OutputBuffer.h"
 #include "MemoryFile.h"
-#include "Timer.h"
+#include "../Timer.h"
 
 enum LogLevel
 {

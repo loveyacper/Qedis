@@ -1,7 +1,5 @@
 PROJECT(QEDISSERVER)
 
-SET(CMAKE_CXX_FLAGS_DEBUG   "-g -Wall ")
-SET(CMAKE_BUILD_TYPE "Debug")
 
 AUX_SOURCE_DIRECTORY(. QEDISSERVER_SRC)
 
@@ -10,5 +8,5 @@ INCLUDE_DIRECTORIES(../QBase; ../QedisLib)
 
 ADD_EXECUTABLE(qedisserver ${QEDISSERVER_SRC})
 SET(EXECUTABLE_OUTPUT_PATH  ../)
-TARGET_LINK_LIBRARIES(qedisserver qbaselib; qedislib; pthread)
+TARGET_LINK_LIBRARIES(qedisserver qedislib; qbaselib; pthread)
 ADD_DEPENDENCIES(qedisserver qbaselib; qedislib)

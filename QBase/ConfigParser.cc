@@ -1,6 +1,6 @@
 #include <vector>
 #include "ConfigParser.h"
-#include "MemoryFile.h"
+#include "Log/MemoryFile.h"
 
 static const int  SPACE     = ' ';
 static const int  TAB       = '\t';

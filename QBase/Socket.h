@@ -5,6 +5,7 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include <memory>
+#include <atomic>
 
 #define INVALID_SOCKET  (int)(~0)
 #define SOCKET_ERROR    (-1)

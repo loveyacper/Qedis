@@ -83,8 +83,6 @@ public:
     std::size_t ReadableSize()  const {  return (m_writePos - m_readPos) & (m_maxSize - 1);  }
     std::size_t WritableSize()  const {  return m_maxSize - ReadableSize() - 1;  }
 
-    void Clear() {  AtomicSet(&m_readPos, m_writePos);  }
-
     std::size_t Capacity() const { return m_maxSize; }
     void InitCapacity(std::size_t size);
 

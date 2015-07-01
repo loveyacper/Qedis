@@ -1,5 +1,6 @@
 #include "Log/Logger.h"
 
+#include <algorithm>
 #include "QStore.h"
 #include "QCommand.h"
 #include "QMulti.h"

@@ -2,10 +2,11 @@
 #include "QStore.h"
 #include "QClient.h"
 #include "Log/Logger.h"
-#include <iostream>
+#include <algorithm>
+//#include <iostream>
 #include <cassert>
 
-using namespace std;
+using std::vector;
 
 
 QObject  CreateListObject()

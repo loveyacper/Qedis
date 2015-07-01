@@ -1,13 +1,15 @@
 
 #include "QDB.h"
-#include "Logger.h"
+#include "Log/Logger.h"
 #include <iostream>
 #include <sstream>
 #include <unistd.h>
+#include <math.h>
+#include <arpa/inet.h>
 
 extern "C"
 {
-#include "lzf.h"
+#include "lzf/lzf.h"
 #include "redisZipList.h"
 #include "redisIntset.h"
 }
@@ -199,7 +201,7 @@ void  QDBSaver::_SaveDoubleValue(double val)
     if (isnan(val)) {
         buf[0] = 253;
         len = 1;
-    } else if (!isfinite(val)) {
+    } else if (!std::isfinite(val)) {
         len = 1;
         buf[0] = (val < 0) ? 255 : 254;
     } else {
@@ -459,7 +461,7 @@ int  QDBLoader::Load(const char *filename)
                 }
                 else if (absTimeout > 0)
                 {
-                    if (absTimeout > ::Now())
+                    if (absTimeout > static_cast<int64_t>(::Now()))
                     {
                         std::cerr << key << " load timeout " << absTimeout << std::endl;
                         QSTORE.SetValue(key, obj);
@@ -831,7 +833,7 @@ QObject    QDBLoader::_LoadSSet()
 
 double  QDBLoader::_LoadDoubleValue()
 {
-    const int8_t byte1st = m_qdb.Read<int8_t>();
+    const uint8_t byte1st = m_qdb.Read<uint8_t>();
 
     double  dvalue;
     switch (byte1st)

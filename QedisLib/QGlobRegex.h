@@ -1,6 +1,7 @@
 #ifndef BERT_QGLOBREGEX_H
 #define BERT_QGLOBREGEX_H
 
+#include <string.h>
 #include "QString.h"
 
 class QGlobRegex

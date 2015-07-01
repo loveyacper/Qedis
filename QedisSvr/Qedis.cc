@@ -7,6 +7,8 @@
 //
 
 #include <iostream>
+#include <unistd.h>
+#include <sys/wait.h>
 
 #include "Server.h"
 #include "Log/Logger.h"
@@ -121,39 +123,44 @@ bool Qedis::_Init()
 
 Time  g_now;
 
+static void CheckChild()
+{
+    if (g_qdbPid == -1 && g_rewritePid == -1)
+        return;
+
+    int    statloc;
+
+    pid_t  pid = wait3(&statloc,WNOHANG,NULL);
+    if (pid != 0 && pid != -1)
+    {
+        int exitcode = WEXITSTATUS(statloc);
+        int bysignal = 0;
+
+        if (WIFSIGNALED(statloc)) bysignal = WTERMSIG(statloc);
+        
+        if (pid == g_qdbPid)
+        {
+            QDBSaver::SaveDoneHandler(exitcode, bysignal);
+        }
+        else if (pid == g_rewritePid)
+        {
+            INF << pid << " aof process success done.";
+            QAOFThreadController::RewriteDoneHandler(exitcode, bysignal);
+        }
+        else
+        {
+            ERR << pid << " is not rdb or aof process ";
+            assert (false);
+        }
+    }
+}
+
 bool Qedis::_RunLogic()
 {
     g_now.Now();
     TimerManager::Instance().UpdateTimers(g_now);
     
-    if (g_qdbPid != -1 || g_rewritePid != -1)
-    {
-        int    statloc;
-
-        pid_t  pid = wait3(&statloc,WNOHANG,NULL);
-        if (pid != 0 && pid != -1)
-        {
-            int exitcode = WEXITSTATUS(statloc);
-            int bysignal = 0;
-
-            if (WIFSIGNALED(statloc)) bysignal = WTERMSIG(statloc);
-            
-            if (pid == g_qdbPid)
-            {
-                QDBSaver::SaveDoneHandler(exitcode, bysignal);
-            }
-            else if (pid == g_rewritePid)
-            {
-                INF << pid << " aof process success done.";
-                QAOFThreadController::RewriteDoneHandler(exitcode, bysignal);
-            }
-            else
-            {
-                ERR << pid << " is not rdb or aof process ";
-                assert (false);
-            }
-        }
-    }
+    CheckChild();
     
     if (!Server::_RunLogic())
         Thread::YieldCPU();

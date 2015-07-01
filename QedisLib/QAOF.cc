@@ -1,7 +1,7 @@
 
 #include "QAOF.h"
-#include "Logger.h"
-#include "ThreadPool.h"
+#include "Log/Logger.h"
+#include "Threads/ThreadPool.h"
 #include "QStore.h"
 #include <unistd.h>
 #include <iostream>
@@ -491,7 +491,7 @@ bool  QAOFLoader::Load(const char* name)
                     params.push_back(QString(content, paramLen));
                     content += paramLen + kCRLFLen;
 
-                    if (params.size() == m_multi)
+                    if (static_cast<int>(params.size()) == m_multi)
                         m_state = Ready;
                 }
 

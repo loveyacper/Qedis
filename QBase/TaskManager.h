@@ -5,6 +5,7 @@
 #include <map>
 #include <mutex>
 #include <memory>
+#include <atomic>
 
 class StreamSocket;
 
