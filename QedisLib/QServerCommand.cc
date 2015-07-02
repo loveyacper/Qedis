@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include "QDB.h"
 #include "QAOF.h"
+#include "QConfig.h"
 
 using namespace std;
 
@@ -81,7 +82,7 @@ QError  bgsave(const vector<QString>& params, UnboundedBuffer& reply)
     {
         {
         QDBSaver  qdb;
-        qdb.Save(g_qdbFile);
+        qdb.Save(g_config.rdbfilename.c_str());
         std::cerr << "child save rdb done, exiting child\n";
         }
         exit(0);
@@ -113,7 +114,7 @@ QError  save(const vector<QString>& params, UnboundedBuffer& reply)
     }
     
     QDBSaver  qdb;
-    qdb.Save(g_qdbFile);
+    qdb.Save(g_config.rdbfilename.c_str());
     g_lastQDBSave = time(NULL);
 
     FormatOK(reply);

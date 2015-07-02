@@ -82,6 +82,11 @@ bool  LoadQedisConfig(const char* cfgFile, QConfig& cfg)
     cfg.saveseconds = std::stoi(saveInfo[0]);
     cfg.savechanges = std::stoi(saveInfo[1]);
     
+    if (cfg.saveseconds == 0)
+        cfg.saveseconds = 999999999;
+    if (cfg.savechanges == 0)
+        cfg.savechanges = 999999999;
+    
     cfg.rdbcompression = (parser.GetData<QString>("rdbcompression") == "yes");
     cfg.rdbchecksum    = (parser.GetData<QString>("rdbchecksum") == "yes");
     cfg.rdbfilename    = parser.GetData<QString>("dbfilename", "dump.rdb");
@@ -123,6 +128,8 @@ bool  QConfig::CheckArgs() const
     RETURN_IF_FAIL(databases > 0);
     RETURN_IF_FAIL(maxclients > 0);
     RETURN_IF_FAIL(hz > 0 && hz < 500);
+
+#undef RETURN_IF_FAIL
     
     
 #undef RETURN_IF_FALSE

@@ -211,7 +211,8 @@ void  QAOFThreadController::AOFThread::Run()
 
 void  QAOFThreadController::Join()
 {
-    m_aofThread->m_sem.Wait();
+    if (m_aofThread)
+        m_aofThread->m_sem.Wait();
 }
 
 static void SaveExpire(const QString& key, uint64_t absMs, OutputMemoryFile& file)

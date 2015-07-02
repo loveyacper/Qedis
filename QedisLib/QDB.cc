@@ -108,7 +108,7 @@ void  QDBSaver::Save(const char* qdbFile)
     const uint64_t  crc = crc64(0, (const unsigned char* )data, len);
     m_qdb.Write(&crc, sizeof crc);
     
-    if (::rename(tmpFile, g_qdbFile) != 0)
+    if (::rename(tmpFile, qdbFile) != 0)
     {
         std::cerr << "rename error " << errno << std::endl;
         assert (false);

@@ -149,8 +149,8 @@ bool  OutputMemoryFile::Open(const char* file, bool bAppend)
     }
     else
     {
-        ::ftruncate(m_file, 0);
-        m_size    = 0;
+        ::ftruncate(m_file, 1 * 1024 * 1024);
+        m_size    = 1 * 1024 * 1024;
         m_offset  = 0;
     }
     

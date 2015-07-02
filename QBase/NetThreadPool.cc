@@ -225,7 +225,9 @@ void SendThread::Run( )
 void NetThreadPool::StopAllThreads()
 {
     m_recvThread->Stop();
+    m_recvThread.reset();
     m_sendThread->Stop();
+    m_sendThread.reset();
 
     INF << "Stop all recv and send threads";
 }

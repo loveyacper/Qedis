@@ -60,6 +60,39 @@ std::shared_ptr<StreamSocket>   Qedis::_OnNewConnection(int connfd)
     return  pNewTask;
 }
 
+Time  g_now;
+
+static void  ServerCron()
+{
+    if (g_qdbPid == -1)
+    {
+        if (g_now.MilliSeconds() > 1000 * (g_lastQDBSave + g_config.saveseconds))
+        {
+            g_lastQDBSave = g_now.MilliSeconds() / 1000;
+            QDBSaver   qdb;
+            qdb.Save((g_config.rdbdir + g_config.rdbfilename).c_str());
+            
+            
+            INF << "ServerCron save rdb file " << (g_config.rdbdir + g_config.rdbfilename);
+        }
+    }
+}
+
+class  ServerCronTimer : public Timer
+{
+public:
+    ServerCronTimer() : Timer(1000 / g_config.hz)
+    {
+    }
+
+private:
+    bool _OnTimer() override
+    {
+        ServerCron();
+        return  true;
+    }
+};
+
 static void LoadDbFromFile()
 {
     //  USE AOF RECOVERY FIRST, IF FAIL, THEN RDB
@@ -77,7 +110,7 @@ static void LoadDbFromFile()
     else
     {
         QDBLoader  loader;
-        loader.Load(g_qdbFile);
+        loader.Load(g_config.rdbfilename.c_str());
     }
 }
 
@@ -114,14 +147,13 @@ bool Qedis::_Init()
     LoadDbFromFile();
 
     QAOFThreadController::Instance().Start();
-    
-    // slow log
+
     QSlowLog::Instance().SetThreshold(g_config.slowlogtime);
+    
+    TimerManager::Instance().AddTimer(PTIMER(new ServerCronTimer));
     
     return  true;
 }
-
-Time  g_now;
 
 static void CheckChild()
 {

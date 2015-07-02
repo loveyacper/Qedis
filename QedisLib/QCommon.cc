@@ -96,6 +96,7 @@ bool Strtol(const char* ptr, size_t nBytes, long* outVal)
     if (nBytes == 0 || nBytes > 20) // include the sign
         return false;
 
+    errno = 0;
     char* pEnd = 0;
     *outVal = strtol(ptr, &pEnd, 0);
 
@@ -111,6 +112,7 @@ bool Strtoll(const char* ptr, size_t nBytes, long long* outVal)
     if (nBytes == 0 || nBytes > 20)
         return false;
     
+    errno  = 0;
     char* pEnd = 0;
     *outVal = strtoll(ptr, &pEnd, 0);
     
@@ -126,6 +128,7 @@ bool Strtof(const char* ptr, size_t nBytes, float* outVal)
     if (nBytes == 0 || nBytes > 20)
         return false;
     
+    errno = 0;
     char* pEnd = 0;
     *outVal = strtof(ptr, &pEnd);
     
@@ -141,6 +144,7 @@ bool Strtod(const char* ptr, size_t nBytes, double* outVal)
     if (nBytes == 0 || nBytes > 20)
         return false;
     
+    errno = 0;
     char* pEnd = 0;
     *outVal = strtod(ptr, &pEnd);
     
