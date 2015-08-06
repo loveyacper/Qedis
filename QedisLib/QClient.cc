@@ -55,6 +55,8 @@ void QClient::_ProcessInlineCmd(const char* buf, size_t bytes, BODY_LENGTH_T* bo
                 param.push_back(buf[i]);
             }
         }
+        
+        m_params.emplace_back(std::move(param));
     }
 }
 
