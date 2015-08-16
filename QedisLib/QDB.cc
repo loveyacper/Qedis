@@ -51,8 +51,6 @@ static const int8_t  kEnc16Bits = 1;
 static const int8_t  kEnc32Bits = 2;
 static const int8_t  kEncLZF    = 3;
 
-const char* const g_qdbFile = "dump.qdb.rdb";
-
 void  QDBSaver::Save(const char* qdbFile)
 {
     char     tmpFile[64] = "";

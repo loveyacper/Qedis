@@ -12,7 +12,9 @@ using namespace std;
 #include "MemoryFile.h"
 
 using std::size_t;
-    
+
+static const size_t kDefaultSize = 1 * 1024 * 1024;
+
 static const int   kInvalidFile = -1;
 static char* const kInvalidAddr = reinterpret_cast<char*>(-1);
 
@@ -149,9 +151,9 @@ bool  OutputMemoryFile::Open(const char* file, bool bAppend)
     }
     else
     {
-        ::ftruncate(m_file, 1 * 1024 * 1024);
-        m_size    = 1 * 1024 * 1024;
+        m_size    = kDefaultSize;
         m_offset  = 0;
+        ::ftruncate(m_file, m_size);
     }
     
     return _MapWriteOnly();
@@ -187,10 +189,12 @@ bool   OutputMemoryFile::_MapWriteOnly()
 {
     if (m_size == 0 || m_file == kInvalidFile)
         return false;
-        
+    
+#if 0
+    // codes below cause coredump when file size > 4MB
     if (m_pMemory != kInvalidAddr)
         ::munmap(m_pMemory, m_size);
-
+#endif
     m_pMemory = (char* )::mmap(0, m_size, PROT_WRITE, MAP_SHARED, m_file, 0);
     return (m_pMemory != kInvalidAddr);
 }
@@ -234,7 +238,7 @@ bool  OutputMemoryFile::IsOpen() const
 void   OutputMemoryFile::Write(const void* data, size_t len)
 {
     _AssureSpace(len);
-        
+    assert( m_pMemory > 0);
     ::memcpy(m_pMemory + m_offset, data, len);
     m_offset += len;
     assert(m_offset <= m_size);
@@ -246,11 +250,10 @@ void   OutputMemoryFile::_AssureSpace(size_t  size)
     while (m_offset + size > newSize)
     {
         if (newSize == 0)
-            newSize = 1 * 1024 * 1024;
+            newSize = kDefaultSize;
         else
             newSize <<= 1;
     }
 
     _ExtendFileSize(newSize);
 }
-

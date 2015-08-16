@@ -4,7 +4,6 @@
 #include "Log/MemoryFile.h"
 #include "QStore.h"
 
-extern const char* const g_qdbFile;
 class QDBSaver
 {
 public:
