@@ -54,7 +54,7 @@ public:
     virtual ~Timer() {}
     bool     OnTimer();
     void     SetRemainCnt(int32_t remain) {  m_count = remain; }
-    bool     IsWorking() const {  return  m_prev != NULL; }
+    bool     IsWorking() const {  return  m_prev.get() != nullptr; }
 
 private:
     virtual  bool _OnTimer() { return false; }

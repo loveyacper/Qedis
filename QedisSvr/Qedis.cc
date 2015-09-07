@@ -68,10 +68,23 @@ static void  ServerCron()
     {
         if (g_now.MilliSeconds() > 1000 * (g_lastQDBSave + g_config.saveseconds))
         {
-            g_lastQDBSave = g_now.MilliSeconds() / 1000;
-            QDBSaver   qdb;
-            qdb.Save((g_config.rdbdir + g_config.rdbfilename).c_str());
-            
+            int ret = fork();
+            if (ret == 0)
+            {
+                {
+                    QDBSaver  qdb;
+                    qdb.Save((g_config.rdbdir + g_config.rdbfilename).c_str());
+                    std::cerr << "ServerCron child save rdb done, exiting child\n";
+                }  //  make qdb to be destructed before exit
+                exit(0);
+            }
+            else if (ret == -1)
+            {
+            }
+            else
+            {
+                g_qdbPid = ret;
+            }
             
             INF << "ServerCron save rdb file " << (g_config.rdbdir + g_config.rdbfilename);
         }
@@ -128,7 +141,7 @@ bool Qedis::_Init()
         daemon(1, 0);
     }
     
-    g_log = LogManager::Instance().CreateLog(logALL, logALL, "./qedislog/");
+    //g_log = LogManager::Instance().CreateLog(logALL, logALL, "./qedislog/");
     
     SocketAddr addr("0.0.0.0", g_config.port);
     

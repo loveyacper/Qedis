@@ -217,7 +217,7 @@ TimerManager::~TimerManager()
     PTIMER   pTimer;
     for (int i = 0; i < LIST1_SIZE; ++ i)
     {
-        while ((pTimer = m_list1[i]->m_next) != NULL)
+        while ((pTimer = m_list1[i]->m_next) )
         {
             KillTimer(pTimer);
         }
@@ -225,22 +225,22 @@ TimerManager::~TimerManager()
 
     for (int i = 0; i < LIST_SIZE; ++ i)
     {
-        while ((pTimer = m_list2[i]->m_next) != NULL)
+        while ((pTimer = m_list2[i]->m_next) )
         {
             KillTimer(pTimer);
         }
 
-        while ((pTimer = m_list3[i]->m_next) != NULL)
+        while ((pTimer = m_list3[i]->m_next) )
         {
             KillTimer(pTimer);
         }
 
-        while ((pTimer = m_list4[i]->m_next) != NULL)
+        while ((pTimer = m_list4[i]->m_next) )
         {
             KillTimer(pTimer);
         }
 
-        while ((pTimer = m_list5[i]->m_next) != NULL)
+        while ((pTimer = m_list5[i]->m_next) )
         {
             KillTimer(pTimer);
         }
@@ -286,7 +286,7 @@ bool TimerManager::UpdateTimers(const Time& now)
         m_lastCheckTime.AddDelay(1);
 
         PTIMER   pTimer;
-        while ((pTimer = m_list1[index]->m_next) != NULL)
+        while ((pTimer = m_list1[index]->m_next))
         {
             KillTimer(pTimer);
             if (pTimer->OnTimer())
@@ -391,7 +391,7 @@ bool TimerManager::_Cacsade(PTIMER pList[], int index)
     PTIMER  tmpListHead = pList[index]->m_next;
     pList[index]->m_next.reset();
 
-    while (tmpListHead != NULL)
+    while (tmpListHead)
     {
         PTIMER next = tmpListHead->m_next;
         if (tmpListHead->m_next)
