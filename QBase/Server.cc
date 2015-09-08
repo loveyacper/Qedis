@@ -46,7 +46,9 @@ void Server::HupHandler(int signum)
         Server::Instance()->m_reloadCfg = true;
 }
 
-Server* Server::sm_instance = NULL;
+Server* Server::sm_instance = nullptr;
+
+std::set<int>   Server::sm_listenSocks;
 
 Server::Server() : m_bTerminate(false), m_reloadCfg(false)
 {
@@ -72,7 +74,13 @@ bool Server::TCPBind(const SocketAddr& addr)
 
     std::shared_ptr<ListenSocket> pServerSocket(new ListenSocket);
 
-    return  pServerSocket->Bind(addr);
+    if (pServerSocket->Bind(addr))
+    {
+        sm_listenSocks.insert(pServerSocket->GetSocket());
+        return true;
+    }
+    
+    return  false;
 }
 
 
@@ -100,6 +108,8 @@ void Server::MainLoop()
     sig.sa_handler = SIG_IGN;
     sigaction(SIGPIPE, &sig, NULL);
 
+    ::pthread_atfork(nullptr, nullptr, AtForkHandler);
+    
     ::srand(static_cast<unsigned int>(time(NULL)));
     ::srandom(static_cast<unsigned int>(time(NULL)));
 
@@ -167,3 +177,23 @@ void  Server::NewConnection(int  sock, bool needReconn)
         m_tasks.AddTask(pNewTask);
 }
 
+void   Server::AtForkHandler()
+{
+    for (auto sock : sm_listenSocks)
+    {
+        close(sock);
+    }
+}
+
+void   Server::DelListenSock(int sock)
+{
+    if (sock == INVALID_SOCKET)
+        return;
+    
+    auto n = sm_listenSocks.erase(sock);
+
+    if (n != 1)
+        ERR << "DelListenSock failed  " << sock;
+    else
+        INF << "DelListenSock succ " << sock;
+}

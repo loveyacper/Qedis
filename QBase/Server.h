@@ -2,6 +2,7 @@
 #ifndef BERT_SERVER_H
 #define BERT_SERVER_H
 
+#include <set>
 #include "TaskManager.h"
 
 struct SocketAddr;
@@ -38,14 +39,19 @@ public:
     static void HupHandler(int sig);
 
     std::shared_ptr<StreamSocket>  FindTCP(unsigned int id) const { return m_tasks.FindTCP(id); }
+    
+    static void AtForkHandler();
+    static void DelListenSock(int sock);
 
 private:
     virtual std::shared_ptr<StreamSocket>   _OnNewConnection(int tcpsock);
 
-    volatile bool m_bTerminate;
+    std::atomic<bool> m_bTerminate;
     Internal::TaskManager   m_tasks;
     bool          m_reloadCfg;
     static Server*   sm_instance;
+    
+    static std::set<int>  sm_listenSocks;
 };
 
 #endif

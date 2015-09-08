@@ -21,6 +21,7 @@ ListenSocket::ListenSocket()
 
 ListenSocket::~ListenSocket()
 {
+    Server::Instance()->DelListenSock(m_localSock);
     USR << "close LISTEN socket " << m_localSock;
 }
 
@@ -122,7 +123,7 @@ bool ListenSocket::OnError()
 {
     if (Socket::OnError())
     {
-        Server::Instance()->Terminate();
+        Server::Instance()->DelListenSock(m_localSock);
         return  true;
     }
 

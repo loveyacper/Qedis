@@ -252,9 +252,9 @@ QError  getrange(const vector<QString>& params, UnboundedBuffer& reply)
         return err;  
     }
 
-    long start, end;
+    long start = 0, end = 0;
     if (!Strtol(params[2].c_str(), params[2].size(), &start) ||
-        !Strtol(params[2].c_str(), params[2].size(), &start))
+        !Strtol(params[3].c_str(), params[3].size(), &end))
     {
         ReplyError(QError_nan, reply);
         return QError_nan;
