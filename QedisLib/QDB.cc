@@ -100,7 +100,7 @@ void  QDBSaver::Save(const char* qdbFile)
     InputMemoryFile  file;
     file.Open(tmpFile);
     
-    auto  len  = m_qdb.Offset();
+    auto  len  = m_qdb.Size();
     auto  data = file.Read(len);
     
     const uint64_t  crc = crc64(0, (const unsigned char* )data, len);
@@ -207,7 +207,8 @@ void  QDBSaver::_SaveDoubleValue(double val)
         buf[0] = strlen((char*)buf+1);
         len = buf[0]+1;
     }
-    return m_qdb.Write(buf,len);
+    
+    m_qdb.Write(buf,len);
 }
 
 

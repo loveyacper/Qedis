@@ -39,7 +39,7 @@ bool InputMemoryFile::_MapReadOnly()
     fstat(m_file, &st);
     m_size = st.st_size;
 
-    m_pMemory = (char* )::mmap(0, m_size, PROT_READ, MAP_SHARED, m_file, 0);
+    m_pMemory = (char* )::mmap(0, m_size, PROT_READ, MAP_PRIVATE, m_file, 0);
     return   m_pMemory != kInvalidAddr;
 }
 
@@ -101,24 +101,13 @@ bool InputMemoryFile::IsOpen() const
 // OutputMemoryFile
 
 OutputMemoryFile::OutputMemoryFile() : m_file(kInvalidFile),
-                                       m_pMemory(kInvalidAddr),
-                                       m_offset(0),
-                                       m_size(0),
-                                       m_syncPos(0)
+                                       m_size(0)
 {
 }
 
 OutputMemoryFile::~OutputMemoryFile()
 {
     Close();
-}
-
-void OutputMemoryFile::_ExtendFileSize(size_t  size)
-{
-    assert (m_file != kInvalidFile);
-
-    if (size > m_size)
-        Truncate(size);
 }
 
 bool  OutputMemoryFile::Open(const std::string&  file, bool bAppend)
@@ -130,7 +119,7 @@ bool  OutputMemoryFile::Open(const char* file, bool bAppend)
 {
     Close();
 
-    m_file = ::open(file, O_RDWR | O_CREAT, 0644);
+    m_file = ::open(file, O_RDWR | O_CREAT | (bAppend ? O_APPEND : 0), 0644);
 
     if (m_file == kInvalidFile)
     {
@@ -139,95 +128,37 @@ bool  OutputMemoryFile::Open(const char* file, bool bAppend)
         perror(err);
         return false;
     }
-
-    struct stat st;
-    fstat(m_file, &st);
-    m_size = st.st_size;
-    cerr << "open size " << m_size << endl;
-
+    
+    m_size = 0;
     if (bAppend)
     {
-        m_offset = m_size;
-    }
-    else
-    {
-        m_size    = kDefaultSize;
-        m_offset  = 0;
-        ::ftruncate(m_file, m_size);
+        struct stat st;
+        fstat(m_file, &st);
+        m_size = st.st_size;
     }
     
-    return _MapWriteOnly();
+    return  true;
 }
 
 void  OutputMemoryFile::Close()
 {
     if (m_file != kInvalidFile)
     {
-        ::munmap(m_pMemory, m_size);
-        ::ftruncate(m_file, m_offset);
         ::close(m_file);
 
         m_file      = kInvalidFile;
         m_size      = 0;
-        m_pMemory   = kInvalidAddr;
-        m_offset    = 0;
-        m_syncPos   = 0;
     }
 }
 
 bool    OutputMemoryFile::Sync()
 {
-    if (m_syncPos >= m_offset)
-        return false;
-    
-    ::msync(m_pMemory + m_syncPos, m_offset - m_syncPos, MS_SYNC);
-    m_syncPos = m_offset;
-    return true;
-}
-
-bool   OutputMemoryFile::_MapWriteOnly()
-{
-    if (m_size == 0 || m_file == kInvalidFile)
-        return false;
-    
-#if 0
-    // codes below cause coredump when file size > 4MB
-    if (m_pMemory != kInvalidAddr)
-        ::munmap(m_pMemory, m_size);
-#endif
-    m_pMemory = (char* )::mmap(0, m_size, PROT_WRITE, MAP_SHARED, m_file, 0);
-    return (m_pMemory != kInvalidAddr);
-}
-
-void    OutputMemoryFile::Truncate(std::size_t  size)
-{
-    if (size == m_size)
-        return;
-    
-    m_size = size;
-    ::ftruncate(m_file, size);
-    
-    if (m_offset > m_size)
-        m_offset = m_size;
-    
-    _MapWriteOnly();
-}
-
-void    OutputMemoryFile::TruncateTailZero()
-{
     if (m_file == kInvalidFile)
-        return;
-
-    size_t  tail = m_size;
-    while (tail > 0 && m_pMemory[--tail] == '\0')
-        ;
-
-    ++ tail;
-
-    cerr << "tail " << tail << endl;;
-
-    Truncate(tail);
+        return false;
+    
+    return 0 == ::fsync(m_file);
 }
+
 
 bool  OutputMemoryFile::IsOpen() const
 {
@@ -235,25 +166,14 @@ bool  OutputMemoryFile::IsOpen() const
 }
 
 // consumer
-void   OutputMemoryFile::Write(const void* data, size_t len)
+size_t   OutputMemoryFile::Write(const void* data, size_t len)
 {
-    _AssureSpace(len);
-    assert( m_pMemory > 0);
-    ::memcpy(m_pMemory + m_offset, data, len);
-    m_offset += len;
-    assert(m_offset <= m_size);
-}
+    auto n = ::write(m_file, data, len);
+    if (n > 0)
+        m_size += n;
+    else if (n < 0)
+        n = 0;
     
-void   OutputMemoryFile::_AssureSpace(size_t  size)
-{
-    size_t  newSize = m_size;
-    while (m_offset + size > newSize)
-    {
-        if (newSize == 0)
-            newSize = kDefaultSize;
-        else
-            newSize <<= 1;
-    }
-
-    _ExtendFileSize(newSize);
+    return n;
 }
+

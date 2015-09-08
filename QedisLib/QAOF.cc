@@ -421,13 +421,6 @@ bool  QAOFLoader::Load(const char* name)
     _Reset();
     
     const int kCRLFLen = 2;
-
-    // truncate tail zero if aof terminated abnormally
-    {
-        OutputMemoryFile file;
-        file.Open(name);
-        file.TruncateTailZero();
-    }
     
     // load file to memory
     InputMemoryFile  file;

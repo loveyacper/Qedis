@@ -46,7 +46,7 @@ void QClient::_ProcessInlineCmd(const char* buf, size_t bytes, BODY_LENGTH_T* bo
                 if (!param.empty())
                 {
                     INF << "inline cmd param " << param.c_str();
-                    m_params.emplace_back(param);
+                    m_params.emplace_back(std::move(param));
                     param.clear();
                 }
             }

@@ -141,7 +141,7 @@ bool Qedis::_Init()
         daemon(1, 0);
     }
     
-    //g_log = LogManager::Instance().CreateLog(logALL, logALL, "./qedislog/");
+    g_log = LogManager::Instance().CreateLog(logALL, logFILE, "./qedislog/");
     
     SocketAddr addr("0.0.0.0", g_config.port);
     
