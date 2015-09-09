@@ -116,8 +116,7 @@ static void LoadDbFromFile()
         for (const auto& cmd : cmds)
         {
             const QCommandInfo* info = QCommandTable::GetCommandInfo(cmd[0]);
-            UnboundedBuffer reply;
-            QCommandTable::ExecuteCmd(cmd, info, reply);
+            QCommandTable::ExecuteCmd(cmd, info);
         }
     }
     else

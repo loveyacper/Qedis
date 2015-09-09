@@ -179,7 +179,7 @@ size_t  QStore::BlockedClients::ServeClient(const QString& key, const PLIST& lis
                     if (err != QError_notExist)
                     {
                         UnboundedBuffer  reply;
-                        ReplyError(err, reply);
+                        ReplyError(err, &reply);
                         cli->SendPacket(reply.ReadAddr(), reply.ReadableSize());
                         errorTarget = true;
                     }
@@ -205,18 +205,18 @@ size_t  QStore::BlockedClients::ServeClient(const QString& key, const PLIST& lis
             
                 if (!dst)
                 {
-                    PreFormatMultiBulk(2, reply);
-                    FormatBulk(key.c_str(), key.size(), reply);
+                    PreFormatMultiBulk(2, &reply);
+                    FormatBulk(key.c_str(), key.size(), &reply);
                 }
 
                 if (pos == ListPosition::head)
                 {
-                    FormatBulk(list->front().c_str(), list->front().size(), reply);
+                    FormatBulk(list->front().c_str(), list->front().size(), &reply);
                     list->pop_front();
                 }
                 else
                 {
-                    FormatBulk(list->back().c_str(), list->back().size(), reply);
+                    FormatBulk(list->back().c_str(), list->back().size(), &reply);
                     list->pop_back();
                 }
                 
@@ -257,7 +257,7 @@ int QStore::BlockedClients::LoopCheck(uint64_t now)
                 {
                     INF << scli->GetName() << " is timeout for waiting key " << key;
                     UnboundedBuffer  reply;
-                    FormatNull(reply);
+                    FormatNull(&reply);
                     scli->SendPacket(reply.ReadAddr(), reply.ReadableSize());
                     scli->ClearWaitingKeys();
                 }

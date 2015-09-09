@@ -172,11 +172,11 @@ private:
 #define  LOG_ERR(x)      (LogHelper(logERROR))=(x ? x : LogManager::Instance().NullLog())->SetCurLevel(logERROR)
 #define  LOG_USR(x)      (LogHelper(logUSR))=(x ? x : LogManager::Instance().NullLog())->SetCurLevel(logUSR)
 
-#define  INF      (LogHelper(logINFO))=(g_log ? g_log : LogManager::Instance().NullLog())->SetCurLevel(logINFO)
-#define  DBG      (LogHelper(logDEBUG))=(g_log ? g_log : LogManager::Instance().NullLog())->SetCurLevel(logDEBUG)
-#define  WRN      (LogHelper(logWARN))=(g_log ? g_log : LogManager::Instance().NullLog())->SetCurLevel(logWARN)
-#define  ERR      (LogHelper(logERROR))=(g_log ? g_log : LogManager::Instance().NullLog())->SetCurLevel(logERROR)
-#define  USR      (LogHelper(logUSR))=(g_log ? g_log : LogManager::Instance().NullLog())->SetCurLevel(logUSR)
+#define  INF      LOG_INF(g_log)
+#define  DBG      LOG_DBG(g_log)
+#define  WRN      LOG_WRN(g_log)
+#define  ERR      LOG_ERR(g_log)
+#define  USR      LOG_USR(g_log)
 
 #endif
 

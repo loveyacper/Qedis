@@ -170,119 +170,148 @@ const char* SearchCRLF(const char* ptr, size_t nBytes)
     return  Strstr(ptr, nBytes, CRLF, 2);
 }
 
-size_t  FormatInt(long value, UnboundedBuffer& reply)
+size_t  FormatInt(long value, UnboundedBuffer* reply)
 {
+    if (!reply)
+        return 0;
+    
     char val[32];
     int len = snprintf(val, sizeof val, "%ld" CRLF, value);
     
-    size_t  oldSize = reply.ReadableSize();
-    reply.PushData(":", 1);
-    reply.PushData(val, len);
+    size_t  oldSize = reply->ReadableSize();
+    reply->PushData(":", 1);
+    reply->PushData(val, len);
     
-    return reply.ReadableSize() - oldSize;
+    return reply->ReadableSize() - oldSize;
 }
 
-size_t  FormatSingle(const char* str, size_t len, UnboundedBuffer& reply)
+size_t  FormatSingle(const char* str, size_t len, UnboundedBuffer* reply)
 {
-    size_t   oldSize = reply.ReadableSize();
-    reply.PushData("+", 1);
-    reply.PushData(str, len);
-    reply.PushData(CRLF, 2);
+    if (!reply)
+        return 0;
+    size_t   oldSize = reply->ReadableSize();
+    reply->PushData("+", 1);
+    reply->PushData(str, len);
+    reply->PushData(CRLF, 2);
 
-    return reply.ReadableSize() - oldSize;
+    return reply->ReadableSize() - oldSize;
 }
 
-size_t  FormatSingle(const QString& str, UnboundedBuffer& reply)
+size_t  FormatSingle(const QString& str, UnboundedBuffer* reply)
 {
     return  FormatSingle(str.c_str(), str.size(), reply);
 }
 
-size_t  FormatBulk(const char* str, size_t len, UnboundedBuffer& reply)
+size_t  FormatBulk(const char* str, size_t len, UnboundedBuffer* reply)
 {
-    size_t oldSize = reply.ReadableSize();
-    reply.PushData("$", 1);
+    if (!reply)
+        return 0;
+    
+    size_t oldSize = reply->ReadableSize();
+    reply->PushData("$", 1);
 
     char val[32];
     int tmp = snprintf(val, sizeof val - 1, "%lu" CRLF, len);
-    reply.PushData(val, tmp);
+    reply->PushData(val, tmp);
 
     if (str && len > 0)
     {
-        reply.PushData(str, len);
+        reply->PushData(str, len);
     }
     
-    reply.PushData(CRLF, 2);
+    reply->PushData(CRLF, 2);
     
-    return reply.ReadableSize() - oldSize;
+    return reply->ReadableSize() - oldSize;
 }
 
-size_t  FormatBulk(const QString& str, UnboundedBuffer& reply)
+size_t  FormatBulk(const QString& str, UnboundedBuffer* reply)
 {
     return  FormatBulk(str.c_str(), str.size(), reply);
 }
 
-size_t  PreFormatMultiBulk(size_t nBulk, UnboundedBuffer& reply)
+size_t  PreFormatMultiBulk(size_t nBulk, UnboundedBuffer* reply)
 {
-    size_t  oldSize = reply.ReadableSize();
-    reply.PushData("*", 1);
+    if (!reply)
+        return 0;
+    
+    size_t  oldSize = reply->ReadableSize();
+    reply->PushData("*", 1);
 
     char val[32];
     int tmp = snprintf(val, sizeof val - 1, "%lu" CRLF, nBulk);
-    reply.PushData(val, tmp);
+    reply->PushData(val, tmp);
 
-    return reply.ReadableSize() - oldSize;
+    return reply->ReadableSize() - oldSize;
 }
 
-void  ReplyError(QError err, UnboundedBuffer& reply)
+void  ReplyError(QError err, UnboundedBuffer* reply)
 {
+    if (!reply)
+        return;
+    
     const QErrorInfo& info = g_errorInfo[err];
 
-    reply.PushData(info.errorStr, info.len);
+    reply->PushData(info.errorStr, info.len);
 }
 
-size_t  FormatNull(UnboundedBuffer& reply)
+size_t  FormatNull(UnboundedBuffer* reply)
 {
-    size_t   oldSize = reply.ReadableSize();
-    reply.PushData("$-1" CRLF, 5);
+    if (!reply)
+        return 0;
     
-    return reply.ReadableSize() - oldSize;
-}
-
-
-size_t  FormatNullArray(UnboundedBuffer& reply)
-{
-    size_t   oldSize = reply.ReadableSize();
-    reply.PushData("*-1" CRLF, 5);
+    size_t   oldSize = reply->ReadableSize();
+    reply->PushData("$-1" CRLF, 5);
     
-    return reply.ReadableSize() - oldSize;
+    return reply->ReadableSize() - oldSize;
 }
 
-size_t  FormatOK(UnboundedBuffer& reply)
+
+size_t  FormatNullArray(UnboundedBuffer* reply)
 {
-    size_t   oldSize = reply.ReadableSize();
-    reply.PushData("+OK" CRLF, 5);
+    if (!reply)
+        return 0;
     
-    return reply.ReadableSize() - oldSize;
+    size_t   oldSize = reply->ReadableSize();
+    reply->PushData("*-1" CRLF, 5);
+    
+    return reply->ReadableSize() - oldSize;
 }
 
-size_t Format1(UnboundedBuffer& reply)
+size_t  FormatOK(UnboundedBuffer* reply)
 {
+    if (!reply)
+        return 0;
+    
+    size_t   oldSize = reply->ReadableSize();
+    reply->PushData("+OK" CRLF, 5);
+    
+    return reply->ReadableSize() - oldSize;
+}
+
+size_t Format1(UnboundedBuffer* reply)
+{
+    if (!reply)
+        return 0;
+    
     const char* val = ":1\r\n";
     
-    size_t  oldSize = reply.ReadableSize();
-    reply.PushData(val, 4);
+    size_t  oldSize = reply->ReadableSize();
+    reply->PushData(val, 4);
     
-    return reply.ReadableSize() - oldSize;
+    return reply->ReadableSize() - oldSize;
 }
 
-size_t Format0(UnboundedBuffer& reply)
+size_t Format0(UnboundedBuffer* reply)
 {
+    if (!reply)
+        return 0;
+
     const char* val = ":0\r\n";
     
-    size_t  oldSize = reply.ReadableSize();
-    reply.PushData(val, 4);
+    size_t  oldSize = reply->ReadableSize();
+    reply->PushData(val, 4);
     
-    return reply.ReadableSize() - oldSize;
+    return reply->ReadableSize() - oldSize;
 }
 
 QParseInt  GetIntUntilCRLF(const char*& ptr, std::size_t nBytes, int& val)

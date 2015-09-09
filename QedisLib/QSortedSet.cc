@@ -78,7 +78,7 @@ int  QSortedSet::RevRank(const QString& member) const
     if (rank == -1)
         return  rank;
 
-    return m_members.size() - (rank + 1);
+    return static_cast<int>(m_members.size() - (rank + 1));
 }
 
 bool  QSortedSet::DelMember(const QString& member)
@@ -217,7 +217,7 @@ QObject  CreateSSetObject()
         value = QSTORE.SetValue(name, val);  \
     }
 
-QError  zadd(const vector<QString>& params, UnboundedBuffer& reply)
+QError  zadd(const vector<QString>& params, UnboundedBuffer* reply)
 {
     if (params.size() % 2 != 0)
     {
@@ -250,7 +250,7 @@ QError  zadd(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  zcard(const vector<QString>& params, UnboundedBuffer& reply)
+QError  zcard(const vector<QString>& params, UnboundedBuffer* reply)
 {
     GET_SORTEDSET(params[1]);
     
@@ -260,7 +260,7 @@ QError  zcard(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  zrank(const vector<QString>& params, UnboundedBuffer& reply)
+QError  zrank(const vector<QString>& params, UnboundedBuffer* reply)
 {
     GET_SORTEDSET(params[1]);
     
@@ -275,7 +275,7 @@ QError  zrank(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  zrevrank(const vector<QString>& params, UnboundedBuffer& reply)
+QError  zrevrank(const vector<QString>& params, UnboundedBuffer* reply)
 {
     GET_SORTEDSET(params[1]);
     
@@ -290,7 +290,7 @@ QError  zrevrank(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  zrem(const vector<QString>& params, UnboundedBuffer& reply)
+QError  zrem(const vector<QString>& params, UnboundedBuffer* reply)
 {
     GET_SORTEDSET(params[1]);
     
@@ -307,7 +307,7 @@ QError  zrem(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  zincrby(const vector<QString>& params, UnboundedBuffer& reply)
+QError  zincrby(const vector<QString>& params, UnboundedBuffer* reply)
 {
     GET_OR_SET_SORTEDSET(params[1]);
 
@@ -334,7 +334,7 @@ QError  zincrby(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  zscore(const vector<QString>& params, UnboundedBuffer& reply)
+QError  zscore(const vector<QString>& params, UnboundedBuffer* reply)
 {
     GET_SORTEDSET(params[1]);
 
@@ -353,7 +353,7 @@ QError  zscore(const vector<QString>& params, UnboundedBuffer& reply)
 }
 
 
-static QError GenericRange(const vector<QString>& params, UnboundedBuffer& reply, bool reverse)
+static QError GenericRange(const vector<QString>& params, UnboundedBuffer* reply, bool reverse)
 {
     GET_SORTEDSET(params[1]);
     
@@ -425,19 +425,19 @@ static QError GenericRange(const vector<QString>& params, UnboundedBuffer& reply
 }
 
 // zrange key start stop [WITHSCORES]
-QError  zrange(const vector<QString>& params, UnboundedBuffer& reply)
+QError  zrange(const vector<QString>& params, UnboundedBuffer* reply)
 {
     return GenericRange(params, reply, false);
 }
 
 // zrange key start stop [WITHSCORES]
-QError  zrevrange(const vector<QString>& params, UnboundedBuffer& reply)
+QError  zrevrange(const vector<QString>& params, UnboundedBuffer* reply)
 {
     return GenericRange(params, reply, true);
 }
 
 
-static QError GenericScoreRange(const vector<QString>& params, UnboundedBuffer& reply, bool reverse)
+static QError GenericScoreRange(const vector<QString>& params, UnboundedBuffer* reply, bool reverse)
 {
     GET_SORTEDSET(params[1]);
     
@@ -508,17 +508,17 @@ static QError GenericScoreRange(const vector<QString>& params, UnboundedBuffer& 
     return   QError_ok;
 }
 
-QError  zrangebyscore(const vector<QString>& params, UnboundedBuffer& reply)
+QError  zrangebyscore(const vector<QString>& params, UnboundedBuffer* reply)
 {
     return GenericScoreRange(params, reply, false);
 }
 
-QError  zrevrangebyscore(const vector<QString>& params, UnboundedBuffer& reply)
+QError  zrevrangebyscore(const vector<QString>& params, UnboundedBuffer* reply)
 {
     return GenericScoreRange(params, reply, true);
 }
 
-static QError GenericRemRange(const vector<QString>& params, UnboundedBuffer& reply, bool useRank)
+static QError GenericRemRange(const vector<QString>& params, UnboundedBuffer* reply, bool useRank)
 {
     GET_SORTEDSET(params[1]);
     
@@ -565,12 +565,12 @@ static QError GenericRemRange(const vector<QString>& params, UnboundedBuffer& re
     return   QError_ok;
 }
 
-QError zremrangebyrank(const vector<QString>& params, UnboundedBuffer& reply)
+QError zremrangebyrank(const vector<QString>& params, UnboundedBuffer* reply)
 {
     return GenericRemRange(params, reply, true);
 }
 
-QError zremrangebyscore(const vector<QString>& params, UnboundedBuffer& reply)
+QError zremrangebyscore(const vector<QString>& params, UnboundedBuffer* reply)
 {
     return GenericRemRange(params, reply, false);
 }

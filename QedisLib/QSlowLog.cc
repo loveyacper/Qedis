@@ -51,14 +51,11 @@ void QSlowLog::EndAndStat(const std::vector<QString>& cmds)
         if (m_logger == nullptr)
             m_logger = LogManager::Instance().CreateLog(logALL, logFILE, "slowlog.qedis");
         
-        LOG_INF(m_logger) << "+++++++++++";
-        LOG_INF(m_logger) << "Used:(us) " << used;
+        LOG_INF(m_logger) << "+ Used:(us) " << used;
         
         for (const auto& param : cmds)
         {
             LOG_INF(m_logger) << param;
         }
-        
-        LOG_INF(m_logger) << "-----------";
     }
 }

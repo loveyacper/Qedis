@@ -87,7 +87,7 @@ void  QMulti::NotifyDirty(const QString& key)
 }
 
 // multi commands
-QError  watch(const vector<QString>& params, UnboundedBuffer& reply)
+QError  watch(const vector<QString>& params, UnboundedBuffer* reply)
 {
     QClient* client = QClient::Current();
     if (client->IsFlagOn(ClientFlag_multi))
@@ -105,7 +105,7 @@ QError  watch(const vector<QString>& params, UnboundedBuffer& reply)
     return QError_ok;
 }
 
-QError  unwatch(const vector<QString>& params, UnboundedBuffer& reply)
+QError  unwatch(const vector<QString>& params, UnboundedBuffer* reply)
 {
     QClient* client = QClient::Current();
     QMulti::Instance().Unwatch(client);
@@ -113,7 +113,7 @@ QError  unwatch(const vector<QString>& params, UnboundedBuffer& reply)
     return QError_ok;
 }
 
-QError  multi(const vector<QString>& params, UnboundedBuffer& reply)
+QError  multi(const vector<QString>& params, UnboundedBuffer* reply)
 {
     QClient* client = QClient::Current();
     QMulti::Instance().Multi(client);
@@ -121,7 +121,7 @@ QError  multi(const vector<QString>& params, UnboundedBuffer& reply)
     return QError_ok;
 }
 
-QError  exec(const vector<QString>& params, UnboundedBuffer& reply)
+QError  exec(const vector<QString>& params, UnboundedBuffer* reply)
 {
     QClient* client = QClient::Current();
     if (!client->IsFlagOn(ClientFlag_multi))
@@ -137,7 +137,7 @@ QError  exec(const vector<QString>& params, UnboundedBuffer& reply)
     return QError_ok;
 }
 
-QError  discard(const vector<QString>& params, UnboundedBuffer& reply)
+QError  discard(const vector<QString>& params, UnboundedBuffer* reply)
 {
     QClient* client = QClient::Current();
     QMulti::Instance().Discard(client);

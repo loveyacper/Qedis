@@ -14,7 +14,7 @@ enum QCommandAttr
 
 
 class   UnboundedBuffer;
-typedef QError  QCommandHandler(const std::vector<QString>& params, UnboundedBuffer& reply);
+typedef QError  QCommandHandler(const std::vector<QString>& params, UnboundedBuffer* reply);
 
 // key commands
 QCommandHandler  type;
@@ -163,8 +163,8 @@ public:
     static void Init();
 
     static const QCommandInfo* GetCommandInfo(const QString& cmd);
-    static QError ExecuteCmd(const std::vector<QString>& params, const QCommandInfo* info, UnboundedBuffer& reply);
-    static QError ExecuteCmd(const std::vector<QString>& params, UnboundedBuffer& reply);
+    static QError ExecuteCmd(const std::vector<QString>& params, const QCommandInfo* info, UnboundedBuffer* reply = nullptr);
+    static QError ExecuteCmd(const std::vector<QString>& params, UnboundedBuffer* reply = nullptr);
 
 private:
     static const QCommandInfo s_info[];

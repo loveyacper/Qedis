@@ -259,7 +259,7 @@ static void RewriteProcess()
     }
 }
 
-QError bgrewriteaof(const std::vector<QString>& params, UnboundedBuffer& reply)
+QError bgrewriteaof(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     if (g_rewritePid != -1)
     {

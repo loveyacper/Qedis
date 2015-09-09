@@ -51,7 +51,7 @@ static bool RandomMember(const QSet& set, QString& res)
     return false;
 }
 
-QError  spop(const vector<QString>& params, UnboundedBuffer& reply)
+QError  spop(const vector<QString>& params, UnboundedBuffer* reply)
 {
     GET_SET(params[1]);
 
@@ -72,7 +72,7 @@ QError  spop(const vector<QString>& params, UnboundedBuffer& reply)
 }
 
 
-QError  srandmember(const vector<QString>& params, UnboundedBuffer& reply)
+QError  srandmember(const vector<QString>& params, UnboundedBuffer* reply)
 {
     GET_SET(params[1]);
 
@@ -91,7 +91,7 @@ QError  srandmember(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  sadd(const vector<QString>& params, UnboundedBuffer& reply)
+QError  sadd(const vector<QString>& params, UnboundedBuffer* reply)
 {
     GET_OR_SET_SET(params[1]);
     
@@ -106,7 +106,7 @@ QError  sadd(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  scard(const vector<QString>& params, UnboundedBuffer& reply)
+QError  scard(const vector<QString>& params, UnboundedBuffer* reply)
 {
     GET_SET(params[1]);
 
@@ -118,7 +118,7 @@ QError  scard(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  srem(const vector<QString>& params, UnboundedBuffer& reply)
+QError  srem(const vector<QString>& params, UnboundedBuffer* reply)
 {
     GET_SET(params[1]);
 
@@ -134,7 +134,7 @@ QError  srem(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  sismember(const vector<QString>& params, UnboundedBuffer& reply)
+QError  sismember(const vector<QString>& params, UnboundedBuffer* reply)
 {
     GET_SET(params[1]);
     
@@ -146,7 +146,7 @@ QError  sismember(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  smembers(const vector<QString>& params, UnboundedBuffer& reply)
+QError  smembers(const vector<QString>& params, UnboundedBuffer* reply)
 {
     GET_SET(params[1]);
 
@@ -159,7 +159,7 @@ QError  smembers(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  smove(const vector<QString>& params, UnboundedBuffer& reply)
+QError  smove(const vector<QString>& params, UnboundedBuffer* reply)
 {
     return QError_ok;
 #if 0
@@ -298,7 +298,7 @@ static void  _set_operation(const vector<QString>& params,
 #endif
 }
 
-QError  sdiffstore(const vector<QString>& params, UnboundedBuffer& reply)
+QError  sdiffstore(const vector<QString>& params, UnboundedBuffer* reply)
 {
     QSet* res = new QSet();
     _set_operation(params, 2, *res, SetOperation_diff);
@@ -314,7 +314,7 @@ QError  sdiffstore(const vector<QString>& params, UnboundedBuffer& reply)
     return QError_ok;
 }
 
-QError  sdiff(const vector<QString>& params, UnboundedBuffer& reply)
+QError  sdiff(const vector<QString>& params, UnboundedBuffer* reply)
 {
     QSet res;
     _set_operation(params, 1, res, SetOperation_diff);
@@ -327,7 +327,7 @@ QError  sdiff(const vector<QString>& params, UnboundedBuffer& reply)
 }
 
 
-QError  sinter(const vector<QString>& params, UnboundedBuffer& reply)
+QError  sinter(const vector<QString>& params, UnboundedBuffer* reply)
 {
     QSet res;
     _set_operation(params, 1, res, SetOperation_inter);
@@ -340,7 +340,7 @@ QError  sinter(const vector<QString>& params, UnboundedBuffer& reply)
     return QError_ok;
 }
 
-QError  sinterstore(const vector<QString>& params, UnboundedBuffer& reply)
+QError  sinterstore(const vector<QString>& params, UnboundedBuffer* reply)
 {
     QSet* res = new QSet;
     _set_operation(params, 2, *res, SetOperation_inter);
@@ -357,7 +357,7 @@ QError  sinterstore(const vector<QString>& params, UnboundedBuffer& reply)
 }
 
 
-QError  sunion(const vector<QString>& params, UnboundedBuffer& reply)
+QError  sunion(const vector<QString>& params, UnboundedBuffer* reply)
 {
     QSet res;
     _set_operation(params, 1, res, SetOperation_union);
@@ -369,7 +369,7 @@ QError  sunion(const vector<QString>& params, UnboundedBuffer& reply)
     return QError_ok;
 }
 
-QError  sunionstore(const vector<QString>& params, UnboundedBuffer& reply)
+QError  sunionstore(const vector<QString>& params, UnboundedBuffer* reply)
 {
     QSet* res = new QSet;
     _set_operation(params, 2, *res, SetOperation_union);

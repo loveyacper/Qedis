@@ -17,7 +17,7 @@ QObject  CreateListObject()
     return std::move(list);
 }
 
-static QError  push(const vector<QString>& params, UnboundedBuffer& reply, ListPosition pos, bool createIfNotExist = true)
+static QError  push(const vector<QString>& params, UnboundedBuffer* reply, ListPosition pos, bool createIfNotExist = true)
 {
     QObject* value;
     
@@ -99,27 +99,27 @@ static QError  GenericPop(const QString& key, ListPosition pos, QString& result)
     return   QError_ok;
 }
 
-QError  lpush(const vector<QString>& params, UnboundedBuffer& reply)
+QError  lpush(const vector<QString>& params, UnboundedBuffer* reply)
 {
     return push(params, reply, ListPosition::head);
 }
 
-QError  rpush(const vector<QString>& params, UnboundedBuffer& reply)
+QError  rpush(const vector<QString>& params, UnboundedBuffer* reply)
 {
     return push(params, reply, ListPosition::tail);
 }
 
-QError  lpushx(const vector<QString>& params, UnboundedBuffer& reply)
+QError  lpushx(const vector<QString>& params, UnboundedBuffer* reply)
 {
     return push(params, reply, ListPosition::head, false);
 }
 
-QError  rpushx(const vector<QString>& params, UnboundedBuffer& reply)
+QError  rpushx(const vector<QString>& params, UnboundedBuffer* reply)
 {
     return push(params, reply, ListPosition::tail, false);
 }
 
-QError  lpop(const vector<QString>& params, UnboundedBuffer& reply)
+QError  lpop(const vector<QString>& params, UnboundedBuffer* reply)
 {
     QString  result;
     
@@ -138,7 +138,7 @@ QError  lpop(const vector<QString>& params, UnboundedBuffer& reply)
     return  err;
 }
 
-QError  rpop(const vector<QString>& params, UnboundedBuffer& reply)
+QError  rpop(const vector<QString>& params, UnboundedBuffer* reply)
 {
     QString  result;
     
@@ -172,7 +172,7 @@ static bool  _BlockClient( QClient* client, const QString& key, uint64_t timeout
 
 static QError  _GenericBlockedPop(vector<QString>::const_iterator keyBegin,
                                   vector<QString>::const_iterator keyEnd,
-                                  UnboundedBuffer& reply,
+                                  UnboundedBuffer* reply,
                                   ListPosition  pos, long timeout,
                                   const QString* target = nullptr,
                                   bool withKey = true)
@@ -226,7 +226,7 @@ static QError  _GenericBlockedPop(vector<QString>::const_iterator keyBegin,
     return  QError_ok;
 }
 
-QError  blpop(const vector<QString>& params, UnboundedBuffer& reply)
+QError  blpop(const vector<QString>& params, UnboundedBuffer* reply)
 {
     long  timeout;
     if (!TryStr2Long(params.back().c_str(),
@@ -243,7 +243,7 @@ QError  blpop(const vector<QString>& params, UnboundedBuffer& reply)
                                reply, ListPosition::head, timeout);
 }
 
-QError  brpop(const vector<QString>& params, UnboundedBuffer& reply)
+QError  brpop(const vector<QString>& params, UnboundedBuffer* reply)
 {
     long  timeout;
     if (!TryStr2Long(params.back().c_str(),
@@ -260,7 +260,7 @@ QError  brpop(const vector<QString>& params, UnboundedBuffer& reply)
                                reply, ListPosition::tail, timeout);
 }
 
-QError  lindex(const vector<QString>& params, UnboundedBuffer& reply)
+QError  lindex(const vector<QString>& params, UnboundedBuffer* reply)
 {
     QObject* value;
     
@@ -316,7 +316,7 @@ QError  lindex(const vector<QString>& params, UnboundedBuffer& reply)
 }
 
 
-QError  lset(const vector<QString>& params, UnboundedBuffer& reply)
+QError  lset(const vector<QString>& params, UnboundedBuffer* reply)
 {
     QObject* value;
     
@@ -374,7 +374,7 @@ QError  lset(const vector<QString>& params, UnboundedBuffer& reply)
 }
 
 
-QError  llen(const vector<QString>& params, UnboundedBuffer& reply)
+QError  llen(const vector<QString>& params, UnboundedBuffer* reply)
 {
     QObject* value;
     
@@ -438,7 +438,7 @@ static size_t GetRange(long start, long end,
 }
 
 
-QError  ltrim(const vector<QString>& params, UnboundedBuffer& reply)
+QError  ltrim(const vector<QString>& params, UnboundedBuffer* reply)
 {
     QObject* value;
     
@@ -474,7 +474,7 @@ QError  ltrim(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  lrange(const vector<QString>& params, UnboundedBuffer& reply)
+QError  lrange(const vector<QString>& params, UnboundedBuffer* reply)
 {
     QObject* value;
     
@@ -518,7 +518,7 @@ QError  lrange(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  linsert(const vector<QString>& params, UnboundedBuffer& reply)
+QError  linsert(const vector<QString>& params, UnboundedBuffer* reply)
 {
     QObject* value;
     
@@ -559,7 +559,7 @@ QError  linsert(const vector<QString>& params, UnboundedBuffer& reply)
 }
 
 
-QError  lrem(const vector<QString>& params, UnboundedBuffer& reply)
+QError  lrem(const vector<QString>& params, UnboundedBuffer* reply)
 {
     QObject* value;
     
@@ -629,7 +629,7 @@ QError  lrem(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-static QError  _GenericRpoplpush(const vector<QString>& params, UnboundedBuffer& reply, bool block = false)
+static QError  _GenericRpoplpush(const vector<QString>& params, UnboundedBuffer* reply, bool block = false)
 {
     QObject* src;
     
@@ -674,7 +674,7 @@ static QError  _GenericRpoplpush(const vector<QString>& params, UnboundedBuffer&
     return   QError_ok;
 }
 
-QError  rpoplpush(const vector<QString>& params, UnboundedBuffer& reply)
+QError  rpoplpush(const vector<QString>& params, UnboundedBuffer* reply)
 {
     QObject* src;
     
@@ -718,7 +718,7 @@ QError  rpoplpush(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  brpoplpush(const vector<QString>& params, UnboundedBuffer& reply)
+QError  brpoplpush(const vector<QString>& params, UnboundedBuffer* reply)
 {
     // check timeout format
     long  timeout;

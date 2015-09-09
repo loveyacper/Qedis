@@ -227,7 +227,7 @@ void QClient::_HandlePacket(AttachedBuffer& buf)
             if (!info || !info->CheckParamsCount(static_cast<int>(m_params.size())))
             {
                 ERR << "queue failed: cmd " << cmd.c_str() << " has params " << m_params.size();
-                ReplyError(info ? QError_param : QError_unknowCmd, m_reply);
+                ReplyError(info ? QError_param : QError_unknowCmd, &m_reply);
                 SendPacket(m_reply.ReadAddr(), m_reply.ReadableSize());
                 FlagExecWrong();
             }
@@ -247,7 +247,7 @@ void QClient::_HandlePacket(AttachedBuffer& buf)
     
     //m_stat.Begin();
     QSlowLog::Instance().Begin();
-    QError err = QCommandTable::ExecuteCmd(m_params, info, m_reply);
+    QError err = QCommandTable::ExecuteCmd(m_params, info, &m_reply);
     QSlowLog::Instance().EndAndStat(m_params);
 
     if (!m_reply.IsEmpty())
@@ -343,18 +343,18 @@ bool QClient::Exec()
     
     if (IsFlagOn(ClientFlag_dirty))
     {
-        FormatNullArray(m_reply);
+        FormatNullArray(&m_reply);
         return true;
     }
     
-    PreFormatMultiBulk(m_queueCmds.size(), m_reply);
+    PreFormatMultiBulk(m_queueCmds.size(), &m_reply);
     for (auto it(m_queueCmds.begin());
               it != m_queueCmds.end();
               ++ it)
     {
         INF << "EXEC " << (*it)[0].c_str();
         const QCommandInfo* info = QCommandTable::GetCommandInfo((*it)[0]);
-        QError err = QCommandTable::ExecuteCmd(*it, info, m_reply);
+        QError err = QCommandTable::ExecuteCmd(*it, info, &m_reply);
         SendPacket(m_reply.ReadAddr(), m_reply.ReadableSize());
         _Reset();
         

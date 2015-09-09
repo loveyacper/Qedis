@@ -163,7 +163,7 @@ const QCommandInfo* QCommandTable::GetCommandInfo(const QString& cmd)
     return  0;
 }
 
-QError QCommandTable::ExecuteCmd(const std::vector<QString>& params, const QCommandInfo* info, UnboundedBuffer& reply)
+QError QCommandTable::ExecuteCmd(const std::vector<QString>& params, const QCommandInfo* info, UnboundedBuffer* reply)
 {
     if (params.empty())
     {
@@ -186,7 +186,7 @@ QError QCommandTable::ExecuteCmd(const std::vector<QString>& params, const QComm
     return info->handler(params, reply);
 }
 
-QError QCommandTable::ExecuteCmd(const std::vector<QString>& params, UnboundedBuffer& reply)
+QError QCommandTable::ExecuteCmd(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     if (params.empty())
     {

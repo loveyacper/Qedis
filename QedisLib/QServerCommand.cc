@@ -12,7 +12,7 @@
 using namespace std;
 
 
-QError  select(const vector<QString>& params, UnboundedBuffer& reply)
+QError  select(const vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "select");
 
@@ -36,7 +36,7 @@ QError  select(const vector<QString>& params, UnboundedBuffer& reply)
 }
 
 
-QError  dbsize(const vector<QString>& params, UnboundedBuffer& reply)
+QError  dbsize(const vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "dbsize");
 
@@ -44,7 +44,7 @@ QError  dbsize(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  flushdb(const vector<QString>& params, UnboundedBuffer& reply)
+QError  flushdb(const vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "flushdb");
 
@@ -54,7 +54,7 @@ QError  flushdb(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  flushall(const vector<QString>& params, UnboundedBuffer& reply)
+QError  flushall(const vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "flushall");
     
@@ -64,7 +64,7 @@ QError  flushall(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  bgsave(const vector<QString>& params, UnboundedBuffer& reply)
+QError  bgsave(const vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "bgsave");
     
@@ -100,7 +100,7 @@ QError  bgsave(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  save(const vector<QString>& params, UnboundedBuffer& reply)
+QError  save(const vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "save");
     
@@ -121,7 +121,7 @@ QError  save(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  lastsave(const vector<QString>& params, UnboundedBuffer& reply)
+QError  lastsave(const vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "lastsave");
     
@@ -129,7 +129,7 @@ QError  lastsave(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  client(const vector<QString>& params, UnboundedBuffer& reply)
+QError  client(const vector<QString>& params, UnboundedBuffer* reply)
 {
     // getname   setname    kill  list
     assert (params[0] == "client");
@@ -182,7 +182,7 @@ static int Suicide()
     return *ptr;
 }
 
-QError  debug(const vector<QString>& params, UnboundedBuffer& reply)
+QError  debug(const vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "debug");
     
@@ -221,7 +221,7 @@ QError  debug(const vector<QString>& params, UnboundedBuffer& reply)
 }
 
 
-QError  shutdown(const vector<QString>& params, UnboundedBuffer& reply)
+QError  shutdown(const vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "shutdown");
     

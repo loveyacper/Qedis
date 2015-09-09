@@ -136,20 +136,20 @@ const char* SearchCRLF(const char* ptr, std::size_t nBytes);
 
 class UnboundedBuffer;
 
-std::size_t FormatInt(long value, UnboundedBuffer& reply);
-std::size_t FormatSingle(const char* str, std::size_t len, UnboundedBuffer& reply);
-std::size_t FormatSingle(const QString& str, UnboundedBuffer& reply);
-std::size_t FormatBulk(const char* str, std::size_t len, UnboundedBuffer& reply);
-std::size_t FormatBulk(const QString& str, UnboundedBuffer& reply);
-std::size_t PreFormatMultiBulk(std::size_t nBulk, UnboundedBuffer& reply);
+std::size_t FormatInt(long value, UnboundedBuffer* reply);
+std::size_t FormatSingle(const char* str, std::size_t len, UnboundedBuffer* reply);
+std::size_t FormatSingle(const QString& str, UnboundedBuffer* reply);
+std::size_t FormatBulk(const char* str, std::size_t len, UnboundedBuffer* reply);
+std::size_t FormatBulk(const QString& str, UnboundedBuffer* reply);
+std::size_t PreFormatMultiBulk(std::size_t nBulk, UnboundedBuffer* reply);
 
-std::size_t FormatNull(UnboundedBuffer& reply);
-std::size_t FormatNullArray(UnboundedBuffer& reply);
-std::size_t FormatOK(UnboundedBuffer& reply);
-std::size_t Format1(UnboundedBuffer& reply);
-std::size_t Format0(UnboundedBuffer& reply);
+std::size_t FormatNull(UnboundedBuffer* reply);
+std::size_t FormatNullArray(UnboundedBuffer* reply);
+std::size_t FormatOK(UnboundedBuffer* reply);
+std::size_t Format1(UnboundedBuffer* reply);
+std::size_t Format0(UnboundedBuffer* reply);
 
-void  ReplyError(QError err, UnboundedBuffer& reply);
+void  ReplyError(QError err, UnboundedBuffer* reply);
 
 inline void AdjustIndex(long& start, long& end, size_t  size)
 {

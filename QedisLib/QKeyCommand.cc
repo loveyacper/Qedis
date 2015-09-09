@@ -7,7 +7,7 @@
 using namespace std;
 
 
-QError  type(const vector<QString>& params, UnboundedBuffer& reply)
+QError  type(const vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "type");
 
@@ -43,7 +43,7 @@ QError  type(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  exists(const vector<QString>& params, UnboundedBuffer& reply)
+QError  exists(const vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "exists");
 
@@ -53,7 +53,7 @@ QError  exists(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  del(const vector<QString>& params, UnboundedBuffer& reply)
+QError  del(const vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "del");
     
@@ -87,7 +87,7 @@ static int _SetExpireByMs(const QString& key, uint64_t absTimeout)
     return ret;
 }
 
-QError  expire(const vector<QString>& params, UnboundedBuffer& reply)
+QError  expire(const vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "expire");
     
@@ -100,7 +100,7 @@ QError  expire(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  pexpire(const vector<QString>& params, UnboundedBuffer& reply)
+QError  pexpire(const vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "pexpire");
     
@@ -113,7 +113,7 @@ QError  pexpire(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  expireat(const vector<QString>& params, UnboundedBuffer& reply)
+QError  expireat(const vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "expireat");
     
@@ -126,7 +126,7 @@ QError  expireat(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  pexpireat(const vector<QString>& params, UnboundedBuffer& reply)
+QError  pexpireat(const vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "pexpireat");
     
@@ -159,7 +159,7 @@ static int64_t _ttl(const QString& key)
     return  ret;
 }
 
-QError  ttl(const vector<QString>& params, UnboundedBuffer& reply)
+QError  ttl(const vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "ttl");
     
@@ -173,7 +173,7 @@ QError  ttl(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  pttl(const vector<QString>& params, UnboundedBuffer& reply)
+QError  pttl(const vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "pttl");
     
@@ -185,7 +185,7 @@ QError  pttl(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  persist(const vector<QString>& params, UnboundedBuffer& reply)
+QError  persist(const vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "persist");
     
@@ -197,7 +197,7 @@ QError  persist(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  move(const vector<QString>& params, UnboundedBuffer& reply)
+QError  move(const vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "move");
     
@@ -235,7 +235,7 @@ QError  move(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  keys(const vector<QString>& params, UnboundedBuffer& reply)
+QError  keys(const vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "keys");
     
@@ -264,7 +264,7 @@ QError  keys(const vector<QString>& params, UnboundedBuffer& reply)
 }
 
 
-QError  randomkey(const vector<QString>& params, UnboundedBuffer& reply)
+QError  randomkey(const vector<QString>& params, UnboundedBuffer* reply)
 {
     const QString& res = QSTORE.RandomKey();
   

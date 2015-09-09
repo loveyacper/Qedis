@@ -52,7 +52,7 @@ bool _set_hash_if_notexist(QHash& hash, const QString& key, const QString& val)
     return hash.insert(QHash::value_type(key, val)).second;
 }
 
-QError  hset(const vector<QString>& params, UnboundedBuffer& reply)
+QError  hset(const vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "hset");
     assert (params.size() == 4);
@@ -67,7 +67,7 @@ QError  hset(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  hmset(const vector<QString>& params, UnboundedBuffer& reply)
+QError  hmset(const vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "hmset");
 
@@ -88,7 +88,7 @@ QError  hmset(const vector<QString>& params, UnboundedBuffer& reply)
 }
 
 
-QError  hget(const vector<QString>& params, UnboundedBuffer& reply)
+QError  hget(const vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "hget");
 
@@ -106,7 +106,7 @@ QError  hget(const vector<QString>& params, UnboundedBuffer& reply)
 }
 
 
-QError  hmget(const vector<QString>& params, UnboundedBuffer& reply)
+QError  hmget(const vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "hmget");
 
@@ -127,7 +127,7 @@ QError  hmget(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  hgetall(const vector<QString>& params, UnboundedBuffer& reply)
+QError  hgetall(const vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "hgetall");
 
@@ -146,7 +146,7 @@ QError  hgetall(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  hkeys(const vector<QString>& params, UnboundedBuffer& reply)
+QError  hkeys(const vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "hkeys");
 
@@ -164,7 +164,7 @@ QError  hkeys(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  hvals(const vector<QString>& params, UnboundedBuffer& reply)
+QError  hvals(const vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "hvals");
 
@@ -182,7 +182,7 @@ QError  hvals(const vector<QString>& params, UnboundedBuffer& reply)
     return   QError_ok;
 }
 
-QError  hdel(const vector<QString>& params, UnboundedBuffer& reply)
+QError  hdel(const vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "hdel");
 
@@ -212,7 +212,7 @@ QError  hdel(const vector<QString>& params, UnboundedBuffer& reply)
     return QError_ok;
 }
 
-QError  hexists(const vector<QString>& params, UnboundedBuffer& reply)
+QError  hexists(const vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "hexists");
   
@@ -229,7 +229,7 @@ QError  hexists(const vector<QString>& params, UnboundedBuffer& reply)
     return QError_ok;
 }
 
-QError  hlen(const vector<QString>& params, UnboundedBuffer& reply)
+QError  hlen(const vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "hlen");
 
@@ -241,7 +241,7 @@ QError  hlen(const vector<QString>& params, UnboundedBuffer& reply)
     return QError_ok;
 }
 
-QError  hincrby(const vector<QString>& params, UnboundedBuffer& reply)
+QError  hincrby(const vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "hincrby");
 
@@ -282,7 +282,7 @@ QError  hincrby(const vector<QString>& params, UnboundedBuffer& reply)
     return QError_ok;
 }
 
-QError  hincrbyfloat(const vector<QString>& params, UnboundedBuffer& reply)
+QError  hincrbyfloat(const vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "hincrbyfloat");
 
@@ -322,7 +322,7 @@ QError  hincrbyfloat(const vector<QString>& params, UnboundedBuffer& reply)
     return QError_ok;
 }
 
-QError  hsetnx(const vector<QString>& params, UnboundedBuffer& reply)
+QError  hsetnx(const vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "hsetnx");
 
