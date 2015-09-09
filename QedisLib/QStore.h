@@ -171,6 +171,8 @@ public:
     int     LoopCheckBlocked(uint64_t now);
     void    InitBlockedTimer();
     
+    static  unsigned int m_dirty;
+    
 private:
     ExpireResult    _ExpireIfNeed(const QString& key, uint64_t now);
     

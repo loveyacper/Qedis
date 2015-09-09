@@ -369,6 +369,8 @@ void QDBSaver::SaveDoneHandler(int exitcode, int bysignal)
         INF << "save rdb success";
         g_lastQDBSave = time(NULL);
         g_qdbPid = -1;
+        
+        QStore::m_dirty = 0;
     }
     else
     {

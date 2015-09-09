@@ -5,6 +5,7 @@
 #include <limits>
 #include <cassert>
 
+unsigned int QStore::m_dirty = 0;
 
 void QStore::ExpiresDB::SetExpire(const QString& key, uint64_t when)
 {

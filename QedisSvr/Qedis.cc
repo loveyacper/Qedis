@@ -62,32 +62,34 @@ std::shared_ptr<StreamSocket>   Qedis::_OnNewConnection(int connfd)
 
 Time  g_now;
 
-static void  ServerCron()
+static void  QdbCron()
 {
-    if (g_qdbPid == -1)
+    if (g_qdbPid != -1)
+        return;
+    
+    if (g_now.MilliSeconds() > 1000 * (g_lastQDBSave + g_config.saveseconds) &&
+        QStore::m_dirty >= g_config.savechanges)
     {
-        if (g_now.MilliSeconds() > 1000 * (g_lastQDBSave + g_config.saveseconds))
+        int ret = fork();
+        if (ret == 0)
         {
-            int ret = fork();
-            if (ret == 0)
             {
-                {
-                    QDBSaver  qdb;
-                    qdb.Save((g_config.rdbdir + g_config.rdbfilename).c_str());
-                    std::cerr << "ServerCron child save rdb done, exiting child\n";
-                }  //  make qdb to be destructed before exit
-                exit(0);
-            }
-            else if (ret == -1)
-            {
-            }
-            else
-            {
-                g_qdbPid = ret;
-            }
-            
-            INF << "ServerCron save rdb file " << (g_config.rdbdir + g_config.rdbfilename);
+                QDBSaver  qdb;
+                qdb.Save((g_config.rdbdir + g_config.rdbfilename).c_str());
+                std::cerr << "ServerCron child save rdb done, exiting child\n";
+            }  //  make qdb to be destructed before exit
+            exit(0);
         }
+        else if (ret == -1)
+        {
+            ERR << "fork qdb save process failed";
+        }
+        else
+        {
+            g_qdbPid = ret;
+        }
+            
+        INF << "ServerCron save rdb file " << (g_config.rdbdir + g_config.rdbfilename);
     }
 }
 
@@ -101,7 +103,7 @@ public:
 private:
     bool _OnTimer() override
     {
-        ServerCron();
+        QdbCron();
         return  true;
     }
 };
@@ -140,7 +142,17 @@ bool Qedis::_Init()
         daemon(1, 0);
     }
     
-    g_log = LogManager::Instance().CreateLog(logALL, logFILE, "./qedislog/");
+    // process log
+    {
+        unsigned int level = logALL, dest = 0;
+
+        if (g_config.logdir == "stdout")
+            dest = logConsole;
+        else
+            dest = logFILE;
+        
+        g_log = LogManager::Instance().CreateLog(level, dest, g_config.logdir.c_str());
+    }
     
     SocketAddr addr("0.0.0.0", g_config.port);
     

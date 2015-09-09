@@ -13,7 +13,7 @@ struct QConfig
     int       timeout;
     
     QString   loglevel;
-    QString   logfile;
+    QString   logdir;  // the log directory, differ from redis
     
     int       databases;
 

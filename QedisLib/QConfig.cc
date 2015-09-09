@@ -13,19 +13,19 @@ QConfig  g_config;
 QConfig::QConfig()
 {
     daemonize  = false;
-    QString   pidfile = "/var/run/qedis.pid";
+    pidfile = "/var/run/qedis.pid";
     
     port = 6379;
     timeout = 0;
     
     loglevel = "notice";
-    logfile = "stdout";
+    logdir = "stdout";
     
     databases = 16;
     
     // rdb
-    saveseconds = 0;
-    savechanges = 0;
+    saveseconds = 999999999;
+    savechanges = 999999999;
     rdbcompression = true;
     rdbchecksum    = true;
     rdbfilename    = "dump.rdb";
@@ -64,7 +64,7 @@ bool  LoadQedisConfig(const char* cfgFile, QConfig& cfg)
     cfg.timeout = parser.GetData<int>("timeout");
     
     cfg.loglevel = parser.GetData<QString>("loglevel");
-    cfg.logfile  = parser.GetData<QString>("logfile");
+    cfg.logdir   = parser.GetData<QString>("logfile");
     
     cfg.databases = parser.GetData<int>("databases");
  
@@ -107,7 +107,7 @@ bool  LoadQedisConfig(const char* cfgFile, QConfig& cfg)
     {
     }
     
-    cfg.slowlogtime = parser.GetData<int>("slowlog-log-slower-than", 999999999);
+    cfg.slowlogtime = parser.GetData<int>("slowlog-log-slower-than", 0);
     cfg.slowlogmaxlen = parser.GetData<int>("slowlog-max-len");
     
     cfg.hz = parser.GetData<int>("hz", 10);
@@ -130,9 +130,6 @@ bool  QConfig::CheckArgs() const
     RETURN_IF_FAIL(hz > 0 && hz < 500);
 
 #undef RETURN_IF_FAIL
-    
-    
-#undef RETURN_IF_FALSE
     
     return  true;
 }

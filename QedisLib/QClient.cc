@@ -165,6 +165,8 @@ HEAD_LENGTH_T QClient::_HandleHead(AttachedBuffer& buf, BODY_LENGTH_T* bodyLen)
 }
 
 
+static void Propogate(const std::vector<QString>& params);
+
 void QClient::_HandlePacket(AttachedBuffer& buf)
 {
     s_pCurrentClient = this;
@@ -245,7 +247,6 @@ void QClient::_HandlePacket(AttachedBuffer& buf)
         }
     }
     
-    //m_stat.Begin();
     QSlowLog::Instance().Begin();
     QError err = QCommandTable::ExecuteCmd(m_params, info, &m_reply);
     QSlowLog::Instance().EndAndStat(m_params);
@@ -257,9 +258,7 @@ void QClient::_HandlePacket(AttachedBuffer& buf)
     
     if (err == QError_ok && (info->attr & QAttr_write))
     {
-        QMulti::Instance().NotifyDirty(m_params[1]);
-        if (g_config.appendonly)
-            QAOFThreadController::Instance().SaveCommand(m_params, QSTORE.GetDB());
+        Propogate(m_params);
     }
     
     _Reset();
@@ -361,9 +360,7 @@ bool QClient::Exec()
         // may dirty clients;
         if (err == QError_ok && (info->attr & QAttr_write))
         {
-            QMulti::Instance().NotifyDirty((*it)[1]);
-            if (g_config.appendonly)
-                QAOFThreadController::Instance().SaveCommand(*it, QSTORE.GetDB());
+            Propogate(*it);
         }
     }
     
@@ -399,3 +396,11 @@ bool  QClient::WaitFor(const QString& key, const QString* target)
     return succ;
 }
 
+static void Propogate(const std::vector<QString>& params)
+{
+    ++ QStore::m_dirty;
+    QMulti::Instance().NotifyDirty(params[1]);
+    if (g_config.appendonly)
+        QAOFThreadController::Instance().SaveCommand(params, QSTORE.GetDB());
+    
+}
