@@ -6,6 +6,7 @@
 #include "QString.h"
 
 #include "QSlowLog.h"
+#include "QReplication.h"
 #include <unordered_set>
 
 enum  class ParseCmdState : std::int8_t
@@ -26,6 +27,7 @@ enum ClientFlag
 };
 
 class DB;
+struct QSlaveInfo;
 
 class QClient: public StreamSocket
 {
@@ -75,7 +77,6 @@ public:
     const std::unordered_set<QString>&  GetPatternChannels() const { return m_patternChannels; }
     std::size_t     ChannelCount() const { return m_channels.size(); }
     std::size_t     PatternChannelCount() const { return m_patternChannels.size(); }
-
     
     bool  WaitFor(const QString& key, const QString* target = nullptr);
     
@@ -85,6 +86,9 @@ public:
     
     void    SetName(const QString& name) { m_name = name; }
     const   QString&    GetName() const { return m_name; }
+    
+    void         SetSlaveInfo();
+    QSlaveInfo*  GetSlaveInfo() const { return m_slaveInfo.get(); }
     
 private:
     void    _ProcessInlineCmd(const char* , size_t , BODY_LENGTH_T* );
@@ -109,6 +113,9 @@ private:
     // blocked list
     std::unordered_set<QString> m_waitingKeys;
     QString m_target;
+    
+    // slave info from master view
+    std::unique_ptr<QSlaveInfo>  m_slaveInfo;
     
     // name
     std::string m_name;

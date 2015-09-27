@@ -156,7 +156,8 @@ bool    OutputMemoryFile::Sync()
     if (m_file == kInvalidFile)
         return false;
     
-    return 0 == ::fsync(m_file);
+    return true;
+    //return 0 == ::fsync(m_file); // cpu 100%?
 }
 
 

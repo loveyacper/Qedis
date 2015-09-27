@@ -111,6 +111,8 @@ void  QDBSaver::Save(const char* qdbFile)
         std::cerr << "rename error " << errno << std::endl;
         assert (false);
     }
+    
+    QStore::m_dirty = 0;
 }
 
 void QDBSaver::SaveType(const QObject& obj)
@@ -368,14 +370,15 @@ void QDBSaver::SaveDoneHandler(int exitcode, int bysignal)
     {
         INF << "save rdb success";
         g_lastQDBSave = time(NULL);
-        g_qdbPid = -1;
-        
+
         QStore::m_dirty = 0;
     }
     else
     {
         ERR << "save rdb failed with exitcode " << exitcode << ", signal " << bysignal;
     }
+    
+    g_qdbPid = -1;
 }
 
 

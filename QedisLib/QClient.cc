@@ -7,7 +7,6 @@
 #include "QAOF.h"
 #include "QConfig.h"
 #include "QSlowLog.h"
-
 #include "QClient.h"
 
 // *3  CR LF
@@ -396,6 +395,13 @@ bool  QClient::WaitFor(const QString& key, const QString* target)
     return succ;
 }
 
+
+void   QClient::SetSlaveInfo()
+{
+    m_slaveInfo.reset(new QSlaveInfo());
+}
+
+
 static void Propogate(const std::vector<QString>& params)
 {
     ++ QStore::m_dirty;
@@ -403,4 +409,6 @@ static void Propogate(const std::vector<QString>& params)
     if (g_config.appendonly)
         QAOFThreadController::Instance().SaveCommand(params, QSTORE.GetDB());
     
+    // replication
+    QReplication::Instance().SendToSlaves(params);
 }

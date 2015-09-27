@@ -197,10 +197,14 @@ static void CheckChild()
         if (pid == g_qdbPid)
         {
             QDBSaver::SaveDoneHandler(exitcode, bysignal);
+            if (QReplication::Instance().IsBgsaving())
+                QReplication::Instance().OnRdbSaveDone();
+            else
+                QReplication::Instance().TryBgsave();
         }
         else if (pid == g_rewritePid)
         {
-            INF << pid << " aof process success done.";
+            INF << pid << " rewrite process success done.";
             QAOFThreadController::RewriteDoneHandler(exitcode, bysignal);
         }
         else

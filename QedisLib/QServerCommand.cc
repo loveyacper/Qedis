@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include "QDB.h"
 #include "QAOF.h"
+#include "QReplication.h"
 #include "QConfig.h"
 
 using namespace std;
@@ -227,4 +228,30 @@ QError  shutdown(const vector<QString>& params, UnboundedBuffer* reply)
     
     Server::Instance()->Terminate();
     return   QError_ok;
+}
+
+
+
+QError  sync(const std::vector<QString>& params, UnboundedBuffer* reply)
+{
+    QClient* cli = QClient::Current();
+    auto   slave = cli->GetSlaveInfo();
+    if (!slave)
+    {
+        cli->SetSlaveInfo();
+        slave = cli->GetSlaveInfo();
+        slave->state = QSlaveState_wait_bgsave_start;
+    }
+    
+    if (slave && slave->state == QSlaveState_wait_bgsave_end)
+    {
+        // 已经是等待bgsave end状态了，忽略
+    }
+    
+    QReplication::Instance().AddSlave(cli);
+    
+    QReplication::Instance().TryBgsave();
+    
+    FormatOK(reply);
+    return QError_ok;
 }

@@ -6,6 +6,12 @@
     
 const std::size_t UnboundedBuffer::MAX_BUFFER_SIZE = std::numeric_limits<std::size_t>::max() / 2;
 
+
+std::size_t UnboundedBuffer::Write(const void* pData, std::size_t nSize)
+{
+    return PushData(pData, nSize);
+}
+
 std::size_t UnboundedBuffer::PushData(const void* pData, std::size_t nSize)
 {
     std::size_t nBytes  = PushDataAt(pData, nSize);

@@ -146,6 +146,9 @@ QCommandHandler  multi;
 QCommandHandler  exec;
 QCommandHandler  discard;
 
+// replication
+QCommandHandler  sync;
+
 struct QCommandInfo
 {
     QString     cmd;

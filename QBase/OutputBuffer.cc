@@ -23,6 +23,14 @@ OutputBuffer::~OutputBuffer()
 
 void   OutputBuffer::Write(const void* data, size_t len)
 {
+    BufferSequence  bf;
+    bf.buffers[0].iov_base = const_cast<void* >(data);
+    bf.buffers[0].iov_len  = len;
+    bf.count = 1;
+    
+    this->Write(bf);
+    
+#if 0
     if (m_backBytes > 0 || m_buffer.WritableSize() < len)
     {
         std::lock_guard<std::mutex>  guard(m_backBufLock);
@@ -38,6 +46,7 @@ void   OutputBuffer::Write(const void* data, size_t len)
     
     bool succ = m_buffer.PushData(data, len);
     assert(succ);
+#endif
 }
 
 void   OutputBuffer::Write(const BufferSequence& data)

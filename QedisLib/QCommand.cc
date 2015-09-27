@@ -133,6 +133,11 @@ const QCommandInfo QCommandTable::s_info[] =
     {"multi",       QAttr_read,                1,  &multi},
     {"exec",        QAttr_read,                1,  &exec},
     {"discard",     QAttr_read,                1,  &discard},
+    
+    // replication
+    {"sync",        QAttr_read,                1,  &sync},
+    {"syn",         QAttr_read,                1,  &sync},
+    {"psync",       QAttr_read,                1,  &sync},
 };
 
 

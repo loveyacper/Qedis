@@ -7,6 +7,8 @@
 #include "QString.h"
 #include "Threads/Thread.h"
 
+#include "QStore.h"
+
 extern const char* const g_aofFileName;
 extern const char* const g_aofTmp;
 
@@ -95,5 +97,53 @@ private:
     std::vector<std::vector<QString> >  m_cmds;
     int m_state;
 };
+
+template <typename DEST>
+inline void  WriteBulkString(const char* str, size_t strLen, DEST& dst)
+{
+    char    tmp[32];
+    size_t  n = snprintf(tmp, sizeof tmp, "$%lu\r\n", strLen);
+    
+    dst.Write(tmp, n);
+    dst.Write(str, strLen);
+    dst.Write("\r\n", 2);
+}
+
+
+template <typename DEST>
+inline void  WriteBulkString(const QString& str, DEST& dst)
+{
+    WriteBulkString(str.data(), str.size(), dst);
+}
+
+template <typename DEST>
+inline void  WriteMultiBulkLong(long val, DEST& dst)
+{
+    char    tmp[32];
+    size_t  n = snprintf(tmp, sizeof tmp, "*%lu\r\n", val);
+    dst.Write(tmp, n);
+}
+
+template <typename DEST>
+inline void  WriteBulkLong(long val, DEST& dst)
+{
+    char    tmp[32];
+    size_t  n = snprintf(tmp, sizeof tmp, "%lu", val);
+    
+    WriteBulkString(tmp, n, dst);
+}
+
+
+template <typename DEST>
+inline void SaveCommand(const std::vector<QString>& params, DEST& dst)
+{
+    WriteMultiBulkLong(params.size(), dst);
+    
+    for (size_t i = 0; i < params.size(); ++ i)
+    {
+        WriteBulkString(params[i], dst);
+    }
+}
+
 
 #endif

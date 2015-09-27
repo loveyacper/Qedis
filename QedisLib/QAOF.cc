@@ -19,9 +19,9 @@ pid_t             g_rewritePid = -1;
  * the coming aof data will be write to the tmp buffer, not to
  * aof file.
  ****************************************************/
-
+#if 0
 template <typename DEST>
-static void  WriteBulkString(const char* str, size_t strLen, DEST& dst)
+inline void  WriteBulkString(const char* str, size_t strLen, DEST& dst)
 {
     char    tmp[32];
     size_t  n = snprintf(tmp, sizeof tmp, "$%lu\r\n", strLen);
@@ -33,13 +33,13 @@ static void  WriteBulkString(const char* str, size_t strLen, DEST& dst)
 
 
 template <typename DEST>
-static void  WriteBulkString(const QString& str, DEST& dst)
+inline void  WriteBulkString(const QString& str, DEST& dst)
 {
     WriteBulkString(str.data(), str.size(), dst);
 }
 
 template <typename DEST>
-static void  WriteMultiBulkLong(long val, DEST& dst)
+inline void  WriteMultiBulkLong(long val, DEST& dst)
 {
     char    tmp[32];
     size_t  n = snprintf(tmp, sizeof tmp, "*%lu\r\n", val);
@@ -47,13 +47,15 @@ static void  WriteMultiBulkLong(long val, DEST& dst)
 }
 
 template <typename DEST>
-static void  WriteBulkLong(long val, DEST& dst)
+inline void  WriteBulkLong(long val, DEST& dst)
 {
     char    tmp[32];
     size_t  n = snprintf(tmp, sizeof tmp, "%lu", val);
     
     WriteBulkString(tmp, n, dst);
 }
+
+#endif
 
 void   QAOFThreadController::RewriteDoneHandler(int exitcode, int bysignal)
 {
@@ -116,7 +118,7 @@ void   QAOFThreadController::Stop()
     m_aofThread->Stop();
     m_aofThread = nullptr;
 }
-
+#if 0
 template <typename DEST>
 static  void SaveCommand(const std::vector<QString>& params, DEST& dst)
 {
@@ -127,6 +129,7 @@ static  void SaveCommand(const std::vector<QString>& params, DEST& dst)
         WriteBulkString(params[i], dst);
     }
 }
+#endif
 // main thread call this
 void   QAOFThreadController::_WriteSelectDB(int db, OutputBuffer& dst)
 {
@@ -408,7 +411,6 @@ static void SaveObject(const QString& key, const QObject& obj, OutputMemoryFile&
             break;
     }
 }
-
 
 
 QAOFLoader::QAOFLoader()
