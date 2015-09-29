@@ -38,7 +38,7 @@ void QClient::_ProcessInlineCmd(const char* buf, size_t bytes, BODY_LENGTH_T* bo
     if (m_state == ParseCmdState::Ready)
     {
         QString   param;
-        for (size_t i = 0; i + 2 < cursor; ++ i)
+        for (size_t i = 0; i + 1 < cursor; ++ i)
         {
             if (isblank(buf[i]))
             {
@@ -55,6 +55,7 @@ void QClient::_ProcessInlineCmd(const char* buf, size_t bytes, BODY_LENGTH_T* bo
             }
         }
         
+        INF << "inline cmd param " << param.c_str();
         m_params.emplace_back(std::move(param));
     }
 }

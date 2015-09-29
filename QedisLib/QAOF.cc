@@ -204,7 +204,9 @@ void  QAOFThreadController::AOFThread::Run()
     
     while (IsAlive())
     {
-        if (!Flush() && !m_file.Sync())  // TODO : fixme sync hz
+        if (Flush())
+            m_file.Sync(); // TODO : fixme sync hz
+        else
             Thread::YieldCPU();
     }
     

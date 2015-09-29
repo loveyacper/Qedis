@@ -79,10 +79,10 @@ void   QReplication::OnRdbSaveDone()
             const char* data = rdb.Read(size);
             
             // $file_len + filedata
-            UnboundedBuffer  tmp;
-            WriteBulkLong((long)size, tmp);
+            char tmp[32];
+            int n =  snprintf(tmp, sizeof tmp - 1, "$%ld\r\n", (long)size);
             
-            cli->SendPacket(tmp.ReadAddr(), tmp.ReadableSize());
+            cli->SendPacket(tmp, n);
             cli->SendPacket(data, size);
             cli->SendPacket(m_buffer.ReadAddr(), m_buffer.ReadableSize());
             
@@ -195,5 +195,17 @@ void   QReplication::SendToSlaves(const std::vector<QString>& params)
             SaveCommand(params, ub);
         
         cli->SendPacket(ub.ReadAddr(), ub.ReadableSize());
+    }
+}
+
+void   QReplication::Cron()
+{
+    for (const auto& wptr : m_slaves)
+    {
+        auto cli = wptr.lock();
+        if (!cli || cli->GetSlaveInfo()->state != QSlaveState_online)
+            continue;
+        
+        cli->SendPacket("PING\r\n", 6);
     }
 }

@@ -31,6 +31,7 @@ const QCommandInfo QCommandTable::s_info[] =
     {"debug",       QAttr_read,               -2,  &debug},
     {"shutdown",    QAttr_read,                1,  &shutdown},
     {"bgrewriteaof",QAttr_read,                1,  &bgrewriteaof},
+    {"ping",        QAttr_read,                1,  &ping},
     
     // string
     {"strlen",      QAttr_read,                2,  &strlen},
@@ -136,7 +137,6 @@ const QCommandInfo QCommandTable::s_info[] =
     
     // replication
     {"sync",        QAttr_read,                1,  &sync},
-    {"syn",         QAttr_read,                1,  &sync},
     {"psync",       QAttr_read,                1,  &sync},
 };
 

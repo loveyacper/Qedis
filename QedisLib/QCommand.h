@@ -43,6 +43,7 @@ QCommandHandler  client;
 QCommandHandler  debug;
 QCommandHandler  shutdown;
 QCommandHandler  bgrewriteaof;
+QCommandHandler  ping;
 
 // string commands
 QCommandHandler  set;

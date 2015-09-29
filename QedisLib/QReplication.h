@@ -52,7 +52,8 @@ public:
     void   SaveChanges(const std::vector<QString>& params);
     
     void   SendToSlaves(const std::vector<QString>& params);
-
+    
+    void   Cron();
     
 private:
     QReplication();

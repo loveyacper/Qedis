@@ -252,6 +252,13 @@ QError  sync(const std::vector<QString>& params, UnboundedBuffer* reply)
     
     QReplication::Instance().TryBgsave();
     
-    FormatOK(reply);
     return QError_ok;
 }
+
+
+QError  ping(const vector<QString>& params, UnboundedBuffer* reply)
+{
+    FormatSingle("PONG", 4, reply);
+    return   QError_ok;
+}
+

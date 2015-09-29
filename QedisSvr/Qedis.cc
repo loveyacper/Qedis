@@ -108,6 +108,21 @@ private:
     }
 };
 
+class  ReplicationCronTimer : public Timer
+{
+public:
+    ReplicationCronTimer() : Timer(1000 * 5)
+    {
+    }
+    
+private:
+    bool _OnTimer() override
+    {
+        QReplication::Instance().Cron();
+        return  true;
+    }
+};
+
 static void LoadDbFromFile()
 {
     //  USE AOF RECOVERY FIRST, IF FAIL, THEN RDB
@@ -175,6 +190,7 @@ bool Qedis::_Init()
     QSlowLog::Instance().SetThreshold(g_config.slowlogtime);
     
     TimerManager::Instance().AddTimer(PTIMER(new ServerCronTimer));
+    TimerManager::Instance().AddTimer(PTIMER(new ReplicationCronTimer));
     
     return  true;
 }
