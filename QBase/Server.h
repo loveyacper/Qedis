@@ -21,6 +21,7 @@ public:
 
     bool  TCPBind(const SocketAddr&  listenAddr);
     void  TCPReconnect(const SocketAddr& peer);
+    void  TCPConnect(const SocketAddr& peer, bool retry = true);
 
     static Server*  Instance() {   return   sm_instance;  }
 

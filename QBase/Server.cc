@@ -26,9 +26,7 @@ private:
     bool _OnTimer()
     {
         USR << " : OnTimer reconnect to " << m_peer.GetIP();
-
-        std::shared_ptr<ClientSocket>  pClient(new ClientSocket);
-        pClient->Connect(m_peer);
+        Server::Instance()->TCPConnect(m_peer, true);
 
         return false;
     }
@@ -91,6 +89,14 @@ void Server::TCPReconnect(const SocketAddr& peer)
     pTimer->m_peer = peer;
 
     TimerManager::Instance().AsyncAddTimer(pTimer);
+}
+
+void Server::TCPConnect(const SocketAddr& peer, bool retry)
+{
+    INF << __FUNCTION__ << peer.GetIP();
+    
+    std::shared_ptr<ClientSocket>  pClient(new ClientSocket(retry));
+    pClient->Connect(peer);
 }
 
 void Server::MainLoop()
