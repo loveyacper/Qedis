@@ -338,10 +338,10 @@ bool QDBSaver::SaveLZFString(const QString& str)
     if (str.size() < 20)
         return false;
         
-    auto outlen = str.size() - 4;
+    unsigned outlen = static_cast<unsigned>(str.size() - 4);
     std::unique_ptr<char []> outBuf(new char[outlen + 1]);
         
-    auto compressLen = lzf_compress((const void*)str.data(), str.size(),
+    auto compressLen = lzf_compress((const void*)str.data(), static_cast<unsigned>(str.size()),
                                         outBuf.get(), outlen);
     
     if (compressLen == 0)
@@ -604,14 +604,14 @@ QString  QDBLoader::LoadLZFString()
     size_t compressLen = LoadLength(special);
     assert(!special);
     
-    size_t rawLen = LoadLength(special);
+    unsigned rawLen = static_cast<unsigned>(LoadLength(special));
     assert(!special);
     
     const char* compressStr = m_qdb.Read(compressLen);
     
     QString  val;
     val.resize(rawLen);
-    if (lzf_decompress(compressStr, compressLen,
+    if (lzf_decompress(compressStr, static_cast<unsigned>(compressLen),
                        &val[0], rawLen) == 0)
     {
         std::cerr << "decompress error\n";
@@ -926,14 +926,14 @@ QObject     QDBLoader::_LoadZipList(int8_t type)
     QString str = _LoadGenericString();
     
     unsigned char* zlist = (unsigned char* )&str[0];
-    size_t         nElem = ziplistLen(zlist);
+    unsigned       nElem = ziplistLen(zlist);
     
     std::vector<ZipListElement>  elements;
     elements.resize(nElem);
     
-    for (size_t i = 0; i < nElem; ++ i)
+    for (unsigned i = 0; i < nElem; ++ i)
     {
-        unsigned char* elem = ziplistIndex(zlist, i);
+        unsigned char* elem = ziplistIndex(zlist, (int)i);
         
         int succ = ziplistGet(elem, &elements[i].sval, &elements[i].slen,
                                     &elements[i].lval);
@@ -1014,12 +1014,12 @@ QObject     QDBLoader::_LoadIntset()
     QString str = _LoadGenericString();
     
     intset* iset  = (intset* )&str[0];
-    size_t nElem  = intsetLen(iset);
+    unsigned nElem  = intsetLen(iset);
     
     std::vector<int64_t>  elements;
     elements.resize(nElem);
     
-    for (size_t i = 0; i < nElem; ++ i)
+    for (unsigned i = 0; i < nElem; ++ i)
     {
         intsetGet(iset, i, &elements[i]);
     }

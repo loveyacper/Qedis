@@ -13,8 +13,6 @@ using namespace std;
 
 using std::size_t;
 
-static const size_t kDefaultSize = 1 * 1024 * 1024;
-
 static const int   kInvalidFile = -1;
 static char* const kInvalidAddr = reinterpret_cast<char*>(-1);
 

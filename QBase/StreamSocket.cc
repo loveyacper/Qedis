@@ -75,7 +75,7 @@ int StreamSocket::_Send(const BufferSequence& bf)
     if (total == 0)
         return 0;
 
-    int ret = static_cast<int>(::writev(m_localSock, bf.buffers, bf.count));
+    int ret = static_cast<int>(::writev(m_localSock, bf.buffers, static_cast<int>(bf.count)));
     if (ERRORSOCKET == ret && (EAGAIN == errno || EWOULDBLOCK == errno))
     {
         m_epollOut = true;
