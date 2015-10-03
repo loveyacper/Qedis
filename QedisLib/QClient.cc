@@ -19,17 +19,18 @@
 
 QClient*  QClient::s_pCurrentClient = 0;
 
-void QClient::_ProcessInlineCmd(const char* buf, size_t bytes, BODY_LENGTH_T* bodyLen)
+BODY_LENGTH_T QClient::_ProcessInlineCmd(const char* buf, size_t bytes)
 {
     if (bytes < 2)
-        return;
+        return 0;
     
+    BODY_LENGTH_T  len = 0;
     size_t cursor = bytes - 1;
     for (; cursor > 0; -- cursor)
     {
         if (buf[cursor] == '\n' && buf[cursor-1] == '\r')
         {
-            *bodyLen = cursor + 1;
+            len = static_cast<BODY_LENGTH_T>(cursor + 1);
             m_state = ParseCmdState::Ready;
             break;
         }
@@ -58,162 +59,153 @@ void QClient::_ProcessInlineCmd(const char* buf, size_t bytes, BODY_LENGTH_T* bo
         INF << "inline cmd param " << param.c_str();
         m_params.emplace_back(std::move(param));
     }
+    
+    return len;
 }
-
-HEAD_LENGTH_T QClient::_HandleHead(AttachedBuffer& buf, BODY_LENGTH_T* bodyLen)
-{
-    const size_t   bytes = buf.ReadableSize();
-    const char* const start = buf.ReadAddr();
-
-    const char* ptr  = start;
-
-    QParseInt parseIntRet = QParseInt::ok;
-    bool  parseBody = false;
-    while (static_cast<size_t>(ptr - start) < bytes && !parseBody)
-    {
-
-    switch (m_state)
-    {
-    case ParseCmdState::Init:
-        assert (m_multibulk == 0);
-        if (*ptr != '*')
-        {
-            INF << "Try process inline cmd first char " << (int)*ptr;
-            _ProcessInlineCmd(ptr, bytes, bodyLen);
-            return 0;
-        }
-
-        m_state = ParseCmdState::MultiBulk;
-        ++ ptr;
-        break;
-
-    case ParseCmdState::MultiBulk:
-        parseIntRet = GetIntUntilCRLF(ptr, start + bytes - ptr, m_multibulk);
-        if (parseIntRet == QParseInt::waitCrlf)
-        {
-            return static_cast<int>(ptr - start);
-        }
-        else if (parseIntRet == QParseInt::error)
-        {
-            OnError();
-            return 0;
-        }
-
-        assert (ptr[0] == 13 && ptr[1] == 10);
-        ptr += 2;
-            
-        if (m_multibulk < 0 || m_multibulk > 1024)
-        {
-            ERR << "Abnormal m_multibulk " << m_multibulk;
-            OnError();
-            return 0;
-        }
-        
-        m_state = ParseCmdState::Dollar;
-        break;
-
-    case ParseCmdState::Dollar:
-        if (*ptr == '$')
-        {
-            ++ ptr;
-            m_state = ParseCmdState::Arglen;
-        }
-        else
-        {
-            ERR << "ProcessDollarState: expect $, wrong char " << (int)*ptr;
-            OnError();
-            return 0;
-        }
-        break;
-
-    case ParseCmdState::Arglen:
-        parseIntRet = GetIntUntilCRLF(ptr, start + bytes - ptr, m_paramLen);
-        if (parseIntRet == QParseInt::waitCrlf)
-        {
-            return static_cast<int>(ptr - start);
-        }
-        else if (parseIntRet == QParseInt::error)
-        {
-            OnError();
-            ERR << "ProcessArglenState: parseIntError";
-            return 0;
-        }
-
-        assert (ptr[0] == 13 && ptr[1] == 10);
-        ptr += 2;
-
-        m_state = ParseCmdState::Arg;
-        if (m_paramLen < 0 || m_paramLen > 1024 * 1024)
-        {
-            ERR << "Got wrong argLen " << m_paramLen;
-            OnError();
-            return 0;
-        }
-
-        *bodyLen = m_paramLen + 2; // crlf
-        parseBody = true;
-        break;
-
-    default:
-        assert (!!!"Wrong state when handle head");
-        break;
-    }
-
-    }
-
-    return static_cast<int>(ptr - start);
-}
-
 
 static void Propogate(const std::vector<QString>& params);
 
-void QClient::_HandlePacket(AttachedBuffer& buf)
+BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
 {
-    s_pCurrentClient = this;
-
-    const std::size_t bytes = buf.ReadableSize();
+    const size_t   bytes = buf.ReadableSize();
     const char* const start = buf.ReadAddr();
+    const char* const end   = start + bytes;
 
     const char* ptr  = start;
-    const char* crlf = 0;
-
-    if (m_state ==  ParseCmdState::Arg)
+    
     {
-        crlf = SearchCRLF(start, bytes);
+        auto& repl = QReplication::Instance();
+        auto& info = repl.GetMasterInfo();
+        
+        // discard all data before request sync;
+        // or support service use old data? TODO
+        if (info.state == QReplState_connected)
+            return  static_cast<BODY_LENGTH_T>(bytes);
+            
+        if (info.state == QReplState_wait_rdb)
+        {
+            //RECV RDB FILE
+            if (info.rdbSize == std::size_t(-1))
+            {
+                assert(info.state == QReplState_wait_rdb);
+     
+                ++ ptr; // skip $
+                int s;
+                if (QParseInt::ok == GetIntUntilCRLF(ptr, end - ptr, s))
+                {
+                    info.rdbSize = s;
+                    USR << "recv rdb size " << s;
+                    ptr += 2; // skip CRLF
+                }
+            }
+            else
+            {
+                auto rdb = bytes;
+                if (rdb > info.rdbSize)
+                    rdb = info.rdbSize;
+                
+                QReplication::Instance().SaveTmpRdb(start, rdb);
+                ptr += rdb;
+            }
 
-        if (!crlf) 
-        {
-            ERR << "Why can not find crlf?";
-            OnError();
-            return;
-        }
-
-        if (crlf - start != m_paramLen)
-        {
-            ERR << "param len said " << m_paramLen << ", but actual get " << (crlf - start);
-            OnError();
-            return ;
-        }
-
-        m_params.emplace_back(QString(ptr, crlf - start));
-        if (m_params.size() == static_cast<size_t>(m_multibulk))
-        {
-            m_state =  ParseCmdState::Ready;
-        }
-        else
-        {
-            m_state =  ParseCmdState::Dollar;
-            return;
+            return static_cast<BODY_LENGTH_T>(ptr - start);
         }
     }
+    
+    QParseInt parseIntRet = QParseInt::ok;
+    
+    switch (m_state)
+    {
+        case ParseCmdState::Init:
+            assert (m_multibulk == 0);
+            if (*ptr == '*')
+            {
+                ++ ptr;
+                
+                parseIntRet = GetIntUntilCRLF(ptr, end - ptr, m_multibulk);
+                if (parseIntRet == QParseInt::ok)
+                {
+                    m_state = ParseCmdState::Arglen;
+                    ptr += 2; // skip CRLF
+                }
+                else if (parseIntRet == QParseInt::error)
+                {
+                    OnError();
+                    return 0;
+                }
+            }
+            else
+            {
+                INF << "Try process inline cmd first char " << (int)*ptr;
+                ptr += _ProcessInlineCmd(ptr, bytes);
+            }
+                
+            break;
+                
+        case ParseCmdState::Arglen:
+            assert(*ptr == '$');
+            ++ ptr;
+                
+            parseIntRet = GetIntUntilCRLF(ptr, end - ptr, m_paramLen);
+            if (parseIntRet == QParseInt::ok)
+            {
+                m_state = ParseCmdState::Arg;
+                ptr += 2; // skip CRLF
+            }
+            else if (parseIntRet == QParseInt::error)
+            {
+                OnError();
+                return 0;
+            }
+                
+            break;
+                
+        case ParseCmdState::Arg:
+        {
+            const char* crlf = SearchCRLF(ptr, end - ptr);
+                
+            if (!crlf)
+            {
+                USR << "wait crlf for arg";
+                break;
+            }
+                
+            if (crlf - ptr != m_paramLen)
+            {
+                ERR << "param len said " << m_paramLen << ", but actual get " << (crlf - ptr);
+                OnError();
+                return 0;
+            }
+                
+            m_params.emplace_back(QString(ptr, crlf - ptr));
+            if (m_params.size() == static_cast<size_t>(m_multibulk))
+            {
+                m_state =  ParseCmdState::Ready;
+            }
+            else
+            {
+                m_state =  ParseCmdState::Arglen;
+            }
+                
+            ptr = crlf + 2; // skip CRLF
+            break;
+        }
+                
+        default:
+            break;
+    }
+    
+    if (m_state != ParseCmdState::Ready)
+        return static_cast<BODY_LENGTH_T>(ptr - start);
 
-    assert (m_state == ParseCmdState::Ready);
-
+    /// handle packet
+    s_pCurrentClient = this;
+    
     QString& cmd = m_params[0];
     std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::tolower);
-
+    
     QSTORE.SelectDB(m_db);
-
+    
     INF << "client " << GetID() << ", cmd " << m_params[0].c_str();
     
     const QCommandInfo* info = QCommandTable::GetCommandInfo(m_params[0]);
@@ -241,16 +233,18 @@ void QClient::_HandlePacket(AttachedBuffer& buf)
                 SendPacket("+QUEUED\r\n", 9);
                 INF << "queue cmd " << cmd.c_str();
             }
-
+            
             _Reset();
-            return;
+            return static_cast<BODY_LENGTH_T>(ptr - start);
         }
     }
     
     QSlowLog::Instance().Begin();
-    QError err = QCommandTable::ExecuteCmd(m_params, info, &m_reply);
+    QError err = QCommandTable::ExecuteCmd(m_params,
+                                           info,
+                                           IsFlagOn(ClientFlag_master) ? nullptr : &m_reply);
     QSlowLog::Instance().EndAndStat(m_params);
-
+    
     if (!m_reply.IsEmpty())
     {
         SendPacket(m_reply.ReadAddr(), m_reply.ReadableSize());
@@ -262,8 +256,9 @@ void QClient::_HandlePacket(AttachedBuffer& buf)
     }
     
     _Reset();
+    
+    return static_cast<BODY_LENGTH_T>(ptr - start);
 }
-
 
 QClient*  QClient::Current()
 {

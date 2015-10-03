@@ -4,7 +4,10 @@
 #include <list>
 #include <memory>
 #include "UnboundedBuffer.h"
+#include "Socket.h"
+#include "Log/MemoryFile.h"
 
+// master side
 enum QSlaveState
 {
     QSlaveState_none,
@@ -12,12 +15,6 @@ enum QSlaveState
     QSlaveState_wait_bgsave_end,   // sync bgsave正在进行
     //QSlaveState_send_rdb, // 这个slave在接受rdb文件
     QSlaveState_online,
-    
-};
-
-struct  QMasterInfo
-{
-    //SocketAddr  masterAddr;
 };
 
 struct QSlaveInfo
@@ -28,6 +25,37 @@ struct QSlaveInfo
     {
     }
 };
+
+// slave side
+enum QReplState
+{
+    QReplState_none,
+    QReplState_connecting,
+    QReplState_connected,
+    QReplState_wait_rdb,
+    QReplState_online,
+};
+
+struct QMasterInfo
+{
+    SocketAddr  addr;
+    
+    QReplState  state;
+    
+    // For recv rdb
+    std::size_t rdbSize;
+    std::size_t rdbRecved;
+    
+    QMasterInfo()
+    {
+        state   = QReplState_none;
+        rdbSize = std::size_t(-1);
+        rdbRecved = 0;
+    }
+};
+
+//tmp filename
+const char*  const slaveRdbFile = "slave.rdb";
 
 class QClient;
 
@@ -55,6 +83,11 @@ public:
     
     void   Cron();
     
+    void   SetMaster(const std::shared_ptr<QClient>&  cli) { m_master = cli; }
+    QMasterInfo& GetMasterInfo() { return m_masterInfo; }
+    
+    void   SaveTmpRdb(const char* data, std::size_t len);
+    
 private:
     QReplication();
     void    _OnStartBgsave(bool succ);
@@ -65,6 +98,11 @@ private:
     
     UnboundedBuffer  m_buffer; // 存rdb期间，缓冲变化
     // SOCKET::SENDPACKET是一定成功的，所以，当文件发送完毕，立即将此buffer SEND
+
+    QMasterInfo             m_masterInfo;
+    std::weak_ptr<QClient>  m_master;
+
+    OutputMemoryFile        m_rdb;
 };
 
 

@@ -9,6 +9,7 @@
 #include "QReplication.h"
 
 #include "QAOF.h" // FOR save changes commands
+#include "Server.h"
 
 
 QReplication& QReplication::Instance()
@@ -71,8 +72,7 @@ void   QReplication::OnRdbSaveDone()
             if (!rdb.IsOpen() && !rdb.Open(g_config.rdbfilename.c_str()))
             {
                 std::cerr << "can not open rdb when replication\n";
-                return;
-                // fatal error;
+                return;  // fatal error;
             }
             
             std::size_t   size = std::size_t(-1);
@@ -162,18 +162,6 @@ void  QReplication::SaveChanges(const std::vector<QString>& params)
     if (!IsBgsaving())
         return;
     
-#if 0
-    for (const auto& wptr : m_slaves)
-    {
-        auto cli = wptr.lock();
-        if (!cli || cli->GetSlaveInfo()->state != QSlaveState_online)
-            continue;
-        
-        
-        
-    }
-#endif
-    
     SaveCommand(params, m_buffer);
 }
 
@@ -207,5 +195,65 @@ void   QReplication::Cron()
             continue;
         
         cli->SendPacket("PING\r\n", 6);
+    }
+    
+    if (!m_masterInfo.addr.Empty())
+    {
+        switch (m_masterInfo.state)
+        {
+            case QReplState_none:
+            {
+                std::cerr << "Try connect to master " << m_masterInfo.addr.GetIP() << std::endl;
+                Server::Instance()->TCPConnect(m_masterInfo.addr, true);
+                m_masterInfo.state = QReplState_connecting;
+            }
+                break;
+                
+            case QReplState_connected:
+            {
+                auto master = m_master.lock();
+                if (!master)
+                {
+                    m_masterInfo.state = QReplState_none;
+                }
+                else
+                {
+                    master->SendPacket("SYNC\r\n", 6);
+                    std::cerr << "Request SYNC\n";
+                    
+                    m_rdb.Open(slaveRdbFile, false);
+                    m_masterInfo.rdbRecved = 0;
+                    m_masterInfo.rdbSize   = std::size_t(-1);
+                    m_masterInfo.state = QReplState_wait_rdb;
+                }
+            }
+                break;
+                
+            case QReplState_wait_rdb:
+            {
+            }
+                break;
+                
+            default:
+                break;
+        }
+    }
+}
+
+
+void   QReplication::SaveTmpRdb(const char* data, std::size_t len)
+{
+    m_rdb.Write(data, len);
+    m_masterInfo.rdbRecved += len;
+    
+    if (m_masterInfo.rdbRecved == m_masterInfo.rdbSize)
+    {
+        std::cerr << "Rdb recv complete, bytes " << m_masterInfo.rdbSize << std::endl;
+        
+        QSTORE.ResetDb();
+        
+        QDBLoader  loader;
+        loader.Load(slaveRdbFile);
+        m_masterInfo.state = QReplState_online;
     }
 }

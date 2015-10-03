@@ -111,6 +111,15 @@ bool  LoadQedisConfig(const char* cfgFile, QConfig& cfg)
     cfg.slowlogmaxlen = parser.GetData<int>("slowlog-max-len");
     
     cfg.hz = parser.GetData<int>("hz", 10);
+
+    // load master ip port
+    std::vector<QString>  master(SplitString(parser.GetData<QString>("slaveof"), ' '));
+    if (master.size() == 2)
+    {
+        cfg.masterIp   = std::move(master[0]);
+        cfg.masterPort = static_cast<unsigned short>(std::stoi(master[1]));
+    }
+    
     cfg.includefile = parser.GetData<QString>("include"); //TODO multi files include
     
     return  cfg.CheckArgs();

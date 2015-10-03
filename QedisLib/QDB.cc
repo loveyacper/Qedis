@@ -428,6 +428,14 @@ int  QDBLoader::Load(const char *filename)
                 bool special;
                 auto dbno = LoadLength(special);
                 assert(!special);
+                // check db no
+                if (dbno > kMaxDbNum)
+                {
+                    std::cerr << "Abnormal db number " << dbno << std::endl;
+                    return false;
+                }
+                // expand db
+                QSTORE.ExpandDb(static_cast<int>(dbno) + 1);
                 QSTORE.SelectDB(static_cast<int>(dbno));
                 std::cerr << "encounter Select DB " << dbno << std::endl;
                 break;

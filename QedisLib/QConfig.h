@@ -37,6 +37,9 @@ struct QConfig
     
     int       hz;               // 10  [1,500]
     
+    QString   masterIp;
+    unsigned short masterPort;  // replication
+    
     QString   includefile;      // the template config
     
     QConfig();

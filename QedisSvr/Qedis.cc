@@ -54,8 +54,21 @@ std::shared_ptr<StreamSocket>   Qedis::_OnNewConnection(int connfd)
     Socket::GetPeerAddr(connfd,  peer);
 
     std::shared_ptr<QClient>    pNewTask(new QClient());
-    if (!pNewTask->Init(connfd))
+    if (pNewTask->Init(connfd))
+    {
+        const bool peerIsMaster = (peer == QReplication::Instance().GetMasterInfo().addr);
+        if (peerIsMaster)
+        {
+            QReplication::Instance().GetMasterInfo().state = QReplState_connected;
+            QReplication::Instance().SetMaster(pNewTask);
+            
+            pNewTask->SetFlag(ClientFlag_master);
+        }
+    }
+    else
+    {
         pNewTask.reset();
+    }
     
     return  pNewTask;
 }
@@ -191,6 +204,13 @@ bool Qedis::_Init()
     
     TimerManager::Instance().AddTimer(PTIMER(new ServerCronTimer));
     TimerManager::Instance().AddTimer(PTIMER(new ReplicationCronTimer));
+    
+    // master ip
+    if (!g_config.masterIp.empty())
+    {
+        QReplication::Instance().GetMasterInfo().addr.Init(g_config.masterIp.c_str(),
+                                                           g_config.masterPort);
+    }
     
     return  true;
 }

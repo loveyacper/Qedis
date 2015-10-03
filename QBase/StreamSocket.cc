@@ -12,7 +12,6 @@ using std::size_t;
 
 StreamSocket::StreamSocket()
 {
-    m_bodyLen = -1;
     m_retry   = false;
 }
 
@@ -207,47 +206,16 @@ bool StreamSocket::DoMsgParse()
         m_recvBuf.GetDatum(datum, m_recvBuf.ReadableSize());
 
         AttachedBuffer af(datum);
-
-        if (m_bodyLen == -1)
+        auto  bodyLen = _HandlePacket(af);
+        if (bodyLen > 0)
         {
-            const auto headLen = _HandleHead(af, &m_bodyLen);
-            if (headLen < 0 || static_cast<size_t>(headLen + 1) >= m_recvBuf.Capacity())
-            {
-                OnError();
-                return false;
-            }
-            else
-            {
-                m_recvBuf.AdjustReadPtr(headLen);
-            }
+            busy = true;
+            m_recvBuf.AdjustReadPtr(bodyLen);
         }
-
-        // tmp some defensive code
-        if (m_bodyLen >= 0 &&
-            static_cast<size_t>(3 * m_bodyLen) > 2 * m_recvBuf.Capacity())
+        else
         {
-            ERR << "Too big packet " << m_bodyLen << " on socket " << m_localSock;
-            OnError();
-            return  false;
+            break;
         }
-        
-        if (m_bodyLen == -1 ||
-            static_cast<int>(m_recvBuf.ReadableSize()) < m_bodyLen)
-        {
-            return busy;
-        }
-
-        busy = true;
-
-        BufferSequence   bf;
-        m_recvBuf.GetDatum(bf, m_bodyLen); 
-        assert (m_bodyLen == static_cast<int>(bf.TotalBytes()));
-
-        AttachedBuffer   cmd(bf);
-        _HandlePacket(cmd);
-
-        m_recvBuf.AdjustReadPtr(m_bodyLen);
-        m_bodyLen = -1;
     }
 
     return  busy;

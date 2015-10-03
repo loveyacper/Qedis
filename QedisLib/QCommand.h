@@ -149,6 +149,7 @@ QCommandHandler  discard;
 
 // replication
 QCommandHandler  sync;
+QCommandHandler  slaveof;
 
 struct QCommandInfo
 {

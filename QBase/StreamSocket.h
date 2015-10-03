@@ -8,7 +8,6 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-typedef int32_t  HEAD_LENGTH_T;
 typedef int32_t  BODY_LENGTH_T;
 
 // Abstraction for a TCP connection
@@ -48,9 +47,7 @@ private:
     bool   m_retry;
 
     int    _Send(const BufferSequence& bf);
-    virtual HEAD_LENGTH_T _HandleHead(AttachedBuffer& buf, BODY_LENGTH_T* bodyLen) = 0;
-    virtual void _HandlePacket(AttachedBuffer& buf) = 0;
-    BODY_LENGTH_T m_bodyLen;
+    virtual BODY_LENGTH_T _HandlePacket(AttachedBuffer& buf) = 0;
 
 private:
     SocketAddr  m_peerAddr;

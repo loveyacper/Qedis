@@ -79,7 +79,7 @@ bool ListenSocket::OnReadable()
         int connfd = _Accept();
         if (connfd >= 0)
         {
-            Server::Instance()->NewConnection(connfd);
+            Server::Instance()->NewConnection(connfd, false);
         }
         else
         {

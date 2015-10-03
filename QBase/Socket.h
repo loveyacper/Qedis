@@ -84,6 +84,19 @@ struct SocketAddr
     bool  Empty() const { return  0 == m_addr.sin_family; }
 
     sockaddr_in  m_addr;
+    
+    inline friend bool operator== (const SocketAddr& a, const SocketAddr& b)
+    {
+        return a.m_addr.sin_family      ==  b.m_addr.sin_family &&
+               a.m_addr.sin_addr.s_addr ==  b.m_addr.sin_addr.s_addr &&
+               a.m_addr.sin_port        ==  b.m_addr.sin_port ;
+    }
+    
+    
+    inline friend bool operator!= (const SocketAddr& a, const SocketAddr& b)
+    {
+        return  !(a == b);
+    }
 };
 
 

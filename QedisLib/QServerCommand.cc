@@ -262,3 +262,14 @@ QError  ping(const vector<QString>& params, UnboundedBuffer* reply)
     return   QError_ok;
 }
 
+
+QError  slaveof(const std::vector<QString>& params, UnboundedBuffer* reply)
+{
+    auto& info = QReplication::Instance().GetMasterInfo();
+    info.addr.Init(params[1].c_str(), std::stoi(params[2]));
+    info.state = QReplState_none;
+    
+    FormatOK(reply);
+    return QError_ok;
+}
+

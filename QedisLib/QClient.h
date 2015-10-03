@@ -13,7 +13,6 @@ enum  class ParseCmdState : std::int8_t
 {
     Init,
     MultiBulk,
-    Dollar,
     Arglen,
     Arg,
     Ready,
@@ -24,6 +23,7 @@ enum ClientFlag
     ClientFlag_multi = 0x1,
     ClientFlag_dirty = 0x1 << 1,
     ClientFlag_wrongExec = 0x1 << 2,
+    ClientFlag_master = 0x1 << 3,
 };
 
 class DB;
@@ -32,8 +32,7 @@ struct QSlaveInfo;
 class QClient: public StreamSocket
 {
 private:
-    HEAD_LENGTH_T _HandleHead(AttachedBuffer& buf, BODY_LENGTH_T* bodyLen);
-    void _HandlePacket(AttachedBuffer& buf);
+    BODY_LENGTH_T _HandlePacket(AttachedBuffer& buf);
 
 public:
     QClient();
@@ -91,7 +90,7 @@ public:
     QSlaveInfo*  GetSlaveInfo() const { return m_slaveInfo.get(); }
     
 private:
-    void    _ProcessInlineCmd(const char* , size_t , BODY_LENGTH_T* );
+    BODY_LENGTH_T    _ProcessInlineCmd(const char* , size_t);
     void    _Reset();
 
     ParseCmdState  m_state;

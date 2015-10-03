@@ -108,6 +108,8 @@ private:
     bool _OnTimer();
 };
 
+const int kMaxDbNum = 65536;
+
 class QStore
 {
 public:
@@ -122,7 +124,9 @@ public:
 
     int SelectDB(int dbno);
     int GetDB() const;
-  
+    
+    void ExpandDb(int dbNum);
+    
     // Key operation
     bool DeleteKey(const QString& key);
     bool ExistsKey(const QString& key) const;
@@ -158,6 +162,9 @@ public:
     // danger cmd
     void    ClearCurrentDB() { m_db->clear(); }
     void    ClearAllDB()     { std::vector<QDB>(m_store.size()).swap(m_store); }
+    
+    //reset db
+    void    ResetDb(int dbNum);
     
     // for blocked list
     bool    BlockClient(const QString& key,

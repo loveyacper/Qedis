@@ -302,6 +302,11 @@ void  QStore::Init(int dbNum)
 {
     assert (m_db == nullptr);
     
+    if (dbNum < 1)
+        dbNum = 1;
+    else if (dbNum > kMaxDbNum)
+        dbNum = kMaxDbNum;
+    
     m_store.resize(dbNum);
     m_expiresDb.resize(dbNum);
     m_blockedClients.resize(dbNum);
@@ -342,6 +347,14 @@ int QStore::SelectDB(int dbno)
 int  QStore::GetDB() const
 {
     return  m_dbno;
+}
+
+void QStore::ExpandDb(int dbNum)
+{
+    if (dbNum <= m_store.size())
+        return;
+    
+    m_store.resize(dbNum);
 }
 
 bool QStore::DeleteKey(const QString& key)
@@ -464,6 +477,15 @@ void    QStore::InitExpireTimer()
 {
     for (int i = 0; i < static_cast<int>(m_expiresDb.size()); ++ i)
         TimerManager::Instance().AddTimer(PTIMER(new ExpireTimer(i)));
+}
+
+void    QStore::ResetDb(int dbNum)
+{
+    m_store.resize(dbNum);
+    m_expiresDb.clear();
+    m_blockedClients.clear();
+    m_dbno = 0;
+    m_db   = &m_store[m_dbno];
 }
 
 bool    QStore::BlockClient(const QString& key, QClient* client, uint64_t timeout, ListPosition pos, const QString* dstList)

@@ -138,6 +138,7 @@ const QCommandInfo QCommandTable::s_info[] =
     // replication
     {"sync",        QAttr_read,                1,  &sync},
     {"psync",       QAttr_read,                1,  &sync},
+    {"slaveof",     QAttr_read,                3,  &slaveof},
 };
 
 
