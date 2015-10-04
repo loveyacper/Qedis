@@ -4,10 +4,8 @@
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
-#include <iostream>
 #include <unistd.h>
 
-using namespace std;
 
 #include "MemoryFile.h"
 

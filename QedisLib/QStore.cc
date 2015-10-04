@@ -1,7 +1,6 @@
 #include "QStore.h"
 #include "QClient.h"
 #include "Log/Logger.h"
-#include <iostream>
 #include <limits>
 #include <cassert>
 

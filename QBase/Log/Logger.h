@@ -54,6 +54,7 @@ public:
     Logger&  operator<<(long a);
     Logger&  operator<<(unsigned long long a);
     Logger&  operator<<(long long a);
+    Logger&  operator<<(double a);
 
     Logger& SetCurLevel(unsigned int level)
     {

@@ -1,7 +1,6 @@
 #include "QStore.h"
 #include "Log/Logger.h"
 #include "QGlobRegex.h"
-#include <iostream>
 #include <cassert>
 
 using namespace std;

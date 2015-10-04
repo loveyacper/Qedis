@@ -1,5 +1,4 @@
 #include <assert.h>
-#include <iostream>
 
 #if defined(__APPLE__)
 #include <unistd.h>
@@ -29,24 +28,6 @@ void   OutputBuffer::Write(const void* data, size_t len)
     bf.count = 1;
     
     this->Write(bf);
-    
-#if 0
-    if (m_backBytes > 0 || m_buffer.WritableSize() < len)
-    {
-        std::lock_guard<std::mutex>  guard(m_backBufLock);
-        
-        if (m_backBytes > 0 || m_buffer.WritableSize() < len)
-        {
-            m_backBuf.PushData(data, len);
-            m_backBytes += len;
-            assert (m_backBytes == m_backBuf.ReadableSize());
-            return;
-        }
-    }
-    
-    bool succ = m_buffer.PushData(data, len);
-    assert(succ);
-#endif
 }
 
 void   OutputBuffer::Write(const BufferSequence& data)

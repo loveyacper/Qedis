@@ -1,7 +1,6 @@
 
 #include "QDB.h"
 #include "Log/Logger.h"
-#include <iostream>
 #include <sstream>
 #include <unistd.h>
 #include <math.h>
@@ -108,7 +107,7 @@ void  QDBSaver::Save(const char* qdbFile)
     
     if (::rename(tmpFile, qdbFile) != 0)
     {
-        std::cerr << "rename error " << errno << std::endl;
+        ERR << "rename error " << errno;
         assert (false);
     }
     
@@ -346,7 +345,7 @@ bool QDBSaver::SaveLZFString(const QString& str)
     
     if (compressLen == 0)
     {
-        std::cerr << "compress len = 0\n";
+        ERR << "compress len = 0";
         return false;
     }
     
@@ -358,7 +357,7 @@ bool QDBSaver::SaveLZFString(const QString& str)
     SaveLength(str.size());
     m_qdb.Write(outBuf.get(), compressLen);
     
-    std::cerr << "compress len " << compressLen << ", raw len " << str.size() << std::endl;
+    DBG << "compress len " << compressLen << ", raw len " << str.size();
     
     return  true;
 }
@@ -419,7 +418,7 @@ int  QDBLoader::Load(const char *filename)
         switch (indicator)
         {
             case kEOF:
-                std::cerr << "encounter EOF\n";
+                DBG << "encounter EOF";
                 eof = true;
                 break;
                 
@@ -431,13 +430,13 @@ int  QDBLoader::Load(const char *filename)
                 // check db no
                 if (dbno > kMaxDbNum)
                 {
-                    std::cerr << "Abnormal db number " << dbno << std::endl;
+                    ERR << "Abnormal db number " << dbno;
                     return false;
                 }
                 // expand db
                 QSTORE.ExpandDb(static_cast<int>(dbno) + 1);
                 QSTORE.SelectDB(static_cast<int>(dbno));
-                std::cerr << "encounter Select DB " << dbno << std::endl;
+                DBG << "encounter Select DB " << dbno;
                 break;
             }
                 
@@ -463,7 +462,7 @@ int  QDBLoader::Load(const char *filename)
             {
                 QString key = LoadKey();
                 QObject obj = LoadObject(indicator);
-                std::cerr << "encounter key = " << key << ", obj.encoding = " << obj.encoding << std::endl;
+                DBG << "encounter key = " << key << ", obj.encoding = " << obj.encoding;
 
                 assert(absTimeout >= 0);
                 
@@ -475,13 +474,13 @@ int  QDBLoader::Load(const char *filename)
                 {
                     if (absTimeout > static_cast<int64_t>(::Now()))
                     {
-                        std::cerr << key << " load timeout " << absTimeout << std::endl;
+                        DBG << key << " load timeout " << absTimeout;
                         QSTORE.SetValue(key, obj);
                         QSTORE.SetExpire(key, absTimeout);
                     }
                     else
                     {
-                        std::cerr << key << " is already time out\n";
+                        INF << key << " is already time out";
                     }
                     
                     absTimeout = 0;
@@ -614,7 +613,7 @@ QString  QDBLoader::LoadLZFString()
     if (lzf_decompress(compressStr, static_cast<unsigned>(compressLen),
                        &val[0], rawLen) == 0)
     {
-        std::cerr << "decompress error\n";
+        ERR << "decompress error";
         return  QString();
     }
 
@@ -672,7 +671,7 @@ QObject  QDBLoader::LoadObject(int8_t type)
         }
         case kTypeZipMap:
         {
-            std::cerr << "!!!zipmap should be replaced with ziplist\n";
+            ERR << "!!!zipmap should be replaced with ziplist";
             break;
         }
         case kTypeZSet:
@@ -714,7 +713,7 @@ QObject QDBLoader::_LoadList()
     bool special;
     const auto len = LoadLength(special);
     assert(!special);
-    std::cerr << "list length = " << len << std::endl;
+    DBG << "list length = " << len;
     
     QObject obj(CreateListObject());
     PLIST  list(obj.CastList());
@@ -733,7 +732,7 @@ QObject QDBLoader::_LoadList()
         }
         
         list->push_back(elem);
-        std::cerr << "list elem : " << elem.c_str() << std::endl;
+        DBG << "list elem : " << elem.c_str();
     }
     
     return obj;
@@ -744,7 +743,7 @@ QObject QDBLoader::_LoadSet()
     bool special;
     const auto len = LoadLength(special);
     assert(!special);
-    std::cerr << "set length = " << len << std::endl;
+    DBG << "set length = " << len;
     
     QObject obj(CreateSetObject());
     PSET  set(obj.CastSet());
@@ -763,7 +762,7 @@ QObject QDBLoader::_LoadSet()
         }
         
         set->insert(elem);
-        std::cerr << "set elem : " << elem.c_str() << std::endl;
+        DBG << "set elem : " << elem.c_str();
     }
     
     return obj;
@@ -774,7 +773,7 @@ QObject QDBLoader::_LoadHash()
     bool special;
     const auto len = LoadLength(special);
     assert(!special);
-    std::cerr << "hash length = " << len << std::endl;
+    DBG << "hash length = " << len;
     
     QObject obj(CreateHashObject());
     PHASH  hash(obj.CastHash());
@@ -805,7 +804,7 @@ QObject QDBLoader::_LoadHash()
         }
         
         hash->insert(QHash::value_type(key, val));
-        std::cerr << "hash key : " << key.c_str() << " val : " << val.c_str() << std::endl;
+        DBG << "hash key : " << key.c_str() << " val : " << val.c_str();
     }
     
     return obj;
@@ -817,7 +816,7 @@ QObject    QDBLoader::_LoadSSet()
     bool special;
     const auto len = LoadLength(special);
     assert(!special);
-    std::cerr << "sset length = " << len << std::endl;
+    DBG << "sset length = " << len;
     
     QObject obj(CreateSSetObject());
     PSSET  sset(obj.CastSortedSet());
@@ -837,7 +836,7 @@ QObject    QDBLoader::_LoadSSet()
         
         const auto score = _LoadDoubleValue();
         sset->AddMember(member, static_cast<long>(score));
-        std::cerr << "sset member : " << member.c_str() << " score : " << score << std::endl;
+        DBG << "sset member : " << member.c_str() << " score : " << score;
     }
     
     return obj;
@@ -882,7 +881,7 @@ double  QDBLoader::_LoadDoubleValue()
         }
     }
     
-    std::cerr << "load double value " << dvalue << std::endl;
+    DBG << "load double value " << dvalue;
     
     return  dvalue;
 }
@@ -901,7 +900,7 @@ struct ZipListElement
         if (sval)
         {
             const QString str((const char* )sval, QString::size_type(slen));
-            std::cerr << "string zip list element " << str << std::endl;
+            DBG << "string zip list element " << str;
             return str;
         }
         else
@@ -916,7 +915,7 @@ struct ZipListElement
         int len = Number2Str(&str[0], 16, lval);
         str.resize(len);
         
-        std::cerr << "long zip list element " << str << std::endl;
+        DBG << "long zip list element " << str;
         return str;
     }
 };
@@ -993,7 +992,7 @@ QObject     QDBLoader::_LoadZipList(int8_t type)
                     score = it->lval;
                 }
 
-                std::cerr << "BERT member " << member << ", score " << score << std::endl;
+                DBG << "sset member " << member << ", score " << score;
                 sset->AddMember(member, score);
             }
             

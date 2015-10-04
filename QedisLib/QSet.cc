@@ -1,7 +1,6 @@
 #include "QSet.h"
 #include "QStore.h"
 #include "Log/Logger.h"
-#include <iostream>
 #include <cassert>
 
 using namespace std;
@@ -112,7 +111,6 @@ QError  scard(const vector<QString>& params, UnboundedBuffer* reply)
 
     const PSET&  set  = value->CastSet();
     long size = static_cast<long>(set->size());
-    cout << "scard fine= " << size << endl;
     
     FormatInt(size, reply);
     return   QError_ok;

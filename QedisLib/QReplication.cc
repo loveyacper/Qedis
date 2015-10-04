@@ -1,6 +1,5 @@
 
 #include <unistd.h>
-#include <iostream>
 
 #include "QClient.h"
 #include "QConfig.h"
@@ -71,7 +70,7 @@ void   QReplication::OnRdbSaveDone()
             
             if (!rdb.IsOpen() && !rdb.Open(g_config.rdbfilename.c_str()))
             {
-                std::cerr << "can not open rdb when replication\n";
+                ERR << "can not open rdb when replication\n";
                 return;  // fatal error;
             }
             
@@ -86,8 +85,7 @@ void   QReplication::OnRdbSaveDone()
             cli->SendPacket(data, size);
             cli->SendPacket(m_buffer.ReadAddr(), m_buffer.ReadableSize());
             
-            std::cerr << "Send to slave rdb " << size << ", buffer " << m_buffer.ReadableSize() << std::endl;
-            
+            INF << "Send to slave rdb " << size << ", buffer " << m_buffer.ReadableSize();
         }
     }
     
@@ -109,20 +107,19 @@ void   QReplication::TryBgsave()
         {
             QDBSaver  qdb;
             qdb.Save(g_config.rdbfilename.c_str());
-            std::cerr << "QReplication save rdb done, exiting child\n";
+            INF << "QReplication save rdb done, exiting child";
         }
         exit(0);
     }
     else if (ret == -1)
     {
-        // fatal error
-        std::cerr << "QReplication save rdb FATAL ERROR\n";
+        ERR << "QReplication save rdb FATAL ERROR";
         _OnStartBgsave(false); // 设置slave状态
         return;
     }
     else
     {
-        std::cerr << "QReplication save rdb START\n";
+        INF << "QReplication save rdb START";
         g_qdbPid = ret;
         SetBgsaving(true);
         _OnStartBgsave(true); // 设置slave状态
@@ -145,7 +142,7 @@ void   QReplication::_OnStartBgsave(bool succ)
         {
             if (succ)
             {
-                std::cerr << "_OnStartBgsave Set cli state " << cli->GetName();
+                INF << "_OnStartBgsave Set cli state " << cli->GetName();
                 cli->GetSlaveInfo()->state = QSlaveState_wait_bgsave_end;
             }
             else
@@ -203,7 +200,7 @@ void   QReplication::Cron()
         {
             case QReplState_none:
             {
-                std::cerr << "Try connect to master " << m_masterInfo.addr.GetIP() << std::endl;
+                INF << "Try connect to master " << m_masterInfo.addr.GetIP();
                 Server::Instance()->TCPConnect(m_masterInfo.addr, true);
                 m_masterInfo.state = QReplState_connecting;
             }
@@ -215,11 +212,12 @@ void   QReplication::Cron()
                 if (!master)
                 {
                     m_masterInfo.state = QReplState_none;
+                    INF << "Master is down from connected to none";
                 }
                 else
                 {
                     master->SendPacket("SYNC\r\n", 6);
-                    std::cerr << "Request SYNC\n";
+                    INF << "Request SYNC";
                     
                     m_rdb.Open(slaveRdbFile, false);
                     m_masterInfo.rdbRecved = 0;
@@ -248,7 +246,7 @@ void   QReplication::SaveTmpRdb(const char* data, std::size_t len)
     
     if (m_masterInfo.rdbRecved == m_masterInfo.rdbSize)
     {
-        std::cerr << "Rdb recv complete, bytes " << m_masterInfo.rdbSize << std::endl;
+        INF << "Rdb recv complete, bytes " << m_masterInfo.rdbSize;
         
         QSTORE.ResetDb();
         

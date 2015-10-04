@@ -417,6 +417,21 @@ Logger&  Logger::operator<< (long long a)
     return  *this;
 }
 
+Logger&  Logger::operator<< (double a)
+{
+    if (IsLevelForbid(m_curLevel))
+    {
+        return *this;
+    }
+    if (m_pos + 20 < MAXLINE_LOG)
+    {
+        auto nbytes = snprintf(m_tmpBuffer + m_pos, MAXLINE_LOG - m_pos, "%.6g", a);
+        if (nbytes > 0) m_pos += nbytes;
+    }
+    
+    return  *this;
+}
+
 bool Logger::Update()
 {
     BufferSequence  data;

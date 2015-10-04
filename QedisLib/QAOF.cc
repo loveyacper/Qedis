@@ -4,7 +4,6 @@
 #include "Threads/ThreadPool.h"
 #include "QStore.h"
 #include <unistd.h>
-#include <iostream>
 #include <sstream>
 
 
@@ -19,44 +18,6 @@ pid_t             g_rewritePid = -1;
  * the coming aof data will be write to the tmp buffer, not to
  * aof file.
  ****************************************************/
-#if 0
-template <typename DEST>
-inline void  WriteBulkString(const char* str, size_t strLen, DEST& dst)
-{
-    char    tmp[32];
-    size_t  n = snprintf(tmp, sizeof tmp, "$%lu\r\n", strLen);
-    
-    dst.Write(tmp, n);
-    dst.Write(str, strLen);
-    dst.Write("\r\n", 2);
-}
-
-
-template <typename DEST>
-inline void  WriteBulkString(const QString& str, DEST& dst)
-{
-    WriteBulkString(str.data(), str.size(), dst);
-}
-
-template <typename DEST>
-inline void  WriteMultiBulkLong(long val, DEST& dst)
-{
-    char    tmp[32];
-    size_t  n = snprintf(tmp, sizeof tmp, "*%lu\r\n", val);
-    dst.Write(tmp, n);
-}
-
-template <typename DEST>
-inline void  WriteBulkLong(long val, DEST& dst)
-{
-    char    tmp[32];
-    size_t  n = snprintf(tmp, sizeof tmp, "%lu", val);
-    
-    WriteBulkString(tmp, n, dst);
-}
-
-#endif
-
 void   QAOFThreadController::RewriteDoneHandler(int exitcode, int bysignal)
 {
     if (exitcode == 0 && bysignal == 0)
@@ -97,7 +58,7 @@ void  QAOFThreadController::SkipTmpBuffer(size_t n)
 // main thread  call this
 void  QAOFThreadController::Start()
 {
-    std::cout << "start aof thread\n";
+    DBG << "start aof thread";
     
     assert(!m_aofThread || !m_aofThread->IsAlive());
     
@@ -114,22 +75,11 @@ void   QAOFThreadController::Stop()
     if (!m_aofThread)
         return;
     
-    std::cout << "stop aof thread\n";
+    DBG << "stop aof thread";
     m_aofThread->Stop();
     m_aofThread = nullptr;
 }
-#if 0
-template <typename DEST>
-static  void SaveCommand(const std::vector<QString>& params, DEST& dst)
-{
-    WriteMultiBulkLong(params.size(), dst);
-    
-    for (size_t i = 0; i < params.size(); ++ i)
-    {
-        WriteBulkString(params[i], dst);
-    }
-}
-#endif
+
 // main thread call this
 void   QAOFThreadController::_WriteSelectDB(int db, OutputBuffer& dst)
 {
@@ -236,15 +186,18 @@ static void RewriteProcess()
     if (!file.Open(g_aofTmp, false))
     {
         perror("open tmp failed");
-        std::cerr << "open aof tmp failed\n";
+        ERR << "open aof tmp failed";
         exit(-1);
     }
 
-    for (int dbno = 0; dbno < 16; ++ dbno)
+    for (int dbno = 0; ; ++ dbno)
     {
-        QSTORE.SelectDB(dbno);
+        if (QSTORE.SelectDB(dbno) == -1)
+            break;
+        
         if (QSTORE.DBSize() == 0)
             continue;
+
         // select db
         WriteMultiBulkLong(2, file);
         WriteBulkString("select", 6, file);

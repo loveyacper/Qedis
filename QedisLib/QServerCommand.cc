@@ -2,7 +2,6 @@
 #include "QClient.h"
 #include "Log/Logger.h"
 #include "Server.h"
-#include <iostream>
 #include <cassert>
 #include <unistd.h>
 #include "QDB.h"
@@ -84,7 +83,7 @@ QError  bgsave(const vector<QString>& params, UnboundedBuffer* reply)
         {
         QDBSaver  qdb;
         qdb.Save(g_config.rdbfilename.c_str());
-        std::cerr << "child save rdb done, exiting child\n";
+        INF << "child save rdb done, exiting child";
         }
         exit(0);
     }

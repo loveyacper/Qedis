@@ -1,7 +1,6 @@
 #include "QString.h"
 #include "QStore.h"
 #include "Log/Logger.h"
-#include <iostream>
 #include <cassert>
 
 using namespace std;
