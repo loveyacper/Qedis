@@ -62,6 +62,7 @@ std::shared_ptr<StreamSocket>   Qedis::_OnNewConnection(int connfd)
             QReplication::Instance().GetMasterInfo().state = QReplState_connected;
             QReplication::Instance().SetMaster(pNewTask);
             
+            pNewTask->SetName("MasterConnection");
             pNewTask->SetFlag(ClientFlag_master);
         }
     }
@@ -124,7 +125,7 @@ private:
 class  ReplicationCronTimer : public Timer
 {
 public:
-    ReplicationCronTimer() : Timer(1000 * 5)
+    ReplicationCronTimer() : Timer(100 * 5)
     {
     }
     

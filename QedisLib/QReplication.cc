@@ -185,13 +185,18 @@ void   QReplication::SendToSlaves(const std::vector<QString>& params)
 
 void   QReplication::Cron()
 {
-    for (const auto& wptr : m_slaves)
+    static unsigned  pingCron = 0;
+    
+    if (pingCron ++ % 50 == 0)
     {
-        auto cli = wptr.lock();
-        if (!cli || cli->GetSlaveInfo()->state != QSlaveState_online)
-            continue;
+        for (const auto& wptr : m_slaves)
+        {
+            auto cli = wptr.lock();
+            if (!cli || cli->GetSlaveInfo()->state != QSlaveState_online)
+                continue;
         
-        cli->SendPacket("PING\r\n", 6);
+            cli->SendPacket("PING\r\n", 6);
+        }
     }
     
     if (!m_masterInfo.addr.Empty())
@@ -234,6 +239,24 @@ void   QReplication::Cron()
                 
             default:
                 break;
+        }
+    }
+    else
+    {
+        if (m_masterInfo.state != QReplState_none)
+        {
+            auto master = m_master.lock();
+            if (master)
+            {
+                SocketAddr  peer;
+                Socket::GetPeerAddr(master->GetSocket(), peer);
+                INF << master->GetName() << " disconnect with Master " << peer.GetIP();
+                
+                master->SetReconn(false);
+                master->OnError();
+            }
+            
+            m_masterInfo.state = QReplState_none;
         }
     }
 }

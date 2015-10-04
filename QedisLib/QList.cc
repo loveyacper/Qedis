@@ -3,7 +3,6 @@
 #include "QClient.h"
 #include "Log/Logger.h"
 #include <algorithm>
-//#include <iostream>
 #include <cassert>
 
 using std::vector;

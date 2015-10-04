@@ -16,7 +16,7 @@ struct SocketAddr
 {
     SocketAddr()
     {
-        memset(&m_addr, 0, sizeof m_addr);
+        Clear();
     }
     
     SocketAddr(const SocketAddr& other)
@@ -82,6 +82,7 @@ struct SocketAddr
     }
 
     bool  Empty() const { return  0 == m_addr.sin_family; }
+    void  Clear()       { memset(&m_addr, 0, sizeof m_addr); }
 
     sockaddr_in  m_addr;
     
