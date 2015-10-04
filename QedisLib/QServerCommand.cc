@@ -59,7 +59,7 @@ QError  flushall(const vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "flushall");
     
-    QSTORE.ClearAllDB();
+    QSTORE.ResetDb();
     
     FormatOK(reply);
     return   QError_ok;

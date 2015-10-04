@@ -115,8 +115,7 @@ class QStore
 public:
     static QStore& Instance();
 
-    QStore() : m_dbno(0),
-               m_db(nullptr)
+    QStore() : m_dbno(0)
     {
     }
     
@@ -132,13 +131,13 @@ public:
     bool ExistsKey(const QString& key) const;
     QType  KeyType(const QString& key) const;
     QString RandomKey() const;
-    size_t DBSize() const { return m_db->size(); }
+    size_t DBSize() const { return m_store[m_dbno].size(); }
 
     // iterator
-    QDB::const_iterator begin() const   { return m_db->begin(); }
-    QDB::const_iterator end()   const   { return m_db->end(); }
-    QDB::iterator       begin()         { return m_db->begin(); }
-    QDB::iterator       end()           { return m_db->end(); }
+    QDB::const_iterator begin() const   { return m_store[m_dbno].begin(); }
+    QDB::const_iterator end()   const   { return m_store[m_dbno].end(); }
+    QDB::iterator       begin()         { return m_store[m_dbno].begin(); }
+    QDB::iterator       end()           { return m_store[m_dbno].end(); }
     
     QError  GetValue(const QString& key, QObject*& value);
     QError  GetValueByType(const QString& key, QObject*& value, QType  type = QType_invalid);
@@ -160,11 +159,8 @@ public:
     void    InitExpireTimer();
     
     // danger cmd
-    void    ClearCurrentDB() { m_db->clear(); }
-    void    ClearAllDB()     { std::vector<QDB>(m_store.size()).swap(m_store); }
-    
-    //reset db
-    void    ResetDb(int dbNum);
+    void    ClearCurrentDB() { m_store[m_dbno].clear(); }
+    void    ResetDb();
     
     // for blocked list
     bool    BlockClient(const QString& key,
@@ -226,7 +222,6 @@ private:
     std::vector<ExpiresDB> m_expiresDb;
     std::vector<BlockedClients> m_blockedClients;
     int               m_dbno;
-    QDB              *m_db;
 };
 
 #define QSTORE  QStore::Instance()

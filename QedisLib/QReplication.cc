@@ -250,7 +250,7 @@ void   QReplication::SaveTmpRdb(const char* data, std::size_t len)
     {
         std::cerr << "Rdb recv complete, bytes " << m_masterInfo.rdbSize << std::endl;
         
-        QSTORE.ResetDb(16);
+        QSTORE.ResetDb();
         
         QDBLoader  loader;
         loader.Load(slaveRdbFile);

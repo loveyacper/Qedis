@@ -300,8 +300,6 @@ QStore& QStore::Instance()
 
 void  QStore::Init(int dbNum)
 {
-    assert (m_db == nullptr);
-    
     if (dbNum < 1)
         dbNum = 1;
     else if (dbNum > kMaxDbNum)
@@ -310,8 +308,6 @@ void  QStore::Init(int dbNum)
     m_store.resize(dbNum);
     m_expiresDb.resize(dbNum);
     m_blockedClients.resize(dbNum);
-    
-    m_db = &m_store[0];
 }
 
 int  QStore::LoopCheckExpire(uint64_t now)
@@ -337,7 +333,6 @@ int QStore::SelectDB(int dbno)
         int oldDb = m_dbno;
 
         m_dbno    = dbno;
-        m_db      = &m_store[dbno];
         return  oldDb;
     }
         
@@ -359,18 +354,21 @@ void QStore::ExpandDb(int dbNum)
 
 bool QStore::DeleteKey(const QString& key)
 {
-    return m_db->erase(key) != 0;
+    auto db = &m_store[m_dbno];
+    return db->erase(key) != 0;
 }
 
 bool QStore::ExistsKey(const QString& key) const
 {
-    return  m_db->count(key) != 0;
+    auto db = &m_store[m_dbno];
+    return  db->count(key) != 0;
 }
 
 QType  QStore::KeyType(const QString& key) const
 {
-    QDB::const_iterator it(m_db->find(key));
-    if (it == m_db->end())
+    auto db = &m_store[m_dbno];
+    QDB::const_iterator it(db->find(key));
+    if (it == db->end())
         return  QType_invalid;
     
     return  QType(it->second.type);
@@ -391,10 +389,11 @@ static bool RandomMember(const QDB& hash, QString& res)
 
 QString QStore::RandomKey() const
 {
+    auto db = &m_store[m_dbno];
     QString  res;
-    if (m_db && !m_db->empty())
+    if (!m_store.empty() && !m_store[m_dbno].empty())
     {
-        RandomMember(*m_db, res);
+        RandomMember(m_store[m_dbno], res);
     }
 
     return  res;
@@ -412,9 +411,10 @@ QError  QStore::GetValueByType(const QString& key, QObject*& value, QType type)
         return QError_notExist;
     }
     
-    QDB::iterator    it(m_db->find(key));
+    auto db = &m_store[m_dbno];
+    QDB::iterator    it(db->find(key));
 
-    if (it != m_db->end())
+    if (it != db->end())
     {
         if (type != QType_invalid && type != QType(it->second.type))
         {
@@ -437,18 +437,20 @@ QError  QStore::GetValueByType(const QString& key, QObject*& value, QType type)
 
 QObject* QStore::SetValue(const QString& key, const QObject& value)
 {
-    QObject& obj = ((*m_db)[key] = value);
+    auto db = &m_store[m_dbno];
+    QObject& obj = ((*db)[key] = value);
     return &obj;
 }
 
 bool QStore::SetValueIfNotExist(const QString& key, const QObject& value)
 {
-    QDB::iterator    it(m_db->find(key));
+    auto db = &m_store[m_dbno];
+    QDB::iterator    it(db->find(key));
 
-    if (it == m_db->end())
-        (*m_db)[key] = value;
+    if (it == db->end())
+        (*db)[key] = value;
 
-    return it == m_db->end();
+    return it == db->end();
 }
 
 
@@ -479,13 +481,12 @@ void    QStore::InitExpireTimer()
         TimerManager::Instance().AddTimer(PTIMER(new ExpireTimer(i)));
 }
 
-void    QStore::ResetDb(int dbNum)
+void    QStore::ResetDb()
 {
-    m_store.resize(dbNum);
+    std::vector<QDB>(m_store.size()).swap(m_store);
     m_expiresDb.clear();
     m_blockedClients.clear();
     m_dbno = 0;
-    m_db   = &m_store[m_dbno];
 }
 
 bool    QStore::BlockClient(const QString& key, QClient* client, uint64_t timeout, ListPosition pos, const QString* dstList)
