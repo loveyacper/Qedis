@@ -29,6 +29,37 @@ static const size_t DEFAULT_LOGFILESIZE = 32 * 1024 * 1024;
 static const size_t PREFIX_LEVEL_LEN    = 6;
 static const size_t PREFIX_TIME_LEN     = 24;
 
+unsigned int ConvertLogLevel(const std::string& level)
+{
+    unsigned int l = logALL;
+    
+    if (level == "debug")
+    {
+        ;
+    }
+    else if (level == "verbose")
+    {
+        l &= ~logDEBUG;
+    }
+    else if (level == "notice")
+    {
+        l &= ~logDEBUG;
+        l &= ~logINFO;
+    }
+    else if (level == "warning")
+    {
+        l &= ~logDEBUG;
+        l &= ~logINFO;
+        l &= ~logWARN; // redis warning is my error
+    }
+    else if (level == "none")
+    {
+        l = 0;
+    }
+    
+    return l;
+}
+
 static bool MakeDir(const char* pDir)
 {
     if (mkdir(pDir, 0755) != 0)

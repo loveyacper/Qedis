@@ -173,7 +173,7 @@ bool Qedis::_Init()
     
     // process log
     {
-        unsigned int level = logALL, dest = 0;
+        unsigned int level = ConvertLogLevel(g_config.loglevel), dest = 0;
 
         if (g_config.logdir == "stdout")
             dest = logConsole;

@@ -27,6 +27,8 @@ enum LogDest
     logSocket   = 0x01 << 2,  // TODO : LOG SERVER
 };
 
+unsigned int ConvertLogLevel(const std::string& level);
+
 class Logger
 {
 public:
@@ -167,14 +169,14 @@ private:
 #undef ERR
 #undef USR
 
-#define  LOG_INF(x)      (LogHelper(logINFO))=(x ? x : LogManager::Instance().NullLog())->SetCurLevel(logINFO)
 #define  LOG_DBG(x)      (LogHelper(logDEBUG))=(x ? x : LogManager::Instance().NullLog())->SetCurLevel(logDEBUG)
+#define  LOG_INF(x)      (LogHelper(logINFO))=(x ? x : LogManager::Instance().NullLog())->SetCurLevel(logINFO)
 #define  LOG_WRN(x)      (LogHelper(logWARN))=(x ? x : LogManager::Instance().NullLog())->SetCurLevel(logWARN)
 #define  LOG_ERR(x)      (LogHelper(logERROR))=(x ? x : LogManager::Instance().NullLog())->SetCurLevel(logERROR)
 #define  LOG_USR(x)      (LogHelper(logUSR))=(x ? x : LogManager::Instance().NullLog())->SetCurLevel(logUSR)
 
-#define  INF      LOG_INF(g_log)
 #define  DBG      LOG_DBG(g_log)
+#define  INF      LOG_INF(g_log)
 #define  WRN      LOG_WRN(g_log)
 #define  ERR      LOG_ERR(g_log)
 #define  USR      LOG_USR(g_log)

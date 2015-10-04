@@ -388,7 +388,6 @@ static bool RandomMember(const QDB& hash, QString& res)
 
 QString QStore::RandomKey() const
 {
-    auto db = &m_store[m_dbno];
     QString  res;
     if (!m_store.empty() && !m_store[m_dbno].empty())
     {

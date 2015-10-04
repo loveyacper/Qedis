@@ -627,7 +627,7 @@ QError  lrem(const vector<QString>& params, UnboundedBuffer* reply)
     FormatInt(resultCount, reply);
     return   QError_ok;
 }
-
+#if 0
 static QError  _GenericRpoplpush(const vector<QString>& params, UnboundedBuffer* reply, bool block = false)
 {
     QObject* src;
@@ -672,7 +672,7 @@ static QError  _GenericRpoplpush(const vector<QString>& params, UnboundedBuffer*
     
     return   QError_ok;
 }
-
+#endif
 QError  rpoplpush(const vector<QString>& params, UnboundedBuffer* reply)
 {
     QObject* src;
