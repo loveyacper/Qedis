@@ -1,5 +1,6 @@
 
 #include <unistd.h>
+#include <iostream> // the child process use stdout for log
 
 #include "QClient.h"
 #include "QConfig.h"
@@ -107,22 +108,20 @@ void   QReplication::TryBgsave()
         {
             QDBSaver  qdb;
             qdb.Save(g_config.rdbfilename.c_str());
-            INF << "QReplication save rdb done, exiting child";
+            std::cerr << "QReplication save rdb done, exiting child\n";
         }
         exit(0);
     }
     else if (ret == -1)
     {
         ERR << "QReplication save rdb FATAL ERROR";
-        _OnStartBgsave(false); // 设置slave状态
-        return;
+        _OnStartBgsave(false);
     }
     else
     {
         INF << "QReplication save rdb START";
         g_qdbPid = ret;
-        SetBgsaving(true);
-        _OnStartBgsave(true); // 设置slave状态
+        _OnStartBgsave(true);
     }
 }
 
@@ -130,6 +129,7 @@ void   QReplication::TryBgsave()
 void   QReplication::_OnStartBgsave(bool succ)
 {
     m_buffer.Clear();
+    SetBgsaving(succ);
     
     for (auto& c : m_slaves)
     {
@@ -142,12 +142,12 @@ void   QReplication::_OnStartBgsave(bool succ)
         {
             if (succ)
             {
-                INF << "_OnStartBgsave Set cli state " << cli->GetName();
+                INF << "_OnStartBgsave set cli wait bgsave end " << cli->GetName();
                 cli->GetSlaveInfo()->state = QSlaveState_wait_bgsave_end;
             }
             else
             {
-                cli->OnError(); // release slave?
+                cli->OnError(); // release slave
             }
         }
     }

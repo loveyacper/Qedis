@@ -239,18 +239,20 @@ QError  sync(const std::vector<QString>& params, UnboundedBuffer* reply)
     {
         cli->SetSlaveInfo();
         slave = cli->GetSlaveInfo();
-        slave->state = QSlaveState_wait_bgsave_start;
+        QReplication::Instance().AddSlave(cli);
     }
     
-    if (slave && slave->state == QSlaveState_wait_bgsave_end)
+    if (slave->state == QSlaveState_wait_bgsave_end ||
+        slave->state == QSlaveState_online)
     {
-        // 已经是等待bgsave end状态了，忽略
+        WRN << cli->GetName() << " state is "
+            << slave->state << ", ignore this request sync";
+        return QError_ok;
     }
     
-    QReplication::Instance().AddSlave(cli);
-    
+    slave->state = QSlaveState_wait_bgsave_start;
     QReplication::Instance().TryBgsave();
-    
+
     return QError_ok;
 }
 

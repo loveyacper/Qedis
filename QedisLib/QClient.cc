@@ -139,7 +139,6 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
             }
             else
             {
-                INF << "Try process inline cmd first char " << (int)*ptr;
                 ptr += _ProcessInlineCmd(ptr, bytes);
             }
                 
@@ -244,11 +243,21 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
         }
     }
     
-    QSlowLog::Instance().Begin();
-    QError err = QCommandTable::ExecuteCmd(m_params,
-                                           info,
-                                           IsFlagOn(ClientFlag_master) ? nullptr : &m_reply);
-    QSlowLog::Instance().EndAndStat(m_params);
+    QError err = QError_ok;
+    if (QReplication::Instance().GetMasterInfo().state != QReplState_none &&
+        !IsFlagOn(ClientFlag_master) &&
+        (info->attr & QCommandAttr::QAttr_write))
+    {
+        ReplyError(err = QError_readonlySlave, &m_reply);
+    }
+    else
+    {
+        QSlowLog::Instance().Begin();
+        err = QCommandTable::ExecuteCmd(m_params,
+                                        info,
+                                        IsFlagOn(ClientFlag_master) ? nullptr : &m_reply);
+        QSlowLog::Instance().EndAndStat(m_params);
+    }
     
     if (!m_reply.IsEmpty())
     {
@@ -421,21 +430,22 @@ void  QClient::AddCurrentToMonitor()
 
 void  QClient::FeedMonitors(const std::vector<QString>& params)
 {
+    assert(!params.empty());
+
     if (s_monitors.empty())
         return;
-    
+
     char buf[512];
     int n = snprintf(buf, sizeof buf, "+[db%d %s:%hu]: \"",
              QSTORE.GetDB(),
              s_pCurrentClient->m_peerAddr.GetIP(),
              s_pCurrentClient->m_peerAddr.GetPort());
-    
+
     if (n > sizeof buf)
     {
         ERR << "why snprintf return " << n << " bigger than buf size " << sizeof buf;
         n = sizeof buf;
     }
-    
     
     for (const auto& e : params)
     {

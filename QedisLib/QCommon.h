@@ -80,6 +80,7 @@ enum QError
     QError_watch     = 9,
     QError_noMulti   = 10,
     QError_invalidDB = 11,
+    QError_readonlySlave = 12,
     QError_max,
 };
 

@@ -20,7 +20,8 @@ struct QErrorInfo  g_errorInfo[] = {
     {sizeof "-EXECABORT Transaction discarded because of previous errors.\r\n"-1, "-EXECABORT Transaction discarded because of previous errors.\r\n"},
     {sizeof "-WATCH inside MULTI is not allowed\r\n"-1, "-WATCH inside MULTI is not allowed\r\n"},
     {sizeof "-EXEC without MULTI\r\n"-1, "-EXEC without MULTI\r\n"},
-    {sizeof "-ERR invalid DB index\r\n"-1, "-ERR invalid DB index\r\n"}
+    {sizeof "-ERR invalid DB index\r\n"-1, "-ERR invalid DB index\r\n"},
+    {sizeof "-READONLY You can't write against a read only slave.\r\n"-1, "-READONLY You can't write against a read only slave.\r\n"},
 };
 
 
