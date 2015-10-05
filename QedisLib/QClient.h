@@ -89,6 +89,9 @@ public:
     void         SetSlaveInfo();
     QSlaveInfo*  GetSlaveInfo() const { return m_slaveInfo.get(); }
     
+    static void  AddCurrentToMonitor();
+    static void  FeedMonitors(const std::vector<QString>& params);
+
 private:
     BODY_LENGTH_T    _ProcessInlineCmd(const char* , size_t);
     void    _Reset();
@@ -120,6 +123,7 @@ private:
     std::string m_name;
     
     static  QClient*  s_pCurrentClient;
+    static  std::set<std::weak_ptr<QClient>, std::owner_less<std::weak_ptr<QClient> > > s_monitors;
 };
 
 #endif

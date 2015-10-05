@@ -174,6 +174,8 @@ public:
     int     LoopCheckBlocked(uint64_t now);
     void    InitBlockedTimer();
     
+    size_t  BlockedSize() const {  return m_blockedClients.size(); }
+    
     static  unsigned int m_dirty;
     
 private:

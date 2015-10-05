@@ -19,6 +19,9 @@
 
 QClient*  QClient::s_pCurrentClient = 0;
 
+std::set<std::weak_ptr<QClient>, std::owner_less<std::weak_ptr<QClient> > >
+          QClient::s_monitors;
+
 BODY_LENGTH_T QClient::_ProcessInlineCmd(const char* buf, size_t bytes)
 {
     if (bytes < 2)
@@ -207,6 +210,8 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
     QSTORE.SelectDB(m_db);
     
     INF << "client " << GetID() << ", cmd " << m_params[0].c_str();
+    
+    FeedMonitors(m_params);
     
     const QCommandInfo* info = QCommandTable::GetCommandInfo(m_params[0]);
     // if is multi state,  GetCmdInfo, CheckParamsCount;
@@ -407,4 +412,54 @@ static void Propogate(const std::vector<QString>& params)
     
     // replication
     QReplication::Instance().SendToSlaves(params);
+}
+
+void  QClient::AddCurrentToMonitor()
+{
+    s_monitors.insert(std::static_pointer_cast<QClient>(s_pCurrentClient->shared_from_this()));
+}
+
+void  QClient::FeedMonitors(const std::vector<QString>& params)
+{
+    if (s_monitors.empty())
+        return;
+    
+    char buf[512];
+    int n = snprintf(buf, sizeof buf, "+[db%d %s:%hu]: \"",
+             QSTORE.GetDB(),
+             s_pCurrentClient->m_peerAddr.GetIP(),
+             s_pCurrentClient->m_peerAddr.GetPort());
+    
+    if (n > sizeof buf)
+    {
+        ERR << "why snprintf return " << n << " bigger than buf size " << sizeof buf;
+        n = sizeof buf;
+    }
+    
+    
+    for (const auto& e : params)
+    {
+        if (sizeof buf > n)
+            n += snprintf(buf + n, sizeof buf - n, "%s ", e.data());
+        else
+            break;
+    }
+    
+    -- n; // no space follow last param
+    
+    for (auto it(s_monitors.begin()); it != s_monitors.end(); )
+    {
+        auto  m = it->lock();
+        if (m)
+        {
+            m->SendPacket(buf, n);
+            m->SendPacket("\"" CRLF, 3);
+            
+            ++ it;
+        }
+        else
+        {
+            s_monitors.erase(it ++);
+        }
+    }
 }

@@ -7,10 +7,6 @@
 #include <iostream>
 
 
-using  std::size_t;
-
-#define CRLF "\r\n"
-
 struct QErrorInfo  g_errorInfo[] = {
     {sizeof "-Fine"- 1,   "-Fine"},
     {sizeof "-ERR Operation against a key holding the wrong kind of value\r\n"- 1, "-ERR Operation against a key holding the wrong kind of value\r\n"}, 

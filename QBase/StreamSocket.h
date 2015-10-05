@@ -49,9 +49,10 @@ private:
     int    _Send(const BufferSequence& bf);
     virtual BODY_LENGTH_T _HandlePacket(AttachedBuffer& buf) = 0;
 
-private:
+protected:
     SocketAddr  m_peerAddr;
-
+    
+private:
     // For human readability
     enum
     {

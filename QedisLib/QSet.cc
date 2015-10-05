@@ -128,6 +128,9 @@ QError  srem(const vector<QString>& params, UnboundedBuffer* reply)
             ++ res;
     }
     
+    if (set->empty())
+        QSTORE.DeleteKey(params[1]);
+    
     FormatInt(res, reply);
     return   QError_ok;
 }

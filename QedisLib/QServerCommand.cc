@@ -280,3 +280,37 @@ QError  slaveof(const std::vector<QString>& params, UnboundedBuffer* reply)
     return QError_ok;
 }
 
+
+QError  info(const vector<QString>& params, UnboundedBuffer* reply)
+{
+    char buf[1024];
+    int  offset = 0;
+    int  n = 0;
+    
+    // clients
+    n = snprintf(buf + offset, sizeof buf - 1 - offset,
+                                          "# Clients\n"
+                                          "connected_clients:%lu\n"
+                                          "blocked_clients:%lu\n"
+                                          , Server::Instance()->TCPSize()
+                                          , QSTORE.BlockedSize());
+    offset += n;
+    // replication
+    /*# Replication
+     role:master
+     connected_slaves:1
+     slave0:127.0.0.1,0,online*/
+    
+    FormatSingle(buf, offset, reply);
+
+    return   QError_ok;
+}
+
+
+QError  monitor(const vector<QString>& params, UnboundedBuffer* reply)
+{
+    QClient::AddCurrentToMonitor();
+    
+    FormatOK(reply);
+    return   QError_ok;
+}

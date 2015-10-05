@@ -44,6 +44,8 @@ QCommandHandler  debug;
 QCommandHandler  shutdown;
 QCommandHandler  bgrewriteaof;
 QCommandHandler  ping;
+QCommandHandler  info;
+QCommandHandler  monitor;
 
 // string commands
 QCommandHandler  set;

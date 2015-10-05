@@ -9,6 +9,7 @@
 
 #define QEDIS static_cast<Qedis* >(Server::Instance())
 
+#define CRLF "\r\n"
 
 enum QType
 {
