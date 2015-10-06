@@ -328,11 +328,17 @@ static QError  RenameKey(const QString& oldKey, const QString& newKey, bool forc
     if (!force && QSTORE.ExistsKey(newKey))
         return QError_exist;
     
-    auto when = QSTORE.TTL(oldKey, 0);
+    auto now = ::Now();
+    auto ttl = QSTORE.TTL(oldKey, now);
+    
+    if (ttl == QStore::expired)
+        return QError_notExist;
 
     QSTORE.SetValue(newKey, *val);
-    if (when > 0)
-        QSTORE.SetExpire(newKey, when);
+    if (ttl > 0)
+        QSTORE.SetExpire(newKey, ttl + now);
+    else if (ttl == QStore::persist)
+        QSTORE.ClearExpire(newKey);
 
     QSTORE.ClearExpire(oldKey);
     QSTORE.DeleteKey(oldKey);

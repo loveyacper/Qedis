@@ -482,7 +482,7 @@ void    QStore::InitExpireTimer()
 void    QStore::ResetDb()
 {
     std::vector<QDB>(m_store.size()).swap(m_store);
-    m_expiresDb.clear();
+    std::vector<ExpiresDB>(m_expiresDb.size()).swap(m_expiresDb);
     m_blockedClients.clear();
     m_dbno = 0;
 }
