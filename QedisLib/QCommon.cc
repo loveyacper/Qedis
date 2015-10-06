@@ -8,9 +8,9 @@
 
 
 struct QErrorInfo  g_errorInfo[] = {
-    {sizeof "-Fine"- 1,   "-Fine"},
+    {sizeof "+OK\r\n"- 1,   "+OK\r\n"},
     {sizeof "-ERR Operation against a key holding the wrong kind of value\r\n"- 1, "-ERR Operation against a key holding the wrong kind of value\r\n"}, 
-    {sizeof "already exist"- 1,   "already exist"},
+    {sizeof "-ERR already exist"- 1,   "-ERR already exist"},
     {sizeof "-ERR no such key\r\n" - 1, "-ERR no such key\r\n"},
     {sizeof "-ERR wrong number of arguments\r\n"- 1, "-ERR wrong number of arguments\r\n"},
     {sizeof "-ERR Unknown command\r\n"- 1,   "-ERR Unknown command\r\n"},

@@ -18,6 +18,8 @@ const QCommandInfo QCommandTable::s_info[] =
     {"move",        QAttr_write,               3,  &move},
     {"keys",        QAttr_read,                2,  &keys},
     {"randomkey",   QAttr_read,                1,  &randomkey},
+    {"rename",      QAttr_write,               3,  &rename},
+    {"renamenx",    QAttr_write,               3,  &renamenx},
 
     // server
     {"select",      QAttr_read,                2,  &select},

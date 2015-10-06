@@ -30,6 +30,8 @@ QCommandHandler  persist;
 QCommandHandler  move;
 QCommandHandler  keys;
 QCommandHandler  randomkey;
+QCommandHandler  rename;
+QCommandHandler  renamenx;
 
 // server commands
 QCommandHandler  select;

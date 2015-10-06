@@ -316,3 +316,46 @@ QError  monitor(const vector<QString>& params, UnboundedBuffer* reply)
     FormatOK(reply);
     return   QError_ok;
 }
+
+static QError  RenameKey(const QString& oldKey, const QString& newKey, bool force)
+{
+    QObject* val;
+    
+    QError err = QSTORE.GetValue(oldKey, val);
+    if (err != QError_ok)
+        return  err;
+    
+    if (!force && QSTORE.ExistsKey(newKey))
+        return QError_exist;
+    
+    auto when = QSTORE.TTL(oldKey, 0);
+
+    QSTORE.SetValue(newKey, *val);
+    if (when > 0)
+        QSTORE.SetExpire(newKey, when);
+
+    QSTORE.ClearExpire(oldKey);
+    QSTORE.DeleteKey(oldKey);
+    
+    return QError_ok;
+}
+
+QError  rename(const std::vector<QString>& params, UnboundedBuffer* reply)
+{
+    QError err = RenameKey(params[1], params[2], true);
+    
+    ReplyError(err, reply);
+    return  err;
+}
+
+QError  renamenx(const std::vector<QString>& params, UnboundedBuffer* reply)
+{
+    QError err = RenameKey(params[1], params[2], false);
+    
+    if (err == QError_ok)
+        Format1(reply);
+    else
+        ReplyError(err, reply);
+    
+    return  err;
+}
