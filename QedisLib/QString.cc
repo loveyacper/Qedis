@@ -104,7 +104,7 @@ QError  mset(const vector<QString>& params, UnboundedBuffer* reply)
 
     for (size_t i = 1; i < params.size(); i += 2)
     {
-        QSTORE.SetValue(params[i], CreateStringObject(params[i + 1]));
+        SetValue(params[i], params[i + 1]);
     }
     
     FormatOK(reply);

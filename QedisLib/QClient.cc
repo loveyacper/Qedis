@@ -28,12 +28,12 @@ BODY_LENGTH_T QClient::_ProcessInlineCmd(const char* buf, size_t bytes)
         return 0;
     
     BODY_LENGTH_T  len = 0;
-    size_t cursor = bytes - 1;
-    for (; cursor > 0; -- cursor)
+    size_t cursor = 0;
+    for (cursor = 0; cursor + 1 < bytes; ++ cursor)
     {
-        if (buf[cursor] == '\n' && buf[cursor-1] == '\r')
+        if (buf[cursor] == '\r' && buf[cursor+1] == '\n')
         {
-            len = static_cast<BODY_LENGTH_T>(cursor + 1);
+            len = static_cast<BODY_LENGTH_T>(cursor + 2);
             m_state = ParseCmdState::Ready;
             break;
         }
@@ -42,7 +42,7 @@ BODY_LENGTH_T QClient::_ProcessInlineCmd(const char* buf, size_t bytes)
     if (m_state == ParseCmdState::Ready)
     {
         QString   param;
-        for (size_t i = 0; i + 1 < cursor; ++ i)
+        for (size_t i = 0; i < cursor; ++ i)
         {
             if (isblank(buf[i]))
             {
