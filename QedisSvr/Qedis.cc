@@ -161,8 +161,7 @@ bool Qedis::_Init()
 {
     if (!LoadQedisConfig("qedis.conf", g_config))
     {
-        std::cerr << "can not load qedis.conf\n";
-        return false;
+        std::cerr << "can not find qedis.conf, use default config\n";
     }
     
     // daemon must be first, before descriptor open, threads create
@@ -180,7 +179,7 @@ bool Qedis::_Init()
         else
             dest = logFILE;
         
-        g_log = LogManager::Instance().CreateLog(level, dest, g_config.logdir.c_str());
+  //      g_log = LogManager::Instance().CreateLog(level, dest, g_config.logdir.c_str());
     }
     
     SocketAddr addr("0.0.0.0", g_config.port);

@@ -403,12 +403,30 @@ static void Index2Iterator(long start, long end,
                            QList::iterator& endIt)
 {
     assert (start >= 0 && end >= 0 && start <= end);
+    assert (end < list.size());
     
-    beginIt = list.begin();
-    while (start -- > 0)   ++ beginIt;
-
-    endIt  = list.begin();
-    while (end -- > 0)  ++ endIt;
+    long size = static_cast<long>(list.size());
+    if (start * 2 < size)
+    {
+        beginIt = list.begin();
+        while (start -- > 0)   ++ beginIt;
+    }
+    else
+    {
+        beginIt = list.end();
+        while (start ++ < size)  -- beginIt;
+    }
+    
+    if (end * 2 < size)
+    {
+        endIt = list.begin();
+        while (end -- > 0)   ++ endIt;
+    }
+    else
+    {
+        endIt = list.end();
+        while (end ++ < size)  -- endIt;
+    }
 }
 
 static size_t GetRange(long start, long end,
