@@ -441,7 +441,8 @@ void  QClient::FeedMonitors(const std::vector<QString>& params)
              s_pCurrentClient->m_peerAddr.GetIP(),
              s_pCurrentClient->m_peerAddr.GetPort());
 
-    if (n > sizeof buf)
+    assert(n > 0);
+    if (n > static_cast<int>(sizeof buf))
     {
         ERR << "why snprintf return " << n << " bigger than buf size " << sizeof buf;
         n = sizeof buf;
@@ -449,7 +450,7 @@ void  QClient::FeedMonitors(const std::vector<QString>& params)
     
     for (const auto& e : params)
     {
-        if (sizeof buf > n)
+        if (static_cast<int>(sizeof buf) < n)
             n += snprintf(buf + n, sizeof buf - n, "%s ", e.data());
         else
             break;

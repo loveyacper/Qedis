@@ -69,7 +69,7 @@ const QCommandInfo QCommandTable::s_info[] =
     {"llen",        QAttr_read,                2,  &llen},
     {"lset",        QAttr_write,               4,  &lset},
     {"ltrim",       QAttr_write,               4,  &ltrim},
-    {"lrange",      QAttr_write,               4,  &lrange},
+    {"lrange",      QAttr_read,                4,  &lrange},
     {"linsert",     QAttr_write,               5,  &linsert},
     {"lrem",        QAttr_write,               4,  &lrem},
     {"rpoplpush",   QAttr_write,               3,  &rpoplpush},
@@ -106,7 +106,7 @@ const QCommandInfo QCommandTable::s_info[] =
     {"sunionstore", QAttr_write,              -3,  &sunionstore},
     {"smove",       QAttr_write,               4,  &smove},
     {"spop",        QAttr_write,               2,  &spop},
-    {"srandmember", QAttr_write,               2,  &srandmember},
+    {"srandmember", QAttr_read,                2,  &srandmember},
 
     //
     {"zadd",        QAttr_write,              -4,  &zadd},

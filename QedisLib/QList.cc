@@ -403,7 +403,7 @@ static void Index2Iterator(long start, long end,
                            QList::iterator& endIt)
 {
     assert (start >= 0 && end >= 0 && start <= end);
-    assert (end < list.size());
+    assert (end < static_cast<long>(list.size()));
     
     long size = static_cast<long>(list.size());
     if (start * 2 < size)

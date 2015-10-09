@@ -179,7 +179,7 @@ bool Qedis::_Init()
         else
             dest = logFILE;
         
-  //      g_log = LogManager::Instance().CreateLog(level, dest, g_config.logdir.c_str());
+        g_log = LogManager::Instance().CreateLog(level, dest, g_config.logdir.c_str());
     }
     
     SocketAddr addr("0.0.0.0", g_config.port);
