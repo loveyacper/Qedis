@@ -399,45 +399,52 @@ QError  llen(const vector<QString>& params, UnboundedBuffer* reply)
 
 static void Index2Iterator(long start, long end,
                            QList&  list,
-                           QList::iterator& beginIt,
-                           QList::iterator& endIt)
+                           QList::iterator* beginIt,
+                           QList::iterator* endIt)
 {
     assert (start >= 0 && end >= 0 && start <= end);
     assert (end < static_cast<long>(list.size()));
     
     long size = static_cast<long>(list.size());
-    if (start * 2 < size)
+    if (beginIt)
     {
-        beginIt = list.begin();
-        while (start -- > 0)   ++ beginIt;
-    }
-    else
-    {
-        beginIt = list.end();
-        while (start ++ < size)  -- beginIt;
-    }
+        if (start * 2 < size)
+        {
+            *beginIt = list.begin();
+            while (start -- > 0)   ++ *beginIt;
+        }
+        else
+        {
+            *beginIt = list.end();
+            while (start ++ < size)  -- *beginIt;
+        } 
+    } 
     
-    if (end * 2 < size)
+    if (endIt)
     {
-        endIt = list.begin();
-        while (end -- > 0)   ++ endIt;
-    }
-    else
-    {
-        endIt = list.end();
-        while (end ++ < size)  -- endIt;
+        if (end * 2 < size)
+        {
+            *endIt = list.begin();
+            while (end -- > 0)   ++ *endIt;
+        }
+        else
+        {
+            *endIt = list.end();
+            while (end ++ < size)  -- *endIt;
+        }
     }
 }
 
 static size_t GetRange(long start, long end,
                        QList&  list,
-                       QList::iterator& beginIt,
-                       QList::iterator& endIt)
+                       QList::iterator* beginIt = nullptr,
+                       QList::iterator* endIt = nullptr)
 {
     size_t   rangeLen = 0;
-    if (start > end)
+    if (start > end)  // empty
     {
-        beginIt = endIt = list.end();  // empty
+        if (beginIt)    *beginIt = list.end();
+        if (endIt)      *endIt = list.end();
     }
     else if (start != 0 || end + 1 != static_cast<long>(list.size()))
     {
@@ -447,8 +454,8 @@ static size_t GetRange(long start, long end,
     else
     {
         rangeLen= list.size();
-        beginIt = list.begin();
-        endIt   = -- list.end();  // entire list
+        if (beginIt) *beginIt = list.begin();
+        if (endIt)   *endIt   = -- list.end();  // entire list
     }
     
     return rangeLen;
@@ -478,7 +485,7 @@ QError  ltrim(const vector<QString>& params, UnboundedBuffer* reply)
     AdjustIndex(start, end, list->size());
     
     QList::iterator beginIt, endIt;
-    GetRange(start, end, *list, beginIt, endIt);
+    GetRange(start, end, *list, &beginIt, &endIt);
     
     if (beginIt != list->end())
     {
@@ -513,22 +520,18 @@ QError  lrange(const vector<QString>& params, UnboundedBuffer* reply)
     const PLIST&    list   = value->CastList();
     AdjustIndex(start, end, list->size());
     
-    QList::iterator beginIt, endIt;
-    size_t rangeLen = GetRange(start, end, *list, beginIt, endIt);
+    QList::iterator beginIt;
+    size_t rangeLen = GetRange(start, end, *list, &beginIt);
     
     PreFormatMultiBulk(rangeLen, reply);
     
     if (beginIt != list->end())
     {
-        assert (endIt != list->end());
-
-        while (true)
+        while (rangeLen != 0)
         {
             FormatBulk(beginIt->c_str(), beginIt->size(), reply);
-            if (beginIt == endIt)
-                break;
-            
             ++ beginIt;
+            -- rangeLen;
         }
     }
     
