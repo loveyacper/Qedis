@@ -81,7 +81,7 @@ static void  QdbCron()
     if (g_qdbPid != -1)
         return;
     
-    if (g_now.MilliSeconds() > 1000 * (g_lastQDBSave + g_config.saveseconds) &&
+    if (g_now.MilliSeconds() > 1000UL * (g_lastQDBSave + static_cast<unsigned>(g_config.saveseconds)) &&
         QStore::m_dirty >= g_config.savechanges)
     {
         int ret = fork();

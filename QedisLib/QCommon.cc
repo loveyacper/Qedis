@@ -241,6 +241,11 @@ size_t  PreFormatMultiBulk(size_t nBulk, UnboundedBuffer* reply)
     return reply->ReadableSize() - oldSize;
 }
 
+std::size_t FormatEmptyBulk(UnboundedBuffer* reply)
+{
+    return reply->PushData("$0" CRLF CRLF, 6);
+}
+
 void  ReplyError(QError err, UnboundedBuffer* reply)
 {
     if (!reply)
@@ -314,7 +319,7 @@ size_t Format0(UnboundedBuffer* reply)
 QParseInt  GetIntUntilCRLF(const char*& ptr, std::size_t nBytes, int& val)
 {
     if (nBytes < 3)
-        return QParseInt::error;
+        return QParseInt::waitCrlf;
     
     std::size_t i = 0;
     bool negtive = false;

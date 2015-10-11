@@ -145,6 +145,7 @@ std::size_t FormatBulk(const char* str, std::size_t len, UnboundedBuffer* reply)
 std::size_t FormatBulk(const QString& str, UnboundedBuffer* reply);
 std::size_t PreFormatMultiBulk(std::size_t nBulk, UnboundedBuffer* reply);
 
+std::size_t FormatEmptyBulk(UnboundedBuffer* reply);
 std::size_t FormatNull(UnboundedBuffer* reply);
 std::size_t FormatNullArray(UnboundedBuffer* reply);
 std::size_t FormatOK(UnboundedBuffer* reply);
@@ -164,9 +165,6 @@ inline void AdjustIndex(long& start, long& end, size_t  size)
     if (start < 0)  start += size;
     if (start < 0)  start = 0;
     if (end < 0)    end += size;
-    
-    if (start > end || start >= static_cast<long>(size))
-        end = 0, start = 1;
     
     if (end >= static_cast<long>(size))  end = size - 1;
 }

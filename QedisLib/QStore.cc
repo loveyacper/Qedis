@@ -4,7 +4,7 @@
 #include <limits>
 #include <cassert>
 
-unsigned int QStore::m_dirty = 0;
+int QStore::m_dirty = 0;
 
 void QStore::ExpiresDB::SetExpire(const QString& key, uint64_t when)
 {
@@ -343,14 +343,6 @@ int  QStore::GetDB() const
     return  m_dbno;
 }
 
-void QStore::ExpandDb(int dbNum)
-{
-    if (dbNum <= m_store.size())
-        return;
-    
-    m_store.resize(dbNum);
-}
-
 bool QStore::DeleteKey(const QString& key)
 {
     auto db = &m_store[m_dbno];
@@ -483,7 +475,7 @@ void    QStore::ResetDb()
 {
     std::vector<QDB>(m_store.size()).swap(m_store);
     std::vector<ExpiresDB>(m_expiresDb.size()).swap(m_expiresDb);
-    m_blockedClients.clear();
+    std::vector<BlockedClients>(m_blockedClients.size()).swap(m_blockedClients);
     m_dbno = 0;
 }
 

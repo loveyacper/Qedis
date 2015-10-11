@@ -124,8 +124,6 @@ public:
     int SelectDB(int dbno);
     int GetDB() const;
     
-    void ExpandDb(int dbNum);
-    
     // Key operation
     bool DeleteKey(const QString& key);
     bool ExistsKey(const QString& key) const;
@@ -176,7 +174,7 @@ public:
     
     size_t  BlockedSize() const {  return m_blockedClients.size(); }
     
-    static  unsigned int m_dirty;
+    static  int m_dirty;
     
 private:
     ExpireResult    _ExpireIfNeed(const QString& key, uint64_t now);

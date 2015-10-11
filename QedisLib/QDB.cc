@@ -433,9 +433,12 @@ int  QDBLoader::Load(const char *filename)
                     ERR << "Abnormal db number " << dbno;
                     return false;
                 }
-                // expand db
-                QSTORE.ExpandDb(static_cast<int>(dbno) + 1);
-                QSTORE.SelectDB(static_cast<int>(dbno));
+
+                if (QSTORE.SelectDB(static_cast<int>(dbno)) == -1)
+                {
+                    ERR << "DB NUMBER is differ from RDB file";
+                    return __LINE__;
+                }
                 DBG << "encounter Select DB " << dbno;
                 break;
             }

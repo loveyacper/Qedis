@@ -262,14 +262,14 @@ QError  getrange(const vector<QString>& params, UnboundedBuffer* reply)
     const PSTRING& str = GetDecodedString(value);
     AdjustIndex(start, end, str->size());
 
-    if (start < end)
+    if (start <= end)
     {
-        const QString& substr = str->substr(start, end);
-        FormatSingle(substr.c_str(), substr.size(), reply);
+        const QString& substr = str->substr(start, end - start + 1);
+        FormatBulk(substr.c_str(), substr.size(), reply);
     }
     else
     {
-        FormatSingle("", 0, reply);
+        FormatEmptyBulk(reply);
     }
 
     return   QError_ok;
