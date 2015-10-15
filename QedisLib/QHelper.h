@@ -1,5 +1,5 @@
-#ifndef BERT_UTIL_H
-#define BERT_UTIL_H
+#ifndef BERT_HELPER_H
+#define BERT_HELPER_H
 
 #include "QString.h"
 #include <vector> 

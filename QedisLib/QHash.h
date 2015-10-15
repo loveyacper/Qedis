@@ -2,7 +2,7 @@
 #define BERT_QHASH_H
 
 #include "QString.h"
-#include "util.h"
+#include "QHelper.h"
 
 #include <unordered_map>
 typedef std::unordered_map<QString, QString,

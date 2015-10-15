@@ -1,7 +1,7 @@
 #ifndef BERT_QSET_H
 #define BERT_QSET_H
 
-#include "util.h"
+#include "QHelper.h"
 #include <unordered_set>
 
 typedef std::unordered_set<QString,

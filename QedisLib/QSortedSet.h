@@ -2,7 +2,7 @@
 #define BERT_QSORTEDSET_H
 
 #include "QString.h"
-#include "util.h"
+#include "QHelper.h"
 #include <map>
 #include <set>
 #include <vector>

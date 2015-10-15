@@ -48,8 +48,8 @@
 		BAD0C61319E7A02C005B3784 /* QStore.h in Headers */ = {isa = PBXBuildFile; fileRef = BAD0C5F819E7A02C005B3784 /* QStore.h */; };
 		BAD0C61419E7A02C005B3784 /* QString.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAD0C5F919E7A02C005B3784 /* QString.cc */; };
 		BAD0C61519E7A02C005B3784 /* QString.h in Headers */ = {isa = PBXBuildFile; fileRef = BAD0C5FA19E7A02C005B3784 /* QString.h */; };
-		BAD0C61619E7A02C005B3784 /* util.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAD0C5FB19E7A02C005B3784 /* util.cc */; };
-		BAD0C61719E7A02C005B3784 /* util.h in Headers */ = {isa = PBXBuildFile; fileRef = BAD0C5FC19E7A02C005B3784 /* util.h */; };
+		BAD0C61619E7A02C005B3784 /* QHelper.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAD0C5FB19E7A02C005B3784 /* QHelper.cc */; };
+		BAD0C61719E7A02C005B3784 /* QHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = BAD0C5FC19E7A02C005B3784 /* QHelper.h */; };
 		BAD0C61A19E7A075005B3784 /* Qedis.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAD0C61919E7A075005B3784 /* Qedis.cc */; };
 		BAD0C62419E7A8CA005B3784 /* libqbaselib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BAFC83FE19C44AE800C18B22 /* libqbaselib.a */; };
 		BAD0C62519E7A8DA005B3784 /* libqedislib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BAD0C5D919E79FF7005B3784 /* libqedislib.a */; };
@@ -208,8 +208,8 @@
 		BAD0C5F819E7A02C005B3784 /* QStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = QStore.h; path = QedisLib/QStore.h; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		BAD0C5F919E7A02C005B3784 /* QString.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = QString.cc; path = QedisLib/QString.cc; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		BAD0C5FA19E7A02C005B3784 /* QString.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = QString.h; path = QedisLib/QString.h; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
-		BAD0C5FB19E7A02C005B3784 /* util.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = util.cc; path = QedisLib/util.cc; sourceTree = SOURCE_ROOT; };
-		BAD0C5FC19E7A02C005B3784 /* util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = util.h; path = QedisLib/util.h; sourceTree = SOURCE_ROOT; };
+		BAD0C5FB19E7A02C005B3784 /* QHelper.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QHelper.cc; path = QedisLib/QHelper.cc; sourceTree = SOURCE_ROOT; };
+		BAD0C5FC19E7A02C005B3784 /* QHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QHelper.h; path = QedisLib/QHelper.h; sourceTree = SOURCE_ROOT; };
 		BAD0C61919E7A075005B3784 /* Qedis.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Qedis.cc; path = QedisSvr/Qedis.cc; sourceTree = "<group>"; };
 		BAD0C61C19E7A09F005B3784 /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = CMakeLists.txt; path = QedisSvr/CMakeLists.txt; sourceTree = "<group>"; };
 		BAD0C61D19E7A18B005B3784 /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
@@ -407,8 +407,8 @@
 				BAD0C5F819E7A02C005B3784 /* QStore.h */,
 				BAD0C5F919E7A02C005B3784 /* QString.cc */,
 				BAD0C5FA19E7A02C005B3784 /* QString.h */,
-				BAD0C5FB19E7A02C005B3784 /* util.cc */,
-				BAD0C5FC19E7A02C005B3784 /* util.h */,
+				BAD0C5FB19E7A02C005B3784 /* QHelper.cc */,
+				BAD0C5FC19E7A02C005B3784 /* QHelper.h */,
 			);
 			name = QedisLib;
 			path = Qedis;
@@ -487,7 +487,7 @@
 				BAD0C61519E7A02C005B3784 /* QString.h in Headers */,
 				BAD0C60D19E7A02C005B3784 /* QSet.h in Headers */,
 				BAD0C60419E7A02C005B3784 /* QCommon.h in Headers */,
-				BAD0C61719E7A02C005B3784 /* util.h in Headers */,
+				BAD0C61719E7A02C005B3784 /* QHelper.h in Headers */,
 				BAD0C60219E7A02C005B3784 /* QCommand.h in Headers */,
 				BAD0C60619E7A02C005B3784 /* QHash.h in Headers */,
 				BAFFCB631A9EA0AC00C47F92 /* redisZipList.h in Headers */,
@@ -652,7 +652,7 @@
 				BA47763D1AB0773F00EDBB5D /* redisIntset.c in Sources */,
 				BA98F8411B1B539600ABCBD9 /* QSlowLog.cc in Sources */,
 				BA4053931BA1AE3B00B93053 /* QReplication.cc in Sources */,
-				BAD0C61619E7A02C005B3784 /* util.cc in Sources */,
+				BAD0C61619E7A02C005B3784 /* QHelper.cc in Sources */,
 				BA6C336C19EA77B200AC1800 /* QGlobRegex.cc in Sources */,
 				BA3B0AD61ACBA9E1000D9399 /* QAOF.cc in Sources */,
 				BAD0C61219E7A02C005B3784 /* QStore.cc in Sources */,
