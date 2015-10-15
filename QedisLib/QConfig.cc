@@ -28,8 +28,7 @@ QConfig::QConfig()
     savechanges = 999999999;
     rdbcompression = true;
     rdbchecksum    = true;
-    rdbfilename    = "dump.rdb";
-    rdbdir         = "./";
+    rdbfullname    = "./dump.rdb";
     
     maxclients = 10000;
     
@@ -89,8 +88,9 @@ bool  LoadQedisConfig(const char* cfgFile, QConfig& cfg)
     
     cfg.rdbcompression = (parser.GetData<QString>("rdbcompression") == "yes");
     cfg.rdbchecksum    = (parser.GetData<QString>("rdbchecksum") == "yes");
-    cfg.rdbfilename    = parser.GetData<QString>("dbfilename", "dump.rdb");
-    cfg.rdbdir         = parser.GetData<QString>("dir", "./");
+    
+    cfg.rdbfullname    = parser.GetData<QString>("dir", "./") + \
+                         parser.GetData<QString>("dbfilename", "dump.rdb");
     
     cfg.maxclients = parser.GetData<int>("maxclients", 10000);
     cfg.appendonly = (parser.GetData<QString>("appendonly", "no") == "yes");

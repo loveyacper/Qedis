@@ -386,4 +386,18 @@ QError  sunionstore(const vector<QString>& params, UnboundedBuffer* reply)
     return QError_ok;
 }
 
+size_t   SScanKey(const QSet& qset, size_t cursor, size_t count, std::vector<QString>& res)
+{
+    if (qset.empty())
+        return 0;
+    
+    std::vector<QSet::const_local_iterator>  iters;
+    size_t  newCursor = ScanHashMember(qset, cursor, count, iters);
+    
+    res.reserve(iters.size());
+    for (auto it : iters)
+        res.push_back(*it);
+    
+    return newCursor;
+}
 

@@ -130,6 +130,7 @@ public:
     QType  KeyType(const QString& key) const;
     QString RandomKey() const;
     size_t DBSize() const { return m_store[m_dbno].size(); }
+    size_t ScanKey(size_t cursor, size_t count, std::vector<QString>& res) const;
 
     // iterator
     QDB::const_iterator begin() const   { return m_store[m_dbno].begin(); }
@@ -172,7 +173,7 @@ public:
     int     LoopCheckBlocked(uint64_t now);
     void    InitBlockedTimer();
     
-    size_t  BlockedSize() const {  return m_blockedClients.size(); }
+    size_t  BlockedSize() const;
     
     static  int m_dirty;
     
@@ -209,6 +210,7 @@ private:
         size_t  ServeClient(const QString& key, const PLIST& list);
         
         int    LoopCheck(uint64_t now);
+        size_t Size() const { return m_blockedClients.size(); }
     private:
         typedef std::list<std::tuple<std::weak_ptr<QClient>, uint64_t, ListPosition> >   Clients;
         typedef std::unordered_map<QString, Clients>  WaitingList;

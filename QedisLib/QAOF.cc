@@ -186,11 +186,10 @@ static void RewriteProcess()
     if (!file.Open(g_aofTmp, false))
     {
         perror("open tmp failed");
-        ERR << "open aof tmp failed";
         exit(-1);
     }
 
-    for (int dbno = 0; ; ++ dbno)
+    for (int dbno = 0; true; ++ dbno)
     {
         if (QSTORE.SelectDB(dbno) == -1)
             break;

@@ -20,6 +20,7 @@ const QCommandInfo QCommandTable::s_info[] =
     {"randomkey",   QAttr_read,                1,  &randomkey},
     {"rename",      QAttr_write,               3,  &rename},
     {"renamenx",    QAttr_write,               3,  &renamenx},
+    {"scan",        QAttr_read,               -2,  &scan},
 
     // server
     {"select",      QAttr_read,                2,  &select},
@@ -34,6 +35,7 @@ const QCommandInfo QCommandTable::s_info[] =
     {"shutdown",    QAttr_read,                1,  &shutdown},
     {"bgrewriteaof",QAttr_read,                1,  &bgrewriteaof},
     {"ping",        QAttr_read,                1,  &ping},
+    {"echo",        QAttr_read,                2,  &echo},
     {"info",        QAttr_read,               -1,  &info},
     {"monitor",     QAttr_read,                1,  &monitor},
     
@@ -49,6 +51,7 @@ const QCommandInfo QCommandTable::s_info[] =
     {"mget",        QAttr_read,               -2,  &mget},
     {"append",      QAttr_write,               3,  &append},
     {"bitcount",    QAttr_read,               -2,  &bitcount},
+    {"bitop",       QAttr_write,              -4,  &bitop},
     {"getbit",      QAttr_read,                3,  &getbit},
     {"setbit",      QAttr_write,               4,  &setbit},
     {"incr",        QAttr_write,               2,  &incr},
@@ -91,6 +94,7 @@ const QCommandInfo QCommandTable::s_info[] =
     {"hdel",        QAttr_write,              -3,  &hdel},
     {"hincrby",     QAttr_write,               4,  &hincrby},
     {"hincrbyfloat",QAttr_write,               4,  &hincrbyfloat},
+    {"hscan",        QAttr_read,              -3,  &hscan},
 
     // set
     {"sadd",        QAttr_write,              -3,  &sadd},
@@ -107,6 +111,7 @@ const QCommandInfo QCommandTable::s_info[] =
     {"smove",       QAttr_write,               4,  &smove},
     {"spop",        QAttr_write,               2,  &spop},
     {"srandmember", QAttr_read,                2,  &srandmember},
+    {"sscan",       QAttr_read,               -3,  &sscan},
 
     //
     {"zadd",        QAttr_write,              -4,  &zadd},

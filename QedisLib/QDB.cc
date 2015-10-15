@@ -62,9 +62,11 @@ void  QDBSaver::Save(const char* qdbFile)
     snprintf(buf, sizeof buf, "REDIS%04d", kQDBVersion);
     m_qdb.Write(buf, 9);
 
-    for (int dbno = 0; dbno < 16; ++ dbno)
+    for (int dbno = 0; true; ++ dbno)
     {
-        QSTORE.SelectDB(dbno);
+        if (QSTORE.SelectDB(dbno) == -1)
+            break;
+
         if (QSTORE.DBSize() == 0)
             continue;  // But redis will save empty db
         
@@ -107,11 +109,9 @@ void  QDBSaver::Save(const char* qdbFile)
     
     if (::rename(tmpFile, qdbFile) != 0)
     {
-        ERR << "rename error " << errno;
+        perror("rename error");
         assert (false);
     }
-    
-    QStore::m_dirty = 0;
 }
 
 void QDBSaver::SaveType(const QObject& obj)

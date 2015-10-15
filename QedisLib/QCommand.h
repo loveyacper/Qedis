@@ -32,6 +32,7 @@ QCommandHandler  keys;
 QCommandHandler  randomkey;
 QCommandHandler  rename;
 QCommandHandler  renamenx;
+QCommandHandler  scan;
 
 // server commands
 QCommandHandler  select;
@@ -46,6 +47,7 @@ QCommandHandler  debug;
 QCommandHandler  shutdown;
 QCommandHandler  bgrewriteaof;
 QCommandHandler  ping;
+QCommandHandler  echo;
 QCommandHandler  info;
 QCommandHandler  monitor;
 
@@ -57,6 +59,7 @@ QCommandHandler  setrange;
 QCommandHandler  getset;
 QCommandHandler  append;
 QCommandHandler  bitcount;
+QCommandHandler  bitop;
 QCommandHandler  getbit;
 QCommandHandler  setbit;
 QCommandHandler  incr;
@@ -103,6 +106,7 @@ QCommandHandler  hvals;
 QCommandHandler  hdel;
 QCommandHandler  hincrby; // if hash is not exist, create!
 QCommandHandler  hincrbyfloat;
+QCommandHandler  hscan;
 
 // set commands
 QCommandHandler  sadd;
@@ -119,6 +123,7 @@ QCommandHandler  sunionstore;
 QCommandHandler  smove;
 QCommandHandler  spop;
 QCommandHandler  srandmember;
+QCommandHandler  sscan;
 
 
 // sset

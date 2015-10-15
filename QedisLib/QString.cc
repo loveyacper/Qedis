@@ -36,7 +36,7 @@ QObject  CreateStringObject(long val)
     return obj;
 }
 
-static PSTRING GetDecodedString(QObject* value)
+PSTRING GetDecodedString(const QObject* value)
 {
     if (value->encoding == QEncode_raw)
     {
@@ -552,3 +552,132 @@ QError  strlen(const vector<QString>& params, UnboundedBuffer* reply)
     return   QError_ok;
 }
 
+enum BitOp
+{
+    BitOp_and,
+    BitOp_or,
+    BitOp_not,
+    BitOp_xor,
+};
+#include <iostream>
+static QString StringBitOp(const std::vector<const QString* >& keys, BitOp op)
+{
+    QString  res;
+    
+    switch (op)
+    {
+        case BitOp_and:
+        case BitOp_or:
+        case BitOp_xor:
+            for (auto k : keys)
+            {
+                QObject* val;
+                if (QSTORE.GetValueByType(*k, val, QType_string) != QError_ok)
+                    continue;
+                
+                PSTRING str = GetDecodedString(val);
+                if (res.empty())
+                {
+                    res = *str;
+                    continue;
+                }
+                
+                if (str->size() > res.size())
+                    res.resize(str->size());
+
+                for (size_t i = 0; i < str->size(); ++ i)
+                {
+                    if (op == BitOp_and)
+                        res[i] &= (*str)[i];
+                    else if (op == BitOp_or)
+                        res[i] |= (*str)[i];
+                    else if (op == BitOp_xor)
+                        res[i] ^= (*str)[i];
+                }
+            }
+            break;
+            
+        case BitOp_not:
+        {
+            assert(keys.size() == 1);
+            QObject* val;
+            if (QSTORE.GetValueByType(*keys[0], val, QType_string) != QError_ok)
+                break;
+            
+            PSTRING str = GetDecodedString(val);
+            std::cout << *str << std::endl;
+            res.resize(str->size());
+
+            for (size_t i = 0; i < str->size(); ++ i)
+            {
+                res[i] = ~(*str)[i];
+            }
+    
+            break;
+        }
+
+        default:
+            break;
+    }
+    
+    return std::move(res);
+}
+
+
+QError  bitop(const vector<QString>& params, UnboundedBuffer* reply)
+{
+    QError  err = QError_param;
+    const QString& dst = params[2];
+    
+    std::vector<const QString* > keys;
+    for (size_t i = 3; i < params.size(); ++ i)
+        keys.push_back(&params[i]);
+    
+    QString  res;
+    
+    if (params[1].size() == 2)
+    {
+        if (strncasecmp(params[1].c_str(), "or", 2) == 0)
+        {
+            err = QError_ok;
+            res = StringBitOp(keys, BitOp_or);
+        }
+    }
+    else if (params[1].size() == 3)
+    {
+        if (strncasecmp(params[1].c_str(), "xor", 3) == 0)
+        {
+            err = QError_ok;
+            res = StringBitOp(keys, BitOp_xor);
+        }
+        else if (strncasecmp(params[1].c_str(), "and", 3) == 0)
+        {
+            err = QError_ok;
+            res = StringBitOp(keys, BitOp_and);
+        }
+        else if (strncasecmp(params[1].c_str(), "not", 3) == 0)
+        {
+            if (params.size() == 4)
+            {
+                err = QError_ok;
+                res = StringBitOp(keys, BitOp_not);
+            }
+        }
+        else
+        {
+            ;
+        }
+    }
+    
+    if (err != QError_ok)
+    {
+        ReplyError(err, reply);
+    }
+    else
+    {
+        QSTORE.SetValue(dst, CreateStringObject(res));
+        FormatInt(static_cast<long>(res.size()), reply);
+    }
+
+    return   QError_ok;
+}

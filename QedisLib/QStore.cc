@@ -389,6 +389,21 @@ QString QStore::RandomKey() const
     return  res;
 }
 
+size_t QStore::ScanKey(size_t cursor, size_t count, std::vector<QString>& res) const
+{
+    if (m_store.empty() || m_store[m_dbno].empty())
+        return 0;
+
+    std::vector<QDB::const_local_iterator>  iters;
+    size_t newCursor = ScanHashMember(m_store[m_dbno], cursor, count, iters);
+
+    res.reserve(iters.size());
+    for (auto it : iters)
+        res.push_back(it->first);
+
+    return newCursor;
+}
+
 QError  QStore::GetValue(const QString& key, QObject*& value)
 {
     return GetValueByType(key, value);
@@ -477,6 +492,15 @@ void    QStore::ResetDb()
     std::vector<ExpiresDB>(m_expiresDb.size()).swap(m_expiresDb);
     std::vector<BlockedClients>(m_blockedClients.size()).swap(m_blockedClients);
     m_dbno = 0;
+}
+
+size_t  QStore::BlockedSize() const
+{
+    size_t s = 0;
+    for (const auto& b : m_blockedClients)
+        s += b.Size();
+    
+    return s;
 }
 
 bool    QStore::BlockClient(const QString& key, QClient* client, uint64_t timeout, ListPosition pos, const QString* dstList)

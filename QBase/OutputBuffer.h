@@ -11,7 +11,7 @@ class OutputBuffer
 {
 public:
     explicit
-    OutputBuffer(std::size_t  size = 1 * 1024 * 1024);
+    OutputBuffer(std::size_t  size = 128 * 1024);
    ~OutputBuffer();
 
     void        Write(const void* data, std::size_t len);

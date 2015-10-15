@@ -82,8 +82,7 @@ QError  bgsave(const vector<QString>& params, UnboundedBuffer* reply)
     {
         {
         QDBSaver  qdb;
-        qdb.Save(g_config.rdbfilename.c_str());
-        INF << "child save rdb done, exiting child";
+        qdb.Save(g_config.rdbfullname.c_str());
         }
         exit(0);
     }
@@ -114,7 +113,7 @@ QError  save(const vector<QString>& params, UnboundedBuffer* reply)
     }
     
     QDBSaver  qdb;
-    qdb.Save(g_config.rdbfilename.c_str());
+    qdb.Save(g_config.rdbfullname.c_str());
     g_lastQDBSave = time(NULL);
 
     FormatOK(reply);
@@ -136,7 +135,7 @@ QError  client(const vector<QString>& params, UnboundedBuffer* reply)
     
     QError   err = QError_ok;
     
-    if (params[1] == "getname")
+    if (params[1].size() == 7 && strncasecmp(params[1].c_str(), "getname", 7) == 0)
     {
         if (params.size() != 2)
             ReplyError(err = QError_param, reply);
@@ -144,7 +143,7 @@ QError  client(const vector<QString>& params, UnboundedBuffer* reply)
             FormatBulk(QClient::Current()->GetName(),
                        reply);
     }
-    else if (params[1] == "setname")
+    else if (params[1].size() == 7 && strncasecmp(params[1].c_str(), "setname", 7) == 0)
     {
         if (params.size() != 3)
         {
@@ -156,13 +155,13 @@ QError  client(const vector<QString>& params, UnboundedBuffer* reply)
             FormatOK(reply);
         }
     }
-    else if (params[1] == "kill")
+    else if (params[1].size() == 4 && strncasecmp(params[1].c_str(), "kill", 4) == 0)
     {
         // only kill current client
         QClient::Current()->OnError();
         FormatOK(reply);
     }
-    else if (params[1] == "list")
+    else if (params[1].size() == 4 && strncasecmp(params[1].c_str(), "list", 4) == 0)
     {
         FormatOK(reply);
     }
@@ -188,12 +187,12 @@ QError  debug(const vector<QString>& params, UnboundedBuffer* reply)
     
     QError err = QError_ok;
     
-    if (strcasecmp(params[1].c_str(), "segfault") == 0 && params.size() == 2)
+    if (strncasecmp(params[1].c_str(), "segfault", 8) == 0 && params.size() == 2)
     {
         Suicide();
         assert (false);
     }
-    else if (strcasecmp(params[1].c_str(), "object") == 0 && params.size() == 3)
+    else if (strncasecmp(params[1].c_str(), "object", 6) == 0 && params.size() == 3)
     {
         QObject* obj = nullptr;
         err = QSTORE.GetValue(params[2], obj);
@@ -263,6 +262,11 @@ QError  ping(const vector<QString>& params, UnboundedBuffer* reply)
     return   QError_ok;
 }
 
+QError  echo(const vector<QString>& params, UnboundedBuffer* reply)
+{
+    FormatBulk(params[1], reply);
+    return   QError_ok;
+}
 
 QError  slaveof(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
@@ -317,51 +321,4 @@ QError  monitor(const vector<QString>& params, UnboundedBuffer* reply)
     return   QError_ok;
 }
 
-static QError  RenameKey(const QString& oldKey, const QString& newKey, bool force)
-{
-    QObject* val;
-    
-    QError err = QSTORE.GetValue(oldKey, val);
-    if (err != QError_ok)
-        return  err;
-    
-    if (!force && QSTORE.ExistsKey(newKey))
-        return QError_exist;
-    
-    auto now = ::Now();
-    auto ttl = QSTORE.TTL(oldKey, now);
-    
-    if (ttl == QStore::expired)
-        return QError_notExist;
 
-    QSTORE.SetValue(newKey, *val);
-    if (ttl > 0)
-        QSTORE.SetExpire(newKey, ttl + now);
-    else if (ttl == QStore::persist)
-        QSTORE.ClearExpire(newKey);
-
-    QSTORE.ClearExpire(oldKey);
-    QSTORE.DeleteKey(oldKey);
-    
-    return QError_ok;
-}
-
-QError  rename(const std::vector<QString>& params, UnboundedBuffer* reply)
-{
-    QError err = RenameKey(params[1], params[2], true);
-    
-    ReplyError(err, reply);
-    return  err;
-}
-
-QError  renamenx(const std::vector<QString>& params, UnboundedBuffer* reply)
-{
-    QError err = RenameKey(params[1], params[2], false);
-    
-    if (err == QError_ok)
-        Format1(reply);
-    else
-        ReplyError(err, reply);
-    
-    return  err;
-}

@@ -10,5 +10,6 @@ typedef std::string  QString;
 struct   QObject;
 QObject  CreateStringObject(const QString&  value);
 QObject  CreateStringObject(long value);
+std::shared_ptr<QString>  GetDecodedString(const QObject* value);
 
 #endif

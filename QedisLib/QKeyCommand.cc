@@ -278,3 +278,300 @@ QError  randomkey(const vector<QString>& params, UnboundedBuffer* reply)
     
     return   QError_ok;
 }
+
+static QError  RenameKey(const QString& oldKey, const QString& newKey, bool force)
+{
+    QObject* val;
+    
+    QError err = QSTORE.GetValue(oldKey, val);
+    if (err != QError_ok)
+        return  err;
+    
+    if (!force && QSTORE.ExistsKey(newKey))
+        return QError_exist;
+    
+    auto now = ::Now();
+    auto ttl = QSTORE.TTL(oldKey, now);
+    
+    if (ttl == QStore::expired)
+        return QError_notExist;
+    
+    QSTORE.SetValue(newKey, *val);
+    if (ttl > 0)
+        QSTORE.SetExpire(newKey, ttl + now);
+    else if (ttl == QStore::persist)
+        QSTORE.ClearExpire(newKey);
+    
+    QSTORE.ClearExpire(oldKey);
+    QSTORE.DeleteKey(oldKey);
+    
+    return QError_ok;
+}
+
+QError  rename(const std::vector<QString>& params, UnboundedBuffer* reply)
+{
+    QError err = RenameKey(params[1], params[2], true);
+    
+    ReplyError(err, reply);
+    return  err;
+}
+
+QError  renamenx(const std::vector<QString>& params, UnboundedBuffer* reply)
+{
+    QError err = RenameKey(params[1], params[2], false);
+    
+    if (err == QError_ok)
+        Format1(reply);
+    else
+        ReplyError(err, reply);
+    
+    return  err;
+}
+
+// helper func scan
+static QError  ParseScanOption(const std::vector<QString>& params, int start, long& count, const char*& pattern)
+{
+    // scan cursor  MATCH pattern  COUNT 1
+    count  = -1;
+    pattern = nullptr;
+    for (auto i = start; i < params.size(); i += 2)
+    {
+        if (params[i].size() == 5)
+        {
+            if (strncasecmp(params[i].c_str(), "match", 5) == 0)
+            {
+                if (!pattern)
+                {
+                    pattern = params[i + 1].c_str();
+                    continue;
+                }
+            }
+            else if (strncasecmp(params[i].c_str(), "count", 5) == 0)
+            {
+                if (count == -1)
+                {
+                    if (Strtol(params[i+1].c_str(), params[i+1].size(), &count))
+                        continue;
+                }
+            }
+        }
+        
+        return QError_param;
+    }
+
+    return  QError_ok;
+}
+
+QError  scan(const vector<QString>& params, UnboundedBuffer* reply)
+{
+    if (params.size() % 2 != 0)
+    {
+        ReplyError(QError_param, reply);
+        return QError_param;
+    }
+    
+    long   cursor = 0;
+
+    if (!Strtol(params[1].c_str(), params[1].size(), &cursor))
+    {
+        ReplyError(QError_param, reply);
+        return QError_param;
+    }
+    
+    // scan cursor  MATCH pattern  COUNT 1
+    long   count  = -1;
+    const char* pattern = nullptr;
+    
+    QError err  = ParseScanOption(params, 2, count, pattern);
+    if (err != QError_ok)
+    {
+        ReplyError(err, reply);
+        return err;
+    }
+    
+    if (count < 0)  count = 5;
+    
+    std::vector<QString>  res;
+    auto newCursor = QSTORE.ScanKey(cursor, count, res);
+  
+    // filter by pattern
+    if (pattern)
+    {
+        for (auto it = res.begin(); it != res.end(); )
+        {
+            if (!glob_match(pattern, (*it).c_str()))
+                it = res.erase(it);
+            else
+                ++ it;
+        }
+    }
+    
+    // reply
+    PreFormatMultiBulk(2, reply);
+
+    char buf[32];
+    auto len = snprintf(buf, sizeof buf -1, "%lu", newCursor);
+    FormatBulk(buf, len, reply);
+
+    PreFormatMultiBulk(res.size(), reply);
+    for (const auto& s : res)
+    {
+        FormatBulk(s, reply);
+    }
+    
+    return   QError_ok;
+}
+
+
+QError  hscan(const vector<QString>& params, UnboundedBuffer* reply)
+{
+    // hscan key cursor COUNT 0 MATCH 0
+    if (params.size() % 2 == 0)
+    {
+        ReplyError(QError_param, reply);
+        return QError_param;
+    }
+    
+    long   cursor = 0;
+    
+    if (!Strtol(params[2].c_str(), params[2].size(), &cursor))
+    {
+        ReplyError(QError_param, reply);
+        return QError_param;
+    }
+    
+    // find hash
+    QObject* value;
+    QError err = QSTORE.GetValueByType(params[1], value, QType_hash);
+    if (err != QError_ok)
+    {
+        ReplyError(err, reply);
+        return err;
+    }
+    
+    // parse option
+    long   count  = -1;
+    const char* pattern = nullptr;
+    
+    err  = ParseScanOption(params, 3, count, pattern);
+    if (err != QError_ok)
+    {
+        ReplyError(err, reply);
+        return err;
+    }
+    
+    if (count < 0)  count = 5;
+    
+    // scan
+    std::vector<QString>  res;
+    auto newCursor = HScanKey(*value->CastHash(), cursor, count, res);
+    
+    // filter by pattern
+    if (pattern)
+    {
+        for (auto it = res.begin(); it != res.end(); )
+        {
+            if (!glob_match(pattern, (*it).c_str()))
+            {
+                it = res.erase(it); // erase key
+                it = res.erase(it); // erase value
+            }
+            else
+            {
+                ++ it, ++ it;
+            }
+        }
+    }
+    
+    // reply
+    PreFormatMultiBulk(2, reply);
+    
+    char buf[32];
+    auto len = snprintf(buf, sizeof buf -1, "%lu", newCursor);
+    FormatBulk(buf, len, reply);
+    
+    PreFormatMultiBulk(res.size(), reply);
+    for (const auto& s : res)
+    {
+        FormatBulk(s, reply);
+    }
+    
+    return   QError_ok;
+}
+
+
+QError  sscan(const vector<QString>& params, UnboundedBuffer* reply)
+{
+    // sscan key cursor COUNT 0 MATCH 0
+    if (params.size() % 2 == 0)
+    {
+        ReplyError(QError_param, reply);
+        return QError_param;
+    }
+    
+    long   cursor = 0;
+    
+    if (!Strtol(params[2].c_str(), params[2].size(), &cursor))
+    {
+        ReplyError(QError_param, reply);
+        return QError_param;
+    }
+    
+    // find set
+    QObject* value;
+    QError err = QSTORE.GetValueByType(params[1], value, QType_set);
+    if (err != QError_ok)
+    {
+        ReplyError(err, reply);
+        return err;
+    }
+    
+    // parse option
+    long   count  = -1;
+    const char* pattern = nullptr;
+    
+    err  = ParseScanOption(params, 3, count, pattern);
+    if (err != QError_ok)
+    {
+        ReplyError(err, reply);
+        return err;
+    }
+    
+    if (count < 0)  count = 5;
+    
+    // scan
+    std::vector<QString>  res;
+    auto newCursor = SScanKey(*value->CastSet(), cursor, count, res);
+    
+    // filter by pattern
+    if (pattern)
+    {
+        for (auto it = res.begin(); it != res.end(); )
+        {
+            if (!glob_match(pattern, (*it).c_str()))
+            {
+                it = res.erase(it);
+            }
+            else
+            {
+                ++ it;
+            }
+        }
+    }
+    
+    // reply
+    PreFormatMultiBulk(2, reply);
+    
+    char buf[32];
+    auto len = snprintf(buf, sizeof buf -1, "%lu", newCursor);
+    FormatBulk(buf, len, reply);
+    
+    PreFormatMultiBulk(res.size(), reply);
+    for (const auto& s : res)
+    {
+        FormatBulk(s, reply);
+    }
+    
+    return   QError_ok;
+}
+

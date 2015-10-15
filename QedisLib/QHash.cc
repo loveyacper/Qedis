@@ -336,3 +336,18 @@ QError  hsetnx(const vector<QString>& params, UnboundedBuffer* reply)
     return   QError_ok;
 }
 
+
+size_t   HScanKey(const QHash& hash, size_t cursor, size_t count, std::vector<QString>& res)
+{
+    if (hash.empty())
+        return 0;
+    
+    std::vector<QHash::const_local_iterator>  iters;
+    size_t  newCursor = ScanHashMember(hash, cursor, count, iters);
+    
+    res.reserve(iters.size());
+    for (auto it : iters)
+        res.push_back(it->first), res.push_back(it->second);
+    
+    return newCursor;
+}

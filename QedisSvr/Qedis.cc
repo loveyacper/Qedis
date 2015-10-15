@@ -89,7 +89,7 @@ static void  QdbCron()
         {
             {
                 QDBSaver  qdb;
-                qdb.Save((g_config.rdbdir + g_config.rdbfilename).c_str());
+                qdb.Save(g_config.rdbfullname.c_str());
                 std::cerr << "ServerCron child save rdb done, exiting child\n";
             }  //  make qdb to be destructed before exit
             exit(0);
@@ -103,7 +103,7 @@ static void  QdbCron()
             g_qdbPid = ret;
         }
             
-        INF << "ServerCron save rdb file " << (g_config.rdbdir + g_config.rdbfilename);
+        INF << "ServerCron save rdb file " << g_config.rdbfullname;
     }
 }
 
@@ -153,7 +153,7 @@ static void LoadDbFromFile()
     else
     {
         QDBLoader  loader;
-        loader.Load(g_config.rdbfilename.c_str());
+        loader.Load(g_config.rdbfullname.c_str());
     }
 }
 

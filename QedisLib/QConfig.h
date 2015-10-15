@@ -23,8 +23,7 @@ struct QConfig
     int       savechanges;
     bool      rdbcompression;   // yes
     bool      rdbchecksum;      // yes
-    QString   rdbfilename;      // dump.rdb
-    QString   rdbdir;           // ./
+    QString   rdbfullname;      // ./dump.rdb
     
     int       maxclients;       // 10000
     

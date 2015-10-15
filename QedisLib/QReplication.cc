@@ -69,7 +69,7 @@ void   QReplication::OnRdbSaveDone()
             cli->GetSlaveInfo()->state = QSlaveState_online;
             
             
-            if (!rdb.IsOpen() && !rdb.Open(g_config.rdbfilename.c_str()))
+            if (!rdb.IsOpen() && !rdb.Open(g_config.rdbfullname.c_str()))
             {
                 ERR << "can not open rdb when replication\n";
                 return;  // fatal error;
@@ -107,7 +107,7 @@ void   QReplication::TryBgsave()
     {
         {
             QDBSaver  qdb;
-            qdb.Save(g_config.rdbfilename.c_str());
+            qdb.Save(g_config.rdbfullname.c_str());
             std::cerr << "QReplication save rdb done, exiting child\n";
         }
         exit(0);
