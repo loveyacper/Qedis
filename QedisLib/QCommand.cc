@@ -46,6 +46,7 @@ const QCommandInfo QCommandTable::s_info[] =
     {"msetnx",      QAttr_write,              -3,  &msetnx},
     {"setnx",       QAttr_write,               3,  &setnx},
     {"setex",       QAttr_write,               4,  &setex},
+    {"psetex",      QAttr_write,               4,  &psetex},
     {"get",         QAttr_read,                2,  &get},
     {"getset",      QAttr_write,               3,  &getset},
     {"mget",        QAttr_read,               -2,  &mget},
@@ -57,6 +58,7 @@ const QCommandInfo QCommandTable::s_info[] =
     {"incr",        QAttr_write,               2,  &incr},
     {"decr",        QAttr_write,               2,  &decr},
     {"incrby",      QAttr_write,               3,  &incrby},
+    {"incrbyfloat", QAttr_write,               3,  &incrbyfloat},
     {"decrby",      QAttr_write,               3,  &decrby},
     {"getrange",    QAttr_read,                4,  &getrange},
     {"setrange",    QAttr_write,               4,  &setrange},
@@ -94,7 +96,8 @@ const QCommandInfo QCommandTable::s_info[] =
     {"hdel",        QAttr_write,              -3,  &hdel},
     {"hincrby",     QAttr_write,               4,  &hincrby},
     {"hincrbyfloat",QAttr_write,               4,  &hincrbyfloat},
-    {"hscan",        QAttr_read,              -3,  &hscan},
+    {"hscan",       QAttr_read,               -3,  &hscan},
+    {"hstrlen",     QAttr_read,                3,  &hstrlen},
 
     // set
     {"sadd",        QAttr_write,              -3,  &sadd},

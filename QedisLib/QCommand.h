@@ -64,6 +64,7 @@ QCommandHandler  getbit;
 QCommandHandler  setbit;
 QCommandHandler  incr;
 QCommandHandler  incrby;
+QCommandHandler  incrbyfloat;
 QCommandHandler  decr;
 QCommandHandler  decrby;
 QCommandHandler  mget;
@@ -71,6 +72,7 @@ QCommandHandler  mset;
 QCommandHandler  msetnx;
 QCommandHandler  setnx;
 QCommandHandler  setex;
+QCommandHandler  psetex;
 QCommandHandler  strlen;
 
 // list commands
@@ -107,6 +109,7 @@ QCommandHandler  hdel;
 QCommandHandler  hincrby; // if hash is not exist, create!
 QCommandHandler  hincrbyfloat;
 QCommandHandler  hscan;
+QCommandHandler  hstrlen;
 
 // set commands
 QCommandHandler  sadd;

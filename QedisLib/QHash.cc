@@ -336,6 +336,25 @@ QError  hsetnx(const vector<QString>& params, UnboundedBuffer* reply)
     return   QError_ok;
 }
 
+QError  hstrlen(const vector<QString>& params, UnboundedBuffer* reply)
+{
+    QObject* value;
+    QError err = QSTORE.GetValueByType(params[1], value, QType_hash);
+    if (err != QError_ok) 
+    {
+        Format0(reply);
+        return err;
+    }
+    
+    const PHASH& hash= value->CastHash();
+    auto it = hash->find(params[2]);
+    if (it == hash->end())
+        Format0(reply);
+    else
+        FormatInt(static_cast<long>(it->second.size()), reply);
+
+    return   QError_ok;
+}
 
 size_t   HScanKey(const QHash& hash, size_t cursor, size_t count, std::vector<QString>& res)
 {

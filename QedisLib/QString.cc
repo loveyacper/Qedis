@@ -156,6 +156,23 @@ QError  setex(const vector<QString>& params, UnboundedBuffer* reply)
     return  QError_ok;
 }
 
+QError  psetex(const vector<QString>& params, UnboundedBuffer* reply)
+{
+    long  milliseconds;
+    if (!Strtol(params[2].c_str(), params[2].size(), &milliseconds))
+    {
+        ReplyError(QError_nan, reply);
+        return QError_nan;
+    }
+    
+    const auto& key = params[1];
+    QSTORE.SetValue(key, CreateStringObject(params[3]));
+    QSTORE.SetExpire(key, ::Now() + milliseconds);
+    
+    FormatOK(reply);
+    return  QError_ok;
+}
+
 QError  setrange(const vector<QString>& params, UnboundedBuffer* reply)
 {
     long offset;
@@ -473,6 +490,51 @@ QError  setbit(const vector<QString>& params, UnboundedBuffer* reply)
     return QError_ok;
 }
 
+static QError  ChangeFloatValue(const QString& key, float delta, UnboundedBuffer* reply)
+{
+    QObject* value;
+    QError err = QSTORE.GetValueByType(key, value, QType_string);
+    if (err == QError_notExist)
+    {
+        value = QSTORE.SetValue(key, CreateStringObject("0"));
+        err = QError_ok;
+    }
+
+    if (err != QError_ok)
+    {
+        ReplyError(err, reply);
+        return  err;
+    }
+
+    const PSTRING& val = GetDecodedString(value);
+    float  oldVal = 0;
+    if (!Strtof(val->c_str(), val->size(), &oldVal))
+    {
+        ReplyError(QError_nan, reply);
+        return QError_nan;
+    }
+
+    char newVal[32];
+    int  len = snprintf(newVal, sizeof newVal - 1, "%.6g", (oldVal + delta));
+    value->encoding = QEncode_raw;
+    value->value.reset(new QString(newVal, len));
+
+    FormatSingle(newVal, len, reply);
+    return QError_ok;
+}
+
+QError  incrbyfloat(const vector<QString>& params, UnboundedBuffer* reply)
+{
+    float delta = 0;
+    if (!Strtof(params[2].c_str(), params[2].size(), &delta))
+    {
+        ReplyError(QError_nan, reply);
+        return QError_nan;
+    }
+
+    return ChangeFloatValue(params[1], delta, reply);
+}
+
 static QError  ChangeIntValue(const QString& key, long delta, UnboundedBuffer* reply)
 {
     QObject* value;
@@ -491,7 +553,7 @@ static QError  ChangeIntValue(const QString& key, long delta, UnboundedBuffer* r
 
     if (value->encoding != QEncode_int)
     {
-        ReplyError(QError_param, reply);
+        ReplyError(QError_nan, reply);
         return QError_ok;
     }
 
