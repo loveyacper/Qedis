@@ -210,7 +210,7 @@ static QError  _GenericBlockedPop(vector<QString>::const_iterator keyBegin,
     }
     
     // Do NOT block if in transaction
-    if (QClient::Current()->IsFlagOn(ClientFlag_multi))
+    if (QClient::Current() && QClient::Current()->IsFlagOn(ClientFlag_multi))
     {
         FormatNull(reply);
         return QError_ok;
