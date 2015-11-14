@@ -7,7 +7,6 @@
 #include <memory>
 #include <mutex>
 #include "Poller.h"
-#include "Threads/Thread.h"
 #include "Threads/ThreadPool.h"
 
 inline long GetCpuNum()
@@ -22,11 +21,11 @@ namespace Internal
 {
 
 
-class NetThread : public Runnable
+class NetThread
 {
 public:
     NetThread();
-   ~NetThread();
+    virtual ~NetThread();
 
     bool IsAlive() const  {  return m_running; }
     void Stop()           {  m_running = false;}

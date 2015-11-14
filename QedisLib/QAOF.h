@@ -2,10 +2,10 @@
 #define BERT_QAOF_H
 
 #include <memory>
+#include <future>
 #include "Log/MemoryFile.h"
 #include "OutputBuffer.h"
 #include "QString.h"
-#include "Threads/Thread.h"
 
 #include "QStore.h"
 
@@ -33,7 +33,7 @@ public:
 private:
     QAOFThreadController() : m_lastDb(-1) {}
 
-    class AOFThread : public Runnable
+    class AOFThread
     {
         friend class QAOFThreadController;
     public:
@@ -57,7 +57,7 @@ private:
         OutputMemoryFile    m_file;
         OutputBuffer        m_buf;
         
-        Semaphore           m_sem;
+        std::promise<void>  m_pro; // Effective modern C++ : Item 39
     };
     
     void _WriteSelectDB(int db, OutputBuffer& dst);

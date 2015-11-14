@@ -5,7 +5,7 @@
 #include <set>
 #include <memory>
 
-#include "../Threads/Thread.h"
+#include "../Threads/ThreadPool.h"
 #include "../OutputBuffer.h"
 #include "MemoryFile.h"
 #include "../Timer.h"
@@ -75,7 +75,6 @@ private:
     std::size_t     m_pos;
     
     Time            m_time;
-    THREAD_ID       m_thread;
 
     unsigned int    m_level;
     std::string     m_directory;
@@ -145,7 +144,7 @@ private:
     std::set<Logger* >  m_logs;
     
 
-    class LogThread : public Runnable
+    class LogThread
     {
     public:
         LogThread() : m_alive(false) {}
@@ -156,12 +155,15 @@ private:
         
         virtual void Run();
     private:
-        volatile bool m_alive;
+        std::atomic<bool> m_alive;
     };
     
     std::shared_ptr<LogThread>  m_logThread;
 };
 
+extern __thread Logger*  g_log;
+extern __thread unsigned g_logLevel;
+extern __thread unsigned g_logDest;
 
 #undef INF
 #undef DBG

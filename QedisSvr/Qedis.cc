@@ -259,7 +259,7 @@ bool Qedis::_RunLogic()
     CheckChild();
     
     if (!Server::_RunLogic())
-        Thread::YieldCPU();
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
 
     return  true;
 }

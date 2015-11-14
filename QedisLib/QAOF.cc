@@ -32,6 +32,11 @@ void   QAOFThreadController::RewriteDoneHandler(int exitcode, int bysignal)
     else
     {
         ERR << "save aof failed with exitcode " << exitcode << ", signal " << bysignal;
+        g_rewritePid = -1;
+        
+        ::unlink(g_aofTmp);
+        QAOFThreadController::Instance().Join();
+        QAOFThreadController::Instance().Start();
     }
 }
 
@@ -66,7 +71,7 @@ void  QAOFThreadController::Start()
     m_aofThread->Open(g_aofFileName);
     m_aofThread->SetAlive();
     
-    ThreadPool::Instance().ExecuteTask(m_aofThread);
+    ThreadPool::Instance().ExecuteTask(std::bind(&AOFThread::Run, m_aofThread.get()));
 }
 
 // when fork(), parent call stop;
@@ -139,7 +144,7 @@ void   QAOFThreadController::AOFThread::SaveCommand(const std::vector<QString>& 
 void  QAOFThreadController::AOFThread::Run()
 {
     assert (IsAlive());
-   
+    
     // CHECK aof temp buffer first!
     BufferSequence  data;
     while (QAOFThreadController::Instance().ProcessTmpBuffer(data))
@@ -155,19 +160,19 @@ void  QAOFThreadController::AOFThread::Run()
     while (IsAlive())
     {
         if (Flush())
-            m_file.Sync(); // TODO : fixme sync hz
+            m_file.Sync();
         else
-            Thread::YieldCPU();
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     
     Close();
-    m_sem.Post();
+    m_pro.set_value();
 }
 
 void  QAOFThreadController::Join()
 {
     if (m_aofThread)
-        m_aofThread->m_sem.Wait();
+        m_aofThread->m_pro.get_future().wait();
 }
 
 static void SaveExpire(const QString& key, uint64_t absMs, OutputMemoryFile& file)

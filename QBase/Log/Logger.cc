@@ -22,7 +22,6 @@ enum LogColor
 
 #include "Logger.h"
 #include "../Timer.h"
-#include "../Threads/ThreadPool.h"
 
 
 static const size_t DEFAULT_LOGFILESIZE = 32 * 1024 * 1024;
@@ -71,10 +70,13 @@ static bool MakeDir(const char* pDir)
     return true;
 }
 
+__thread Logger*  g_log = nullptr;
+__thread unsigned g_logLevel;
+__thread unsigned g_logDest;
+
 Logger::Logger() : m_level(0),
                    m_dest(0)
 {
-    m_thread = Thread::GetCurrentThreadId();
     m_lastLogMSecond = m_lastLogSecond = -1;
     _Reset();
 }
@@ -158,8 +160,6 @@ void Logger::Flush(enum LogLevel level)
         _Reset();
         return;
     }
-
-    assert (m_thread == Thread::GetCurrentThreadId());
     
     m_time.Now();
 #if 0
@@ -623,7 +623,8 @@ bool LogManager::StartLog()
     assert (!m_logThread->IsAlive());
     m_logThread->SetAlive();
 
-    return ThreadPool::Instance().ExecuteTask(m_logThread);
+    ThreadPool::Instance().ExecuteTask(std::bind(&LogThread::Run, m_logThread.get()));
+    return true;
 }
 
 void LogManager::StopLog()
@@ -655,6 +656,6 @@ void  LogManager::LogThread::Run()
     while (IsAlive())
     {
         if (!LogManager::Instance().Update())
-            Thread::YieldCPU();
+            std::this_thread::sleep_for(std::chrono::microseconds(500));
     }
 }

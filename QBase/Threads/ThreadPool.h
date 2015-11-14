@@ -1,40 +1,76 @@
-
 #ifndef BERT_THREADPOOL_H
 #define BERT_THREADPOOL_H
 
-#include <string>
-
-#include <set>
-#include <vector>
+#include <deque>
+#include <thread>
+#include <memory>
+#include <future>
+#include <atomic>
 #include <mutex>
+#include <condition_variable>
 
-class Thread;
-class Runnable;
 
-class ThreadPool
+class ThreadPool final
 {
 public:
-    static ThreadPool& Instance() {
-        static ThreadPool  pool;
-        return  pool;
-    }
-
-    bool ExecuteTask(const std::shared_ptr<Runnable>& );
-
-    void StopAllThreads();
-
+    ~ThreadPool();
+    
+    static ThreadPool& Instance();
+    
+    template <typename F, typename... Args>
+    auto    ExecuteTask(F&& f, Args&&... args) -> std::future<typename std::result_of<F (Args...)>::type>;
+    
+    void    JoinAll();
+    void    SetMaxIdleThread(unsigned int m);
+    
 private:
-    ThreadPool() : m_shutdown(false) { }
-
-    typedef std::vector<Thread* > ThreadContainer;
-    typedef ThreadContainer::iterator ThreadIterator;
-
-    std::mutex          m_threadsLock;
-    ThreadContainer     m_threads;
-    volatile bool       m_shutdown;
-
-
+    ThreadPool();
+    
+    void   _CreateWorker();
+    void   _WorkerRoutine();
+    void   _MonitorRoutine();
+    
+    std::thread      monitor_;
+    std::atomic<unsigned> maxIdleThread_;
+    
+    static __thread   bool      working_;
+    std::deque<std::thread>     workers_;
+    
+    std::mutex                  mutex_;
+    std::condition_variable     cond_;
+    int                         waiters_;
+    bool                        shutdown_;
+    std::deque<std::function<void ()> > tasks_;
+    
+    static const int  kMaxThreads = 256;   // TODO : How to set this value
 };
+
+
+template <typename F, typename... Args>
+auto ThreadPool::ExecuteTask(F&& f, Args&&... args) -> std::future<typename std::result_of<F (Args...)>::type>
+{
+    using  resultType = typename std::result_of<F (Args...)>::type;
+    
+    auto task = std::make_shared<std::packaged_task<resultType ()> >(std::bind(std::forward<F>(f), std::forward<Args>(args)...));
+    
+    {
+        std::unique_lock<std::mutex>     guard(mutex_);
+        if (shutdown_)
+        {
+            return std::future<resultType>();
+        }
+        
+        tasks_.emplace_back( [=]() { (*task)(); } );
+        if (waiters_ == 0)
+        {
+            _CreateWorker();
+        }
+        
+        cond_.notify_one();
+    }
+    
+    return task->get_future();
+}
 
 #endif
 

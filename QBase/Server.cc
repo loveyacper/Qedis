@@ -154,7 +154,7 @@ void Server::MainLoop()
     NetThreadPool::Instance().StopAllThreads();
     LogManager::Instance().StopLog();
     
-    ThreadPool::Instance().StopAllThreads();
+    ThreadPool::Instance().JoinAll();
 }
 
 

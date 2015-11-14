@@ -97,7 +97,7 @@ void RecvThread::Run()
 
         if (m_tasks.empty())
         {
-            Thread::YieldCPU();
+            std::this_thread::sleep_for(std::chrono::microseconds(100));
             continue;
         }
 
@@ -193,7 +193,7 @@ void SendThread::Run( )
         
         if (nOut == 0)
         {
-            Thread::YieldCPU();
+            std::this_thread::sleep_for(std::chrono::microseconds(100));
             continue;
         }
 
@@ -251,10 +251,9 @@ bool NetThreadPool::StartAllThreads()
 {
     m_recvThread.reset(new RecvThread);
     m_sendThread.reset(new SendThread);
-
-    if (!ThreadPool::Instance().ExecuteTask(m_recvThread) ||
-        !ThreadPool::Instance().ExecuteTask(m_sendThread))
-        return false;
+    
+    ThreadPool::Instance().ExecuteTask(std::bind(&RecvThread::Run, m_recvThread.get()));
+    ThreadPool::Instance().ExecuteTask(std::bind(&SendThread::Run, m_sendThread.get()));
 
     return  true;
 }
