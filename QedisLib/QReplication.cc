@@ -110,7 +110,7 @@ void   QReplication::TryBgsave()
             qdb.Save(g_config.rdbfullname.c_str());
             std::cerr << "QReplication save rdb done, exiting child\n";
         }
-        exit(0);
+        _exit(0);
     }
     else if (ret == -1)
     {
