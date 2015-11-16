@@ -38,7 +38,7 @@ private:
     
     std::mutex                  mutex_;
     std::condition_variable     cond_;
-    int                         waiters_;
+    unsigned                    waiters_;
     bool                        shutdown_;
     std::deque<std::function<void ()> > tasks_;
     
