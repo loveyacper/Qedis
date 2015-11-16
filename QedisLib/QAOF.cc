@@ -82,6 +82,7 @@ void   QAOFThreadController::Stop()
     
     DBG << "stop aof thread";
     m_aofThread->Stop();
+    QAOFThreadController::Instance().Join();
     m_aofThread = nullptr;
 }
 
@@ -191,7 +192,7 @@ static void RewriteProcess()
     if (!file.Open(g_aofTmp, false))
     {
         perror("open tmp failed");
-        exit(-1);
+        _exit(-1);
     }
 
     for (int dbno = 0; true; ++ dbno)
@@ -234,7 +235,7 @@ QError bgrewriteaof(const std::vector<QString>& params, UnboundedBuffer* reply)
         {
             case 0:
                 RewriteProcess();
-                exit(0);
+                _exit(0);
                 
             case -1:
                 ERR << "fork aof process failed, errno = " << errno;
