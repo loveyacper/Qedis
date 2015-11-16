@@ -84,7 +84,7 @@ QError  bgsave(const vector<QString>& params, UnboundedBuffer* reply)
         QDBSaver  qdb;
         qdb.Save(g_config.rdbfullname.c_str());
         }
-        exit(0);
+        _exit(0);
     }
     else if (ret == -1)
     {
