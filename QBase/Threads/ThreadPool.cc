@@ -110,7 +110,7 @@ void   ThreadPool::_MonitorRoutine()
         if (shutdown_)
             return;
         
-        int nw = waiters_;
+        auto nw = waiters_;
         while (nw -- > maxIdleThread_)
         {
             cerr << "push exit item " << std::this_thread::get_id() << endl;
