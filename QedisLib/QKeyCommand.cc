@@ -334,7 +334,7 @@ static QError  ParseScanOption(const std::vector<QString>& params, int start, lo
     // scan cursor  MATCH pattern  COUNT 1
     count  = -1;
     pattern = nullptr;
-    for (auto i = start; i < params.size(); i += 2)
+    for (std::size_t i = start; i < params.size(); i += 2)
     {
         if (params[i].size() == 5)
         {

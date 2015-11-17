@@ -62,10 +62,13 @@ bool ConfigParser::Load(const char* FileName)
                     if (m_data.count(key) > 0)
                     {
                         // duplicate key
-                        // return false;
+                        m_data[key] += " " + value;
                     }
-					
-                    m_data[key] = value;
+                    else
+                    {
+                        m_data[key] = value;
+                    }
+                    
                     key.clear();
                     value.clear();
                 }

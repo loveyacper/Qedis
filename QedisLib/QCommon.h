@@ -81,6 +81,8 @@ enum QError
     QError_noMulti   = 10,
     QError_invalidDB = 11,
     QError_readonlySlave = 12,
+    QError_needAuth  = 13,
+    QError_errAuth   = 14,
     QError_max,
 };
 

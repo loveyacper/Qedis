@@ -71,6 +71,9 @@ std::shared_ptr<StreamSocket>   Qedis::_OnNewConnection(int connfd)
         pNewTask.reset();
     }
     
+    if (QSTORE.m_password.empty())
+        pNewTask->SetAuth();
+    
     return  pNewTask;
 }
 
@@ -182,7 +185,7 @@ bool Qedis::_Init()
         g_log = LogManager::Instance().CreateLog(level, dest, g_config.logdir.c_str());
     }
     
-    SocketAddr addr("0.0.0.0", g_config.port);
+    SocketAddr addr(g_config.ip.c_str() , g_config.port);
     
     if (!Server::TCPBind(addr))
     {
@@ -191,7 +194,9 @@ bool Qedis::_Init()
     }
 
     QCommandTable::Init();
+    QCommandTable::AliasCommand(g_config.aliases);
     QSTORE.Init(g_config.databases);
+    QSTORE.m_password = g_config.password;
     QSTORE.InitExpireTimer();
     QSTORE.InitBlockedTimer();
     QPubsub::Instance().InitPubsubTimer();

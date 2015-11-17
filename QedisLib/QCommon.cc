@@ -22,6 +22,8 @@ struct QErrorInfo  g_errorInfo[] = {
     {sizeof "-EXEC without MULTI\r\n"-1, "-EXEC without MULTI\r\n"},
     {sizeof "-ERR invalid DB index\r\n"-1, "-ERR invalid DB index\r\n"},
     {sizeof "-READONLY You can't write against a read only slave.\r\n"-1, "-READONLY You can't write against a read only slave.\r\n"},
+    {sizeof "-ERR operation not permitted\r\n"-1, "-ERR operation not permitted\r\n"},
+    {sizeof "-ERR invalid password\r\n"-1, "-ERR invalid password\r\n"},
 };
 
 

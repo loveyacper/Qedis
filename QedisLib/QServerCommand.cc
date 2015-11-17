@@ -321,4 +321,18 @@ QError  monitor(const vector<QString>& params, UnboundedBuffer* reply)
     return   QError_ok;
 }
 
+QError  auth(const vector<QString>& params, UnboundedBuffer* reply)
+{
+    if (QSTORE.CheckPassword(params[1]))
+    {
+        QClient::Current()->SetAuth();
+        FormatOK(reply);
+    }
+    else
+    {
+        ReplyError(QError_errAuth, reply);
+    }
+    
+    return   QError_ok;
+}
 

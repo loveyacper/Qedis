@@ -177,6 +177,10 @@ public:
     
     static  int m_dirty;
     
+    // password for auth
+    QString m_password;
+    bool    CheckPassword(const QString& pwd) const { return m_password.empty() || m_password == pwd; }
+    
 private:
     ExpireResult    _ExpireIfNeed(const QString& key, uint64_t now);
     

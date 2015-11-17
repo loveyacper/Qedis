@@ -91,6 +91,8 @@ public:
     
     static void  AddCurrentToMonitor();
     static void  FeedMonitors(const std::vector<QString>& params);
+    
+    void    SetAuth() { m_auth = true; }
 
 private:
     BODY_LENGTH_T    _ProcessInlineCmd(const char* , size_t);
@@ -121,6 +123,9 @@ private:
     
     // name
     std::string m_name;
+    
+    // auth
+    bool  m_auth;
     
     static  QClient*  s_pCurrentClient;
     static  std::set<std::weak_ptr<QClient>, std::owner_less<std::weak_ptr<QClient> > > s_monitors;

@@ -15,6 +15,7 @@ QConfig::QConfig()
     daemonize  = false;
     pidfile = "/var/run/qedis.pid";
     
+    ip = "127.0.0.1";
     port = 6379;
     timeout = 0;
     
@@ -59,6 +60,7 @@ bool  LoadQedisConfig(const char* cfgFile, QConfig& cfg)
     
     cfg.pidfile = parser.GetData<QString>("pidfile");
     
+    cfg.ip      = parser.GetData<QString>("bind", cfg.ip);
     cfg.port    = parser.GetData<unsigned short>("port");
     cfg.timeout = parser.GetData<int>("timeout");
     
@@ -66,20 +68,39 @@ bool  LoadQedisConfig(const char* cfgFile, QConfig& cfg)
     cfg.logdir   = parser.GetData<QString>("logfile");
     
     cfg.databases = parser.GetData<int>("databases");
- 
+    cfg.password  = parser.GetData<QString>("requirepass");
+
+    // alias command
+    {
+        std::vector<QString>  alias = std::move(SplitString(parser.GetData<QString>("rename-command"), ' '));
+        if (alias.size() % 2 == 0)
+        {
+            for (auto it(alias.begin()); it != alias.end(); )
+            {
+                const QString& oldCmd =  *(it ++);
+                const QString& newCmd =  *(it ++);
+                cfg.aliases[oldCmd] = newCmd;
+            }
+        }
+    }
     
     // load rdb config
     std::vector<QString>  saveInfo = std::move(SplitString(parser.GetData<QString>("save"), ' '));
     if (saveInfo.size() != 2)
     {
-        std::cerr << "bad format save rdb interval, bad string "
-                  << parser.GetData<QString>("save")
-                  << std::endl;
-        return false;
+        if (!(saveInfo.size() == 1 && saveInfo[0] == "\"\""))
+        {
+            std::cerr << "bad format save rdb interval, bad string "
+                      << parser.GetData<QString>("save")
+                      << std::endl;
+            return false;
+        }
     }
-    
-    cfg.saveseconds = std::stoi(saveInfo[0]);
-    cfg.savechanges = std::stoi(saveInfo[1]);
+    else
+    {
+        cfg.saveseconds = std::stoi(saveInfo[0]);
+        cfg.savechanges = std::stoi(saveInfo[1]);
+    }
     
     if (cfg.saveseconds == 0)
         cfg.saveseconds = 999999999;

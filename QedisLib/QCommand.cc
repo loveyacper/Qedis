@@ -38,6 +38,7 @@ const QCommandInfo QCommandTable::s_info[] =
     {"echo",        QAttr_read,                2,  &echo},
     {"info",        QAttr_read,               -1,  &info},
     {"monitor",     QAttr_read,                1,  &monitor},
+    {"auth",        QAttr_read,                2,  &auth},
     
     // string
     {"strlen",      QAttr_read,                2,  &strlen},
@@ -172,13 +173,55 @@ void QCommandTable::Init()
 
 const QCommandInfo* QCommandTable::GetCommandInfo(const QString& cmd)
 {
-    std::map<QString, const QCommandInfo* >::const_iterator it(s_handlers.find(cmd));
+    auto it(s_handlers.find(cmd));
     if (it != s_handlers.end())
     {
         return it->second;
     }
     
     return  0;
+}
+    
+bool  QCommandTable::AliasCommand(const std::map<QString, QString>& aliases)
+{
+    for (const auto& pair : aliases)
+    {
+        if (!AliasCommand(pair.first, pair.second))
+            return false;
+    }
+            
+    return true;
+}
+    
+bool  QCommandTable::AliasCommand(const QString& oldKey, const QString& newKey)
+{
+    auto info = DelCommand(oldKey);
+    if (!info)
+        return false;
+
+    return AddCommand(newKey, info);
+}
+
+const QCommandInfo* QCommandTable::DelCommand(const QString& cmd)
+{
+    auto it(s_handlers.find(cmd));
+    if (it != s_handlers.end())
+    {
+        auto p = it->second;
+        s_handlers.erase(it);
+        return p;
+    }
+
+    return nullptr;
+}
+
+bool  QCommandTable::AddCommand(const QString& cmd, const QCommandInfo* info)
+{
+    if (cmd.empty() || cmd == "\"\"")
+        return true;
+
+    printf("newcmd %s, type %d\n", cmd.c_str(), info->attr);
+    return s_handlers.insert(std::make_pair(cmd, info)).second;
 }
 
 QError QCommandTable::ExecuteCmd(const std::vector<QString>& params, const QCommandInfo* info, UnboundedBuffer* reply)

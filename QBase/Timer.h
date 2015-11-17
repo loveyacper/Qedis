@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <memory>
 #include <mutex>
+#include <atomic>
 
 uint64_t Now();
 

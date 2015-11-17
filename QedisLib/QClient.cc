@@ -203,6 +203,14 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
     /// handle packet
     s_pCurrentClient = this;
     
+    if (!m_auth && m_params[0] != "auth")
+    {
+        ReplyError(QError_needAuth, &m_reply);
+        SendPacket(m_reply.ReadAddr(), m_reply.ReadableSize());
+        _Reset();
+        return static_cast<BODY_LENGTH_T>(ptr - start);
+    }
+    
     QString& cmd = m_params[0];
     std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::tolower);
     
@@ -281,6 +289,7 @@ QClient*  QClient::Current()
 
 QClient::QClient() : m_db(0), m_flag(0), m_name("clientxxx")
 {
+    m_auth = false;
     SelectDB(0);
     _Reset();
 }

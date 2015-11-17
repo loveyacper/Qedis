@@ -50,6 +50,7 @@ QCommandHandler  ping;
 QCommandHandler  echo;
 QCommandHandler  info;
 QCommandHandler  monitor;
+QCommandHandler  auth;
 
 // string commands
 QCommandHandler  set;
@@ -183,7 +184,13 @@ public:
     static QError ExecuteCmd(const std::vector<QString>& params, const QCommandInfo* info, UnboundedBuffer* reply = nullptr);
     static QError ExecuteCmd(const std::vector<QString>& params, UnboundedBuffer* reply = nullptr);
 
+    static bool  AliasCommand(const std::map<QString, QString>& aliases);
+    static bool  AliasCommand(const QString& oldKey, const QString& newKey);
+
 private:
+    static const QCommandInfo* DelCommand(const QString& cmd);
+    static bool  AddCommand(const QString& cmd, const QCommandInfo* info);
+
     static const QCommandInfo s_info[];
     static std::map<QString, const QCommandInfo* >  s_handlers;
 };

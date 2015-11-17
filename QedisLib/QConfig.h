@@ -1,6 +1,7 @@
 #ifndef BERT_QCONFIG_H
 #define BERT_QCONFIG_H
 
+#include <map>
 #include "QString.h"
 
 struct QConfig
@@ -8,6 +9,7 @@ struct QConfig
     bool      daemonize;
     QString   pidfile;
     
+    QString   ip;
     unsigned short  port;
     
     int       timeout;
@@ -16,6 +18,11 @@ struct QConfig
     QString   logdir;  // the log directory, differ from redis
     
     int       databases;
+    
+    // auth
+    QString   password;
+    
+    std::map<QString, QString>   aliases;
 
     // @ rdb
     // save seconds changes
