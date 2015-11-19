@@ -2,6 +2,7 @@
 #define BERT_QSTRING_H
 
 #include <string>
+#include <memory>
 
 typedef std::string  QString;
 
