@@ -3,8 +3,6 @@
 #include "Log/Logger.h"
 #include <cassert>
 
-using namespace std;
-
 
 QObject  CreateSetObject()
 {
@@ -50,7 +48,7 @@ static bool RandomMember(const QSet& set, QString& res)
     return false;
 }
 
-QError  spop(const vector<QString>& params, UnboundedBuffer* reply)
+QError  spop(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     GET_SET(params[1]);
 
@@ -71,7 +69,7 @@ QError  spop(const vector<QString>& params, UnboundedBuffer* reply)
 }
 
 
-QError  srandmember(const vector<QString>& params, UnboundedBuffer* reply)
+QError  srandmember(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     GET_SET(params[1]);
 
@@ -90,22 +88,24 @@ QError  srandmember(const vector<QString>& params, UnboundedBuffer* reply)
     return   QError_ok;
 }
 
-QError  sadd(const vector<QString>& params, UnboundedBuffer* reply)
+QError  sadd(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     GET_OR_SET_SET(params[1]);
     
     int  res = 0;
     const PSET&  set = value->CastSet();
     for (size_t i = 2; i < params.size(); ++ i)
+    {
         if (set->insert(params[i]).second)
             ++ res;
+    }
     
     FormatInt(res, reply);
 
     return   QError_ok;
 }
 
-QError  scard(const vector<QString>& params, UnboundedBuffer* reply)
+QError  scard(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     GET_SET(params[1]);
 
@@ -116,7 +116,7 @@ QError  scard(const vector<QString>& params, UnboundedBuffer* reply)
     return   QError_ok;
 }
 
-QError  srem(const vector<QString>& params, UnboundedBuffer* reply)
+QError  srem(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     GET_SET(params[1]);
 
@@ -135,7 +135,7 @@ QError  srem(const vector<QString>& params, UnboundedBuffer* reply)
     return   QError_ok;
 }
 
-QError  sismember(const vector<QString>& params, UnboundedBuffer* reply)
+QError  sismember(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     GET_SET(params[1]);
     
@@ -147,7 +147,7 @@ QError  sismember(const vector<QString>& params, UnboundedBuffer* reply)
     return   QError_ok;
 }
 
-QError  smembers(const vector<QString>& params, UnboundedBuffer* reply)
+QError  smembers(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     GET_SET(params[1]);
 
@@ -160,7 +160,7 @@ QError  smembers(const vector<QString>& params, UnboundedBuffer* reply)
     return   QError_ok;
 }
 
-QError  smove(const vector<QString>& params, UnboundedBuffer* reply)
+QError  smove(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     GET_SET(params[1]);
     
@@ -240,7 +240,7 @@ enum SetOperation
     SetOperation_union,
 };
 
-static void  _set_operation(const vector<QString>& params,
+static void  _set_operation(const std::vector<QString>& params,
                             size_t offset,
                             QSet& res,
                             SetOperation oper)
@@ -284,7 +284,7 @@ static void  _set_operation(const vector<QString>& params,
     }
 }
 
-QError  sdiffstore(const vector<QString>& params, UnboundedBuffer* reply)
+QError  sdiffstore(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     QObject   obj = CreateSetObject();
     obj.value.reset(new QSet);
@@ -297,7 +297,7 @@ QError  sdiffstore(const vector<QString>& params, UnboundedBuffer* reply)
     return QError_ok;
 }
 
-QError  sdiff(const vector<QString>& params, UnboundedBuffer* reply)
+QError  sdiff(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     QSet res;
     _set_operation(params, 1, res, SetOperation_diff);
@@ -310,7 +310,7 @@ QError  sdiff(const vector<QString>& params, UnboundedBuffer* reply)
 }
 
 
-QError  sinter(const vector<QString>& params, UnboundedBuffer* reply)
+QError  sinter(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     QSet res;
     _set_operation(params, 1, res, SetOperation_inter);
@@ -322,7 +322,7 @@ QError  sinter(const vector<QString>& params, UnboundedBuffer* reply)
     return QError_ok;
 }
 
-QError  sinterstore(const vector<QString>& params, UnboundedBuffer* reply)
+QError  sinterstore(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     QObject   obj = CreateSetObject();
     obj.value.reset(new QSet);
@@ -336,7 +336,7 @@ QError  sinterstore(const vector<QString>& params, UnboundedBuffer* reply)
 }
 
 
-QError  sunion(const vector<QString>& params, UnboundedBuffer* reply)
+QError  sunion(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     QSet res;
     _set_operation(params, 1, res, SetOperation_union);
@@ -348,7 +348,7 @@ QError  sunion(const vector<QString>& params, UnboundedBuffer* reply)
     return QError_ok;
 }
 
-QError  sunionstore(const vector<QString>& params, UnboundedBuffer* reply)
+QError  sunionstore(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     QObject   obj = CreateSetObject();
     obj.value.reset(new QSet);

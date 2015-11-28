@@ -727,7 +727,7 @@ QObject QDBLoader::_LoadList()
         if (special)
         {
             QObject str = LoadSpecialStringObject(elemLen);
-            elem = *str.CastString();
+            elem = *GetDecodedString(&str);
         }
         else
         {
@@ -757,7 +757,7 @@ QObject QDBLoader::_LoadSet()
         if (special)
         {
             QObject str = LoadSpecialStringObject(elemLen);
-            elem = *str.CastString();
+            elem = *GetDecodedString(&str);
         }
         else
         {
@@ -787,7 +787,7 @@ QObject QDBLoader::_LoadHash()
         if (special)
         {
             QObject str = LoadSpecialStringObject(keyLen);
-            key = *str.CastString();
+            key = *GetDecodedString(&str);
         }
         else
         {
@@ -799,7 +799,7 @@ QObject QDBLoader::_LoadHash()
         if (special)
         {
             QObject str = LoadSpecialStringObject(valLen);
-            val = *str.CastString();
+            val = *GetDecodedString(&str);
         }
         else
         {
@@ -830,7 +830,7 @@ QObject    QDBLoader::_LoadSSet()
         if (special)
         {
             QObject str = LoadSpecialStringObject(memberLen);
-            member = *str.CastString();
+            member = *GetDecodedString(&str);
         }
         else
         {

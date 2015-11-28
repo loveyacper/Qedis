@@ -1,7 +1,5 @@
 #include "QHelper.h"
 
-using namespace std;
-
 static unsigned dict_hash_function_seed = 5381;
 
 // hash func from redis

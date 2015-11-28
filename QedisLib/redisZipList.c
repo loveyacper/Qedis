@@ -294,7 +294,6 @@ static void zipPrevEncodeLengthForceLarge(unsigned char *p, unsigned int len) {
     } else if ((prevlensize) == 5) {                                           \
         assert(sizeof((prevlensize)) == 4);                                    \
         memcpy(&(prevlen), ((char*)(ptr)) + 1, 4);                             \
-        memrev32ifbe(&prevlen);                                                \
     }                                                                          \
 } while(0);
 
@@ -366,11 +365,11 @@ static void zipSaveInteger(unsigned char *p, int64_t value, unsigned char encodi
         memcpy(p,&i16,sizeof(i16));
         //memrev16ifbe(p);
     } else if (encoding == ZIP_INT_24B) {
-        i32 = value<<8;
+        i32 = (int32_t)(value<<8);
         //memrev32ifbe(&i32);
         memcpy(p,((uint8_t*)&i32)+1,sizeof(i32)-sizeof(uint8_t));
     } else if (encoding == ZIP_INT_32B) {
-        i32 = value;
+        i32 = (int32_t)(value);
         memcpy(p,&i32,sizeof(i32));
        // memrev32ifbe(p);
     } else if (encoding == ZIP_INT_64B) {

@@ -1,7 +1,4 @@
 #include "ThreadPool.h"
-#include <iostream>
-
-using namespace std;
 
 __thread bool ThreadPool::working_ = true;
 
@@ -37,7 +34,6 @@ void    ThreadPool::JoinAll()
         if (shutdown_)
             return;
         
-        cerr << std::this_thread::get_id() << " shutdown threadpool\n";
         shutdown_ = true;
         cond_.notify_all();
         
@@ -48,12 +44,7 @@ void    ThreadPool::JoinAll()
     for (auto& t : tmp)
     {
         if (t.joinable())
-        {
-            cerr << "join thread " << t.get_id() << endl;
             t.join();
-        }
-        else
-            cerr << "not joinable " << t.get_id() << endl;
     }
     
     if (monitor_.joinable())
@@ -70,7 +61,6 @@ void   ThreadPool::_WorkerRoutine()
 {
     working_ = true;
     
-    cerr << "worker start " << std::this_thread::get_id() << endl;
     while (working_)
     {
         std::function<void ()>   task;
@@ -79,16 +69,11 @@ void   ThreadPool::_WorkerRoutine()
             std::unique_lock<std::mutex>    guard(mutex_);
             
             ++ waiters_;
-            cerr << waiters_ << ": incr waiter " << std::this_thread::get_id() << endl;
             cond_.wait(guard, [this]()->bool { return this->shutdown_ || !tasks_.empty(); } );
             -- waiters_;
-            cerr << waiters_ << ": dec waiter " << std::this_thread::get_id() << endl;
             
             if (this->shutdown_ && tasks_.empty())
-            {
-                cerr << "exit because shutdown " << std::this_thread::get_id() << endl;
                 return;
-            }
             
             task = std::move(tasks_.front());
             tasks_.pop_front();
@@ -96,8 +81,6 @@ void   ThreadPool::_WorkerRoutine()
         
         task();
     }
-    
-    cerr << "exit because not working " << std::this_thread::get_id() << endl;
 }
 
 void   ThreadPool::_MonitorRoutine()
@@ -113,7 +96,6 @@ void   ThreadPool::_MonitorRoutine()
         auto nw = waiters_;
         while (nw -- > maxIdleThread_)
         {
-            cerr << "push exit item " << std::this_thread::get_id() << endl;
             tasks_.push_back([this]() { working_ = false; });
             cond_.notify_one();
         }

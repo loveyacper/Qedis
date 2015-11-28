@@ -3,7 +3,6 @@
 #include "Log/Logger.h"
 #include <cassert>
 
-using namespace std;
 
 QObject  CreateStringObject(const QString&  value)
 {
@@ -77,14 +76,14 @@ static bool SetValue(const QString& key, const QString& value, bool exclusive = 
     return  true;
 }
 
-QError  set(const vector<QString>& params, UnboundedBuffer* reply)
+QError  set(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     SetValue(params[1], params[2]);
     FormatOK(reply);
     return   QError_ok;
 }
 
-QError  setnx(const vector<QString>& params, UnboundedBuffer* reply)
+QError  setnx(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     if (SetValue(params[1], params[2], true))
         Format1(reply);
@@ -94,7 +93,7 @@ QError  setnx(const vector<QString>& params, UnboundedBuffer* reply)
     return  QError_ok;
 }
 
-QError  mset(const vector<QString>& params, UnboundedBuffer* reply)
+QError  mset(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     if (params.size() % 2 != 1)
     {
@@ -112,7 +111,7 @@ QError  mset(const vector<QString>& params, UnboundedBuffer* reply)
     return   QError_ok;
 }
 
-QError  msetnx(const vector<QString>& params, UnboundedBuffer* reply)
+QError  msetnx(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     if (params.size() % 2 != 1)
     {
@@ -139,7 +138,7 @@ QError  msetnx(const vector<QString>& params, UnboundedBuffer* reply)
     return  QError_ok;
 }
 
-QError  setex(const vector<QString>& params, UnboundedBuffer* reply)
+QError  setex(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     long  seconds;
     if (!Strtol(params[2].c_str(), params[2].size(), &seconds))
@@ -156,7 +155,7 @@ QError  setex(const vector<QString>& params, UnboundedBuffer* reply)
     return  QError_ok;
 }
 
-QError  psetex(const vector<QString>& params, UnboundedBuffer* reply)
+QError  psetex(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     long  milliseconds;
     if (!Strtol(params[2].c_str(), params[2].size(), &milliseconds))
@@ -173,7 +172,7 @@ QError  psetex(const vector<QString>& params, UnboundedBuffer* reply)
     return  QError_ok;
 }
 
-QError  setrange(const vector<QString>& params, UnboundedBuffer* reply)
+QError  setrange(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     long offset;
     if (!Strtol(params[2].c_str(), params[2].size(), &offset))
@@ -214,7 +213,7 @@ static void AddReply(QObject* value, UnboundedBuffer* reply)
     FormatBulk(str->c_str(), str->size(), reply);
 }
 
-QError  get(const vector<QString>& params, UnboundedBuffer* reply)
+QError  get(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "get");
 
@@ -234,7 +233,7 @@ QError  get(const vector<QString>& params, UnboundedBuffer* reply)
     return   QError_ok;
 }
 
-QError  mget(const vector<QString>& params, UnboundedBuffer* reply)
+QError  mget(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     PreFormatMultiBulk(params.size() - 1, reply);
 
@@ -255,7 +254,7 @@ QError  mget(const vector<QString>& params, UnboundedBuffer* reply)
     return   QError_ok;
 }
 
-QError  getrange(const vector<QString>& params, UnboundedBuffer* reply)
+QError  getrange(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     QObject*   value;
     QError err = QSTORE.GetValueByType(params[1], value, QType_string);
@@ -292,7 +291,7 @@ QError  getrange(const vector<QString>& params, UnboundedBuffer* reply)
     return   QError_ok;
 }
 
-QError  getset(const vector<QString>& params, UnboundedBuffer* reply)
+QError  getset(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     QObject*  value;
     QError err = QSTORE.GetValueByType(params[1], value, QType_string);
@@ -323,7 +322,7 @@ QError  getset(const vector<QString>& params, UnboundedBuffer* reply)
     return   QError_ok;
 }
 
-QError  append(const vector<QString>& params, UnboundedBuffer* reply)
+QError  append(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     QObject* value;
     QError err = QSTORE.GetValueByType(params[1], value, QType_string);
@@ -347,7 +346,7 @@ QError  append(const vector<QString>& params, UnboundedBuffer* reply)
     return   QError_ok;
 }
 
-QError  bitcount(const vector<QString>& params, UnboundedBuffer* reply)
+QError  bitcount(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     QObject* value;
     QError err = QSTORE.GetValueByType(params[1], value, QType_string);
@@ -397,7 +396,7 @@ QError  bitcount(const vector<QString>& params, UnboundedBuffer* reply)
     return   QError_ok;
 }
 
-QError  getbit(const vector<QString>& params, UnboundedBuffer* reply)
+QError  getbit(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     QObject* value;
     QError err = QSTORE.GetValueByType(params[1], value, QType_string);
@@ -436,7 +435,7 @@ QError  getbit(const vector<QString>& params, UnboundedBuffer* reply)
     return QError_ok;
 }
 
-QError  setbit(const vector<QString>& params, UnboundedBuffer* reply)
+QError  setbit(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     QObject* value;
     QError err = QSTORE.GetValueByType(params[1], value, QType_string);
@@ -523,7 +522,7 @@ static QError  ChangeFloatValue(const QString& key, float delta, UnboundedBuffer
     return QError_ok;
 }
 
-QError  incrbyfloat(const vector<QString>& params, UnboundedBuffer* reply)
+QError  incrbyfloat(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     float delta = 0;
     if (!Strtof(params[2].c_str(), params[2].size(), &delta))
@@ -565,16 +564,16 @@ static QError  ChangeIntValue(const QString& key, long delta, UnboundedBuffer* r
     return QError_ok;
 }
 //
-QError  incr(const vector<QString>& params, UnboundedBuffer* reply)
+QError  incr(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     return ChangeIntValue(params[1], 1, reply);
 }
-QError  decr(const vector<QString>& params, UnboundedBuffer* reply)
+QError  decr(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     return ChangeIntValue(params[1], -1, reply);
 }
 
-QError  incrby(const vector<QString>& params, UnboundedBuffer* reply)
+QError  incrby(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     long delta = 0;
     if (!Strtol(params[2].c_str(), params[2].size(), &delta))
@@ -586,7 +585,7 @@ QError  incrby(const vector<QString>& params, UnboundedBuffer* reply)
     return ChangeIntValue(params[1], delta, reply);
 }
 
-QError  decrby(const vector<QString>& params, UnboundedBuffer* reply)
+QError  decrby(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     long delta = 0;
     if (!Strtol(params[2].c_str(), params[2].size(), &delta))
@@ -598,7 +597,7 @@ QError  decrby(const vector<QString>& params, UnboundedBuffer* reply)
     return ChangeIntValue(params[1], -delta, reply);
 }
 
-QError  strlen(const vector<QString>& params, UnboundedBuffer* reply)
+QError  strlen(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     QObject* val;
     QError   err = QSTORE.GetValueByType(params[1], val, QType_string);
@@ -621,7 +620,7 @@ enum BitOp
     BitOp_not,
     BitOp_xor,
 };
-#include <iostream>
+
 static QString StringBitOp(const std::vector<const QString* >& keys, BitOp op)
 {
     QString  res;
@@ -667,7 +666,6 @@ static QString StringBitOp(const std::vector<const QString* >& keys, BitOp op)
                 break;
             
             PSTRING str = GetDecodedString(val);
-            std::cout << *str << std::endl;
             res.resize(str->size());
 
             for (size_t i = 0; i < str->size(); ++ i)
@@ -686,7 +684,7 @@ static QString StringBitOp(const std::vector<const QString* >& keys, BitOp op)
 }
 
 
-QError  bitop(const vector<QString>& params, UnboundedBuffer* reply)
+QError  bitop(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     QError  err = QError_param;
     const QString& dst = params[2];

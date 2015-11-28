@@ -1,5 +1,4 @@
 #include <cassert>
-#include <iostream>
 #include <set>
 #include "QGlobRegex.h"
 
@@ -119,7 +118,7 @@ bool  QGlobRegex::_ProcessBracket()
 
     if (m_pOff + 1 >= m_pLen)
     {
-        std::cerr << "expect ] at end\n";
+        //std::cerr << "expect ] at end\n";
         return  false;
     }
 
@@ -171,7 +170,7 @@ bool  QGlobRegex::_ProcessBracket()
 
     if (m_pOff == m_pLen)
     {
-        std::cerr << "expect ]\n";
+        //std::cerr << "expect ]\n";
         return  false;
     }
     else
@@ -193,11 +192,9 @@ bool  QGlobRegex::_ProcessBracket()
         }
     }
 
-    for (std::set<std::pair<int, int> >::const_iterator it(spans.begin());
-            it != spans.end();
-            ++ it)
+    for (const auto& pair : spans)
     {
-        if (m_text[m_tOff] >= it->first && m_text[m_tOff] <= it->second)
+        if (m_text[m_tOff] >= pair.first && m_text[m_tOff] <= pair.second)
         {
             if (include)
             {
@@ -213,12 +210,10 @@ bool  QGlobRegex::_ProcessBracket()
 
     if (include)
     {
-        std::cerr << "include but not match " << m_text[m_tOff] << std::endl;
         return false;
     }
     else
     {
-        std::cerr << "not include and not match " << m_text[m_tOff] << std::endl;
         ++ m_tOff;
         return true;
     }
@@ -226,10 +221,5 @@ bool  QGlobRegex::_ProcessBracket()
 
 bool QGlobRegex::_IsMatch() const
 {
-    if (m_pOff != m_pLen)
-        std::cerr << "poff = " << m_pOff << " but plen = " << m_pLen << std::endl;
-    if (m_tOff != m_tLen)
-        std::cerr << "toff = " << m_tOff << " but tlen = " << m_tLen << std::endl;
-
     return m_pOff == m_pLen && m_tLen == m_tOff;
 }

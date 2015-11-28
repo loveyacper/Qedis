@@ -6,11 +6,11 @@
 #include "QSortedSet.h"
 #include "QHash.h"
 #include "QList.h"
-#include <map>
-#include <memory>
 #include "Timer.h"
 
 #include <vector>
+#include <map>
+#include <memory>
 
 typedef std::shared_ptr<QString>      PSTRING;
 typedef std::shared_ptr<QList>        PLIST;
@@ -114,10 +114,6 @@ class QStore
 {
 public:
     static QStore& Instance();
-
-    QStore() : m_dbno(0)
-    {
-    }
     
     void  Init(int dbNum = 16);
 
@@ -182,6 +178,10 @@ public:
     bool    CheckPassword(const QString& pwd) const { return m_password.empty() || m_password == pwd; }
     
 private:
+    QStore() : m_dbno(0)
+    {
+    }
+    
     ExpireResult    _ExpireIfNeed(const QString& key, uint64_t now);
     
     class ExpiresDB

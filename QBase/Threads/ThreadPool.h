@@ -42,7 +42,7 @@ private:
     bool                        shutdown_;
     std::deque<std::function<void ()> > tasks_;
     
-    static const int  kMaxThreads = 256;   // TODO : How to set this value
+    static const int  kMaxThreads = 256;
 };
 
 

@@ -1,18 +1,19 @@
+#include <sys/utsname.h>
+#include <cassert>
+#include <unistd.h>
+
 #include "QStore.h"
 #include "QClient.h"
 #include "Log/Logger.h"
 #include "Server.h"
-#include <cassert>
-#include <unistd.h>
 #include "QDB.h"
 #include "QAOF.h"
 #include "QReplication.h"
 #include "QConfig.h"
 
-using namespace std;
 
 
-QError  select(const vector<QString>& params, UnboundedBuffer* reply)
+QError  select(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "select");
 
@@ -36,7 +37,7 @@ QError  select(const vector<QString>& params, UnboundedBuffer* reply)
 }
 
 
-QError  dbsize(const vector<QString>& params, UnboundedBuffer* reply)
+QError  dbsize(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "dbsize");
 
@@ -44,7 +45,7 @@ QError  dbsize(const vector<QString>& params, UnboundedBuffer* reply)
     return   QError_ok;
 }
 
-QError  flushdb(const vector<QString>& params, UnboundedBuffer* reply)
+QError  flushdb(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "flushdb");
 
@@ -54,7 +55,7 @@ QError  flushdb(const vector<QString>& params, UnboundedBuffer* reply)
     return   QError_ok;
 }
 
-QError  flushall(const vector<QString>& params, UnboundedBuffer* reply)
+QError  flushall(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "flushall");
     
@@ -64,7 +65,7 @@ QError  flushall(const vector<QString>& params, UnboundedBuffer* reply)
     return   QError_ok;
 }
 
-QError  bgsave(const vector<QString>& params, UnboundedBuffer* reply)
+QError  bgsave(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "bgsave");
     
@@ -99,7 +100,7 @@ QError  bgsave(const vector<QString>& params, UnboundedBuffer* reply)
     return   QError_ok;
 }
 
-QError  save(const vector<QString>& params, UnboundedBuffer* reply)
+QError  save(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "save");
     
@@ -120,7 +121,7 @@ QError  save(const vector<QString>& params, UnboundedBuffer* reply)
     return   QError_ok;
 }
 
-QError  lastsave(const vector<QString>& params, UnboundedBuffer* reply)
+QError  lastsave(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "lastsave");
     
@@ -128,7 +129,7 @@ QError  lastsave(const vector<QString>& params, UnboundedBuffer* reply)
     return   QError_ok;
 }
 
-QError  client(const vector<QString>& params, UnboundedBuffer* reply)
+QError  client(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     // getname   setname    kill  list
     assert (params[0] == "client");
@@ -181,7 +182,7 @@ static int Suicide()
     return *ptr;
 }
 
-QError  debug(const vector<QString>& params, UnboundedBuffer* reply)
+QError  debug(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "debug");
     
@@ -220,7 +221,7 @@ QError  debug(const vector<QString>& params, UnboundedBuffer* reply)
 }
 
 
-QError  shutdown(const vector<QString>& params, UnboundedBuffer* reply)
+QError  shutdown(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "shutdown");
     
@@ -256,13 +257,13 @@ QError  sync(const std::vector<QString>& params, UnboundedBuffer* reply)
 }
 
 
-QError  ping(const vector<QString>& params, UnboundedBuffer* reply)
+QError  ping(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     FormatSingle("PONG", 4, reply);
     return   QError_ok;
 }
 
-QError  echo(const vector<QString>& params, UnboundedBuffer* reply)
+QError  echo(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     FormatBulk(params[1], reply);
     return   QError_ok;
@@ -287,12 +288,24 @@ QError  slaveof(const std::vector<QString>& params, UnboundedBuffer* reply)
 }
 
 
-QError  info(const vector<QString>& params, UnboundedBuffer* reply)
+QError  info(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     char buf[1024];
     int  offset = 0;
     int  n = 0;
     
+    // server
+    struct utsname  name;
+    uname(&name);
+    n = snprintf(buf + offset, sizeof buf - 1 - offset,
+                                "# Server\n"
+                                "qedis_mode:standalone\n"
+                                "os:%s %s %s\n"
+                                "tcp_port:%hu\n"
+                                , name.sysname, name.release, name.machine
+                                , g_config.port);
+    offset += n;
+
     // clients
     n = snprintf(buf + offset, sizeof buf - 1 - offset,
                                           "# Clients\n"
@@ -313,7 +326,7 @@ QError  info(const vector<QString>& params, UnboundedBuffer* reply)
 }
 
 
-QError  monitor(const vector<QString>& params, UnboundedBuffer* reply)
+QError  monitor(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     QClient::AddCurrentToMonitor();
     
@@ -321,7 +334,7 @@ QError  monitor(const vector<QString>& params, UnboundedBuffer* reply)
     return   QError_ok;
 }
 
-QError  auth(const vector<QString>& params, UnboundedBuffer* reply)
+QError  auth(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     if (QSTORE.CheckPassword(params[1]))
     {

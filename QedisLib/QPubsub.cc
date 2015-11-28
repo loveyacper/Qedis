@@ -4,8 +4,6 @@
 #include "Timer.h"
 #include "QGlobRegex.h"
 
-using namespace std;
-
 QPubsub&    QPubsub::Instance()
 {
     static QPubsub  ps;
@@ -268,7 +266,7 @@ void QPubsub::InitPubsubTimer()
     TimerManager::Instance().AddTimer(PTIMER(new PubsubTimer));
 }
 
-void QPubsub::PubsubChannels(vector<QString>& res, const char* pattern) const
+void QPubsub::PubsubChannels(std::vector<QString>& res, const char* pattern) const
 {
     res.clear();
 
@@ -305,7 +303,7 @@ size_t QPubsub::PubsubNumpat() const
 }
 
 // pubsub commands
-QError  subscribe(const vector<QString>& params, UnboundedBuffer* reply)
+QError  subscribe(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     QClient* client = QClient::Current();
     for (const auto& pa : params)
@@ -327,7 +325,7 @@ QError  subscribe(const vector<QString>& params, UnboundedBuffer* reply)
     return QError_ok;
 }
 
-QError  psubscribe(const vector<QString>& params, UnboundedBuffer* reply)
+QError  psubscribe(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     QClient* client = QClient::Current();
     for (const auto& pa : params)
@@ -350,7 +348,7 @@ QError  psubscribe(const vector<QString>& params, UnboundedBuffer* reply)
 }
 
 
-QError  unsubscribe(const vector<QString>& params, UnboundedBuffer* reply)
+QError  unsubscribe(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     QClient* client = QClient::Current();
 
@@ -366,7 +364,7 @@ QError  unsubscribe(const vector<QString>& params, UnboundedBuffer* reply)
     }
     else
     {
-        set<QString> channels;
+        std::set<QString> channels;
 
         for (size_t i = 1; i < params.size(); ++ i)
         {
@@ -391,7 +389,7 @@ QError  unsubscribe(const vector<QString>& params, UnboundedBuffer* reply)
     return  QError_ok;
 }
 
-QError  punsubscribe(const vector<QString>& params, UnboundedBuffer* reply)
+QError  punsubscribe(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     QClient* client = QClient::Current();
 
@@ -407,7 +405,7 @@ QError  punsubscribe(const vector<QString>& params, UnboundedBuffer* reply)
     }
     else
     {
-        set<QString> channels;
+        std::set<QString> channels;
 
         for (size_t i = 1; i < params.size(); ++ i)
         {
@@ -432,7 +430,7 @@ QError  punsubscribe(const vector<QString>& params, UnboundedBuffer* reply)
     return  QError_ok;
 }
 
-QError  publish(const vector<QString>& params, UnboundedBuffer* reply)
+QError  publish(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     size_t n = QPubsub::Instance().PublishMsg(params[1], params[2]);
     FormatInt(n, reply);
@@ -441,7 +439,7 @@ QError  publish(const vector<QString>& params, UnboundedBuffer* reply)
 }
 
 // neixing command
-QError  pubsub(const vector<QString>& params, UnboundedBuffer* reply)
+QError  pubsub(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     if (params[1] == "channels")
     {
@@ -451,7 +449,7 @@ QError  pubsub(const vector<QString>& params, UnboundedBuffer* reply)
             return QError_param;
         }
 
-        vector<QString> res;
+        std::vector<QString> res;
         QPubsub::Instance().PubsubChannels(res, params.size() == 3 ? params[2].c_str() : 0);
         PreFormatMultiBulk(res.size(), reply);
         for (const auto& channel : res)

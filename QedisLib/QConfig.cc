@@ -1,9 +1,8 @@
 #include <vector>
+#include <iostream>
+
 #include "QConfig.h"
 #include "ConfigParser.h"
-
-#include <iostream>
-using namespace std;
 
 
 extern std::vector<QString>  SplitString(const QString& str, char seperator);
