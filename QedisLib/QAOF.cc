@@ -7,7 +7,6 @@
 #include <sstream>
 
 
-const char* const g_aofFileName = "qedis_appendonly.aof";
 const char* const g_aofTmp = "qedis_appendonly.aof.tmp";
 
 pid_t             g_rewritePid = -1;
@@ -26,7 +25,7 @@ void   QAOFThreadController::RewriteDoneHandler(int exitcode, int bysignal)
         g_rewritePid = -1;
         
         QAOFThreadController::Instance().Join();
-        ::rename(g_aofTmp, g_aofFileName);
+        ::rename(g_aofTmp, QAOFThreadController::Instance().m_aofFile.c_str());
         QAOFThreadController::Instance().Start();
     }
     else
@@ -47,6 +46,10 @@ QAOFThreadController& QAOFThreadController::Instance()
     return  threadCtrl;
 }
 
+void  QAOFThreadController::SetAofFile(const QString& name)
+{
+    m_aofFile = name;
+}
 
 bool  QAOFThreadController::ProcessTmpBuffer(BufferSequence& bf)
 {
@@ -68,7 +71,7 @@ void  QAOFThreadController::Start()
     assert(!m_aofThread || !m_aofThread->IsAlive());
     
     m_aofThread.reset(new AOFThread);
-    m_aofThread->Open(g_aofFileName);
+    m_aofThread->Open(m_aofFile.c_str());
     m_aofThread->SetAlive();
     
     ThreadPool::Instance().ExecuteTask(std::bind(&AOFThread::Run, m_aofThread.get()));

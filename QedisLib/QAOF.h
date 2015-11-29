@@ -6,11 +6,8 @@
 #include "Log/MemoryFile.h"
 #include "OutputBuffer.h"
 #include "QString.h"
-
 #include "QStore.h"
 
-extern const char* const g_aofFileName;
-extern const char* const g_aofTmp;
 
 extern pid_t             g_rewritePid;
 
@@ -27,11 +24,14 @@ public:
     
     bool  ProcessTmpBuffer(BufferSequence& bf);
     void  SkipTmpBuffer(size_t  n);
+    
+    const QString&  GetAofFile() const { return m_aofFile; }
+    void  SetAofFile(const QString& name);
 
     static void  RewriteDoneHandler(int exitcode, int bysignal);
     
 private:
-    QAOFThreadController() : m_lastDb(-1) {}
+    QAOFThreadController() : m_lastDb(-1), m_aofFile("appendonly.aof") {}
 
     class AOFThread
     {
@@ -65,6 +65,8 @@ private:
     std::shared_ptr<AOFThread>  m_aofThread;
     OutputBuffer                m_aofBuffer;
     int                         m_lastDb;
+    
+    QString                     m_aofFile;
 };
 
 

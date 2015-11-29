@@ -36,6 +36,9 @@ private:
 
 public:
     QClient();
+    
+    void OnConnect() override;
+    
     bool SelectDB(int db);
     static QClient*  Current();
     

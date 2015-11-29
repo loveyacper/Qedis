@@ -118,7 +118,7 @@ void Server::MainLoop()
     
     ::srand(static_cast<unsigned int>(time(NULL)));
     ::srandom(static_cast<unsigned int>(time(NULL)));
-
+#if 0
     // set the max fd number
     struct rlimit   rlim; 
     getrlimit(RLIMIT_NOFILE, &rlim); 
@@ -131,6 +131,7 @@ void Server::MainLoop()
             ERR << "Failed to setrlimit ";
         } 
     }
+#endif
 
 //  int threadNum = (GetCpuNum() + 1) / 2;
     if (NetThreadPool::Instance().StartAllThreads() &&
@@ -177,6 +178,7 @@ void  Server::NewConnection(int  sock, bool needReconn)
         return;
     }
 
+    pNewTask->OnConnect();
     pNewTask->SetReconn(needReconn);
 
     if (NetThreadPool::Instance().AddSocket(pNewTask, EventTypeRead | EventTypeWrite))

@@ -231,6 +231,7 @@ private:
 };
 
 #define QSTORE  QStore::Instance()
+#define QEDIS_VERSION "0.8.0"
 
 #endif
 

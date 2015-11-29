@@ -94,7 +94,6 @@ bool Logger::Init(unsigned int level, unsigned int dest, const char* pDir)
 
     if (0 == m_level)
     {
-        std::cout << "Init log with level 0\n";
         return  true;
     }
   

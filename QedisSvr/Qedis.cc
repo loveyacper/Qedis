@@ -31,20 +31,106 @@ public:
     Qedis();
     ~Qedis();
     
+    bool  ParseArgs(int ac, char* av[]);
+    
 private:
-    std::shared_ptr<StreamSocket>   _OnNewConnection(int fd);
-    bool    _Init();
-    bool    _RunLogic();
-    void    _Recycle();
+    std::shared_ptr<StreamSocket>   _OnNewConnection(int fd) override;
+    bool    _Init() override;
+    bool    _RunLogic() override;
+    void    _Recycle() override;
+    
+    std::string m_cfgFile;
+    unsigned short m_port;
+    std::string m_logLevel;
+    
+    std::string m_master;
+    unsigned short m_masterPort;
 };
 
 
-Qedis::Qedis()
+Qedis::Qedis() : m_port(0), m_masterPort(0)
 {
 }
 
 Qedis::~Qedis()
 {
+}
+
+static void Usage()
+{
+    std::cerr << "Usage:  ./qedis-server [/path/to/redis.conf] [options]\n\
+        ./qedis-server -v or --version\n\
+        ./qedis-server -h or --help\n\
+Examples:\n\
+        ./qedis-server (run the server with default conf)\n\
+        ./qedis-server /etc/redis/6379.conf\n\
+        ./qedis-server --port 7777\n\
+        ./qedis-server --port 7777 --slaveof 127.0.0.1 8888\n\
+        ./qedis-server /etc/myredis.conf --loglevel verbose\n";
+}
+
+bool  Qedis::ParseArgs(int ac, char* av[])
+{
+    for (int i = 0; i < ac; i ++)
+    {
+        if (m_cfgFile.empty() && ::access(av[i], R_OK) == 0)
+        {
+            m_cfgFile = av[i];
+            continue;
+        }
+        else if (strncasecmp(av[i], "-v", 2) == 0 ||
+                 strncasecmp(av[i], "--version", 9) == 0)
+        {
+            std::cerr << "Qedis Server v="
+                      << QEDIS_VERSION
+                      << " bits="
+                      << (sizeof(void*) == 8 ? 64 : 32)
+                      << std::endl;
+
+            exit(0);
+            return true;
+        }
+        else if (strncasecmp(av[i], "-h", 2) == 0 ||
+                 strncasecmp(av[i], "--help", 6) == 0)
+        {
+            Usage();
+            exit(0);
+            return true;
+        }
+        else if (strncasecmp(av[i], "--port", 6) == 0)
+        {
+            if (++i == ac)
+            {
+                return false;
+            }
+            m_port = static_cast<unsigned short>(std::atoi(av[i]));
+        }
+        else if (strncasecmp(av[i], "--loglevel", 10) == 0)
+        {
+            if (++i == ac)
+            {
+                return false;
+            }
+            m_logLevel = std::string(av[i]);
+        }
+        else if (strncasecmp(av[i], "--slaveof", 9) == 0)
+        {
+            if (i + 2 >= ac)
+            {
+                return false;
+            }
+            
+            m_master = std::string(av[++i]);
+            m_port   = static_cast<unsigned short>(std::atoi(av[++i]));
+        }
+        else
+        {
+            std::cerr << "Unknow option " << av[i] << std::endl;
+            return false;
+        }
+    }
+    
+    return true;
 }
 
 
@@ -70,9 +156,6 @@ std::shared_ptr<StreamSocket>   Qedis::_OnNewConnection(int connfd)
     {
         pNewTask.reset();
     }
-    
-    if (QSTORE.m_password.empty())
-        pNewTask->SetAuth();
     
     return  pNewTask;
 }
@@ -140,11 +223,11 @@ private:
     }
 };
 
-static void LoadDbFromFile()
+static void LoadDbFromDisk()
 {
     //  USE AOF RECOVERY FIRST, IF FAIL, THEN RDB
     QAOFLoader aofLoader;
-    if (aofLoader.Load(g_aofFileName))
+    if (aofLoader.Load(QAOFThreadController::Instance().GetAofFile().c_str()))
     {
         const auto& cmds = aofLoader.GetCmds();
         for (const auto& cmd : cmds)
@@ -162,9 +245,29 @@ static void LoadDbFromFile()
 
 bool Qedis::_Init()
 {
-    if (!LoadQedisConfig("qedis.conf", g_config))
+    if (!m_cfgFile.empty())
     {
-        std::cerr << "can not find qedis.conf, use default config\n";
+        if (!LoadQedisConfig(m_cfgFile.c_str(), g_config))
+        {
+            std::cerr << "Load config file [" << m_cfgFile << "] failed!\n";
+            return false;
+        }
+    }
+    else
+    {
+        std::cerr << "No config file specified, using the default config.\n";
+    }
+    
+    if (m_port != 0)
+        g_config.port = m_port;
+
+    if (!m_logLevel.empty())
+        g_config.loglevel = m_logLevel;
+    
+    if (!m_master.empty())
+    {
+        g_config.masterIp = m_master;
+        g_config.masterPort = m_masterPort;
     }
     
     // daemon must be first, before descriptor open, threads create
@@ -201,7 +304,10 @@ bool Qedis::_Init()
     QSTORE.InitBlockedTimer();
     QPubsub::Instance().InitPubsubTimer();
     
-    LoadDbFromFile();
+    if (g_config.appendonly)
+        QAOFThreadController::Instance().SetAofFile(g_config.appendfilename);
+    
+    LoadDbFromDisk();
 
     QAOFThreadController::Instance().Start();
 
@@ -275,9 +381,16 @@ void    Qedis::_Recycle()
     QAOFThreadController::Instance().Stop();
 }
 
-int main()
+
+int main(int ac, char* av[])
 {
     Qedis  svr;
+    if (!svr.ParseArgs(ac - 1, av + 1))
+    {
+        Usage();
+        return -1;
+    }
+    
     svr.MainLoop();
     
     return 0;

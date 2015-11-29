@@ -131,6 +131,7 @@ public:
     virtual bool OnReadable() { return false; }
     virtual bool OnWritable() { return false; }
     virtual bool OnError();
+    virtual void OnConnect()  {  }
 
     static int CreateTCPSocket();
     static int CreateUDPSocket();

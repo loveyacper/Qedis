@@ -294,6 +294,12 @@ QClient::QClient() : m_db(0), m_flag(0), m_name("clientxxx")
     _Reset();
 }
 
+void QClient::OnConnect()
+{
+    if (QSTORE.m_password.empty())
+        SetAuth();
+}
+
 bool QClient::SelectDB(int db)
 { 
     if (QSTORE.SelectDB(db) >= 0)

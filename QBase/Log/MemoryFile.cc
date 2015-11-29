@@ -49,7 +49,7 @@ bool  InputMemoryFile::Open(const char* file)
     {
         char err[128];
         snprintf(err, sizeof err - 1, "OpenForRead %s failed\n", file);
-        perror(err);
+        //perror(err);
         return false;
     }
 
