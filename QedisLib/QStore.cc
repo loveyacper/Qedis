@@ -1,5 +1,7 @@
 #include "QStore.h"
 #include "QClient.h"
+#include "QConfig.h"
+#include "QAOF.h"
 #include "Log/Logger.h"
 #include <limits>
 #include <cassert>
@@ -520,4 +522,15 @@ void    QStore::InitBlockedTimer()
 {
     for (int i = 0; i < static_cast<int>(m_blockedClients.size()); ++ i)
         TimerManager::Instance().AddTimer(PTIMER(new BlockedListTimer(i)));
+}
+
+extern void Propogate(const std::vector<QString>& params)
+{
+    //++ QStore::m_dirty;
+    //QMulti::Instance().NotifyDirty(params[1]);
+    if (g_config.appendonly)
+        QAOFThreadController::Instance().SaveCommand(params, QSTORE.GetDB());
+    
+    // replication
+    QReplication::Instance().SendToSlaves(params);
 }

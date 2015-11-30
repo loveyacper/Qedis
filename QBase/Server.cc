@@ -25,7 +25,7 @@ public:
 private:
     bool _OnTimer()
     {
-        USR << " : OnTimer reconnect to " << m_peer.GetIP();
+        USR << " : OnTimer reconnect to " << m_peer.GetIP() << ":" << m_peer.GetPort();
         Server::Instance()->TCPConnect(m_peer, true);
 
         return false;

@@ -3,9 +3,6 @@
 #include <algorithm>
 #include "QStore.h"
 #include "QCommand.h"
-#include "QMulti.h"
-#include "QAOF.h"
-#include "QConfig.h"
 #include "QSlowLog.h"
 #include "QClient.h"
 
@@ -65,8 +62,6 @@ BODY_LENGTH_T QClient::_ProcessInlineCmd(const char* buf, size_t bytes)
     
     return len;
 }
-
-static void Propogate(const std::vector<QString>& params);
 
 BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
 {
@@ -424,18 +419,6 @@ bool  QClient::WaitFor(const QString& key, const QString* target)
 void   QClient::SetSlaveInfo()
 {
     m_slaveInfo.reset(new QSlaveInfo());
-}
-
-
-static void Propogate(const std::vector<QString>& params)
-{
-    ++ QStore::m_dirty;
-    QMulti::Instance().NotifyDirty(params[1]);
-    if (g_config.appendonly)
-        QAOFThreadController::Instance().SaveCommand(params, QSTORE.GetDB());
-    
-    // replication
-    QReplication::Instance().SendToSlaves(params);
 }
 
 void  QClient::AddCurrentToMonitor()

@@ -96,6 +96,8 @@ public:
     static void  FeedMonitors(const std::vector<QString>& params);
     
     void    SetAuth() { m_auth = true; }
+    
+    void    RewriteCmd(std::vector<QString>& params) { m_params.swap(params); }
 
 private:
     BODY_LENGTH_T    _ProcessInlineCmd(const char* , size_t);

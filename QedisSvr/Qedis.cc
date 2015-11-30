@@ -121,7 +121,7 @@ bool  Qedis::ParseArgs(int ac, char* av[])
             }
             
             m_master = std::string(av[++i]);
-            m_port   = static_cast<unsigned short>(std::atoi(av[++i]));
+            m_masterPort = static_cast<unsigned short>(std::atoi(av[++i]));
         }
         else
         {
