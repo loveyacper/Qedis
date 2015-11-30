@@ -52,13 +52,21 @@ static QError  push(const vector<QString>& params, UnboundedBuffer* reply, ListP
             list->push_back(params[i]);
     }
     
+    FormatInt(static_cast<long>(list->size()), reply);
     if (mayReady && !list->empty())
     {
-        QSTORE.ServeClient(params[1], list);
+        if (reply) // Do not propogate if aof reload...
+        {
+            // push must before pop(serve)...
+            Propogate(params);                   // the push
+            QSTORE.ServeClient(params[1], list); // the pop
+        }
+        return  QError_nop;
     }
-    
-    FormatInt(static_cast<long>(list->size()), reply);
-    return   QError_ok;
+    else
+    {
+        return  QError_ok;
+    }
 }
 
 
@@ -73,11 +81,7 @@ static QError  GenericPop(const QString& key, ListPosition pos, QString& result)
     }
     
     const PLIST&  list = value->CastList();
-    if (list->empty())
-    {
-        QSTORE.DeleteKey(key);
-        return QError_notExist;
-    }
+    assert (!list->empty());
 
     if (pos == ListPosition::head)
     {
@@ -195,6 +199,14 @@ static QError  _GenericBlockedPop(vector<QString>::const_iterator keyBegin,
                 {
                     // fuck, the target process
                 }
+
+                {
+                    std::vector<QString> params;
+                    params.push_back(pos == ListPosition::head ? "lpop" : "rpop");
+                    params.push_back(*it);
+
+                    QClient::Current()->RewriteCmd(params);
+                }
                 return  err;
                 
             case QError_type:
@@ -213,7 +225,7 @@ static QError  _GenericBlockedPop(vector<QString>::const_iterator keyBegin,
     if (QClient::Current() && QClient::Current()->IsFlagOn(ClientFlag_multi))
     {
         FormatNull(reply);
-        return QError_ok;
+        return QError_nop;
     }
     
     // Put client to the wait-list
@@ -222,7 +234,7 @@ static QError  _GenericBlockedPop(vector<QString>::const_iterator keyBegin,
         _BlockClient(QClient::Current(), *it, timeout, pos, target);
     }
     
-    return  QError_ok;
+    return  QError_nop;
 }
 
 QError  blpop(const vector<QString>& params, UnboundedBuffer* reply)
@@ -706,12 +718,7 @@ QError  rpoplpush(const vector<QString>& params, UnboundedBuffer* reply)
     }
     
     const PLIST& srclist = src->CastList();
-    if (srclist->empty())
-    {
-        QSTORE.DeleteKey(params[1]);
-        FormatNull(reply);
-        return QError_notExist;
-    }
+    assert (!srclist->empty());
     
     QObject* dst;
     

@@ -103,6 +103,7 @@ QError  mset(const std::vector<QString>& params, UnboundedBuffer* reply)
 
     for (size_t i = 1; i < params.size(); i += 2)
     {
+        g_dirtyKeys.push_back(params[i]);
         SetValue(params[i], params[i + 1]);
     }
     
@@ -131,6 +132,7 @@ QError  msetnx(const std::vector<QString>& params, UnboundedBuffer* reply)
 
     for (size_t i = 1; i < params.size(); i += 2)
     {
+        g_dirtyKeys.push_back(params[i]);
         SetValue(params[i], params[i + 1]);
     }
 

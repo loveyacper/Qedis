@@ -178,7 +178,7 @@ static void  QdbCron()
                 qdb.Save(g_config.rdbfullname.c_str());
                 std::cerr << "ServerCron child save rdb done, exiting child\n";
             }  //  make qdb to be destructed before exit
-            exit(0);
+            _exit(0);
         }
         else if (ret == -1)
         {

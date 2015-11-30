@@ -231,8 +231,10 @@ private:
 };
 
 #define QSTORE  QStore::Instance()
-#define QEDIS_VERSION "0.8.0"
+#define QEDIS_VERSION "0.7.0"
 
+// ugly, but I don't want to write signalModifiedKey() every where
+extern std::vector<QString> g_dirtyKeys;
 extern void Propogate(const std::vector<QString>& params);
 
 #endif

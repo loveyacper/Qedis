@@ -65,6 +65,8 @@ bool  LoadQedisConfig(const char* cfgFile, QConfig& cfg)
     
     cfg.loglevel = parser.GetData<QString>("loglevel");
     cfg.logdir   = parser.GetData<QString>("logfile");
+    if (cfg.logdir == "\"\"")
+        cfg.logdir = "stdout";
     
     cfg.databases = parser.GetData<int>("databases");
     cfg.password  = parser.GetData<QString>("requirepass");
@@ -85,7 +87,7 @@ bool  LoadQedisConfig(const char* cfgFile, QConfig& cfg)
     
     // load rdb config
     std::vector<QString>  saveInfo = std::move(SplitString(parser.GetData<QString>("save"), ' '));
-    if (saveInfo.size() != 2)
+    if (!saveInfo.empty() && saveInfo.size() != 2)
     {
         if (!(saveInfo.size() == 1 && saveInfo[0] == "\"\""))
         {
@@ -95,7 +97,7 @@ bool  LoadQedisConfig(const char* cfgFile, QConfig& cfg)
             return false;
         }
     }
-    else
+    else if (!saveInfo.empty())
     {
         cfg.saveseconds = std::stoi(saveInfo[0]);
         cfg.savechanges = std::stoi(saveInfo[1]);
@@ -115,8 +117,14 @@ bool  LoadQedisConfig(const char* cfgFile, QConfig& cfg)
     cfg.maxclients = parser.GetData<int>("maxclients", 10000);
     cfg.appendonly = (parser.GetData<QString>("appendonly", "no") == "yes");
     cfg.appendfilename = parser.GetData<const char* >("appendfilename", "appendonly.aof");
+    if (cfg.appendfilename.size() <= 2)
+        return false;
+
+    if (cfg.appendfilename[0] == '"') // redis.conf use quote for string, but qedis do not. For compatiable...
+        cfg.appendfilename = cfg.appendfilename.substr(1, cfg.appendfilename.size() - 2);
 
     QString tmpfsync = parser.GetData<const char* >("appendfsync", "no");
+    // qedis always use "always", fsync is done in another thread
     if (tmpfsync == "everysec")
     {
     }

@@ -68,6 +68,7 @@ inline const char* EncodingStringInfo(unsigned encode)
 
 enum QError
 {
+    QError_nop       = -1,
     QError_ok        = 0,
     QError_type      = 1,
     QError_exist     = 2,

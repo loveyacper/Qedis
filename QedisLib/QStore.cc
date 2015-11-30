@@ -2,6 +2,7 @@
 #include "QClient.h"
 #include "QConfig.h"
 #include "QAOF.h"
+#include "QMulti.h"
 #include "Log/Logger.h"
 #include <limits>
 #include <cassert>
@@ -201,6 +202,13 @@ size_t  QStore::BlockedClients::ServeClient(const QString& key, const PLIST& lis
                     const PLIST& dstlist = dst->CastList();
                     dstlist->push_front(list->back());
                     INF << list->front() << " success lpush to target list " << target;
+
+                    std::vector<QString> params;
+                    params.push_back("lpush");
+                    params.push_back(target); // key
+                    params.push_back(list->back());
+
+                    Propogate(params);
                 }
                 
                 UnboundedBuffer reply;
@@ -215,15 +223,27 @@ size_t  QStore::BlockedClients::ServeClient(const QString& key, const PLIST& lis
                 {
                     FormatBulk(list->front().c_str(), list->front().size(), &reply);
                     list->pop_front();
+
+                    std::vector<QString> params;
+                    params.push_back("lpop");
+                    params.push_back(key);
+
+                    Propogate(params);
                 }
                 else
                 {
                     FormatBulk(list->back().c_str(), list->back().size(), &reply);
                     list->pop_back();
+
+                    std::vector<QString> params;
+                    params.push_back("rpop");
+                    params.push_back(key);
+
+                    Propogate(params);
                 }
                 
                 cli->SendPacket(reply.ReadAddr(), reply.ReadableSize());
-                INF << "server client " << cli->GetName() << " list member " <<  list->front();
+                INF << "Serve client " << cli->GetName() << " list key : " << key;
             }
             
             UnblockClient(cli.get());
@@ -524,13 +544,32 @@ void    QStore::InitBlockedTimer()
         TimerManager::Instance().AddTimer(PTIMER(new BlockedListTimer(i)));
 }
 
-extern void Propogate(const std::vector<QString>& params)
+
+std::vector<QString>  g_dirtyKeys;
+
+void Propogate(const std::vector<QString>& params)
 {
-    //++ QStore::m_dirty;
-    //QMulti::Instance().NotifyDirty(params[1]);
+    if (!g_dirtyKeys.empty())
+    {
+        for (const auto& k : g_dirtyKeys)
+        {
+            ++ QStore::m_dirty;
+            QMulti::Instance().NotifyDirty(k);
+        }
+        g_dirtyKeys.clear();
+    }
+    else
+    {
+        ++ QStore::m_dirty;
+        QMulti::Instance().NotifyDirty(params[1]);
+    }
+
+    if (params.empty())
+        return;
+
     if (g_config.appendonly)
         QAOFThreadController::Instance().SaveCommand(params, QSTORE.GetDB());
-    
-    // replication
+
     QReplication::Instance().SendToSlaves(params);
 }
+
