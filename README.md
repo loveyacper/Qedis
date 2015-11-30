@@ -1,4 +1,5 @@
 # Qedis
+[![Build Status](https://travis-ci.org/loveyacper/qedis.svg?branch=master)](https://travis-ci.org/loveyacper/qedis)
 A C++11 implementation of Redis(not including sentinel, cluster yet)
 
 ## Requirements
