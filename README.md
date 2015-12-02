@@ -10,153 +10,153 @@ A C++11 implementation of Redis Sever(not including sentinel, cluster yet)
  You can test Qedis with redis-cli, redis-benchmark, or use redis as master with Qedis as slave, viceversa.
  
 ## Command List
-###key commands
--type
--exists
--del
--expire
--pexpire
--expireat
--pexpireat
--ttl
--pttl
--persist
--move
--keys
--randomkey
--rename
--renamenx
--scan
+#### key commands
+- type
+- exists
+- del
+- expire
+- pexpire
+- expireat
+- pexpireat
+- ttl
+- pttl
+- persist
+- move
+- keys
+- randomkey
+- rename
+- renamenx
+- scan
 
-###server commands
--select
--dbsize
--bgsave
--save
--lastsave
--flushdb
--flushall
--client
--debug
--shutdown
--bgrewriteaof
--ping
--echo
--info
--monitor
--auth
+#### server commands
+- select
+- dbsize
+- bgsave
+- save
+- lastsave
+- flushdb
+- flushall
+- client
+- debug
+- shutdown
+- bgrewriteaof
+- ping
+- echo
+- info
+- monitor
+- auth
 
-###string commands
--set
--get
--getrange
--setrange
--getset
--append
--bitcount
--bitop
--getbit
--setbit
--incr
--incrby
--incrbyfloat
--decr
--decrby
--mget
--mset
--msetnx
--setnx
--setex
--psetex
--strlen
+#### string commands
+- set
+- get
+- getrange
+- setrange
+- getset
+- append
+- bitcount
+- bitop
+- getbit
+- setbit
+- incr
+- incrby
+- incrbyfloat
+- decr
+- decrby
+- mget
+- mset
+- msetnx
+- setnx
+- setex
+- psetex
+- strlen
 
-###list commands
--lpush
--rpush
--lpushx
--rpushx
--lpop
--rpop
--lindex
--llen
--lset
--ltrim
--lrange
--linsert
--lrem
--rpoplpush
--blpop
--brpop
--brpoplpush
+#### list commands
+- lpush
+- rpush
+- lpushx
+- rpushx
+- lpop
+- rpop
+- lindex
+- llen
+- lset
+- ltrim
+- lrange
+- linsert
+- lrem
+- rpoplpush
+- blpop
+- brpop
+- brpoplpush
 
-###hash commands
--hget
--hmget
--hgetall
--hset
--hsetnx
--hmset
--hlen
--hexists
--hkeys
--hvals
--hdel
--hincrby
--hincrbyfloat
--hscan
--hstrlen
+#### hash commands
+- hget
+- hmget
+- hgetall
+- hset
+- hsetnx
+- hmset
+- hlen
+- hexists
+- hkeys
+- hvals
+- hdel
+- hincrby
+- hincrbyfloat
+- hscan
+- hstrlen
 
-###set commands
--sadd
--scard
--srem
--sismember
--smembers
--sdiff
--sdiffstore
--sinter
--sinterstore
--sunion
--sunionstore
--smove
--spop
--srandmember
--sscan
+#### set commands
+- sadd
+- scard
+- srem
+- sismember
+- smembers
+- sdiff
+- sdiffstore
+- sinter
+- sinterstore
+- sunion
+- sunionstore
+- smove
+- spop
+- srandmember
+- sscan
 
-###sset
--zadd
--zcard
--zrank
--zrevrank
--zrem
--zincrby
--zscore
--zrange
--zrevrange
--zrangebyscore
--zrevrangebyscore
--zremrangebyrank
--zremrangebyscore
 
-###pubsub
--subscribe
--unsubscribe
--publish
--psubscribe
--punsubscribe
--pubsub
+#### sorted set commands
+- zadd
+- zcard
+- zrank
+- zrevrank
+- zrem
+- zincrby
+- zscore
+- zrange
+- zrevrange
+- zrangebyscore
+- zrevrangebyscore
+- zremrangebyrank
+- zremrangebyscore
 
-###multi
--watch
--unwatch
--multi
--exec
--discard
+#### pubsub commands
+- subscribe
+- unsubscribe
+- publish
+- psubscribe
+- punsubscribe
+- pubsub
 
-###replication
--sync
--slaveof
+#### multi commands
+- watch
+- unwatch
+- multi
+- exec
+- discard
 
+#### replication commands
+- sync
+- slaveof
 
 ## High Performance
  Run this command, compare with redis, try it!
