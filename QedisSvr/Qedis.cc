@@ -39,16 +39,16 @@ private:
     bool    _RunLogic() override;
     void    _Recycle() override;
     
-    std::string m_cfgFile;
-    unsigned short m_port;
-    std::string m_logLevel;
+    std::string cfgFile_;
+    unsigned short port_;
+    std::string logLevel_;
     
-    std::string m_master;
-    unsigned short m_masterPort;
+    std::string master_;
+    unsigned short masterPort_;
 };
 
 
-Qedis::Qedis() : m_port(0), m_masterPort(0)
+Qedis::Qedis() : port_(0), masterPort_(0)
 {
 }
 
@@ -73,9 +73,9 @@ bool  Qedis::ParseArgs(int ac, char* av[])
 {
     for (int i = 0; i < ac; i ++)
     {
-        if (m_cfgFile.empty() && ::access(av[i], R_OK) == 0)
+        if (cfgFile_.empty() && ::access(av[i], R_OK) == 0)
         {
-            m_cfgFile = av[i];
+            cfgFile_ = av[i];
             continue;
         }
         else if (strncasecmp(av[i], "-v", 2) == 0 ||
@@ -103,7 +103,7 @@ bool  Qedis::ParseArgs(int ac, char* av[])
             {
                 return false;
             }
-            m_port = static_cast<unsigned short>(std::atoi(av[i]));
+            port_ = static_cast<unsigned short>(std::atoi(av[i]));
         }
         else if (strncasecmp(av[i], "--loglevel", 10) == 0)
         {
@@ -111,7 +111,7 @@ bool  Qedis::ParseArgs(int ac, char* av[])
             {
                 return false;
             }
-            m_logLevel = std::string(av[i]);
+            logLevel_ = std::string(av[i]);
         }
         else if (strncasecmp(av[i], "--slaveof", 9) == 0)
         {
@@ -120,8 +120,8 @@ bool  Qedis::ParseArgs(int ac, char* av[])
                 return false;
             }
             
-            m_master = std::string(av[++i]);
-            m_masterPort = static_cast<unsigned short>(std::atoi(av[++i]));
+            master_ = std::string(av[++i]);
+            masterPort_ = static_cast<unsigned short>(std::atoi(av[++i]));
         }
         else
         {
@@ -168,7 +168,7 @@ static void  QdbCron()
         return;
     
     if (g_now.MilliSeconds() > 1000UL * (g_lastQDBSave + static_cast<unsigned>(g_config.saveseconds)) &&
-        QStore::m_dirty >= g_config.savechanges)
+        QStore::dirty_ >= g_config.savechanges)
     {
         int ret = fork();
         if (ret == 0)
@@ -245,11 +245,11 @@ static void LoadDbFromDisk()
 
 bool Qedis::_Init()
 {
-    if (!m_cfgFile.empty())
+    if (!cfgFile_.empty())
     {
-        if (!LoadQedisConfig(m_cfgFile.c_str(), g_config))
+        if (!LoadQedisConfig(cfgFile_.c_str(), g_config))
         {
-            std::cerr << "Load config file [" << m_cfgFile << "] failed!\n";
+            std::cerr << "Load config file [" << cfgFile_ << "] failed!\n";
             return false;
         }
     }
@@ -258,16 +258,16 @@ bool Qedis::_Init()
         std::cerr << "No config file specified, using the default config.\n";
     }
     
-    if (m_port != 0)
-        g_config.port = m_port;
+    if (port_ != 0)
+        g_config.port = port_;
 
-    if (!m_logLevel.empty())
-        g_config.loglevel = m_logLevel;
+    if (!logLevel_.empty())
+        g_config.loglevel = logLevel_;
     
-    if (!m_master.empty())
+    if (!master_.empty())
     {
-        g_config.masterIp = m_master;
-        g_config.masterPort = m_masterPort;
+        g_config.masterIp = master_;
+        g_config.masterPort = masterPort_;
     }
     
     // daemon must be first, before descriptor open, threads create
@@ -299,7 +299,7 @@ bool Qedis::_Init()
     QCommandTable::Init();
     QCommandTable::AliasCommand(g_config.aliases);
     QSTORE.Init(g_config.databases);
-    QSTORE.m_password = g_config.password;
+    QSTORE.password_ = g_config.password;
     QSTORE.InitExpireTimer();
     QSTORE.InitBlockedTimer();
     QPubsub::Instance().InitPubsubTimer();
@@ -312,6 +312,7 @@ bool Qedis::_Init()
     QAOFThreadController::Instance().Start();
 
     QSlowLog::Instance().SetThreshold(g_config.slowlogtime);
+    QSlowLog::Instance().SetLogLimit(static_cast<std::size_t>(g_config.slowlogmaxlen));
     
     TimerManager::Instance().AddTimer(PTIMER(new ServerCronTimer));
     TimerManager::Instance().AddTimer(PTIMER(new ReplicationCronTimer));

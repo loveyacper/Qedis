@@ -8,15 +8,15 @@
 
 using std::size_t;
 
-OutputBuffer::OutputBuffer(size_t size) : m_buffer(size),
-                                          m_backBytes(0)
+OutputBuffer::OutputBuffer(size_t size) : buffer_(size),
+                                          backBytes_(0)
 {
 }
 
 OutputBuffer::~OutputBuffer()
 {
-  //  assert (m_buffer.IsEmpty());
-   // assert (m_backBytes == 0);
+  //  assert (buffer_.IsEmpty());
+   // assert (backBytes_ == 0);
 }
 
 
@@ -34,30 +34,30 @@ void   OutputBuffer::Write(const BufferSequence& data)
 {
     auto len = data.TotalBytes();
 
-    if (m_backBytes > 0 || m_buffer.WritableSize() < len)
+    if (backBytes_ > 0 || buffer_.WritableSize() < len)
     {
-        std::lock_guard<std::mutex>  guard(m_backBufLock);
+        std::lock_guard<std::mutex>  guard(backBufLock_);
 
-        if (m_backBytes > 0 || m_buffer.WritableSize() < len)
+        if (backBytes_ > 0 || buffer_.WritableSize() < len)
         {
             for (size_t i = 0; i < data.count; ++ i)
             {
-                m_backBuf.PushData(data.buffers[i].iov_base,
+                backBuf_.PushData(data.buffers[i].iov_base,
                                    data.buffers[i].iov_len);
             }
         
-            m_backBytes += len;
-            assert (m_backBytes == m_backBuf.ReadableSize());
+            backBytes_ += len;
+            assert (backBytes_ == backBuf_.ReadableSize());
 
             return;
         }
     }
     
-    assert(m_backBytes == 0 && m_buffer.WritableSize() >= len);
+    assert(backBytes_ == 0 && buffer_.WritableSize() >= len);
 
     for (size_t i = 0; i < data.count; ++ i)
     {
-        m_buffer.PushData(data.buffers[i].iov_base, data.buffers[i].iov_len);
+        buffer_.PushData(data.buffers[i].iov_base, data.buffers[i].iov_len);
     }
 }
 
@@ -65,45 +65,45 @@ void  OutputBuffer::ProcessBuffer(BufferSequence& data)
 {
     data.count = 0;
     
-    if (!m_tmpBuf.IsEmpty())
+    if (!tmpBuf_.IsEmpty())
     {
         data.count = 1;
-        data.buffers[0].iov_base = m_tmpBuf.ReadAddr();
-        data.buffers[0].iov_len  = m_tmpBuf.ReadableSize();
+        data.buffers[0].iov_base = tmpBuf_.ReadAddr();
+        data.buffers[0].iov_len  = tmpBuf_.ReadableSize();
     }
-    else if (!m_buffer.IsEmpty())
+    else if (!buffer_.IsEmpty())
     {
-        auto nLen = m_buffer.ReadableSize();
+        auto nLen = buffer_.ReadableSize();
 
-        m_buffer.GetDatum(data, nLen);
+        buffer_.GetDatum(data, nLen);
         assert (nLen == data.TotalBytes());
     }
     else
     {
-        if (m_backBytes > 0 && m_backBufLock.try_lock())
+        if (backBytes_ > 0 && backBufLock_.try_lock())
         {
-            m_backBytes = 0;
-            m_tmpBuf.Swap(m_backBuf);
-            m_backBufLock.unlock();
+            backBytes_ = 0;
+            tmpBuf_.Swap(backBuf_);
+            backBufLock_.unlock();
             
             data.count = 1;
-            data.buffers[0].iov_base = m_tmpBuf.ReadAddr();
-            data.buffers[0].iov_len  = m_tmpBuf.ReadableSize();
+            data.buffers[0].iov_base = tmpBuf_.ReadAddr();
+            data.buffers[0].iov_len  = tmpBuf_.ReadableSize();
         }
     }
 }
 
 void  OutputBuffer::Skip(size_t  size)
 {
-    if (!m_tmpBuf.IsEmpty())
+    if (!tmpBuf_.IsEmpty())
     {
-        assert(size <= m_tmpBuf.ReadableSize());
-        m_tmpBuf.AdjustReadPtr(size);
+        assert(size <= tmpBuf_.ReadableSize());
+        tmpBuf_.AdjustReadPtr(size);
     }
     else
     {
-        assert(m_buffer.ReadableSize() >= size);
-        m_buffer.AdjustReadPtr(size);
+        assert(buffer_.ReadableSize() >= size);
+        buffer_.AdjustReadPtr(size);
     }
 }
 

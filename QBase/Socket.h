@@ -21,13 +21,13 @@ struct SocketAddr
     
     SocketAddr(const SocketAddr& other)
     {
-        memcpy(&m_addr, &other.m_addr, sizeof m_addr);
+        memcpy(&addr_, &other.addr_, sizeof addr_);
     }
 
     SocketAddr& operator= (const SocketAddr&  other)
     {
         if (this != &other)
-            memcpy(&m_addr, &other.m_addr, sizeof m_addr);
+            memcpy(&addr_, &other.addr_, sizeof addr_);
 
         return *this;
     }
@@ -49,48 +49,48 @@ struct SocketAddr
 
     void Init(const sockaddr_in& addr)
     {
-        memcpy(&m_addr, &addr, sizeof(addr));
+        memcpy(&addr_, &addr, sizeof(addr));
     }
 
     void Init(uint32_t  netip, uint16_t netport)
     {
-        m_addr.sin_family = AF_INET;       
-        m_addr.sin_addr.s_addr = netip;       
-        m_addr.sin_port   = netport;
+        addr_.sin_family = AF_INET;       
+        addr_.sin_addr.s_addr = netip;       
+        addr_.sin_port   = netport;
     }
 
     void Init(const char* ip, uint16_t hostport)
     {
-        m_addr.sin_family = AF_INET;
-        m_addr.sin_addr.s_addr = ::inet_addr(ip);
-        m_addr.sin_port   = htons(hostport);
+        addr_.sin_family = AF_INET;
+        addr_.sin_addr.s_addr = ::inet_addr(ip);
+        addr_.sin_port   = htons(hostport);
     }
 
     const sockaddr_in& GetAddr() const
     {
-        return m_addr;
+        return addr_;
     }
 
     const char* GetIP() const
     {
-        return ::inet_ntoa(m_addr.sin_addr);
+        return ::inet_ntoa(addr_.sin_addr);
     }
 
     unsigned short  GetPort() const
     {
-        return ntohs(m_addr.sin_port);
+        return ntohs(addr_.sin_port);
     }
 
-    bool  Empty() const { return  0 == m_addr.sin_family; }
-    void  Clear()       { memset(&m_addr, 0, sizeof m_addr); }
+    bool  Empty() const { return  0 == addr_.sin_family; }
+    void  Clear()       { memset(&addr_, 0, sizeof addr_); }
 
-    sockaddr_in  m_addr;
+    sockaddr_in  addr_;
     
     inline friend bool operator== (const SocketAddr& a, const SocketAddr& b)
     {
-        return a.m_addr.sin_family      ==  b.m_addr.sin_family &&
-               a.m_addr.sin_addr.s_addr ==  b.m_addr.sin_addr.s_addr &&
-               a.m_addr.sin_port        ==  b.m_addr.sin_port ;
+        return a.addr_.sin_family      ==  b.addr_.sin_family &&
+               a.addr_.sin_addr.s_addr ==  b.addr_.sin_addr.s_addr &&
+               a.addr_.sin_port        ==  b.addr_.sin_port ;
     }
     
     
@@ -123,10 +123,10 @@ public:
     };
 
     virtual SocketType GetSocketType() const { return SocketType_Invalid; }
-    bool Invalid() const { return m_invalid; }
+    bool Invalid() const { return invalid_; }
     
-    int  GetSocket() const {   return m_localSock;   }
-    std::size_t GetID() const     {   return m_id;   }
+    int  GetSocket() const {   return localSock_;   }
+    std::size_t GetID() const     {   return id_;   }
 
     virtual bool OnReadable() { return false; }
     virtual bool OnWritable() { return false; }
@@ -149,13 +149,13 @@ protected:
     Socket();
 
     // The local socket
-    int    m_localSock;
-    bool   m_epollOut;
+    int    localSock_;
+    bool   epollOut_;
 
 private:
-    std::atomic<bool> m_invalid;
-    std::size_t    m_id;
-    static std::atomic<std::size_t> sm_id;
+    std::atomic<bool> invalid_;
+    std::size_t    id_;
+    static std::atomic<std::size_t> sid_;
 };
 
 

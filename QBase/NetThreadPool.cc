@@ -19,49 +19,49 @@
 namespace Internal
 {
 
-NetThread::NetThread() : m_running(true), m_newCnt(0)
+NetThread::NetThread() : running_(true), newCnt_(0)
 {
 #if defined(__gnu_linux__)
-    m_poller.reset(new Epoller);
+    poller_.reset(new Epoller);
 #else
-    m_poller.reset(new Kqueue);
+    poller_.reset(new Kqueue);
 #endif
 }
 
 NetThread::~NetThread()
 {
-//    DBG << "close epollfd " << m_epfd;
-//    TEMP_FAILURE_RETRY(::close(m_epfd));
+//    DBG << "close epollfd " << epfd_;
+//    TEMP_FAILURE_RETRY(::close(epfd_));
 }
 
 void NetThread::AddSocket(PSOCKET task, uint32_t events)
 {
-    std::lock_guard<std::mutex>    guard(m_mutex);
-    m_newTasks.push_back(std::make_pair(task, events)); 
-    ++ m_newCnt;
+    std::lock_guard<std::mutex>    guard(mutex_);
+    newTasks_.push_back(std::make_pair(task, events)); 
+    ++ newCnt_;
 
-    assert (m_newCnt == static_cast<int>(m_newTasks.size()));
+    assert (newCnt_ == static_cast<int>(newTasks_.size()));
 }
 
 void NetThread::ModSocket(PSOCKET task, uint32_t events)
 {
-    m_poller->ModSocket(task->GetSocket(), events, task.get());
+    poller_->ModSocket(task->GetSocket(), events, task.get());
 }
 
 void NetThread::RemoveSocket(std::deque<PSOCKET >::iterator& iter)
 {
-    m_poller->DelSocket((*iter)->GetSocket(), 0);
-    iter = m_tasks.erase(iter);
+    poller_->DelSocket((*iter)->GetSocket(), 0);
+    iter = tasks_.erase(iter);
 }
 
 void NetThread::_TryAddNewTasks()
 {
-    if (m_newCnt > 0 && m_mutex.try_lock())
+    if (newCnt_ > 0 && mutex_.try_lock())
     { 
         NewTasks  tmp;
-        m_newTasks.swap(tmp); 
-        m_newCnt = 0; 
-        m_mutex.unlock();
+        newTasks_.swap(tmp); 
+        newCnt_ = 0; 
+        mutex_.unlock();
 
         NewTasks::const_iterator iter(tmp.begin()),
                                  end (tmp.end());
@@ -73,8 +73,8 @@ void NetThread::_TryAddNewTasks()
 
 void NetThread::_AddSocket(PSOCKET task, uint32_t events)
 {
-    if (m_poller->AddSocket(task->GetSocket(), events, task.get()))
-        m_tasks.push_back(task);
+    if (poller_->AddSocket(task->GetSocket(), events, task.get()))
+        tasks_.push_back(task);
 }
 
 //////////////////////////////////
@@ -95,20 +95,20 @@ void RecvThread::Run()
     {
         _TryAddNewTasks();
 
-        if (m_tasks.empty())
+        if (tasks_.empty())
         {
             std::this_thread::sleep_for(std::chrono::microseconds(100));
             continue;
         }
 
-        const int nReady = m_poller->Poll(m_firedEvents, static_cast<int>(m_tasks.size()), 1);
+        const int nReady = poller_->Poll(firedEvents_, static_cast<int>(tasks_.size()), 1);
         for (int i = 0; i < nReady; ++ i)
         {
-            assert (!(m_firedEvents[i].events & EventTypeWrite));
+            assert (!(firedEvents_[i].events & EventTypeWrite));
 
-            Socket* pSock = (Socket* )m_firedEvents[i].userdata;
+            Socket* pSock = (Socket* )firedEvents_[i].userdata;
 
-            if (m_firedEvents[i].events & EventTypeRead)
+            if (firedEvents_[i].events & EventTypeRead)
             {
                 if (!pSock->OnReadable())
                 {
@@ -116,7 +116,7 @@ void RecvThread::Run()
                 }
             }
 
-            if (m_firedEvents[i].events & EventTypeError)
+            if (firedEvents_[i].events & EventTypeError)
             {
                 ERR << "recv thread, on error, socket " << pSock->GetSocket();
                 pSock->OnError();
@@ -131,8 +131,8 @@ void RecvThread::Run()
 
         loopCount = 0;
 
-        for (std::deque<PSOCKET >::iterator  it(m_tasks.begin());
-             it != m_tasks.end();
+        for (std::deque<PSOCKET >::iterator  it(tasks_.begin());
+             it != tasks_.end();
              )
         {
             if ((*it)->Invalid())
@@ -165,7 +165,7 @@ void SendThread::Run( )
         _TryAddNewTasks();
 
         size_t  nOut = 0;
-        for (it = m_tasks.begin(); it != m_tasks.end(); )
+        for (it = tasks_.begin(); it != tasks_.end(); )
         {
             Socket::SocketType  type  = (*it)->GetSocketType();
             Socket*  pSock = (*it).get();
@@ -184,7 +184,7 @@ void SendThread::Run( )
             }
             else
             {
-                if (pSock->m_epollOut)
+                if (pSock->epollOut_)
                     ++ nOut;
 
                 ++ it;
@@ -197,13 +197,13 @@ void SendThread::Run( )
             continue;
         }
 
-        const int nReady = m_poller->Poll(m_firedEvents, static_cast<int>(m_tasks.size()), 1);
+        const int nReady = poller_->Poll(firedEvents_, static_cast<int>(tasks_.size()), 1);
         for (int i = 0; i < nReady; ++ i)
         {
-            Socket* pSock = (Socket* )m_firedEvents[i].userdata;
+            Socket* pSock = (Socket* )firedEvents_[i].userdata;
             
-            assert (!(m_firedEvents[i].events & EventTypeRead));
-            if (m_firedEvents[i].events & EventTypeWrite)
+            assert (!(firedEvents_[i].events & EventTypeRead));
+            if (firedEvents_[i].events & EventTypeWrite)
             {
                 if (!pSock->OnWritable())
                 {
@@ -212,7 +212,7 @@ void SendThread::Run( )
                 }
             }
             
-            if (m_firedEvents[i].events & EventTypeError)
+            if (firedEvents_[i].events & EventTypeError)
             {
                 ERR << "send thread, on error, socket " << pSock->GetSocket();
                 pSock->OnError();
@@ -224,10 +224,10 @@ void SendThread::Run( )
 
 void NetThreadPool::StopAllThreads()
 {
-    m_recvThread->Stop();
-    m_recvThread.reset();
-    m_sendThread->Stop();
-    m_sendThread.reset();
+    recvThread_->Stop();
+    recvThread_.reset();
+    sendThread_->Stop();
+    sendThread_.reset();
 
     INF << "Stop all recv and send threads";
 }
@@ -236,12 +236,12 @@ bool NetThreadPool::AddSocket(PSOCKET sock, uint32_t  events)
 {
     if (events & EventTypeRead)
     {
-        m_recvThread->AddSocket(sock, EventTypeRead);
+        recvThread_->AddSocket(sock, EventTypeRead);
     }
 
     if (events & EventTypeWrite)
     {
-        m_sendThread->AddSocket(sock, EventTypeWrite);
+        sendThread_->AddSocket(sock, EventTypeWrite);
     }
 
     return true;
@@ -249,11 +249,11 @@ bool NetThreadPool::AddSocket(PSOCKET sock, uint32_t  events)
 
 bool NetThreadPool::StartAllThreads()
 {
-    m_recvThread.reset(new RecvThread);
-    m_sendThread.reset(new SendThread);
+    recvThread_.reset(new RecvThread);
+    sendThread_.reset(new SendThread);
     
-    ThreadPool::Instance().ExecuteTask(std::bind(&RecvThread::Run, m_recvThread.get()));
-    ThreadPool::Instance().ExecuteTask(std::bind(&SendThread::Run, m_sendThread.get()));
+    ThreadPool::Instance().ExecuteTask(std::bind(&RecvThread::Run, recvThread_.get()));
+    ThreadPool::Instance().ExecuteTask(std::bind(&SendThread::Run, sendThread_.get()));
 
     return  true;
 }
@@ -261,22 +261,22 @@ bool NetThreadPool::StartAllThreads()
 
 void NetThreadPool::EnableRead(const std::shared_ptr<Socket>& sock)
 {
-    m_recvThread->ModSocket(sock, EventTypeRead);
+    recvThread_->ModSocket(sock, EventTypeRead);
 }
 
 void NetThreadPool::EnableWrite(const std::shared_ptr<Socket>& sock)
 {
-    m_sendThread->ModSocket(sock, EventTypeWrite);
+    sendThread_->ModSocket(sock, EventTypeWrite);
 }
    
 void NetThreadPool::DisableRead(const std::shared_ptr<Socket>& sock)
 {
-    m_recvThread->ModSocket(sock, 0);
+    recvThread_->ModSocket(sock, 0);
 }
 
 void NetThreadPool::DisableWrite(const std::shared_ptr<Socket>& sock)
 {
-    m_sendThread->ModSocket(sock, 0);
+    sendThread_->ModSocket(sock, 0);
 }
 
 }

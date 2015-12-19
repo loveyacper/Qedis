@@ -16,8 +16,8 @@ public:
     SocketType GetSockType() const { return SocketType_Client; }
 
 private:
-    SocketAddr       m_peerAddr;
-    bool             m_retry;
+    SocketAddr       peerAddr_;
+    bool             retry_;
 };
 
 #endif

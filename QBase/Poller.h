@@ -23,7 +23,7 @@ struct FiredEvent
 class Poller
 {
 public:
-    Poller() : m_multiplexer(-1)
+    Poller() : multiplexer_(-1)
     {
     }
 
@@ -38,7 +38,7 @@ public:
     virtual int Poll(std::vector<FiredEvent>& events, std::size_t maxEv, int timeoutMs) = 0;
 
 protected:
-    int  m_multiplexer;
+    int  multiplexer_;
 };
 
 #endif

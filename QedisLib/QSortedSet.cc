@@ -5,15 +5,15 @@
 
 QSortedSet::Member2Score::iterator  QSortedSet::FindMember(const QString& member)
 {
-    return  m_members.find(member);
+    return  members_.find(member);
 }
 
 void  QSortedSet::AddMember(const QString& member, double score)
 {
-    assert (FindMember(member) == m_members.end());
+    assert (FindMember(member) == members_.end());
         
-    m_members.insert(Member2Score::value_type(member, score));
-    m_scores[score].insert(member);
+    members_.insert(Member2Score::value_type(member, score));
+    scores_[score].insert(member);
 }
 
 double    QSortedSet::UpdateMember(const Member2Score::iterator& itMem, double delta)
@@ -22,13 +22,13 @@ double    QSortedSet::UpdateMember(const Member2Score::iterator& itMem, double d
     auto newScore = oldScore + delta;
     itMem->second = newScore;
 
-    Score2Members::iterator  itScore(m_scores.find(oldScore));
-    assert (itScore != m_scores.end());
+    Score2Members::iterator  itScore(scores_.find(oldScore));
+    assert (itScore != scores_.end());
 
     size_t ret = itScore->second.erase(itMem->first);
     assert (ret == 1);
 
-    bool succ = m_scores[newScore].insert(itMem->first).second;
+    bool succ = scores_[newScore].insert(itMem->first).second;
     assert (succ);
 
     return newScore;
@@ -37,8 +37,8 @@ double    QSortedSet::UpdateMember(const Member2Score::iterator& itMem, double d
 int     QSortedSet::Rank(const QString& member) const
 {
     double    score;
-    Member2Score::const_iterator  itMem(m_members.find(member));
-    if (itMem != m_members.end())
+    Member2Score::const_iterator  itMem(members_.find(member));
+    if (itMem != members_.end())
     {
         score = itMem->second;
     }
@@ -48,8 +48,8 @@ int     QSortedSet::Rank(const QString& member) const
     }
 
     int  rank = 0;
-    for (auto it(m_scores.begin());
-              it != m_scores.end();
+    for (auto it(scores_.begin());
+              it != scores_.end();
               rank += it->second.size(), ++ it)
     {
         if (it->first == score)
@@ -76,25 +76,25 @@ int  QSortedSet::RevRank(const QString& member) const
     if (rank == -1)
         return  rank;
 
-    return static_cast<int>(m_members.size() - (rank + 1));
+    return static_cast<int>(members_.size() - (rank + 1));
 }
 
 bool  QSortedSet::DelMember(const QString& member)
 {
     double  score = 0;
-    Member2Score::const_iterator  itMem(m_members.find(member));
-    if (itMem != m_members.end())
+    Member2Score::const_iterator  itMem(members_.find(member));
+    if (itMem != members_.end())
     {
         score  = itMem->second;
-        m_members.erase(itMem);
+        members_.erase(itMem);
     }
     else
     {
         return false;
     }
 
-    auto it(m_scores.find(score));
-    assert (it != m_scores.end());
+    auto it(scores_.find(score));
+    assert (it != scores_.end());
             
     auto num = it->second.erase(member);
     assert (num == 1);
@@ -105,17 +105,17 @@ bool  QSortedSet::DelMember(const QString& member)
 QSortedSet::Member2Score::value_type
 QSortedSet::GetMemberByRank(size_t  rank) const
 {
-    if (rank >= m_members.size())
-        rank = m_members.size() - 1;
+    if (rank >= members_.size())
+        rank = members_.size() - 1;
 
     double  score = 0;
     QString member;
 
     size_t  iterRank = 0;
-   // Score2Members::const_iterator   it(m_scores.begin());
+   // Score2Members::const_iterator   it(scores_.begin());
 
-    for ( auto it(m_scores.begin());
-          it != m_scores.end();
+    for ( auto it(scores_.begin());
+          it != scores_.end();
           iterRank += it->second.size(), ++ it)
     {
         if (iterRank + it->second.size() > rank)
@@ -139,7 +139,7 @@ QSortedSet::GetMemberByRank(size_t  rank) const
 
 size_t QSortedSet::Size() const
 {
-    return   m_members.size();
+    return   members_.size();
 }
 
 
@@ -168,12 +168,12 @@ QSortedSet::RangeByScore(double minScore, double maxScore)
     if (minScore > maxScore)
         return std::vector<Member2Score::value_type >();
     
-    Score2Members::const_iterator  itMin = m_scores.lower_bound(minScore);
-    if (itMin == m_scores.end())
+    Score2Members::const_iterator  itMin = scores_.lower_bound(minScore);
+    if (itMin == scores_.end())
         return std::vector<Member2Score::value_type >();
     
     std::vector<Member2Score::value_type>  res;
-    Score2Members::const_iterator  itMax = m_scores.upper_bound(maxScore);
+    Score2Members::const_iterator  itMax = scores_.upper_bound(maxScore);
     for (; itMin != itMax; ++ itMin)
     {
         for (const auto& e : itMin->second)

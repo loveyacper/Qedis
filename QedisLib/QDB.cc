@@ -55,12 +55,12 @@ void  QDBSaver::Save(const char* qdbFile)
     char     tmpFile[64] = "";
     snprintf(tmpFile, sizeof tmpFile, "tmp_qdb_file_%d", getpid());
     
-    if (!m_qdb.Open(tmpFile, false))
+    if (!qdb_.Open(tmpFile, false))
         assert (false);
     
     char     buf[16];
     snprintf(buf, sizeof buf, "REDIS%04d", kQDBVersion);
-    m_qdb.Write(buf, 9);
+    qdb_.Write(buf, 9);
 
     for (int dbno = 0; true; ++ dbno)
     {
@@ -70,7 +70,7 @@ void  QDBSaver::Save(const char* qdbFile)
         if (QSTORE.DBSize() == 0)
             continue;  // But redis will save empty db
         
-        m_qdb.Write(&kSelectDB, 1);
+        qdb_.Write(&kSelectDB, 1);
         SaveLength(dbno);
         
         uint64_t now = ::Now();
@@ -81,8 +81,8 @@ void  QDBSaver::Save(const char* qdbFile)
             {
                 ttl += now;
 
-                m_qdb.Write(&kExpireMs, 1);
-                m_qdb.Write(&ttl, sizeof ttl);
+                qdb_.Write(&kExpireMs, 1);
+                qdb_.Write(&ttl, sizeof ttl);
             }
             else if (ttl == QStore::ExpireResult::expired)
             {
@@ -95,17 +95,17 @@ void  QDBSaver::Save(const char* qdbFile)
         }
     }
 
-    m_qdb.Write(&kEOF, 1);
+    qdb_.Write(&kEOF, 1);
     
     // crc 8 bytes
     InputMemoryFile  file;
     file.Open(tmpFile);
     
-    auto  len  = m_qdb.Size();
+    auto  len  = qdb_.Size();
     auto  data = file.Read(len);
     
     const uint64_t  crc = crc64(0, (const unsigned char* )data, len);
-    m_qdb.Write(&crc, sizeof crc);
+    qdb_.Write(&crc, sizeof crc);
     
     if (::rename(tmpFile, qdbFile) != 0)
     {
@@ -120,23 +120,23 @@ void QDBSaver::SaveType(const QObject& obj)
     {
         case QEncode_raw:
         case QEncode_int:
-            m_qdb.Write(&kTypeString, 1);
+            qdb_.Write(&kTypeString, 1);
             break;
                 
         case QEncode_list:
-            m_qdb.Write(&kTypeList, 1);
+            qdb_.Write(&kTypeList, 1);
             break;
                 
         case QEncode_hash:
-            m_qdb.Write(&kTypeHash, 1);
+            qdb_.Write(&kTypeHash, 1);
             break;
             
         case QEncode_set:
-            m_qdb.Write(&kTypeSet, 1);
+            qdb_.Write(&kTypeSet, 1);
             break;
             
         case QEncode_sset:
-            m_qdb.Write(&kTypeZSet, 1);
+            qdb_.Write(&kTypeZSet, 1);
             break;
             
         default:
@@ -209,7 +209,7 @@ void  QDBSaver::_SaveDoubleValue(double val)
         len = buf[0]+1;
     }
     
-    m_qdb.Write(buf,len);
+    qdb_.Write(buf,len);
 }
 
 
@@ -272,7 +272,7 @@ void QDBSaver::SaveString(const QString& str)
     if (!SaveLZFString(str))
     {
         SaveLength(str.size());
-        m_qdb.Write(str.data(), str.size());
+        qdb_.Write(str.data(), str.size());
     }
 }
     
@@ -285,21 +285,21 @@ void  QDBSaver::SaveLength(uint64_t  len)
     {
         len &= kLow6Bits;
         len |= k6Bits << 6;
-        m_qdb.Write(&len, 1);
+        qdb_.Write(&len, 1);
     }
     else if (len < (1 << 14))
     {
         uint16_t encodeLen = (len >> 8) & kLow6Bits;
         encodeLen |= k14bits << 6;
         encodeLen |= (len & 0xFF) << 8;
-        m_qdb.Write(&encodeLen, 2);
+        qdb_.Write(&encodeLen, 2);
     }
     else
     {
         int8_t  encFlag = k32bits << 6;
-        m_qdb.Write(&encFlag, 1);
+        qdb_.Write(&encFlag, 1);
         len = htonl(len);
-        m_qdb.Write(&len, 4);
+        qdb_.Write(&len, 4);
     }
 }
     
@@ -310,20 +310,20 @@ void QDBSaver::SaveString(int64_t intVal)
     if ((intVal & ~0x7F) == 0)
     {
         specialByte |= kEnc8Bits;
-        m_qdb.Write(&specialByte, 1);
-        m_qdb.Write(&intVal, 1);
+        qdb_.Write(&specialByte, 1);
+        qdb_.Write(&intVal, 1);
     }
     else if ((intVal & ~0x7FFF) == 0)
     {
         specialByte |= kEnc16Bits;
-        m_qdb.Write(&specialByte, 1);
-        m_qdb.Write(&intVal, 2);
+        qdb_.Write(&specialByte, 1);
+        qdb_.Write(&intVal, 2);
     }
     else if ((intVal & ~0x7FFFFFFF) == 0)
     {
         specialByte |= kEnc32Bits;
-        m_qdb.Write(&specialByte, 1);
-        m_qdb.Write(&intVal, 4);
+        qdb_.Write(&specialByte, 1);
+        qdb_.Write(&intVal, 4);
     }
     else
     {
@@ -350,12 +350,12 @@ bool QDBSaver::SaveLZFString(const QString& str)
     }
     
     int8_t specialByte = (kSpecial << 6) | kEncLZF;
-    m_qdb.Write(&specialByte, 1);
+    qdb_.Write(&specialByte, 1);
     
     // compress len + raw len + str data;
     SaveLength(compressLen);
     SaveLength(str.size());
-    m_qdb.Write(outBuf.get(), compressLen);
+    qdb_.Write(outBuf.get(), compressLen);
     
     DBG << "compress len " << compressLen << ", raw len " << str.size();
     
@@ -370,7 +370,7 @@ void QDBSaver::SaveDoneHandler(int exitcode, int bysignal)
         INF << "save rdb success";
         g_lastQDBSave = time(NULL);
 
-        QStore::m_dirty = 0;
+        QStore::dirty_ = 0;
     }
     else
     {
@@ -383,14 +383,14 @@ void QDBSaver::SaveDoneHandler(int exitcode, int bysignal)
 
 int  QDBLoader::Load(const char *filename)
 {
-    if (!m_qdb.Open(filename))
+    if (!qdb_.Open(filename))
     {
         return - __LINE__;
     }
     
     // check the magic string "REDIS" and version number
     size_t len = 9;
-    const char* data = m_qdb.Read(len);
+    const char* data = qdb_.Read(len);
     
     if (len != 9)
     {
@@ -403,7 +403,7 @@ int  QDBLoader::Load(const char *filename)
     {
         return - 123;
     }
-    m_qdb.Skip(9);
+    qdb_.Skip(9);
     
     //  SELECTDB + dbno
     //  type1 + key + obj
@@ -413,7 +413,7 @@ int  QDBLoader::Load(const char *filename)
     bool eof = false;
     while (!eof)
     {
-        int8_t indicator = m_qdb.Read<int8_t>();
+        int8_t indicator = qdb_.Read<int8_t>();
         
         switch (indicator)
         {
@@ -444,11 +444,11 @@ int  QDBLoader::Load(const char *filename)
             }
                 
             case kExpireMs:
-                absTimeout = m_qdb.Read<int64_t>();
+                absTimeout = qdb_.Read<int64_t>();
                 break;
                 
             case kExpire:
-                absTimeout = m_qdb.Read<int64_t>();
+                absTimeout = qdb_.Read<int64_t>();
                 absTimeout *= 1000;
                 break;
                 
@@ -501,7 +501,7 @@ int  QDBLoader::Load(const char *filename)
 
 size_t  QDBLoader::LoadLength(bool& special)
 {
-    const int8_t byte = m_qdb.Read<int8_t>();
+    const int8_t byte = qdb_.Read<int8_t>();
     
     special = false;
     size_t  lenResult = 0;
@@ -519,7 +519,7 @@ size_t  QDBLoader::LoadLength(bool& special)
             lenResult = byte & kLow6Bits; // high 6 bits;
             lenResult <<= 8;
             
-            const int8_t bytelow = m_qdb.Read<int8_t>();
+            const int8_t bytelow = qdb_.Read<int8_t>();
             
             lenResult |= bytelow;
             break;
@@ -527,7 +527,7 @@ size_t  QDBLoader::LoadLength(bool& special)
             
         case k32bits:
         {
-            const int32_t fourbytes = m_qdb.Read<int32_t>();
+            const int32_t fourbytes = qdb_.Read<int32_t>();
             
             lenResult = ntohl(fourbytes);
             break;
@@ -559,19 +559,19 @@ QObject  QDBLoader::LoadSpecialStringObject(size_t  specialVal)
     {
         case kEnc8Bits:
         {
-            val = m_qdb.Read<uint8_t>();
+            val = qdb_.Read<uint8_t>();
             break;
         }
             
         case kEnc16Bits:
         {
-            val = m_qdb.Read<uint16_t>();
+            val = qdb_.Read<uint16_t>();
             break;
         }
             
         case kEnc32Bits:
         {
-            val = m_qdb.Read<uint32_t>();
+            val = qdb_.Read<uint32_t>();
             break;
         }
             
@@ -593,8 +593,8 @@ QObject  QDBLoader::LoadSpecialStringObject(size_t  specialVal)
 
 QString  QDBLoader::LoadString(size_t strLen)
 {
-    const char* str = m_qdb.Read(strLen);
-    m_qdb.Skip(strLen);
+    const char* str = qdb_.Read(strLen);
+    qdb_.Skip(strLen);
     
     return QString(str, strLen);
 }
@@ -609,7 +609,7 @@ QString  QDBLoader::LoadLZFString()
     unsigned rawLen = static_cast<unsigned>(LoadLength(special));
     assert(!special);
     
-    const char* compressStr = m_qdb.Read(compressLen);
+    const char* compressStr = qdb_.Read(compressLen);
     
     QString  val;
     val.resize(rawLen);
@@ -620,7 +620,7 @@ QString  QDBLoader::LoadLZFString()
         return  QString();
     }
 
-    m_qdb.Skip(compressLen);
+    qdb_.Skip(compressLen);
     return  val;
 }
 
@@ -847,7 +847,7 @@ QObject    QDBLoader::_LoadSSet()
 
 double  QDBLoader::_LoadDoubleValue()
 {
-    const uint8_t byte1st = m_qdb.Read<uint8_t>();
+    const uint8_t byte1st = qdb_.Read<uint8_t>();
 
     double  dvalue;
     switch (byte1st)
@@ -873,9 +873,9 @@ double  QDBLoader::_LoadDoubleValue()
         default:
         {
             size_t len = byte1st;
-            const char* val = m_qdb.Read(len);
+            const char* val = qdb_.Read(len);
             assert(len == byte1st);
-            m_qdb.Skip(len);
+            qdb_.Skip(len);
             
             std::istringstream  is(std::string(val, len));
             is >> dvalue;

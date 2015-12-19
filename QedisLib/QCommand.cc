@@ -39,6 +39,7 @@ const QCommandInfo QCommandTable::s_info[] =
     {"info",        QAttr_read,               -1,  &info},
     {"monitor",     QAttr_read,                1,  &monitor},
     {"auth",        QAttr_read,                2,  &auth},
+    {"slowlog",     QAttr_read,               -2,  &slowlog},
     
     // string
     {"strlen",      QAttr_read,                2,  &strlen},

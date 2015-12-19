@@ -14,9 +14,9 @@ TaskManager::~TaskManager()
      
 bool TaskManager::AddTask(PTCPSOCKET  task)    
 {   
-    std::lock_guard<std::mutex>  guard(m_lock);
-    m_newTasks.push_back(task);
-    ++ m_newCnt;
+    std::lock_guard<std::mutex>  guard(lock_);
+    newTasks_.push_back(task);
+    ++ newCnt_;
 
     return  true;    
 }
@@ -25,8 +25,8 @@ TaskManager::PTCPSOCKET  TaskManager::FindTCP(unsigned int id) const
 {
     if (id > 0)
     {
-        std::map<int, PTCPSOCKET>::const_iterator it = m_tcpSockets.find(id);
-        if (it != m_tcpSockets.end())
+        std::map<int, PTCPSOCKET>::const_iterator it = tcpSockets_.find(id);
+        if (it != tcpSockets_.end())
             return  it->second;
     }
            
@@ -35,25 +35,25 @@ TaskManager::PTCPSOCKET  TaskManager::FindTCP(unsigned int id) const
 
 bool TaskManager::_AddTask(PTCPSOCKET task)
 {   
-    bool succ = m_tcpSockets.insert(std::map<int, PTCPSOCKET>::value_type(task->GetID(), task)).second;
+    bool succ = tcpSockets_.insert(std::map<int, PTCPSOCKET>::value_type(task->GetID(), task)).second;
     return  succ;    
 }
 
 
 void TaskManager::_RemoveTask(std::map<int, PTCPSOCKET>::iterator& it)    
 {
-    m_tcpSockets.erase(it ++);
+    tcpSockets_.erase(it ++);
 }
 
 
 bool TaskManager::DoMsgParse()
 {
-    if (m_newCnt > 0 && m_lock.try_lock())
+    if (newCnt_ > 0 && lock_.try_lock())
     {
         NEWTASKS_T  tmpNewTask;
-        tmpNewTask.swap(m_newTasks);
-        m_newCnt = 0;
-        m_lock.unlock();
+        tmpNewTask.swap(newTasks_);
+        newCnt_ = 0;
+        lock_.unlock();
 
         for (NEWTASKS_T::iterator it(tmpNewTask.begin());
             it != tmpNewTask.end();
@@ -71,8 +71,8 @@ bool TaskManager::DoMsgParse()
 
     bool  busy = false;
 
-    for (std::map<int, PTCPSOCKET>::iterator it(m_tcpSockets.begin());
-         it != m_tcpSockets.end();
+    for (std::map<int, PTCPSOCKET>::iterator it(tcpSockets_.begin());
+         it != tcpSockets_.end();
          )
     {
         if (!it->second || it->second->Invalid())

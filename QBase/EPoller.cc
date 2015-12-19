@@ -65,20 +65,20 @@ namespace Epoll
 
 Epoller::Epoller()
 {
-    m_multiplexer = ::epoll_create(512);
-    INF << "create epoll:  " << m_multiplexer;
+    multiplexer_ = ::epoll_create(512);
+    INF << "create epoll:  " << multiplexer_;
 }
 
 Epoller::~Epoller()
 {
-    INF << "close epoll:  " << m_multiplexer;
-    if (m_multiplexer != -1)  
-        ::close(m_multiplexer);
+    INF << "close epoll:  " << multiplexer_;
+    if (multiplexer_ != -1)  
+        ::close(multiplexer_);
 }
 
 bool Epoller::AddSocket(int sock, int events, void* userPtr)
 {
-    if (Epoll::AddSocket(m_multiplexer, sock, events, userPtr))
+    if (Epoll::AddSocket(multiplexer_, sock, events, userPtr))
         return  true;
 
     return (errno == EEXIST) && ModSocket(sock, events, userPtr);
@@ -86,7 +86,7 @@ bool Epoller::AddSocket(int sock, int events, void* userPtr)
     
 bool Epoller::DelSocket(int sock, int events)
 {
-    return Epoll::DelSocket(m_multiplexer, sock);
+    return Epoll::DelSocket(multiplexer_, sock);
 }
 
    
@@ -95,7 +95,7 @@ bool Epoller::ModSocket(int sock, int events, void* userPtr)
     if (events == 0)
         return DelSocket(sock, 0);
 
-    if (Epoll::ModSocket(m_multiplexer, sock, events, userPtr))
+    if (Epoll::ModSocket(multiplexer_, sock, events, userPtr))
         return  true;
 
     return  errno == ENOENT && AddSocket(sock, events, userPtr);
@@ -107,10 +107,10 @@ int Epoller::Poll(std::vector<FiredEvent>& events, size_t  maxEvent, int timeout
     if (maxEvent == 0)
         return 0;
 
-    while (m_events.size() < maxEvent)
-        m_events.resize(2 * m_events.size() + 1);
+    while (events_.size() < maxEvent)
+        events_.resize(2 * events_.size() + 1);
 
-    int nFired = TEMP_FAILURE_RETRY(::epoll_wait(m_multiplexer, &m_events[0], maxEvent, timeoutMs));
+    int nFired = TEMP_FAILURE_RETRY(::epoll_wait(multiplexer_, &events_[0], maxEvent, timeoutMs));
     if (nFired == -1 && errno != EINTR && errno != EWOULDBLOCK)
         return -1;
 
@@ -121,15 +121,15 @@ int Epoller::Poll(std::vector<FiredEvent>& events, size_t  maxEvent, int timeout
     {
         FiredEvent& fired = events[i];
         fired.events   = 0;
-        fired.userdata = m_events[i].data.ptr;
+        fired.userdata = events_[i].data.ptr;
 
-        if (m_events[i].events & EPOLLIN)
+        if (events_[i].events & EPOLLIN)
             fired.events  |= EventTypeRead;
 
-        if (m_events[i].events & EPOLLOUT)
+        if (events_[i].events & EPOLLOUT)
             fired.events  |= EventTypeWrite;
 
-        if (m_events[i].events & (EPOLLERR | EPOLLHUP))
+        if (events_[i].events & (EPOLLERR | EPOLLHUP))
             fired.events  |= EventTypeError;
     }
 

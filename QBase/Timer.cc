@@ -29,16 +29,16 @@ static int DaysOfMonth(int year, int month)
 
 
 
-Time::Time() : m_ms(0), m_valid(false)
+Time::Time() : ms_(0), valid_(false)
 {
-    m_tm.tm_year = 0;
+    tm_.tm_year = 0;
     this->Now();
 }
 
-Time::Time(const Time& other) : m_ms(other.m_ms)
+Time::Time(const Time& other) : ms_(other.ms_)
 {
-    m_tm.tm_year = 0;
-    m_valid = false;
+    tm_.tm_year = 0;
+    valid_ = false;
 }
 
 
@@ -89,24 +89,24 @@ Time::Time(int hour, int min, int sec)
     stm.tm_isdst = 0;
 
     time_t tt = mktime(&stm);
-    m_ms = tt * 1000UL;
-    m_valid = false;
+    ms_ = tt * 1000UL;
+    valid_ = false;
 }
 
 void Time::_UpdateTm()  const
 {
-    if (m_valid)  
+    if (valid_)  
         return;
 
-    m_valid = true; 
-    const time_t now(m_ms / 1000UL); 
-    ::localtime_r(&now, &m_tm);
+    valid_ = true; 
+    const time_t now(ms_ / 1000UL); 
+    ::localtime_r(&now, &tm_);
 }
 
 void Time::Now()
 {
-    m_ms = ::Now();
-    m_valid = false;
+    ms_ = ::Now();
+    valid_ = false;
 }
 
 // from 2015 to 2025
@@ -134,25 +134,25 @@ std::size_t Time::FormatTime(char* buf) const
     _UpdateTm();
     
 #if  1
-    memcpy(buf, YEAR[m_tm.tm_year + 1900 - 2015], 4);
+    memcpy(buf, YEAR[tm_.tm_year + 1900 - 2015], 4);
     buf[4] = '-';
-    memcpy(buf + 5, NUMBER[m_tm.tm_mon + 1], 2);
+    memcpy(buf + 5, NUMBER[tm_.tm_mon + 1], 2);
     buf[7] = '-';
-    memcpy(buf + 8, NUMBER[m_tm.tm_mday], 2);
+    memcpy(buf + 8, NUMBER[tm_.tm_mday], 2);
     buf[10] = '[';
-    memcpy(buf + 11, NUMBER[m_tm.tm_hour], 2);
+    memcpy(buf + 11, NUMBER[tm_.tm_hour], 2);
     buf[13] = ':';
-    memcpy(buf + 14, NUMBER[m_tm.tm_min], 2);
+    memcpy(buf + 14, NUMBER[tm_.tm_min], 2);
     buf[16] = ':';
-    memcpy(buf + 17, NUMBER[m_tm.tm_sec], 2);
+    memcpy(buf + 17, NUMBER[tm_.tm_sec], 2);
     buf[19] = '.';
-    snprintf(buf + 20, 5, "%03d]", static_cast<int>(m_ms % 1000));
+    snprintf(buf + 20, 5, "%03d]", static_cast<int>(ms_ % 1000));
 #else
     
     snprintf(buf, 25, "%04d-%02d-%02d[%02d:%02d:%02d.%03d]",
-             m_tm.tm_year+1900, m_tm.tm_mon+1, m_tm.tm_mday,
-             m_tm.tm_hour, m_tm.tm_min, m_tm.tm_sec,
-             static_cast<int>(m_ms % 1000));
+             tm_.tm_year+1900, tm_.tm_mon+1, tm_.tm_mday,
+             tm_.tm_hour, tm_.tm_min, tm_.tm_sec,
+             static_cast<int>(ms_ % 1000));
 #endif
     
     return 24;
@@ -160,16 +160,16 @@ std::size_t Time::FormatTime(char* buf) const
 
 void Time::AddDelay(uint64_t delay)
 {
-    m_ms   += delay;
-    m_valid = false;
+    ms_   += delay;
+    valid_ = false;
 }
 
 Time& Time::operator= (const Time & other)
 {
     if (this != &other)
     {
-        m_ms    = other.m_ms;
-        m_valid = false;
+        ms_    = other.ms_;
+        valid_ = false;
     }
     return *this;
 }
@@ -178,25 +178,25 @@ Time& Time::operator= (const Time & other)
 
 
 Timer::Timer(uint32_t interval, int32_t count) :
-m_interval(interval),
-m_count(count)
+interval_(interval),
+count_(count)
 {
-    m_triggerTime.AddDelay(interval);
+    triggerTime_.AddDelay(interval);
 }
 
 
 bool Timer::OnTimer()
 {
-    if (m_count < 0 || -- m_count >= 0)
+    if (count_ < 0 || -- count_ >= 0)
     {
-        m_triggerTime.AddDelay(m_interval);
+        triggerTime_.AddDelay(interval_);
         return  _OnTimer();
     }
 
     return false;        
 }
 
-TimerManager::TimerManager() : m_count(0)
+TimerManager::TimerManager() : count_(0)
 {
     for (int i = 0; i < LIST1_SIZE; ++ i)
     {
@@ -217,7 +217,7 @@ TimerManager::~TimerManager()
     PTIMER   pTimer;
     for (int i = 0; i < LIST1_SIZE; ++ i)
     {
-        while ((pTimer = m_list1[i]->m_next) )
+        while ((pTimer = m_list1[i]->next_) )
         {
             KillTimer(pTimer);
         }
@@ -225,22 +225,22 @@ TimerManager::~TimerManager()
 
     for (int i = 0; i < LIST_SIZE; ++ i)
     {
-        while ((pTimer = m_list2[i]->m_next) )
+        while ((pTimer = m_list2[i]->next_) )
         {
             KillTimer(pTimer);
         }
 
-        while ((pTimer = m_list3[i]->m_next) )
+        while ((pTimer = m_list3[i]->next_) )
         {
             KillTimer(pTimer);
         }
 
-        while ((pTimer = m_list4[i]->m_next) )
+        while ((pTimer = m_list4[i]->next_) )
         {
             KillTimer(pTimer);
         }
 
-        while ((pTimer = m_list5[i]->m_next) )
+        while ((pTimer = m_list5[i]->next_) )
         {
             KillTimer(pTimer);
         }
@@ -255,12 +255,12 @@ TimerManager&  TimerManager::Instance()
 
 bool TimerManager::UpdateTimers(const Time& now)
 {
-    if (m_count > 0 && m_lock.try_lock())
+    if (count_ > 0 && lock_.try_lock())
     {
         std::vector<PTIMER >  tmp;
-        tmp.swap(m_timers);
-        m_count = 0;
-        m_lock.unlock();
+        tmp.swap(timers_);
+        count_ = 0;
+        lock_.unlock();
 
         for (std::vector<PTIMER >::iterator it(tmp.begin());
              it != tmp.end();
@@ -286,7 +286,7 @@ bool TimerManager::UpdateTimers(const Time& now)
         m_lastCheckTime.AddDelay(1);
 
         PTIMER   pTimer;
-        while ((pTimer = m_list1[index]->m_next))
+        while ((pTimer = m_list1[index]->next_))
         {
             KillTimer(pTimer);
             if (pTimer->OnTimer())
@@ -302,9 +302,9 @@ void TimerManager::AddTimer(const PTIMER& pTimer)
 {
     KillTimer(pTimer);
 
-    uint32_t diff      =  static_cast<uint32_t>(pTimer->m_triggerTime - m_lastCheckTime);
+    uint32_t diff      =  static_cast<uint32_t>(pTimer->triggerTime_ - m_lastCheckTime);
     PTIMER   pListHead ;
-    uint64_t trigTime  =  pTimer->m_triggerTime.MilliSeconds();
+    uint64_t trigTime  =  pTimer->triggerTime_.MilliSeconds();
 
     if ((int32_t)diff < 0)
     {
@@ -331,21 +331,21 @@ void TimerManager::AddTimer(const PTIMER& pTimer)
         pListHead = m_list5[(trigTime >> (LIST1_BITS + 3 * LIST_BITS)) & (LIST_SIZE - 1)];
     }
 
-    assert(!pListHead->m_prev);
+    assert(!pListHead->prev_);
 
-    pTimer->m_prev = pListHead;
-    pTimer->m_next = pListHead->m_next;
-    if (pListHead->m_next)
-        pListHead->m_next->m_prev = pTimer;
-    pListHead->m_next = pTimer;
+    pTimer->prev_ = pListHead;
+    pTimer->next_ = pListHead->next_;
+    if (pListHead->next_)
+        pListHead->next_->prev_ = pTimer;
+    pListHead->next_ = pTimer;
 }
 
 void    TimerManager::AsyncAddTimer(const PTIMER&  pTimer)
 {
-    std::lock_guard<std::mutex>  guard(m_lock);
-    m_timers.push_back(pTimer);
-    ++ m_count;
-    assert (m_count == m_timers.size());
+    std::lock_guard<std::mutex>  guard(lock_);
+    timers_.push_back(pTimer);
+    ++ count_;
+    assert (count_ == timers_.size());
 }
 
 void    TimerManager::ScheduleAt(const PTIMER& pTimer, const Time& triggerTime)
@@ -353,25 +353,25 @@ void    TimerManager::ScheduleAt(const PTIMER& pTimer, const Time& triggerTime)
     if (!pTimer)
         return;
 
-    pTimer->m_triggerTime = triggerTime;
+    pTimer->triggerTime_ = triggerTime;
     AddTimer(pTimer);
 }
 
 
 void TimerManager::KillTimer(const PTIMER& pTimer)
 {
-    if (pTimer && pTimer->m_prev)
+    if (pTimer && pTimer->prev_)
     {
-        pTimer->m_prev->m_next = pTimer->m_next;
+        pTimer->prev_->next_ = pTimer->next_;
 
-        if (pTimer->m_next)
+        if (pTimer->next_)
         {
-            pTimer->m_next->m_prev = pTimer->m_prev;
-            pTimer->m_next.reset();
+            pTimer->next_->prev_ = pTimer->prev_;
+            pTimer->next_.reset();
         }
 
-        if (pTimer->m_prev)
-            pTimer->m_prev.reset();
+        if (pTimer->prev_)
+            pTimer->prev_.reset();
     }
 }
 
@@ -385,19 +385,19 @@ bool TimerManager::_Cacsade(PTIMER pList[], int index)
 
     assert (pList[index]);
 
-    if (!pList[index]->m_next)
+    if (!pList[index]->next_)
         return false;
 
-    PTIMER  tmpListHead = pList[index]->m_next;
-    pList[index]->m_next.reset();
+    PTIMER  tmpListHead = pList[index]->next_;
+    pList[index]->next_.reset();
 
     while (tmpListHead)
     {
-        PTIMER next = tmpListHead->m_next;
-        if (tmpListHead->m_next)
-            tmpListHead->m_next.reset();
-        if (tmpListHead->m_prev)
-            tmpListHead->m_prev.reset();
+        PTIMER next = tmpListHead->next_;
+        if (tmpListHead->next_)
+            tmpListHead->next_.reset();
+        if (tmpListHead->prev_)
+            tmpListHead->prev_.reset();
         AddTimer(tmpListHead);
         tmpListHead = next;
     }

@@ -20,13 +20,13 @@ private:
     bool _ProcessBracket();
     bool _IsMatch() const;
 
-    const char*     m_pattern;
-    std::size_t     m_pLen;
-    std::size_t     m_pOff;
+    const char*     pattern_;
+    std::size_t     pLen_;
+    std::size_t     pOff_;
 
-    const char*     m_text;
-    std::size_t     m_tLen;
-    std::size_t     m_tOff;
+    const char*     text_;
+    std::size_t     tLen_;
+    std::size_t     tOff_;
 };
 
 inline bool glob_match(const char* pattern, std::size_t plen,

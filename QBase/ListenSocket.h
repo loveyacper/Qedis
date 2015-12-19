@@ -23,8 +23,8 @@ public:
 
 private:
     int _Accept();
-    sockaddr_in     m_addrClient;
-    unsigned short  m_localPort;
+    sockaddr_in     addrClient_;
+    unsigned short  localPort_;
 };
 
 }

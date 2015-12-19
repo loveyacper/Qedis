@@ -89,10 +89,10 @@ class ExpireTimer  : public Timer
 public:
     ExpireTimer(int db) : Timer(1)
     {
-        m_dbno = db;
+        dbno_ = db;
     }
 private:
-    int  m_dbno;
+    int  dbno_;
     bool _OnTimer();
 };
 
@@ -101,10 +101,10 @@ class BlockedListTimer  : public Timer
 public:
     BlockedListTimer(int db) : Timer(3)
     {
-        m_dbno = db;
+        dbno_ = db;
     }
 private:
-    int  m_dbno;
+    int  dbno_;
     bool _OnTimer();
 };
 
@@ -125,14 +125,14 @@ public:
     bool ExistsKey(const QString& key) const;
     QType  KeyType(const QString& key) const;
     QString RandomKey() const;
-    size_t DBSize() const { return m_store[m_dbno].size(); }
+    size_t DBSize() const { return store_[dbno_].size(); }
     size_t ScanKey(size_t cursor, size_t count, std::vector<QString>& res) const;
 
     // iterator
-    QDB::const_iterator begin() const   { return m_store[m_dbno].begin(); }
-    QDB::const_iterator end()   const   { return m_store[m_dbno].end(); }
-    QDB::iterator       begin()         { return m_store[m_dbno].begin(); }
-    QDB::iterator       end()           { return m_store[m_dbno].end(); }
+    QDB::const_iterator begin() const   { return store_[dbno_].begin(); }
+    QDB::const_iterator end()   const   { return store_[dbno_].end(); }
+    QDB::iterator       begin()         { return store_[dbno_].begin(); }
+    QDB::iterator       end()           { return store_[dbno_].end(); }
     
     QError  GetValue(const QString& key, QObject*& value);
     QError  GetValueByType(const QString& key, QObject*& value, QType  type = QType_invalid);
@@ -154,7 +154,7 @@ public:
     void    InitExpireTimer();
     
     // danger cmd
-    void    ClearCurrentDB() { m_store[m_dbno].clear(); }
+    void    ClearCurrentDB() { store_[dbno_].clear(); }
     void    ResetDb();
     
     // for blocked list
@@ -171,14 +171,14 @@ public:
     
     size_t  BlockedSize() const;
     
-    static  int m_dirty;
+    static  int dirty_;
     
     // password for auth
-    QString m_password;
-    bool    CheckPassword(const QString& pwd) const { return m_password.empty() || m_password == pwd; }
+    QString password_;
+    bool    CheckPassword(const QString& pwd) const { return password_.empty() || password_ == pwd; }
     
 private:
-    QStore() : m_dbno(0)
+    QStore() : dbno_(0)
     {
     }
     
@@ -199,7 +199,7 @@ private:
                                     my_hash,
                                     std::equal_to<QString> >
                                Q_EXPIRE_DB;
-        Q_EXPIRE_DB            m_expireKeys;  // all the keys to be expired, unorder.
+        Q_EXPIRE_DB            expireKeys_;  // all the keys to be expired, unorder.
     };
     
     class BlockedClients
@@ -214,20 +214,20 @@ private:
         size_t  ServeClient(const QString& key, const PLIST& list);
         
         int    LoopCheck(uint64_t now);
-        size_t Size() const { return m_blockedClients.size(); }
+        size_t Size() const { return blockedClients_.size(); }
     private:
         typedef std::list<std::tuple<std::weak_ptr<QClient>, uint64_t, ListPosition> >   Clients;
         typedef std::unordered_map<QString, Clients>  WaitingList;
         
-        WaitingList  m_blockedClients;
+        WaitingList  blockedClients_;
     };
 
     QError  _SetValue(const QString& key, QObject& value, bool exclusive = false);
 
-    std::vector<QDB>  m_store;
-    std::vector<ExpiresDB> m_expiresDb;
-    std::vector<BlockedClients> m_blockedClients;
-    int               m_dbno;
+    std::vector<QDB>  store_;
+    std::vector<ExpiresDB> expiresDb_;
+    std::vector<BlockedClients> blockedClients_;
+    int               dbno_;
 };
 
 #define QSTORE  QStore::Instance()

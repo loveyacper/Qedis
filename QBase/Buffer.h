@@ -48,17 +48,17 @@ class  CircularBuffer
 {
 public:
     // Constructor  to be specialized
-    explicit CircularBuffer(std::size_t size = 0) : m_maxSize(size),
-    m_readPos(0),
-    m_writePos(0)
+    explicit CircularBuffer(std::size_t size = 0) : maxSize_(size),
+    readPos_(0),
+    writePos_(0)
     {
     }
     CircularBuffer(const BufferSequence& bf);
     CircularBuffer(char* , std::size_t );
    ~CircularBuffer() { }
 
-    bool IsEmpty() const { return m_writePos == m_readPos; }
-    bool IsFull()  const { return ((m_writePos + 1) & (m_maxSize - 1)) == m_readPos; }
+    bool IsEmpty() const { return writePos_ == readPos_; }
+    bool IsFull()  const { return ((writePos_ + 1) & (maxSize_ - 1)) == readPos_; }
 
     // For gather write
     void GetDatum(BufferSequence& buffer, std::size_t maxSize, std::size_t offset = 0);
@@ -66,24 +66,24 @@ public:
     // For scatter read
     void GetSpace(BufferSequence& buffer, std::size_t offset = 0);
 
-    // Put data into internal m_buffer
+    // Put data into internal buffer_
     bool PushData(const void* pData, std::size_t nSize);
     bool PushDataAt(const void* pData, std::size_t nSize, std::size_t offset = 0);
 
-    // Get data from internal m_buffer, adjust read ptr
+    // Get data from internal buffer_, adjust read ptr
     bool PeekData(void* pBuf, std::size_t nSize);
     bool PeekDataAt(void* pBuf, std::size_t nSize, std::size_t offset = 0);
 
-    char* ReadAddr() { return &m_buffer[m_readPos]; }
-    char* WriteAddr() { return &m_buffer[m_writePos]; }
+    char* ReadAddr() { return &buffer_[readPos_]; }
+    char* WriteAddr() { return &buffer_[writePos_]; }
 
     void AdjustWritePtr(std::size_t size);
     void AdjustReadPtr(std::size_t size);
 
-    std::size_t ReadableSize()  const {  return (m_writePos - m_readPos) & (m_maxSize - 1);  }
-    std::size_t WritableSize()  const {  return m_maxSize - ReadableSize() - 1;  }
+    std::size_t ReadableSize()  const {  return (writePos_ - readPos_) & (maxSize_ - 1);  }
+    std::size_t WritableSize()  const {  return maxSize_ - ReadableSize() - 1;  }
 
-    std::size_t Capacity() const { return m_maxSize; }
+    std::size_t Capacity() const { return maxSize_; }
     void InitCapacity(std::size_t size);
 
     template <typename T>
@@ -100,20 +100,20 @@ public:
     CircularBuffer & operator>> (std::string& str);
 
 protected:
-    // The max capacity of m_buffer
-    std::size_t m_maxSize;
+    // The max capacity of buffer_
+    std::size_t maxSize_;
 
 private:
     // The starting address can be read
-    std::atomic<std::size_t> m_readPos;
+    std::atomic<std::size_t> readPos_;
 
     // The starting address can be write
-    std::atomic<std::size_t> m_writePos;
+    std::atomic<std::size_t> writePos_;
 
     // The real internal buffer
-    BUFFER m_buffer;
+    BUFFER buffer_;
 
-    bool   m_owned = false;
+    bool   owned_ = false;
 };
 
 template <typename BUFFER>
@@ -127,15 +127,15 @@ void CircularBuffer<BUFFER>::GetDatum(BufferSequence& buffer, std::size_t maxSiz
         return;
     }
 
-    assert(m_readPos  < m_maxSize);
-    assert(m_writePos < m_maxSize);
+    assert(readPos_  < maxSize_);
+    assert(writePos_ < maxSize_);
 
     std::size_t   bufferIndex  = 0;
-    const std::size_t readPos  = (m_readPos + offset) & (m_maxSize - 1);
-    const std::size_t writePos = m_writePos;
+    const std::size_t readPos  = (readPos_ + offset) & (maxSize_ - 1);
+    const std::size_t writePos = writePos_;
     assert (readPos != writePos);
 
-    buffer.buffers[bufferIndex].iov_base = &m_buffer[readPos];
+    buffer.buffers[bufferIndex].iov_base = &buffer_[readPos];
     if (readPos < writePos)
     {            
         if (maxSize < writePos - readPos)
@@ -146,8 +146,8 @@ void CircularBuffer<BUFFER>::GetDatum(BufferSequence& buffer, std::size_t maxSiz
     else
     {
         std::size_t nLeft = maxSize;
-        if (nLeft > (m_maxSize - readPos))
-            nLeft = (m_maxSize - readPos);
+        if (nLeft > (maxSize_ - readPos))
+            nLeft = (maxSize_ - readPos);
         buffer.buffers[bufferIndex].iov_len = nLeft;
         nLeft = maxSize - nLeft;
  
@@ -157,7 +157,7 @@ void CircularBuffer<BUFFER>::GetDatum(BufferSequence& buffer, std::size_t maxSiz
                 nLeft = writePos;
 
             ++ bufferIndex;
-            buffer.buffers[bufferIndex].iov_base = &m_buffer[0];
+            buffer.buffers[bufferIndex].iov_base = &buffer_[0];
             buffer.buffers[bufferIndex].iov_len = nLeft;
         }
     }
@@ -168,8 +168,8 @@ void CircularBuffer<BUFFER>::GetDatum(BufferSequence& buffer, std::size_t maxSiz
 template <typename BUFFER>
 void CircularBuffer<BUFFER>::GetSpace(BufferSequence& buffer, std::size_t offset)
 {
-    assert(m_readPos >= 0 && m_readPos < m_maxSize);
-    assert(m_writePos >= 0 && m_writePos < m_maxSize);
+    assert(readPos_ >= 0 && readPos_ < maxSize_);
+    assert(writePos_ >= 0 && writePos_ < maxSize_);
 
     if (WritableSize() <= offset + 1)
     {
@@ -178,10 +178,10 @@ void CircularBuffer<BUFFER>::GetSpace(BufferSequence& buffer, std::size_t offset
     }
 
     std::size_t bufferIndex = 0;
-    const std::size_t readPos  = m_readPos;
-    const std::size_t writePos = (m_writePos + offset) & (m_maxSize - 1);
+    const std::size_t readPos  = readPos_;
+    const std::size_t writePos = (writePos_ + offset) & (maxSize_ - 1);
 
-    buffer.buffers[bufferIndex].iov_base = &m_buffer[writePos];
+    buffer.buffers[bufferIndex].iov_base = &buffer_[writePos];
 
     if (readPos > writePos)
     {
@@ -190,15 +190,15 @@ void CircularBuffer<BUFFER>::GetSpace(BufferSequence& buffer, std::size_t offset
     }
     else
     {
-        buffer.buffers[bufferIndex].iov_len = m_maxSize - writePos;
+        buffer.buffers[bufferIndex].iov_len = maxSize_ - writePos;
         if (0 == readPos)
         {
             buffer.buffers[bufferIndex].iov_len -= 1;
         }
-        else if (readPos > 1) // 缓冲区必须大于0
+        else if (readPos > 1)
         {
             ++ bufferIndex;
-            buffer.buffers[bufferIndex].iov_base = &m_buffer[0];
+            buffer.buffers[bufferIndex].iov_base = &buffer_[0];
             buffer.buffers[bufferIndex].iov_len = readPos - 1;
         }
     }
@@ -215,29 +215,29 @@ bool CircularBuffer<BUFFER>::PushDataAt(const void* pData, std::size_t nSize, st
     if (offset + nSize > WritableSize())
         return false;
 
-    const std::size_t readPos = m_readPos;
-    const std::size_t writePos = (m_writePos + offset) & (m_maxSize - 1);
+    const std::size_t readPos = readPos_;
+    const std::size_t writePos = (writePos_ + offset) & (maxSize_ - 1);
     if (readPos > writePos)
     {
         assert(readPos - writePos > nSize);
-        ::memcpy(&m_buffer[writePos], pData, nSize);
+        ::memcpy(&buffer_[writePos], pData, nSize);
     }
     else
     {
-        std::size_t availBytes1 = m_maxSize - writePos;
+        std::size_t availBytes1 = maxSize_ - writePos;
         std::size_t availBytes2 = readPos - 0;
         assert (availBytes1 + availBytes2 >= 1 + nSize);
 
         if (availBytes1 >= nSize + 1)
         {
-            ::memcpy(&m_buffer[writePos], pData, nSize);
+            ::memcpy(&buffer_[writePos], pData, nSize);
         }
         else
         {
-            ::memcpy(&m_buffer[writePos], pData, availBytes1);
+            ::memcpy(&buffer_[writePos], pData, availBytes1);
             int bytesLeft = static_cast<int>(nSize - availBytes1);
             if (bytesLeft > 0)
-                ::memcpy(&m_buffer[0], static_cast<const char*>(pData) + availBytes1, bytesLeft);
+                ::memcpy(&buffer_[0], static_cast<const char*>(pData) + availBytes1, bytesLeft);
         }
     }
 
@@ -263,29 +263,29 @@ bool CircularBuffer<BUFFER>::PeekDataAt(void* pBuf, std::size_t nSize, std::size
     if (nSize + offset > ReadableSize())
         return false;
 
-    const std::size_t writePos = m_writePos;
-    const std::size_t readPos  = (m_readPos + offset) & (m_maxSize - 1);
+    const std::size_t writePos = writePos_;
+    const std::size_t readPos  = (readPos_ + offset) & (maxSize_ - 1);
     if (readPos < writePos)
     {
         assert(writePos - readPos >= nSize);
-        ::memcpy(pBuf, &m_buffer[readPos], nSize);
+        ::memcpy(pBuf, &buffer_[readPos], nSize);
     }
     else
     {
         assert(readPos > writePos);
-        std::size_t availBytes1 = m_maxSize - readPos;
+        std::size_t availBytes1 = maxSize_ - readPos;
         std::size_t availBytes2 = writePos - 0;
         assert(availBytes1 + availBytes2 >= nSize);
 
         if (availBytes1 >= nSize)
         {
-            ::memcpy(pBuf, &m_buffer[readPos], nSize);            
+            ::memcpy(pBuf, &buffer_[readPos], nSize);            
         }
         else
         {
-            ::memcpy(pBuf, &m_buffer[readPos], availBytes1);
+            ::memcpy(pBuf, &buffer_[readPos], availBytes1);
             assert(nSize - availBytes1 > 0);
-            ::memcpy(static_cast<char*>(pBuf) + availBytes1, &m_buffer[0], nSize - availBytes1);
+            ::memcpy(static_cast<char*>(pBuf) + availBytes1, &buffer_[0], nSize - availBytes1);
         }
     }
 
@@ -307,21 +307,21 @@ bool CircularBuffer<BUFFER>::PeekData(void* pBuf, std::size_t nSize)
 template <typename BUFFER>
 inline void CircularBuffer<BUFFER>::AdjustWritePtr(std::size_t size)
 {
-    std::size_t writePos = m_writePos;
+    std::size_t writePos = writePos_;
     writePos += size;
-    writePos &= m_maxSize - 1;
+    writePos &= maxSize_ - 1;
     
-    m_writePos = writePos;
+    writePos_ = writePos;
 }
 
 template <typename BUFFER>
 inline void CircularBuffer<BUFFER>::AdjustReadPtr(std::size_t size)
 {
-    std::size_t readPos = m_readPos;
+    std::size_t readPos = readPos_;
     readPos += size;
-    readPos &= m_maxSize - 1;
+    readPos &= maxSize_ - 1;
     
-    m_readPos = readPos;
+    readPos_ = readPos;
 }
 
 template <typename BUFFER>
@@ -329,9 +329,9 @@ inline void CircularBuffer<BUFFER>::InitCapacity(std::size_t size)
 {
     assert (size > 0 && size <= 1 * 1024 * 1024 * 1024);
 
-    m_maxSize = RoundUp2Power(size);
-    m_buffer.resize(m_maxSize);
-    std::vector<char>(m_buffer).swap(m_buffer);
+    maxSize_ = RoundUp2Power(size);
+    buffer_.resize(maxSize_);
+    std::vector<char>(buffer_).swap(buffer_);
 }
 
 template <typename BUFFER>
@@ -349,7 +349,7 @@ template <typename T>
 inline CircularBuffer<BUFFER> & CircularBuffer<BUFFER>::operator>> (T& data )
 {
     if (!PeekData(&data, sizeof(data)))
-        assert(!!!"Not enough data in m_buffer");
+        assert(!!!"Not enough data in buffer_");
 
     return *this;
 }
@@ -420,80 +420,80 @@ inline CircularBuffer<BUFFER>& CircularBuffer<BUFFER>::operator>> (std::string& 
 typedef CircularBuffer< ::std::vector<char> >  Buffer;
 
 template <>
-inline Buffer::CircularBuffer(std::size_t maxSize) : m_maxSize(RoundUp2Power(maxSize)), m_readPos(0), m_writePos(0), m_buffer(m_maxSize)
+inline Buffer::CircularBuffer(std::size_t maxSize) : maxSize_(RoundUp2Power(maxSize)), readPos_(0), writePos_(0), buffer_(maxSize_)
 {
-    assert (0 == (m_maxSize & (m_maxSize - 1)) && "m_maxSize MUST BE power of 2");
+    assert (0 == (maxSize_ & (maxSize_ - 1)) && "maxSize_ MUST BE power of 2");
 }
 
 
 template <int N>
 class StackBuffer : public CircularBuffer<char [N]>
 {
-    using CircularBuffer<char [N]>::m_maxSize;
+    using CircularBuffer<char [N]>::maxSize_;
 public:
     StackBuffer()
     {
-        m_maxSize = N;
-        if (m_maxSize < 0)
-            m_maxSize = 1;
+        maxSize_ = N;
+        if (maxSize_ < 0)
+            maxSize_ = 1;
 
-        if (0 != (m_maxSize & (m_maxSize - 1)))
-            m_maxSize = RoundUp2Power(m_maxSize);
+        if (0 != (maxSize_ & (maxSize_ - 1)))
+            maxSize_ = RoundUp2Power(maxSize_);
 
-        assert (0 == (m_maxSize & (m_maxSize - 1)) && "m_maxSize MUST BE power of 2");
+        assert (0 == (maxSize_ & (maxSize_ - 1)) && "maxSize_ MUST BE power of 2");
     }
 };
 
 typedef CircularBuffer<char* > AttachedBuffer;
 
 template <>
-inline AttachedBuffer::CircularBuffer(char* pBuf, std::size_t len) : m_maxSize(RoundUp2Power(len + 1)),
-                                                             m_readPos(0),
-                                                             m_writePos(0)
+inline AttachedBuffer::CircularBuffer(char* pBuf, std::size_t len) : maxSize_(RoundUp2Power(len + 1)),
+                                                             readPos_(0),
+                                                             writePos_(0)
 {
-    m_buffer = pBuf;
-    m_owned  = false;
+    buffer_ = pBuf;
+    owned_  = false;
 }
 
 template <>
 inline AttachedBuffer::CircularBuffer(const BufferSequence& bf) :
-m_readPos(0),
-m_writePos(0)
+readPos_(0),
+writePos_(0)
 {
-    m_owned = false;
+    owned_ = false;
 
     if (0 == bf.count)
     {
-        m_buffer = 0;
+        buffer_ = 0;
     }
     else if (1 == bf.count)
     {
-        m_buffer   = (char*)bf.buffers[0].iov_base;
-        m_writePos = static_cast<int>(bf.buffers[0].iov_len);
+        buffer_   = (char*)bf.buffers[0].iov_base;
+        writePos_ = static_cast<int>(bf.buffers[0].iov_len);
     }
     else if (bf.count > 1)
     {
-        m_owned  = true;
-        m_buffer = new char[bf.TotalBytes()];
+        owned_  = true;
+        buffer_ = new char[bf.TotalBytes()];
 
         std::size_t off = 0;
         for (std::size_t i = 0; i < bf.count; ++ i)
         {
-            memcpy(m_buffer + off, bf.buffers[i].iov_base, bf.buffers[i].iov_len);
+            memcpy(buffer_ + off, bf.buffers[i].iov_base, bf.buffers[i].iov_len);
             off += bf.buffers[i].iov_len;
         }
 
-        m_writePos = bf.TotalBytes();
+        writePos_ = bf.TotalBytes();
     }
 
-    m_maxSize = RoundUp2Power(m_writePos - m_readPos + 1);
+    maxSize_ = RoundUp2Power(writePos_ - readPos_ + 1);
 }
 
 template <>
 inline AttachedBuffer::~CircularBuffer()
 {
-    if (m_owned)
-        delete [] m_buffer;
+    if (owned_)
+        delete [] buffer_;
 }
 
 template <typename T>

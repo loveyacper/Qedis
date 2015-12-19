@@ -20,7 +20,7 @@ public:
     int Poll(std::vector<FiredEvent>& events, std::size_t maxEvent, int timeoutMs);
 
 private:
-    std::vector<epoll_event> m_events;    
+    std::vector<epoll_event> events_;    
 };
 
 #endif

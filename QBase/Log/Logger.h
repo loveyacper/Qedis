@@ -40,7 +40,7 @@ public:
               const char* pDir  = 0);
     
     void Flush(LogLevel  level);
-    bool IsLevelForbid(unsigned int level)  {  return  !(level & m_level); };
+    bool IsLevelForbid(unsigned int level)  {  return  !(level & level_); };
 
     Logger&  operator<<(const char* msg);
     Logger&  operator<<(const unsigned char* msg);
@@ -60,7 +60,7 @@ public:
 
     Logger& SetCurLevel(unsigned int level)
     {
-        m_curLevel = level;
+        curLevel_ = level;
         return *this;
     }
 
@@ -71,24 +71,24 @@ private:
    ~Logger();
 
     static const size_t MAXLINE_LOG = 2048; // TODO
-    char            m_tmpBuffer[MAXLINE_LOG];
-    std::size_t     m_pos;
+    char            tmpBuffer_[MAXLINE_LOG];
+    std::size_t     pos_;
     
-    Time            m_time;
+    Time            time_;
 
-    unsigned int    m_level;
-    std::string     m_directory;
-    unsigned int    m_dest;
-    std::string     m_fileName;
+    unsigned int    level_;
+    std::string     directory_;
+    unsigned int    dest_;
+    std::string     fileName_;
 
-    unsigned int    m_curLevel;
+    unsigned int    curLevel_;
 
-    OutputBuffer    m_buffer;
-    OutputMemoryFile m_file;
+    OutputBuffer    buffer_;
+    OutputMemoryFile file_;
     
     // for optimization
-    uint64_t        m_lastLogSecond;
-    uint64_t        m_lastLogMSecond;
+    uint64_t        lastLogSecond_;
+    uint64_t        lastLogMSecond_;
     
     std::size_t     _Log(const char* data, std::size_t len);
 
@@ -110,7 +110,7 @@ public:
     Logger& operator=(Logger& log);
 
 private:
-    LogLevel    m_level;
+    LogLevel    level_;
 };
 
 
@@ -133,32 +133,32 @@ public:
     void    StopLog();
     bool    Update();
 
-    Logger* NullLog()  {  return  &m_nullLog;  }
+    Logger* NullLog()  {  return  &nullLog_;  }
 
 private:
     LogManager();
 
-    Logger  m_nullLog;
+    Logger  nullLog_;
 
-    std::mutex          m_logsMutex;
-    std::set<Logger* >  m_logs;
+    std::mutex          logsMutex_;
+    std::set<Logger* >  logs_;
     
 
     class LogThread
     {
     public:
-        LogThread() : m_alive(false) {}
+        LogThread() : alive_(false) {}
         
-        void  SetAlive() { m_alive = true; }
-        bool  IsAlive() const { return m_alive; }
-        void  Stop() {  m_alive = false; }
+        void  SetAlive() { alive_ = true; }
+        bool  IsAlive() const { return alive_; }
+        void  Stop() {  alive_ = false; }
         
         virtual void Run();
     private:
-        std::atomic<bool> m_alive;
+        std::atomic<bool> alive_;
     };
     
-    std::shared_ptr<LogThread>  m_logThread;
+    std::shared_ptr<LogThread>  logThread_;
 };
 
 extern __thread Logger*  g_log;

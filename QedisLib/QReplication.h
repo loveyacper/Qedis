@@ -83,8 +83,8 @@ public:
     
     void   Cron();
     
-    void   SetMaster(const std::shared_ptr<QClient>&  cli) { m_master = cli; }
-    QMasterInfo& GetMasterInfo() { return m_masterInfo; }
+    void   SetMaster(const std::shared_ptr<QClient>&  cli) { master_ = cli; }
+    QMasterInfo& GetMasterInfo() { return masterInfo_; }
     
     void   SaveTmpRdb(const char* data, std::size_t len);
     
@@ -92,17 +92,17 @@ private:
     QReplication();
     void    _OnStartBgsave(bool succ);
     
-    bool    m_bgsaving;
+    bool    bgsaving_;
     
-    std::list<std::weak_ptr<QClient> >  m_slaves;
+    std::list<std::weak_ptr<QClient> >  slaves_;
     
-    UnboundedBuffer  m_buffer; // 存rdb期间，缓冲变化
+    UnboundedBuffer  buffer_; // 存rdb期间，缓冲变化
     // SOCKET::SENDPACKET是一定成功的，所以，当文件发送完毕，立即将此buffer SEND
 
-    QMasterInfo             m_masterInfo;
-    std::weak_ptr<QClient>  m_master;
+    QMasterInfo             masterInfo_;
+    std::weak_ptr<QClient>  master_;
 
-    OutputMemoryFile        m_rdb;
+    OutputMemoryFile        rdb_;
 };
 
 

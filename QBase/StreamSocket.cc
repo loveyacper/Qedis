@@ -12,12 +12,12 @@ using std::size_t;
 
 StreamSocket::StreamSocket()
 {
-    m_retry   = false;
+    retry_   = false;
 }
 
 StreamSocket::~StreamSocket()
 {
-    INF << __FUNCTION__ << ": Try close tcp connection " << (m_localSock != INVALID_SOCKET ? m_localSock : -1);
+    INF << __FUNCTION__ << ": Try close tcp connection " << (localSock_ != INVALID_SOCKET ? localSock_ : -1);
 }
 
 bool StreamSocket::Init(int fd)
@@ -25,16 +25,16 @@ bool StreamSocket::Init(int fd)
     if (fd < 0)
         return false;
 
-    Socket::GetPeerAddr(fd, m_peerAddr);
-    m_localSock = fd;
-    SetNonBlock(m_localSock);
-    USR << "Init new fd = " << m_localSock
-        << ", peer addr = " << m_peerAddr.GetIP()
-        << ", peer port = " << m_peerAddr.GetPort();
+    Socket::GetPeerAddr(fd, peerAddr_);
+    localSock_ = fd;
+    SetNonBlock(localSock_);
+    USR << "Init new fd = " << localSock_
+        << ", peer addr = " << peerAddr_.GetIP()
+        << ", peer port = " << peerAddr_.GetPort();
     
 #if defined(__APPLE__)
     int set = 1;
-    setsockopt(m_localSock, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
+    setsockopt(localSock_, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
 #endif
 
     return  true;
@@ -42,27 +42,27 @@ bool StreamSocket::Init(int fd)
 
 int StreamSocket::Recv()
 {
-    if (m_recvBuf.Capacity() == 0)
+    if (recvBuf_.Capacity() == 0)
     {
-        m_recvBuf.InitCapacity(64 * 1024); // First recv data, allocate buffer
-        INF << "First expand recv buffer, capacity " << m_recvBuf.Capacity();
+        recvBuf_.InitCapacity(64 * 1024); // First recv data, allocate buffer
+        INF << "First expand recv buffer, capacity " << recvBuf_.Capacity();
     }
     
     BufferSequence  buffers;
-    m_recvBuf.GetSpace(buffers);
+    recvBuf_.GetSpace(buffers);
     if (buffers.count == 0)
     {
         WRN << "Recv buffer is full";
         return 0;
     }
 
-    int ret = static_cast<int>(::readv(m_localSock, buffers.buffers, static_cast<int>(buffers.count)));
+    int ret = static_cast<int>(::readv(localSock_, buffers.buffers, static_cast<int>(buffers.count)));
     if (ret == ERRORSOCKET && (EAGAIN == errno || EWOULDBLOCK == errno))
         return 0;
 
     if (ret > 0)
     {
-        m_recvBuf.AdjustWritePtr(ret);
+        recvBuf_.AdjustWritePtr(ret);
     }
 
     return (0 == ret) ? EOFSOCKET : ret;
@@ -75,19 +75,19 @@ int StreamSocket::_Send(const BufferSequence& bf)
     if (total == 0)
         return 0;
 
-    int ret = static_cast<int>(::writev(m_localSock, bf.buffers, static_cast<int>(bf.count)));
+    int ret = static_cast<int>(::writev(localSock_, bf.buffers, static_cast<int>(bf.count)));
     if (ERRORSOCKET == ret && (EAGAIN == errno || EWOULDBLOCK == errno))
     {
-        m_epollOut = true;
+        epollOut_ = true;
         ret = 0;
     }
     else if (ret > 0 && static_cast<size_t>(ret) < total)
     {
-        m_epollOut = true;
+        epollOut_ = true;
     }
     else if (static_cast<size_t>(ret) == total)
     {
-        m_epollOut = false;
+        epollOut_ = false;
     }
 
     return ret;
@@ -97,7 +97,7 @@ int StreamSocket::_Send(const BufferSequence& bf)
 bool StreamSocket::SendPacket(const char* pData, size_t nBytes)
 {
     if (pData && nBytes > 0)
-        m_sendBuf.Write(pData, nBytes);
+        sendBuf_.Write(pData, nBytes);
 
     return true;
 }
@@ -119,7 +119,7 @@ bool  StreamSocket::OnReadable()
     int nBytes = StreamSocket::Recv();
     if (nBytes < 0)
     {
-        ERR << "socket " << m_localSock <<", OnReadable error, nBytes = " << nBytes << ", errno " << errno;
+        ERR << "socket " << localSock_ <<", OnReadable error, nBytes = " << nBytes << ", errno " << errno;
         Internal::NetThreadPool::Instance().DisableRead(shared_from_this());
         return false;
     }
@@ -129,11 +129,11 @@ bool  StreamSocket::OnReadable()
 
 bool StreamSocket::Send()
 {
-    if (m_epollOut)
+    if (epollOut_)
         return true;
 
     BufferSequence  bf;
-    m_sendBuf.ProcessBuffer(bf);
+    sendBuf_.ProcessBuffer(bf);
     
     size_t  total = bf.TotalBytes();
     if (total == 0)  return true;
@@ -142,13 +142,13 @@ bool StreamSocket::Send()
     
     if (nSent > 0)
     {
-        m_sendBuf.Skip(nSent);
+        sendBuf_.Skip(nSent);
     }
         
-    if (m_epollOut)
+    if (epollOut_)
     {
         Internal::NetThreadPool::Instance().EnableWrite(shared_from_this());
-        INF << __FUNCTION__ << ": epoll out = true, socket = " << m_localSock;
+        INF << __FUNCTION__ << ": epoll out = true, socket = " << localSock_;
     }
     
     return  nSent >= 0;
@@ -158,7 +158,7 @@ bool StreamSocket::Send()
 bool StreamSocket::OnWritable()
 {
     BufferSequence  bf;
-    m_sendBuf.ProcessBuffer(bf);
+    sendBuf_.ProcessBuffer(bf);
     
     size_t  total = bf.TotalBytes();
     int     nSent = 0;
@@ -166,16 +166,16 @@ bool StreamSocket::OnWritable()
     {
         nSent = _Send(bf);
         if (nSent > 0)
-            m_sendBuf.Skip(nSent);
+            sendBuf_.Skip(nSent);
     }
     else
     {
-        m_epollOut = false;
+        epollOut_ = false;
     }
 
-    if (!m_epollOut)
+    if (!epollOut_)
     {  
-        INF << __FUNCTION__ << ": epoll out = false, socket = " << m_localSock;
+        INF << __FUNCTION__ << ": epoll out = false, socket = " << localSock_;
         Internal::NetThreadPool::Instance().DisableWrite(shared_from_this());
     }
 
@@ -186,10 +186,10 @@ bool StreamSocket::OnError()
 {
     if (Socket::OnError())
     {
-        ERR << "OnError stream socket " << m_localSock;
+        ERR << "OnError stream socket " << localSock_;
 
-        if (m_retry)
-            Server::Instance()->TCPReconnect(m_peerAddr);
+        if (retry_)
+            Server::Instance()->TCPReconnect(peerAddr_);
 
         return true;
     }
@@ -200,17 +200,17 @@ bool StreamSocket::OnError()
 bool StreamSocket::DoMsgParse()
 {
     bool busy = false;
-    while (!m_recvBuf.IsEmpty())
+    while (!recvBuf_.IsEmpty())
     {
         BufferSequence  datum;
-        m_recvBuf.GetDatum(datum, m_recvBuf.ReadableSize());
+        recvBuf_.GetDatum(datum, recvBuf_.ReadableSize());
 
         AttachedBuffer af(datum);
         auto  bodyLen = _HandlePacket(af);
         if (bodyLen > 0)
         {
             busy = true;
-            m_recvBuf.AdjustReadPtr(bodyLen);
+            recvBuf_.AdjustReadPtr(bodyLen);
         }
         else
         {

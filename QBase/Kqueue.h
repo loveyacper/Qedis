@@ -19,7 +19,7 @@ public:
     int Poll(std::vector<FiredEvent>& events, std::size_t maxEvent, int timeoutMs);
 
 private:
-    std::vector<struct kevent> m_events;    
+    std::vector<struct kevent> events_;    
 };
 
 #endif

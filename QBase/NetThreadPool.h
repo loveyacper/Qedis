@@ -27,26 +27,26 @@ public:
     NetThread();
     virtual ~NetThread();
 
-    bool IsAlive() const  {  return m_running; }
-    void Stop()           {  m_running = false;}
+    bool IsAlive() const  {  return running_; }
+    void Stop()           {  running_ = false;}
 
     void AddSocket(PSOCKET , uint32_t event);
     void ModSocket(PSOCKET , uint32_t event);
     void RemoveSocket(std::deque<PSOCKET>::iterator & iter);
 
 protected:
-    std::unique_ptr<Poller>        m_poller;
-    std::vector<FiredEvent > m_firedEvents;    
-    std::deque<PSOCKET>      m_tasks;
+    std::unique_ptr<Poller>        poller_;
+    std::vector<FiredEvent > firedEvents_;    
+    std::deque<PSOCKET>      tasks_;
     void  _TryAddNewTasks();
 
 private:
-    volatile bool m_running;
+    volatile bool running_;
 
-    std::mutex   m_mutex;
+    std::mutex   mutex_;
     typedef std::vector<std::pair<std::shared_ptr<Socket>, uint32_t> >    NewTasks; 
-    NewTasks     m_newTasks; 
-    volatile int m_newCnt;
+    NewTasks     newTasks_; 
+    volatile int newCnt_;
     void _AddSocket(PSOCKET , uint32_t  event);
 };
 
@@ -66,8 +66,8 @@ public:
 ///////////////////////////////////////////////
 class NetThreadPool
 {
-    std::shared_ptr<RecvThread> m_recvThread;
-    std::shared_ptr<SendThread> m_sendThread;
+    std::shared_ptr<RecvThread> recvThread_;
+    std::shared_ptr<SendThread> sendThread_;
 
 public:
     bool AddSocket(PSOCKET , uint32_t event);

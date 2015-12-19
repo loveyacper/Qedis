@@ -10,6 +10,7 @@
 #include "QAOF.h"
 #include "QReplication.h"
 #include "QConfig.h"
+#include "QSlowLog.h"
 
 
 
@@ -349,3 +350,55 @@ QError  auth(const std::vector<QString>& params, UnboundedBuffer* reply)
     return   QError_ok;
 }
 
+QError  slowlog(const std::vector<QString>& params, UnboundedBuffer* reply)
+{
+    if (params[1] == "len")
+    {
+        FormatInt(static_cast<long>(QSlowLog::Instance().GetLogsCount()), reply);
+    }
+    else if (params[1] == "reset")
+    {
+        QSlowLog::Instance().ClearLogs();
+        FormatOK(reply);
+    }
+    else if (params[1] == "get")
+    {
+        const long limit = static_cast<long>(QSlowLog::Instance().GetLogsCount());
+        long realCnt = limit;
+        if (params.size() == 3)
+        {
+            if (!Strtol(params[2].c_str(), params[2].size(), &realCnt))
+            {
+                ReplyError(QError_syntax, reply);
+                return QError_syntax;
+            }
+        }
+        
+        if (realCnt > limit)
+            realCnt = limit;
+        
+        PreFormatMultiBulk(realCnt, reply);
+        for (const auto& item : QSlowLog::Instance().GetLogs())
+        {
+            if (realCnt -- == 0)
+                break;
+            
+            PreFormatMultiBulk(2, reply);
+            FormatInt(static_cast<long>(item.used), reply);
+            
+            PreFormatMultiBulk(static_cast<long>(item.cmds.size()), reply);
+            for (const auto& c : item.cmds)
+            {
+                FormatBulk(c, reply);
+            }
+        }
+    }
+    else
+    {
+        ReplyError(QError_syntax, reply);
+        return QError_syntax;
+    }
+
+    
+    return   QError_ok;
+}

@@ -22,10 +22,10 @@ public:
             std::equal_to<QString> >   Member2Score;
 
     Member2Score::iterator FindMember(const QString& member);
-    Member2Score::const_iterator begin() const {  return m_members.begin(); };
-    Member2Score::iterator begin() {  return m_members.begin(); };
-    Member2Score::const_iterator end() const {  return m_members.end(); };
-    Member2Score::iterator end() {  return m_members.end(); };
+    Member2Score::const_iterator begin() const {  return members_.begin(); };
+    Member2Score::iterator begin() {  return members_.begin(); };
+    Member2Score::const_iterator end() const {  return members_.end(); };
+    Member2Score::iterator end() {  return members_.end(); };
     void    AddMember   (const QString& member, double score);
     double  UpdateMember(const Member2Score::iterator& itMem, double delta);
 
@@ -42,8 +42,8 @@ public:
     std::size_t Size    ()  const;
 
 private:
-    Score2Members   m_scores;
-    Member2Score    m_members;
+    Score2Members   scores_;
+    Member2Score    members_;
 };
 
 #endif 

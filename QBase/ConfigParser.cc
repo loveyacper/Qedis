@@ -28,7 +28,7 @@ bool ConfigParser::Load(const char* FileName)
     if (!file.Open(FileName))
         return false; // no such file
 
-    m_data.clear();
+    data_.clear();
 
     size_t      maxLen = size_t(-1);
     const char* data = file.Read(maxLen);
@@ -59,14 +59,14 @@ bool ConfigParser::Load(const char* FileName)
 
                 if (!key.empty())
                 {
-                    if (m_data.count(key) > 0)
+                    if (data_.count(key) > 0)
                     {
                         // duplicate key
-                        m_data[key] += " " + value;
+                        data_[key] += " " + value;
                     }
                     else
                     {
-                        m_data[key] = value;
+                        data_[key] = value;
                     }
                     
                     key.clear();

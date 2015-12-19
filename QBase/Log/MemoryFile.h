@@ -23,17 +23,17 @@ public:
 private:
     bool            _MapReadOnly();
 
-    int				m_file;
-    char*           m_pMemory;
-    std::size_t     m_offset;
-    std::size_t     m_size;
+    int				file_;
+    char*           pMemory_;
+    std::size_t     offset_;
+    std::size_t     size_;
 };
 
 template <typename T>
 inline T  InputMemoryFile::Read()
 {
-    T res(*reinterpret_cast<T* >(m_pMemory + m_offset));
-    m_offset += sizeof(T);
+    T res(*reinterpret_cast<T* >(pMemory_ + offset_));
+    offset_ += sizeof(T);
     
     return res;
 }
@@ -55,12 +55,12 @@ public:
     size_t      Write(const T& t);
     
     
-    std::size_t Size()   const { return m_size;   }
+    std::size_t Size()   const { return size_;   }
     bool        IsOpen() const;
 
 private:
-    int			m_file;
-    size_t      m_size;
+    int			file_;
+    size_t      size_;
 };
 
 

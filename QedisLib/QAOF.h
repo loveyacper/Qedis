@@ -9,7 +9,7 @@
 #include "QStore.h"
 
 
-extern pid_t             g_rewritePid;
+extern pid_t g_rewritePid;
 
 class  QAOFThreadController
 {
@@ -25,48 +25,48 @@ public:
     bool  ProcessTmpBuffer(BufferSequence& bf);
     void  SkipTmpBuffer(size_t  n);
     
-    const QString&  GetAofFile() const { return m_aofFile; }
+    const QString&  GetAofFile() const { return aofFile_; }
     void  SetAofFile(const QString& name);
 
     static void  RewriteDoneHandler(int exitcode, int bysignal);
     
 private:
-    QAOFThreadController() : m_lastDb(-1), m_aofFile("appendonly.aof") {}
+    QAOFThreadController() : lastDb_(-1), aofFile_("appendonly.aof") {}
 
     class AOFThread
     {
         friend class QAOFThreadController;
     public:
-        AOFThread() : m_alive(false) { }
+        AOFThread() : alive_(false) { }
         ~AOFThread();
         
-        void  SetAlive()      {  m_alive = true; }
-        bool  IsAlive() const {  return m_alive; }
-        void  Stop()          {  m_alive = false; }
+        void  SetAlive()      {  alive_ = true; }
+        bool  IsAlive() const {  return alive_; }
+        void  Stop()          {  alive_ = false; }
         
-        bool  Open(const char* file) { return m_file.Open(file); }
-        void  Close()  {    m_file.Close(); }
+        bool  Open(const char* file) { return file_.Open(file); }
+        void  Close()  {    file_.Close(); }
         void  SaveCommand(const std::vector<QString>& params);
         
         bool  Flush();
     
         virtual void Run();
         
-        std::atomic<bool>   m_alive;
+        std::atomic<bool>   alive_;
 
-        OutputMemoryFile    m_file;
-        OutputBuffer        m_buf;
+        OutputMemoryFile    file_;
+        OutputBuffer        buf_;
         
-        std::promise<void>  m_pro; // Effective modern C++ : Item 39
+        std::promise<void>  pro_; // Effective modern C++ : Item 39
     };
     
     void _WriteSelectDB(int db, OutputBuffer& dst);
     
-    std::shared_ptr<AOFThread>  m_aofThread;
-    OutputBuffer                m_aofBuffer;
-    int                         m_lastDb;
+    std::shared_ptr<AOFThread>  aofThread_;
+    OutputBuffer                aofBuffer_;
+    int                         lastDb_;
     
-    QString                     m_aofFile;
+    QString                     aofFile_;
 };
 
 
@@ -76,11 +76,11 @@ public:
     QAOFLoader();
     
     bool  Load(const char* name);
-    bool  IsReady() const  {  return m_state == State::AllReady; }
+    bool  IsReady() const  {  return state_ == State::AllReady; }
 
     const std::vector<std::vector<QString> >& GetCmds() const
     {
-        return m_cmds;
+        return cmds_;
     }
 
 private:
@@ -95,9 +95,9 @@ private:
         AllReady,
     } ;
 
-    int                   m_multi;
-    std::vector<std::vector<QString> >  m_cmds;
-    int m_state;
+    int                   multi_;
+    std::vector<std::vector<QString> >  cmds_;
+    int state_;
 };
 
 template <typename DEST>

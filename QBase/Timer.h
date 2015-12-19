@@ -20,24 +20,24 @@ public:
     Time(int hour, int min, int sec); // TODO year month day, and Effective cpp item 18
 
     void        Now();
-    uint64_t    MilliSeconds() const { return m_ms; }
+    uint64_t    MilliSeconds() const { return ms_; }
     std::size_t FormatTime(char* buf) const;
     void        AddDelay(uint64_t delay);
 
-    int GetYear()   const { _UpdateTm(); return m_tm.tm_year + 1900;  } 
-    int GetMonth()  const { _UpdateTm(); return m_tm.tm_mon + 1;  } 
-    int GetDay()    const { _UpdateTm(); return m_tm.tm_mday; }
-    int GetHour()   const { _UpdateTm(); return m_tm.tm_hour; }
-    int GetMinute() const { _UpdateTm(); return m_tm.tm_min;  }
-    int GetSecond() const { _UpdateTm(); return m_tm.tm_sec;  }
+    int GetYear()   const { _UpdateTm(); return tm_.tm_year + 1900;  } 
+    int GetMonth()  const { _UpdateTm(); return tm_.tm_mon + 1;  } 
+    int GetDay()    const { _UpdateTm(); return tm_.tm_mday; }
+    int GetHour()   const { _UpdateTm(); return tm_.tm_hour; }
+    int GetMinute() const { _UpdateTm(); return tm_.tm_min;  }
+    int GetSecond() const { _UpdateTm(); return tm_.tm_sec;  }
 
     Time&    operator= (const Time& );
-    operator uint64_t() const { return m_ms; }
+    operator uint64_t() const { return ms_; }
 
 private:
-    uint64_t    m_ms;      // milliseconds from 1970
-    mutable tm  m_tm;
-    mutable bool m_valid;
+    uint64_t    ms_;      // milliseconds from 1970
+    mutable tm  tm_;
+    mutable bool valid_;
     
     void    _UpdateTm()  const;
 };
@@ -53,16 +53,16 @@ public:
     explicit Timer(uint32_t interval = uint32_t(-1), int32_t count = -1);
     virtual ~Timer() {}
     bool     OnTimer();
-    void     SetRemainCnt(int32_t remain) {  m_count = remain; }
-    bool     IsWorking() const {  return  m_prev.get() != nullptr; }
+    void     SetRemainCnt(int32_t remain) {  count_ = remain; }
+    bool     IsWorking() const {  return  prev_.get() != nullptr; }
 
 private:
     virtual  bool _OnTimer() { return false; }
-    PTIMER   m_next;
-    PTIMER   m_prev;
-    Time     m_triggerTime;
-    uint32_t m_interval;
-    int32_t  m_count;
+    PTIMER   next_;
+    PTIMER   prev_;
+    Time     triggerTime_;
+    uint32_t interval_;
+    int32_t  count_;
 };
 
 class TimerManager
@@ -98,9 +98,9 @@ private:
     PTIMER m_list5[LIST_SIZE];  // 64 * 64 * 64 * 64 * 256ms = 49d
 
     // async add
-    std::mutex               m_lock;
-    std::atomic<std::size_t> m_count;
-    std::vector<PTIMER >  m_timers;
+    std::mutex               lock_;
+    std::atomic<std::size_t> count_;
+    std::vector<PTIMER >  timers_;
 };
 
 inline int TimerManager::_Index(int level)

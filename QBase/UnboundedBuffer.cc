@@ -32,7 +32,7 @@ std::size_t UnboundedBuffer::PushDataAt(const void* pData, std::size_t nSize, st
 
     assert (nSize + offset <= WritableSize());
 
-   	::memcpy(&m_buffer[m_writePos + offset], pData, nSize);
+   	::memcpy(&buffer_[writePos_ + offset], pData, nSize);
     return  nSize;
 }
 
@@ -55,7 +55,7 @@ std::size_t UnboundedBuffer::PeekDataAt(void* pBuf, std::size_t nSize, std::size
     if (nSize + offset > dataSize)
         nSize = dataSize - offset;
 
-	::memcpy(pBuf, &m_buffer[m_readPos + offset], nSize);
+	::memcpy(pBuf, &buffer_[readPos_ + offset], nSize);
 
     return nSize;
 }
@@ -66,9 +66,9 @@ void UnboundedBuffer::_AssureSpace(std::size_t nSize)
     if (nSize <= WritableSize())
         return;
 
-    std::size_t maxSize = m_buffer.size();
+    std::size_t maxSize = buffer_.size();
 
-    while (nSize > WritableSize() + m_readPos)
+    while (nSize > WritableSize() + readPos_)
     {
         if (maxSize == 0)
             maxSize = 1;
@@ -77,57 +77,57 @@ void UnboundedBuffer::_AssureSpace(std::size_t nSize)
         else 
             break;
 
-        m_buffer.resize(maxSize);
+        buffer_.resize(maxSize);
     }
         
-    if (m_readPos > 0)
+    if (readPos_ > 0)
     {
         std::size_t dataSize = ReadableSize();
-        std::cout << dataSize << " bytes moved from " << m_readPos << std::endl;
-        ::memmove(&m_buffer[0], &m_buffer[m_readPos], dataSize);
-        m_readPos  = 0;
-        m_writePos = dataSize;
+        std::cout << dataSize << " bytes moved from " << readPos_ << std::endl;
+        ::memmove(&buffer_[0], &buffer_[readPos_], dataSize);
+        readPos_  = 0;
+        writePos_ = dataSize;
     }
 }
 
 void UnboundedBuffer::Shrink(bool tight)
 {
-    assert (m_buffer.capacity() == m_buffer.size());
+    assert (buffer_.capacity() == buffer_.size());
 
-    if (m_buffer.empty())
+    if (buffer_.empty())
     { 
-        assert (m_readPos == 0);
-        assert (m_writePos == 0);
+        assert (readPos_ == 0);
+        assert (writePos_ == 0);
         return;
     }
 
-    std::size_t oldCap   = m_buffer.size();
+    std::size_t oldCap   = buffer_.size();
     std::size_t dataSize = ReadableSize();
     if (!tight && dataSize > oldCap / 2)
         return;
 
     std::vector<char>  tmp;
     tmp.resize(dataSize);
-    memcpy(&tmp[0], &m_buffer[m_readPos], dataSize);
-    tmp.swap(m_buffer);
+    memcpy(&tmp[0], &buffer_[readPos_], dataSize);
+    tmp.swap(buffer_);
 
-    m_readPos  = 0;
-    m_writePos = dataSize;
+    readPos_  = 0;
+    writePos_ = dataSize;
 
-    std::cout << oldCap << " shrink to " << m_buffer.size() << std::endl;
+    std::cout << oldCap << " shrink to " << buffer_.size() << std::endl;
 }
 
 void UnboundedBuffer::Clear()
 {
-    m_readPos = m_writePos = 0; 
+    readPos_ = writePos_ = 0; 
 }
 
 
 void UnboundedBuffer::Swap(UnboundedBuffer& buf)
 {
-    m_buffer.swap(buf.m_buffer);
-    std::swap(m_readPos, buf.m_readPos);
-    std::swap(m_writePos, buf.m_writePos);
+    buffer_.swap(buf.buffer_);
+    std::swap(readPos_, buf.readPos_);
+    std::swap(writePos_, buf.writePos_);
 }
 
 #if 0

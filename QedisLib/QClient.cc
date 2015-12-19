@@ -31,12 +31,12 @@ BODY_LENGTH_T QClient::_ProcessInlineCmd(const char* buf, size_t bytes)
         if (buf[cursor] == '\r' && buf[cursor+1] == '\n')
         {
             len = static_cast<BODY_LENGTH_T>(cursor + 2);
-            m_state = ParseCmdState::Ready;
+            state_ = ParseCmdState::Ready;
             break;
         }
     }
     
-    if (m_state == ParseCmdState::Ready)
+    if (state_ == ParseCmdState::Ready)
     {
         QString   param;
         for (size_t i = 0; i < cursor; ++ i)
@@ -46,7 +46,7 @@ BODY_LENGTH_T QClient::_ProcessInlineCmd(const char* buf, size_t bytes)
                 if (!param.empty())
                 {
                     INF << "inline cmd param " << param.c_str();
-                    m_params.emplace_back(std::move(param));
+                    params_.emplace_back(std::move(param));
                     param.clear();
                 }
             }
@@ -57,7 +57,7 @@ BODY_LENGTH_T QClient::_ProcessInlineCmd(const char* buf, size_t bytes)
         }
         
         INF << "inline cmd param " << param.c_str();
-        m_params.emplace_back(std::move(param));
+        params_.emplace_back(std::move(param));
     }
     
     return len;
@@ -112,18 +112,18 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
     
     QParseInt parseIntRet = QParseInt::ok;
     
-    switch (m_state)
+    switch (state_)
     {
         case ParseCmdState::Init:
-            assert (m_multibulk == 0);
+            assert (multibulk_ == 0);
             if (*ptr == '*')
             {
                 ++ ptr;
                 
-                parseIntRet = GetIntUntilCRLF(ptr, end - ptr, m_multibulk);
+                parseIntRet = GetIntUntilCRLF(ptr, end - ptr, multibulk_);
                 if (parseIntRet == QParseInt::ok)
                 {
-                    m_state = ParseCmdState::Arglen;
+                    state_ = ParseCmdState::Arglen;
                     ptr += 2; // skip CRLF
                 }
                 else if (parseIntRet == QParseInt::error)
@@ -143,10 +143,10 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
             assert(*ptr == '$');
             ++ ptr;
                 
-            parseIntRet = GetIntUntilCRLF(ptr, end - ptr, m_paramLen);
+            parseIntRet = GetIntUntilCRLF(ptr, end - ptr, paramLen_);
             if (parseIntRet == QParseInt::ok)
             {
-                m_state = ParseCmdState::Arg;
+                state_ = ParseCmdState::Arg;
                 ptr += 2; // skip CRLF
             }
             else if (parseIntRet == QParseInt::error)
@@ -167,21 +167,21 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
                 break;
             }
                 
-            if (crlf - ptr != m_paramLen)
+            if (crlf - ptr != paramLen_)
             {
-                ERR << "param len said " << m_paramLen << ", but actual get " << (crlf - ptr);
+                ERR << "param len said " << paramLen_ << ", but actual get " << (crlf - ptr);
                 OnError();
                 return 0;
             }
                 
-            m_params.emplace_back(QString(ptr, crlf - ptr));
-            if (m_params.size() == static_cast<size_t>(m_multibulk))
+            params_.emplace_back(QString(ptr, crlf - ptr));
+            if (params_.size() == static_cast<size_t>(multibulk_))
             {
-                m_state =  ParseCmdState::Ready;
+                state_ =  ParseCmdState::Ready;
             }
             else
             {
-                m_state =  ParseCmdState::Arglen;
+                state_ =  ParseCmdState::Arglen;
             }
                 
             ptr = crlf + 2; // skip CRLF
@@ -192,30 +192,30 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
             break;
     }
     
-    if (m_state != ParseCmdState::Ready)
+    if (state_ != ParseCmdState::Ready)
         return static_cast<BODY_LENGTH_T>(ptr - start);
 
     /// handle packet
     s_pCurrentClient = this;
     
-    if (!m_auth && m_params[0] != "auth")
+    if (!auth_ && params_[0] != "auth")
     {
-        ReplyError(QError_needAuth, &m_reply);
-        SendPacket(m_reply.ReadAddr(), m_reply.ReadableSize());
+        ReplyError(QError_needAuth, &reply_);
+        SendPacket(reply_.ReadAddr(), reply_.ReadableSize());
         _Reset();
         return static_cast<BODY_LENGTH_T>(ptr - start);
     }
     
-    QString& cmd = m_params[0];
+    QString& cmd = params_[0];
     std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::tolower);
     
-    QSTORE.SelectDB(m_db);
+    QSTORE.SelectDB(db_);
     
-    INF << "client " << GetID() << ", cmd " << m_params[0].c_str();
+    INF << "client " << GetID() << ", cmd " << params_[0].c_str();
     
-    FeedMonitors(m_params);
+    FeedMonitors(params_);
     
-    const QCommandInfo* info = QCommandTable::GetCommandInfo(m_params[0]);
+    const QCommandInfo* info = QCommandTable::GetCommandInfo(params_[0]);
     // if is multi state,  GetCmdInfo, CheckParamsCount;
     if (IsFlagOn(ClientFlag_multi))
     {
@@ -225,17 +225,17 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
             cmd != "unwatch" &&
             cmd != "discard")
         {
-            if (!info || !info->CheckParamsCount(static_cast<int>(m_params.size())))
+            if (!info || !info->CheckParamsCount(static_cast<int>(params_.size())))
             {
-                ERR << "queue failed: cmd " << cmd.c_str() << " has params " << m_params.size();
-                ReplyError(info ? QError_param : QError_unknowCmd, &m_reply);
-                SendPacket(m_reply.ReadAddr(), m_reply.ReadableSize());
+                ERR << "queue failed: cmd " << cmd.c_str() << " has params " << params_.size();
+                ReplyError(info ? QError_param : QError_unknowCmd, &reply_);
+                SendPacket(reply_.ReadAddr(), reply_.ReadableSize());
                 FlagExecWrong();
             }
             else
             {
                 if (!IsFlagOn(ClientFlag_wrongExec))
-                    m_queueCmds.push_back(m_params);
+                    queueCmds_.push_back(params_);
                 
                 SendPacket("+QUEUED\r\n", 9);
                 INF << "queue cmd " << cmd.c_str();
@@ -251,25 +251,25 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
         !IsFlagOn(ClientFlag_master) &&
         (info->attr & QCommandAttr::QAttr_write))
     {
-        ReplyError(err = QError_readonlySlave, &m_reply);
+        ReplyError(err = QError_readonlySlave, &reply_);
     }
     else
     {
         QSlowLog::Instance().Begin();
-        err = QCommandTable::ExecuteCmd(m_params,
+        err = QCommandTable::ExecuteCmd(params_,
                                         info,
-                                        IsFlagOn(ClientFlag_master) ? nullptr : &m_reply);
-        QSlowLog::Instance().EndAndStat(m_params);
+                                        IsFlagOn(ClientFlag_master) ? nullptr : &reply_);
+        QSlowLog::Instance().EndAndStat(params_);
     }
     
-    if (!m_reply.IsEmpty())
+    if (!reply_.IsEmpty())
     {
-        SendPacket(m_reply.ReadAddr(), m_reply.ReadableSize());
+        SendPacket(reply_.ReadAddr(), reply_.ReadableSize());
     }
     
     if (err == QError_ok && (info->attr & QAttr_write))
     {
-        Propogate(m_params);
+        Propogate(params_);
     }
     
     _Reset();
@@ -282,16 +282,16 @@ QClient*  QClient::Current()
     return s_pCurrentClient;
 }
 
-QClient::QClient() : m_db(0), m_flag(0), m_name("clientxxx")
+QClient::QClient() : db_(0), flag_(0), name_("clientxxx")
 {
-    m_auth = false;
+    auth_ = false;
     SelectDB(0);
     _Reset();
 }
 
 void QClient::OnConnect()
 {
-    if (QSTORE.m_password.empty())
+    if (QSTORE.password_.empty())
         SetAuth();
 }
 
@@ -299,7 +299,7 @@ bool QClient::SelectDB(int db)
 { 
     if (QSTORE.SelectDB(db) >= 0)
     {
-        m_db = db;
+        db_ = db;
         return true;
     }
 
@@ -310,23 +310,23 @@ void QClient::_Reset()
 {
     s_pCurrentClient = 0;
 
-    m_state     = ParseCmdState::Init;
-    m_multibulk = 0;
-    m_paramLen  = 0;
-    m_params.clear();
-    m_reply.Clear();
+    state_     = ParseCmdState::Init;
+    multibulk_ = 0;
+    paramLen_  = 0;
+    params_.clear();
+    reply_.Clear();
 }
 
 // multi
 bool QClient::Watch(const QString& key)
 {
     INF << "Watch " << key.c_str();
-    return m_watchKeys.insert(key).second;
+    return watchKeys_.insert(key).second;
 }
 
 void QClient::UnWatch()
 {
-    m_watchKeys.clear();
+    watchKeys_.clear();
 }
 
 bool QClient::NotifyDirty(const QString& key)
@@ -337,7 +337,7 @@ bool QClient::NotifyDirty(const QString& key)
         return false;
     }
     
-    if (m_watchKeys.count(key))
+    if (watchKeys_.count(key))
     {
         INF << "Dirty client because key " << key.c_str();
         SetFlag(ClientFlag_dirty);
@@ -361,19 +361,19 @@ bool QClient::Exec()
     
     if (IsFlagOn(ClientFlag_dirty))
     {
-        FormatNullArray(&m_reply);
+        FormatNullArray(&reply_);
         return true;
     }
     
-    PreFormatMultiBulk(m_queueCmds.size(), &m_reply);
-    for (auto it(m_queueCmds.begin());
-              it != m_queueCmds.end();
+    PreFormatMultiBulk(queueCmds_.size(), &reply_);
+    for (auto it(queueCmds_.begin());
+              it != queueCmds_.end();
               ++ it)
     {
         INF << "EXEC " << (*it)[0].c_str();
         const QCommandInfo* info = QCommandTable::GetCommandInfo((*it)[0]);
-        QError err = QCommandTable::ExecuteCmd(*it, info, &m_reply);
-        SendPacket(m_reply.ReadAddr(), m_reply.ReadableSize());
+        QError err = QCommandTable::ExecuteCmd(*it, info, &reply_);
+        SendPacket(reply_.ReadAddr(), reply_.ReadableSize());
         _Reset();
         
         // may dirty clients;
@@ -388,8 +388,8 @@ bool QClient::Exec()
 
 void QClient::ClearMulti()
 {
-//    m_watchKeys.clear();
-    m_queueCmds.clear();
+//    watchKeys_.clear();
+    queueCmds_.clear();
     ClearFlag(ClientFlag_multi);
     ClearFlag(ClientFlag_dirty);
     ClearFlag(ClientFlag_wrongExec);
@@ -398,18 +398,18 @@ void QClient::ClearMulti()
 
 bool  QClient::WaitFor(const QString& key, const QString* target)
 {
-    bool  succ = m_waitingKeys.insert(key).second;
+    bool  succ = waitingKeys_.insert(key).second;
     
     if (succ && target)
     {
-        if (!m_target.empty())
+        if (!target_.empty())
         {
-            ERR << "Wait failed for key " << key << ", because old target " << m_target;
-            m_waitingKeys.erase(key);
+            ERR << "Wait failed for key " << key << ", because old target " << target_;
+            waitingKeys_.erase(key);
             return false;
         }
         
-        m_target = *target;
+        target_ = *target;
     }
     
     return succ;
@@ -418,7 +418,7 @@ bool  QClient::WaitFor(const QString& key, const QString* target)
 
 void   QClient::SetSlaveInfo()
 {
-    m_slaveInfo.reset(new QSlaveInfo());
+    slaveInfo_.reset(new QSlaveInfo());
 }
 
 void  QClient::AddCurrentToMonitor()
@@ -436,8 +436,8 @@ void  QClient::FeedMonitors(const std::vector<QString>& params)
     char buf[512];
     int n = snprintf(buf, sizeof buf, "+[db%d %s:%hu]: \"",
              QSTORE.GetDB(),
-             s_pCurrentClient->m_peerAddr.GetIP(),
-             s_pCurrentClient->m_peerAddr.GetPort());
+             s_pCurrentClient->peerAddr_.GetIP(),
+             s_pCurrentClient->peerAddr_.GetPort());
 
     assert(n > 0);
     if (n > static_cast<int>(sizeof buf))

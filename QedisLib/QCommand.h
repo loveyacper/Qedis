@@ -51,6 +51,7 @@ QCommandHandler  echo;
 QCommandHandler  info;
 QCommandHandler  monitor;
 QCommandHandler  auth;
+QCommandHandler  slowlog;
 
 // string commands
 QCommandHandler  set;

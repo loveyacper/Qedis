@@ -25,7 +25,7 @@ void   QAOFThreadController::RewriteDoneHandler(int exitcode, int bysignal)
         g_rewritePid = -1;
         
         QAOFThreadController::Instance().Join();
-        ::rename(g_aofTmp, QAOFThreadController::Instance().m_aofFile.c_str());
+        ::rename(g_aofTmp, QAOFThreadController::Instance().aofFile_.c_str());
         QAOFThreadController::Instance().Start();
     }
     else
@@ -48,19 +48,19 @@ QAOFThreadController& QAOFThreadController::Instance()
 
 void  QAOFThreadController::SetAofFile(const QString& name)
 {
-    m_aofFile = name;
+    aofFile_ = name;
 }
 
 bool  QAOFThreadController::ProcessTmpBuffer(BufferSequence& bf)
 {
-    m_aofBuffer.ProcessBuffer(bf);
+    aofBuffer_.ProcessBuffer(bf);
     
     return bf.count > 0;
 }
 
 void  QAOFThreadController::SkipTmpBuffer(size_t n)
 {
-    m_aofBuffer.Skip(n);
+    aofBuffer_.Skip(n);
 }
 
 // main thread  call this
@@ -68,34 +68,34 @@ void  QAOFThreadController::Start()
 {
     DBG << "start aof thread";
     
-    assert(!m_aofThread || !m_aofThread->IsAlive());
+    assert(!aofThread_ || !aofThread_->IsAlive());
     
-    m_aofThread.reset(new AOFThread);
-    m_aofThread->Open(m_aofFile.c_str());
-    m_aofThread->SetAlive();
+    aofThread_.reset(new AOFThread);
+    aofThread_->Open(aofFile_.c_str());
+    aofThread_->SetAlive();
     
-    ThreadPool::Instance().ExecuteTask(std::bind(&AOFThread::Run, m_aofThread.get()));
+    ThreadPool::Instance().ExecuteTask(std::bind(&AOFThread::Run, aofThread_.get()));
 }
 
 // when fork(), parent call stop;
 void   QAOFThreadController::Stop()
 {
-    if (!m_aofThread)
+    if (!aofThread_)
         return;
     
     DBG << "stop aof thread";
-    m_aofThread->Stop();
+    aofThread_->Stop();
     QAOFThreadController::Instance().Join();
-    m_aofThread = nullptr;
+    aofThread_ = nullptr;
 }
 
 // main thread call this
 void   QAOFThreadController::_WriteSelectDB(int db, OutputBuffer& dst)
 {
-    if (db == m_lastDb)
+    if (db == lastDb_)
         return;
 
-    m_lastDb = db;
+    lastDb_ = db;
     
     WriteMultiBulkLong(2, dst);
     WriteBulkString("select", 6, dst);
@@ -106,13 +106,13 @@ void   QAOFThreadController::SaveCommand(const std::vector<QString>& params, int
 {
     OutputBuffer* dst;
     
-    if (m_aofThread && m_aofThread->IsAlive())
+    if (aofThread_ && aofThread_->IsAlive())
     {
-        dst = &m_aofThread->m_buf;
+        dst = &aofThread_->buf_;
     }
     else
     {
-        dst = &m_aofBuffer;
+        dst = &aofBuffer_;
     }
     
     _WriteSelectDB(db, *dst);
@@ -121,20 +121,20 @@ void   QAOFThreadController::SaveCommand(const std::vector<QString>& params, int
 
 QAOFThreadController::AOFThread::~AOFThread()
 {
-    m_file.Close();
+    file_.Close();
 }
 
 bool   QAOFThreadController::AOFThread::Flush()
 {
     BufferSequence  data;
-    m_buf.ProcessBuffer(data);
+    buf_.ProcessBuffer(data);
     
     for (size_t i = 0; i < data.count; ++ i)
     {
-        m_file.Write(data.buffers[i].iov_base, data.buffers[i].iov_len);
+        file_.Write(data.buffers[i].iov_base, data.buffers[i].iov_len);
     }
     
-    m_buf.Skip(data.TotalBytes());
+    buf_.Skip(data.TotalBytes());
     
     return  data.count != 0;
 }
@@ -142,7 +142,7 @@ bool   QAOFThreadController::AOFThread::Flush()
 
 void   QAOFThreadController::AOFThread::SaveCommand(const std::vector<QString>& params)
 {
-    ::SaveCommand(params, m_buf);
+    ::SaveCommand(params, buf_);
 }
 
 void  QAOFThreadController::AOFThread::Run()
@@ -155,7 +155,7 @@ void  QAOFThreadController::AOFThread::Run()
     {
         for (size_t i = 0; i < data.count; ++ i)
         {
-            m_file.Write(data.buffers[i].iov_base, data.buffers[i].iov_len);
+            file_.Write(data.buffers[i].iov_base, data.buffers[i].iov_len);
         }
         
         QAOFThreadController::Instance().SkipTmpBuffer(data.TotalBytes());
@@ -164,19 +164,19 @@ void  QAOFThreadController::AOFThread::Run()
     while (IsAlive())
     {
         if (Flush())
-            m_file.Sync();
+            file_.Sync();
         else
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     
     Close();
-    m_pro.set_value();
+    pro_.set_value();
 }
 
 void  QAOFThreadController::Join()
 {
-    if (m_aofThread)
-        m_aofThread->m_pro.get_future().wait();
+    if (aofThread_)
+        aofThread_->pro_.get_future().wait();
 }
 
 static void SaveExpire(const QString& key, uint64_t absMs, OutputMemoryFile& file)
@@ -399,19 +399,19 @@ bool  QAOFLoader::Load(const char* name)
     const char* const end = content + maxLen;
     while (content < end)
     {
-        switch (m_state)
+        switch (state_)
         {
             case State::Init:
-                m_cmds.resize(m_cmds.size() + 1);
+                cmds_.resize(cmds_.size() + 1);
 
-                m_state = State::Multi;
+                state_ = State::Multi;
                 break;
 
             case Multi:
                 assert (*content == '*');
                 ++ content;
                 
-                if (QParseInt::ok != GetIntUntilCRLF(content, end - content, m_multi))
+                if (QParseInt::ok != GetIntUntilCRLF(content, end - content, multi_))
                 {
                     ERR << "get multi failed";
                     return false;
@@ -421,7 +421,7 @@ bool  QAOFLoader::Load(const char* name)
                     content += kCRLFLen;
                 }
 
-                m_state = State::Param;
+                state_ = State::Param;
                 break;
 
             case Param:
@@ -446,32 +446,32 @@ bool  QAOFLoader::Load(const char* name)
                         return false;
                     }
 
-                    auto&  params = m_cmds.back();
+                    auto&  params = cmds_.back();
                     params.push_back(QString(content, paramLen));
                     content += paramLen + kCRLFLen;
 
-                    if (static_cast<int>(params.size()) == m_multi)
-                        m_state = Ready;
+                    if (static_cast<int>(params.size()) == multi_)
+                        state_ = Ready;
                 }
 
                 break;
 
             case Ready:
-                m_state = State::Init;
+                state_ = State::Init;
                 break;
         }
     }
 
-    if (m_state == State::Ready)
-        m_state = State::AllReady;
+    if (state_ == State::Ready)
+        state_ = State::AllReady;
 
-    return m_state == State::AllReady;
+    return state_ == State::AllReady;
 }
     
 void QAOFLoader::_Reset()
 {
-    m_state = State::Init;
-    m_multi = 0;
-    m_cmds.clear();
+    state_ = State::Init;
+    multi_ = 0;
+    cmds_.clear();
 }
 

@@ -20,13 +20,13 @@ public:
     {
     }
     
-    SocketAddr  m_peer;
+    SocketAddr  peer_;
 
 private:
     bool _OnTimer()
     {
-        USR << " : OnTimer reconnect to " << m_peer.GetIP() << ":" << m_peer.GetPort();
-        Server::Instance()->TCPConnect(m_peer, true);
+        USR << " : OnTimer reconnect to " << peer_.GetIP() << ":" << peer_.GetPort();
+        Server::Instance()->TCPConnect(peer_, true);
 
         return false;
     }
@@ -41,29 +41,29 @@ void Server::IntHandler(int signum)
 void Server::HupHandler(int signum)
 {
     if (Server::Instance() != NULL)
-        Server::Instance()->m_reloadCfg = true;
+        Server::Instance()->reloadCfg_ = true;
 }
 
-Server* Server::sm_instance = nullptr;
+Server* Server::sinstance_ = nullptr;
 
-std::set<int>   Server::sm_listenSocks;
+std::set<int>   Server::slistenSocks_;
 
-Server::Server() : m_bTerminate(false), m_reloadCfg(false)
+Server::Server() : bTerminate_(false), reloadCfg_(false)
 {
-    if (sm_instance == NULL)
-        sm_instance = this;
+    if (sinstance_ == NULL)
+        sinstance_ = this;
     else
         ::abort();
 }
 
 Server::~Server()
 {
-    sm_instance = NULL;
+    sinstance_ = NULL;
 }
 
 bool Server::_RunLogic() 
 {
-    return m_tasks.DoMsgParse();
+    return tasks_.DoMsgParse();
 }
 
 bool Server::TCPBind(const SocketAddr& addr)
@@ -74,7 +74,7 @@ bool Server::TCPBind(const SocketAddr& addr)
 
     if (pServerSocket->Bind(addr))
     {
-        sm_listenSocks.insert(pServerSocket->GetSocket());
+        slistenSocks_.insert(pServerSocket->GetSocket());
         return true;
     }
     
@@ -86,7 +86,7 @@ void Server::TCPReconnect(const SocketAddr& peer)
 {
     INF << __FUNCTION__ << peer.GetIP();
     std::shared_ptr<ReconnTimer>  pTimer(new ReconnTimer(2 * 1000));  // TODO : flexible
-    pTimer->m_peer = peer;
+    pTimer->peer_ = peer;
 
     TimerManager::Instance().AsyncAddTimer(pTimer);
 }
@@ -122,9 +122,9 @@ void Server::MainLoop()
     // set the max fd number
     struct rlimit   rlim; 
     getrlimit(RLIMIT_NOFILE, &rlim); 
-    if (rlim.rlim_max < 30000) 
+    if (rlim.rlimax_ < 30000) 
     { 
-        rlim.rlim_max = rlim.rlim_cur = 30000;
+        rlim.rlimax_ = rlim.rlicur_ = 30000;
         if (0 != setrlimit(RLIMIT_NOFILE, &rlim)) 
         { 
             perror("setrlimit error "); 
@@ -138,19 +138,19 @@ void Server::MainLoop()
         _Init() &&
         LogManager::Instance().StartLog())
     {
-        while (!m_bTerminate)
+        while (!bTerminate_)
         {
-            if (m_reloadCfg)
+            if (reloadCfg_)
             {
                 ReloadConfig();
-                m_reloadCfg = false;
+                reloadCfg_ = false;
             }
 
             _RunLogic();
         }
     }
 
-    m_tasks.Clear();
+    tasks_.Clear();
     _Recycle();
     NetThreadPool::Instance().StopAllThreads();
     LogManager::Instance().StopLog();
@@ -182,12 +182,12 @@ void  Server::NewConnection(int  sock, bool needReconn)
     pNewTask->SetReconn(needReconn);
 
     if (NetThreadPool::Instance().AddSocket(pNewTask, EventTypeRead | EventTypeWrite))
-        m_tasks.AddTask(pNewTask);
+        tasks_.AddTask(pNewTask);
 }
 
 void   Server::AtForkHandler()
 {
-    for (auto sock : sm_listenSocks)
+    for (auto sock : slistenSocks_)
     {
         close(sock);
     }
@@ -198,7 +198,7 @@ void   Server::DelListenSock(int sock)
     if (sock == INVALID_SOCKET)
         return;
     
-    auto n = sm_listenSocks.erase(sock);
+    auto n = slistenSocks_.erase(sock);
 
     if (n != 1)
         ERR << "DelListenSock failed  " << sock;

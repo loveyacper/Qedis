@@ -36,8 +36,8 @@ private:
     typedef std::set<std::weak_ptr<QClient>, std::owner_less<std::weak_ptr<QClient> > >   Clients;
     typedef std::map<QString, Clients>  ChannelClients;
 
-    ChannelClients   m_channels;
-    ChannelClients   m_patternChannels;
+    ChannelClients   channels_;
+    ChannelClients   patternChannels_;
 
     static void _RecycleClients(ChannelClients& channels, QString& start);
 };

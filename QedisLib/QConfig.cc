@@ -57,18 +57,18 @@ bool  LoadQedisConfig(const char* cfgFile, QConfig& cfg)
     else
         cfg.daemonize = false;
     
-    cfg.pidfile = parser.GetData<QString>("pidfile");
+    cfg.pidfile = parser.GetData<QString>("pidfile", cfg.pidfile);
     
     cfg.ip      = parser.GetData<QString>("bind", cfg.ip);
     cfg.port    = parser.GetData<unsigned short>("port");
     cfg.timeout = parser.GetData<int>("timeout");
     
-    cfg.loglevel = parser.GetData<QString>("loglevel");
-    cfg.logdir   = parser.GetData<QString>("logfile");
+    cfg.loglevel = parser.GetData<QString>("loglevel", cfg.loglevel);
+    cfg.logdir   = parser.GetData<QString>("logfile", cfg.logdir);
     if (cfg.logdir == "\"\"")
         cfg.logdir = "stdout";
     
-    cfg.databases = parser.GetData<int>("databases");
+    cfg.databases = parser.GetData<int>("databases", cfg.databases);
     cfg.password  = parser.GetData<QString>("requirepass");
 
     // alias command
@@ -136,7 +136,7 @@ bool  LoadQedisConfig(const char* cfgFile, QConfig& cfg)
     }
     
     cfg.slowlogtime = parser.GetData<int>("slowlog-log-slower-than", 0);
-    cfg.slowlogmaxlen = parser.GetData<int>("slowlog-max-len");
+    cfg.slowlogmaxlen = parser.GetData<int>("slowlog-max-len", cfg.slowlogmaxlen);
     
     cfg.hz = parser.GetData<int>("hz", 10);
 

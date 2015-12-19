@@ -12,7 +12,7 @@ QSlowLog& QSlowLog::Instance()
     return slog;
 }
 
-QSlowLog::QSlowLog() : m_threshold(0), m_logger(nullptr)
+QSlowLog::QSlowLog() : threshold_(0), logger_(nullptr)
 {
 }
 
@@ -22,40 +22,56 @@ QSlowLog::~QSlowLog()
 
 void QSlowLog::SetThreshold(unsigned int v)
 {
-    m_threshold = v;
+    threshold_ = v;
+}
+
+void QSlowLog::SetLogLimit(std::size_t maxCount)
+{
+    logMaxCount_ = maxCount;
 }
 
 void QSlowLog::Begin()
 {
-    if (!m_threshold)
+    if (!threshold_)
         return;
 
     timeval  begin;
     gettimeofday(&begin, 0);
-    m_beginUs = begin.tv_sec * 1000000 + begin.tv_usec;
+    beginUs_ = begin.tv_sec * 1000000 + begin.tv_usec;
 }
 
 
 
 void QSlowLog::EndAndStat(const std::vector<QString>& cmds)
 {
-    if (!m_threshold)
+    if (!threshold_)
         return;
     
     timeval  end;
     gettimeofday(&end, 0);
-    auto used = end.tv_sec * 1000000 + end.tv_usec - m_beginUs;
+    auto used = end.tv_sec * 1000000 + end.tv_usec - beginUs_;
     
-    if (used >= m_threshold)
+    if (used >= threshold_)
     {
-        if (m_logger == nullptr)
-            m_logger = LogManager::Instance().CreateLog(logALL, logFILE, "slowlog.qedis");
+        if (logger_ == nullptr)
+            logger_ = LogManager::Instance().CreateLog(logALL, logFILE, "slowlog.qedis");
         
-        LOG_INF(m_logger) << "+ Used:(us) " << used;
+        LOG_INF(logger_) << "+ Used:(us) " << used;
         
         for (const auto& param : cmds)
         {
-            LOG_INF(m_logger) << param;
+            LOG_INF(logger_) << param;
         }
+        
+        if (cmds[0] == "slowlog")
+            return;
+        
+        SlowLogItem item;
+        item.used = static_cast<unsigned>(used);
+        item.cmds = cmds;
+        
+        logs_.emplace_front(std::move(item));
+        if (logs_.size() > logMaxCount_)
+            logs_.pop_back();
     }
 }

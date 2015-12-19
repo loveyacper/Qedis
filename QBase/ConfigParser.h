@@ -22,21 +22,21 @@ public:
     T   GetData(const char* key, const T& default_ = T()) const;
 
     typedef std::map<std::string, std::string>::iterator iterator;
-    iterator  begin() { return m_data.begin();  }
-    iterator  end()   { return m_data.end();    }
+    iterator  begin() { return data_.begin();  }
+    iterator  end()   { return data_.end();    }
 
-    void    clear() { m_data.clear(); }
+    void    clear() { data_.clear(); }
     bool    insert(const std::string& key, const std::string& val)
     {
-        return  m_data.insert(std::pair<std::string, std::string>(key, val)).second;
+        return  data_.insert(std::pair<std::string, std::string>(key, val)).second;
     }
 
 #ifdef CONFIG_DEBUG
     void Print()
     {
         std::cout << "//////////////////"<< std::endl;
-        std::map<std::string, std::string>::const_iterator it = m_data.begin();
-        while (it != m_data.end())
+        std::map<std::string, std::string>::const_iterator it = data_.begin();
+        while (it != data_.end())
         {
             std::cout << it->first << ":" << it->second << "\n";
             ++ it;
@@ -45,7 +45,7 @@ public:
 #endif
 
 private:
-    std::map<std::string, std::string> m_data;
+    std::map<std::string, std::string> data_;
 
     template <typename T>
     T  _ToType(const std::string& data) const;
@@ -77,8 +77,8 @@ inline  std::string  ConfigParser::_ToType<std::string >(const std::string& data
 template <typename T>
 inline  T  ConfigParser::GetData(const char* key, const T& default_) const
 {
-    std::map<std::string, std::string>::const_iterator it = m_data.find(key);
-    if (it == m_data.end())
+    std::map<std::string, std::string>::const_iterator it = data_.find(key);
+    if (it == data_.end())
         return default_;
 
     return  _ToType<T>(it->second);

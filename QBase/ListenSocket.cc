@@ -16,13 +16,13 @@ const int ListenSocket::LISTENQ = 1024;
 
 ListenSocket::ListenSocket() 
 {
-    m_localPort  =  INVALID_PORT;
+    localPort_  =  INVALID_PORT;
 }
 
 ListenSocket::~ListenSocket()
 {
-    Server::Instance()->DelListenSock(m_localSock);
-    USR << "close LISTEN socket " << m_localSock;
+    Server::Instance()->DelListenSock(localSock_);
+    USR << "close LISTEN socket " << localSock_;
 }
 
 bool ListenSocket::Bind(const SocketAddr& addr)
@@ -30,31 +30,31 @@ bool ListenSocket::Bind(const SocketAddr& addr)
     if (addr.Empty())
         return  false;
 
-    if (m_localSock != INVALID_SOCKET)
+    if (localSock_ != INVALID_SOCKET)
         return false;
 
-    m_localPort = addr.GetPort();
+    localPort_ = addr.GetPort();
 
-    m_localSock = CreateTCPSocket();
-    SetNonBlock(m_localSock);
-    SetNodelay(m_localSock);
-    SetReuseAddr(m_localSock);
-    SetRcvBuf(m_localSock);
-    SetSndBuf(m_localSock);
+    localSock_ = CreateTCPSocket();
+    SetNonBlock(localSock_);
+    SetNodelay(localSock_);
+    SetReuseAddr(localSock_);
+    SetRcvBuf(localSock_);
+    SetSndBuf(localSock_);
 
     struct sockaddr_in serv = addr.GetAddr();
 
-    int ret = ::bind(m_localSock, (struct sockaddr*)&serv, sizeof serv);
+    int ret = ::bind(localSock_, (struct sockaddr*)&serv, sizeof serv);
     if (SOCKET_ERROR == ret)
     {
-        CloseSocket(m_localSock);
+        CloseSocket(localSock_);
         ERR << "Cannot bind port " << addr.GetPort();
         return false;
     }
-    ret = ::listen(m_localSock, ListenSocket::LISTENQ);
+    ret = ::listen(localSock_, ListenSocket::LISTENQ);
     if (SOCKET_ERROR == ret)
     {
-        CloseSocket(m_localSock);
+        CloseSocket(localSock_);
         ERR << "Cannot listen on port " << addr.GetPort();
         return false;
     }
@@ -62,14 +62,14 @@ bool ListenSocket::Bind(const SocketAddr& addr)
     if (!NetThreadPool::Instance().AddSocket(shared_from_this(), EventTypeRead))
         return false;
 
-    INF << "CREATE LISTEN socket " << m_localSock << " on port " <<  m_localPort;
+    INF << "CREATE LISTEN socket " << localSock_ << " on port " <<  localPort_;
     return true;
 }
 
 int ListenSocket::_Accept()
 {
-    socklen_t   addrLength = sizeof m_addrClient;
-    return ::accept(m_localSock, (struct sockaddr *)&m_addrClient, &addrLength);
+    socklen_t   addrLength = sizeof addrClient_;
+    return ::accept(localSock_, (struct sockaddr *)&addrClient_, &addrLength);
 }
 
 bool ListenSocket::OnReadable()
@@ -123,7 +123,7 @@ bool ListenSocket::OnError()
 {
     if (Socket::OnError())
     {
-        Server::Instance()->DelListenSock(m_localSock);
+        Server::Instance()->DelListenSock(localSock_);
         return  true;
     }
 

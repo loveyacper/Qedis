@@ -16,23 +16,23 @@
 #include "NetThreadPool.h"
 #include "Log/Logger.h"
 
-std::atomic<std::size_t> Socket::sm_id;
+std::atomic<std::size_t> Socket::sid_;
 
-Socket::Socket() : m_localSock(INVALID_SOCKET),
-                   m_epollOut(false),
-                   m_invalid(false)
+Socket::Socket() : localSock_(INVALID_SOCKET),
+                   epollOut_(false),
+                   invalid_(false)
 {
-    ++ sm_id;
+    ++ sid_;
     
     std::size_t expect = 0;
-    sm_id.compare_exchange_strong(expect, 1);
+    sid_.compare_exchange_strong(expect, 1);
                    
-    m_id = sm_id;
+    id_ = sid_;
 }
 
 Socket::~Socket()
 {
-    CloseSocket(m_localSock);
+    CloseSocket(localSock_);
 }
 
 int Socket::CreateUDPSocket()
@@ -43,9 +43,9 @@ int Socket::CreateUDPSocket()
 bool Socket::OnError()   
 {
     bool expect = false;
-    if (m_invalid.compare_exchange_strong(expect, true))
+    if (invalid_.compare_exchange_strong(expect, true))
     {
-        //CloseSocket(m_localSock);
+        //CloseSocket(localSock_);
         return true;
     }
 

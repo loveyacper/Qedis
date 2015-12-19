@@ -10,15 +10,15 @@
 
 Kqueue::Kqueue()
 {
-    m_multiplexer = ::kqueue();
-    INF << "create kqueue:  " << m_multiplexer;
+    multiplexer_ = ::kqueue();
+    INF << "create kqueue:  " << multiplexer_;
 }
 
 Kqueue::~Kqueue()
 {
-    INF << "close kqueue: " << m_multiplexer;
-    if (m_multiplexer != -1)  
-        ::close(m_multiplexer);
+    INF << "close kqueue: " << multiplexer_;
+    if (multiplexer_ != -1)  
+        ::close(multiplexer_);
 }
 
 bool Kqueue::AddSocket(int sock, int events, void* userPtr)
@@ -39,7 +39,7 @@ bool Kqueue::AddSocket(int sock, int events, void* userPtr)
          ++ cnt;
      }
                      
-     return kevent(m_multiplexer, change, cnt, NULL, 0, NULL) != -1;
+     return kevent(multiplexer_, change, cnt, NULL, 0, NULL) != -1;
 }
     
 bool Kqueue::DelSocket(int sock, int events)
@@ -64,7 +64,7 @@ bool Kqueue::DelSocket(int sock, int events)
     if (cnt == 0)
         return false;
                         
-    return -1 != kevent(m_multiplexer, change, cnt, NULL, 0, NULL);
+    return -1 != kevent(multiplexer_, change, cnt, NULL, 0, NULL);
 }
 
    
@@ -83,8 +83,8 @@ int Kqueue::Poll(std::vector<FiredEvent>& events, std::size_t maxEvent, int time
     if (maxEvent == 0)
         return 0;
 
-    while (m_events.size() < maxEvent)
-        m_events.resize(2 * m_events.size() + 1);
+    while (events_.size() < maxEvent)
+        events_.resize(2 * events_.size() + 1);
 
     struct timespec* pTimeout = NULL;  
     struct timespec  timeout;
@@ -95,7 +95,7 @@ int Kqueue::Poll(std::vector<FiredEvent>& events, std::size_t maxEvent, int time
         timeout.tv_nsec = timeoutMs % 1000 * 1000000;
     }
 
-    int nFired = ::kevent(m_multiplexer, NULL, 0, &m_events[0], static_cast<int>(maxEvent), pTimeout);
+    int nFired = ::kevent(multiplexer_, NULL, 0, &events_[0], static_cast<int>(maxEvent), pTimeout);
     if (nFired == -1)
         return -1;
 
@@ -106,15 +106,15 @@ int Kqueue::Poll(std::vector<FiredEvent>& events, std::size_t maxEvent, int time
     {
         FiredEvent& fired = events[i];
         fired.events   = 0;
-        fired.userdata = m_events[i].udata;
+        fired.userdata = events_[i].udata;
 
-        if (m_events[i].filter == EVFILT_READ)
+        if (events_[i].filter == EVFILT_READ)
             fired.events  |= EventTypeRead;
 
-        if (m_events[i].filter == EVFILT_WRITE)
+        if (events_[i].filter == EVFILT_WRITE)
             fired.events  |= EventTypeWrite;
 
-        if (m_events[i].flags & EV_ERROR)
+        if (events_[i].flags & EV_ERROR)
             fired.events  |= EventTypeError;
     }
 

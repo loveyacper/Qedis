@@ -14,7 +14,7 @@ void  QMulti::Watch(QClient* client, const QString& key)
 {
     if (client->Watch(key))
     {
-        Clients& cls = m_clients[key];
+        Clients& cls = clients_[key];
         cls.push_back(std::static_pointer_cast<QClient>(client->shared_from_this()));
     }
 }
@@ -50,8 +50,8 @@ void QMulti::Discard(QClient* client)
 void  QMulti::NotifyDirty(const QString& key)
 {
     INF << "Try NotifyDirty " << key.c_str();
-    auto it = m_clients.find(key);
-    if (it == m_clients.end())
+    auto it = clients_.find(key);
+    if (it == clients_.end())
         return;
     
     Clients& cls = it->second;
@@ -81,7 +81,7 @@ void  QMulti::NotifyDirty(const QString& key)
         
     if (cls.empty())
     {
-        m_clients.erase(it);
+        clients_.erase(it);
     }
 }
 

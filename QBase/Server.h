@@ -23,15 +23,15 @@ public:
     void  TCPReconnect(const SocketAddr& peer);
     void  TCPConnect(const SocketAddr& peer, bool retry = true);
 
-    static Server*  Instance() {   return   sm_instance;  }
+    static Server*  Instance() {   return   sinstance_;  }
 
-    bool IsTerminate() const { return m_bTerminate; }
-    void Terminate()  { m_bTerminate = true; }
+    bool IsTerminate() const { return bTerminate_; }
+    void Terminate()  { bTerminate_ = true; }
 
     void MainLoop();
     void NewConnection(int sock, bool retry = false);
 
-    size_t  TCPSize() const  {  return  m_tasks.TCPSize(); }
+    size_t  TCPSize() const  {  return  tasks_.TCPSize(); }
 
     // SIGHUP handler, in fact, you should load config use this function;
     virtual void ReloadConfig()    { }
@@ -39,7 +39,7 @@ public:
     static void IntHandler(int sig);
     static void HupHandler(int sig);
 
-    std::shared_ptr<StreamSocket>  FindTCP(unsigned int id) const { return m_tasks.FindTCP(id); }
+    std::shared_ptr<StreamSocket>  FindTCP(unsigned int id) const { return tasks_.FindTCP(id); }
     
     static void AtForkHandler();
     static void DelListenSock(int sock);
@@ -47,12 +47,12 @@ public:
 private:
     virtual std::shared_ptr<StreamSocket>   _OnNewConnection(int tcpsock);
 
-    std::atomic<bool> m_bTerminate;
-    Internal::TaskManager   m_tasks;
-    bool          m_reloadCfg;
-    static Server*   sm_instance;
+    std::atomic<bool> bTerminate_;
+    Internal::TaskManager   tasks_;
+    bool          reloadCfg_;
+    static Server*   sinstance_;
     
-    static std::set<int>  sm_listenSocks;
+    static std::set<int>  slistenSocks_;
 };
 
 #endif

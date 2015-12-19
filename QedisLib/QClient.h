@@ -43,9 +43,9 @@ public:
     static QClient*  Current();
     
     //multi
-    void SetFlag(unsigned flag) { m_flag |= flag; }
-    void ClearFlag(unsigned flag) { m_flag &= ~flag; }
-    bool IsFlagOn(unsigned flag) { return m_flag & flag; }
+    void SetFlag(unsigned flag) { flag_ |= flag; }
+    void ClearFlag(unsigned flag) { flag_ &= ~flag; }
+    bool IsFlagOn(unsigned flag) { return flag_ & flag; }
     void FlagExecWrong() { if (IsFlagOn(ClientFlag_multi)) SetFlag(ClientFlag_wrongExec);   }
     
     bool Watch(const QString& key);
@@ -57,80 +57,80 @@ public:
     // pubsub
     std::size_t Subscribe(const QString& channel)
     {
-        return  m_channels.insert(channel).second ? 1 : 0;
+        return  channels_.insert(channel).second ? 1 : 0;
     }
 
     std::size_t UnSubscribe(const QString& channel)
     {
-        return m_channels.erase(channel);
+        return channels_.erase(channel);
     }
 
     std::size_t PSubscribe(const QString& channel)
     {
-        return  m_patternChannels.insert(channel).second ? 1 : 0;
+        return  patternChannels_.insert(channel).second ? 1 : 0;
     }
 
     std::size_t PUnSubscribe(const QString& channel)
     {
-        return m_patternChannels.erase(channel);
+        return patternChannels_.erase(channel);
     }
 
-    const std::unordered_set<QString>&  GetChannels() const { return m_channels; }
-    const std::unordered_set<QString>&  GetPatternChannels() const { return m_patternChannels; }
-    std::size_t     ChannelCount() const { return m_channels.size(); }
-    std::size_t     PatternChannelCount() const { return m_patternChannels.size(); }
+    const std::unordered_set<QString>&  GetChannels() const { return channels_; }
+    const std::unordered_set<QString>&  GetPatternChannels() const { return patternChannels_; }
+    std::size_t     ChannelCount() const { return channels_.size(); }
+    std::size_t     PatternChannelCount() const { return patternChannels_.size(); }
     
     bool  WaitFor(const QString& key, const QString* target = nullptr);
     
-    const std::unordered_set<QString>  WaitingKeys() const { return m_waitingKeys; }
-    void  ClearWaitingKeys()    {  m_waitingKeys.clear(), m_target.clear(); }
-    const QString&  GetTarget() const { return m_target; }
+    const std::unordered_set<QString>  WaitingKeys() const { return waitingKeys_; }
+    void  ClearWaitingKeys()    {  waitingKeys_.clear(), target_.clear(); }
+    const QString&  GetTarget() const { return target_; }
     
-    void    SetName(const QString& name) { m_name = name; }
-    const   QString&    GetName() const { return m_name; }
+    void    SetName(const QString& name) { name_ = name; }
+    const   QString&    GetName() const { return name_; }
     
     void         SetSlaveInfo();
-    QSlaveInfo*  GetSlaveInfo() const { return m_slaveInfo.get(); }
+    QSlaveInfo*  GetSlaveInfo() const { return slaveInfo_.get(); }
     
     static void  AddCurrentToMonitor();
     static void  FeedMonitors(const std::vector<QString>& params);
     
-    void    SetAuth() { m_auth = true; }
+    void    SetAuth() { auth_ = true; }
     
-    void    RewriteCmd(std::vector<QString>& params) { m_params.swap(params); }
+    void    RewriteCmd(std::vector<QString>& params) { params_.swap(params); }
 
 private:
     BODY_LENGTH_T    _ProcessInlineCmd(const char* , size_t);
     void    _Reset();
 
-    ParseCmdState  m_state;
-    int   m_multibulk;
-    int   m_paramLen;
+    ParseCmdState  state_;
+    int   multibulk_;
+    int   paramLen_;
     
-    std::vector<QString> m_params;
-    UnboundedBuffer  m_reply;
+    std::vector<QString> params_;
+    UnboundedBuffer  reply_;
 
-    int   m_db;
+    int   db_;
 
-    std::unordered_set<QString>  m_channels;
-    std::unordered_set<QString>  m_patternChannels;
+    std::unordered_set<QString>  channels_;
+    std::unordered_set<QString>  patternChannels_;
     
-    unsigned m_flag;
-    std::unordered_set<QString>  m_watchKeys;
-    std::vector<std::vector<QString> > m_queueCmds;
+    unsigned flag_;
+    std::unordered_set<QString>  watchKeys_;
+    std::vector<std::vector<QString> > queueCmds_;
     
     // blocked list
-    std::unordered_set<QString> m_waitingKeys;
-    QString m_target;
+    std::unordered_set<QString> waitingKeys_;
+    QString target_;
     
     // slave info from master view
-    std::unique_ptr<QSlaveInfo>  m_slaveInfo;
+    std::unique_ptr<QSlaveInfo>  slaveInfo_;
     
     // name
-    std::string m_name;
+    std::string name_;
     
     // auth
-    bool  m_auth;
+    bool  auth_;
     
     static  QClient*  s_pCurrentClient;
     static  std::set<std::weak_ptr<QClient>, std::owner_less<std::weak_ptr<QClient> > > s_monitors;

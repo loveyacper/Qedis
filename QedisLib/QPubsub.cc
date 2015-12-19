@@ -14,11 +14,11 @@ size_t QPubsub::Subscribe(QClient* client, const QString& channel)
 {
     if (client && client->Subscribe(channel))
     {
-        auto it(m_channels.find(channel));
-        if (it == m_channels.end())
-            it = m_channels.insert(ChannelClients::value_type(channel, Clients())).first;
+        auto it(channels_.find(channel));
+        if (it == channels_.end())
+            it = channels_.insert(ChannelClients::value_type(channel, Clients())).first;
 
-        assert (it != m_channels.end());
+        assert (it != channels_.end());
 
         bool succ = it->second.insert(std::static_pointer_cast<QClient>(client->shared_from_this())).second;
         assert (succ);
@@ -33,8 +33,8 @@ std::size_t QPubsub::UnSubscribe(QClient* client, const QString& channel)
 {
     if (client && client->UnSubscribe(channel))
     {
-        auto it(m_channels.find(channel));
-        assert (it != m_channels.end());
+        auto it(channels_.find(channel));
+        assert (it != channels_.end());
 
         Clients& clientSet = it->second;
 
@@ -42,7 +42,7 @@ std::size_t QPubsub::UnSubscribe(QClient* client, const QString& channel)
         assert (n == 1);
 
         if (clientSet.empty())
-            m_channels.erase(it);
+            channels_.erase(it);
 
         return client->ChannelCount();
     }
@@ -68,11 +68,11 @@ size_t QPubsub::PSubscribe(QClient* client, const QString& channel)
 {
     if (client && client->PSubscribe(channel))
     {
-        auto it(m_patternChannels.find(channel));
-        if (it == m_patternChannels.end())
-            it = m_patternChannels.insert(ChannelClients::value_type(channel, Clients())).first;
+        auto it(patternChannels_.find(channel));
+        if (it == patternChannels_.end())
+            it = patternChannels_.insert(ChannelClients::value_type(channel, Clients())).first;
 
-        assert (it != m_patternChannels.end());
+        assert (it != patternChannels_.end());
 
         bool succ = it->second.insert(std::static_pointer_cast<QClient>(client->shared_from_this())).second;
         assert (succ);
@@ -87,8 +87,8 @@ std::size_t QPubsub::PUnSubscribe(QClient* client, const QString& channel)
 {
     if (client && client->PUnSubscribe(channel))
     {
-        auto  it(m_patternChannels.find(channel));
-        assert (it != m_patternChannels.end());
+        auto  it(patternChannels_.find(channel));
+        assert (it != patternChannels_.end());
 
         Clients& clientSet = it->second;
 
@@ -96,7 +96,7 @@ std::size_t QPubsub::PUnSubscribe(QClient* client, const QString& channel)
         assert (n == 1);
 
         if (clientSet.empty())
-            m_patternChannels.erase(it);
+            patternChannels_.erase(it);
 
         return client->PatternChannelCount();
     }
@@ -123,8 +123,8 @@ std::size_t QPubsub::PublishMsg(const QString& channel, const QString& msg)
 {
     std::size_t n = 0;
 
-    auto it(m_channels.find(channel));
-    if (it != m_channels.end())
+    auto it(channels_.find(channel));
+    if (it != channels_.end())
     {
         Clients&  clientSet = it->second;
         for (auto  itCli(clientSet.begin());
@@ -156,7 +156,7 @@ std::size_t QPubsub::PublishMsg(const QString& channel, const QString& msg)
     }
 
     // TODO fuck me
-    for (auto& pattern : m_patternChannels)
+    for (auto& pattern : patternChannels_)
     {
         if (glob_match(pattern.first, channel))
         {
@@ -197,8 +197,8 @@ std::size_t QPubsub::PublishMsg(const QString& channel, const QString& msg)
 
 void QPubsub::RecycleClients(QString& startChannel, QString& startPattern)
 {
-    _RecycleClients(m_channels, startChannel);
-    _RecycleClients(m_patternChannels, startPattern);
+    _RecycleClients(channels_, startChannel);
+    _RecycleClients(patternChannels_, startPattern);
 }
 
 void QPubsub::_RecycleClients(ChannelClients& channels, QString& start)
@@ -251,12 +251,12 @@ public:
     {
     }
 private:
-    QString  m_startChannel;
-    QString  m_startPattern;
+    QString  startChannel_;
+    QString  startPattern_;
 
     bool    _OnTimer()
     {
-        QPubsub::Instance().RecycleClients(m_startChannel, m_startPattern);
+        QPubsub::Instance().RecycleClients(startChannel_, startPattern_);
         return  true;
     }
 };
@@ -270,7 +270,7 @@ void QPubsub::PubsubChannels(std::vector<QString>& res, const char* pattern) con
 {
     res.clear();
 
-    for (const auto& elem : m_channels)
+    for (const auto& elem : channels_)
     {
         if (!pattern || glob_match(pattern, elem.first))
         {
@@ -282,9 +282,9 @@ void QPubsub::PubsubChannels(std::vector<QString>& res, const char* pattern) con
 
 size_t  QPubsub::PubsubNumsub(const QString& channel) const
 {
-    auto it = m_channels.find(channel);
+    auto it = channels_.find(channel);
     
-    if (it != m_channels.end())
+    if (it != channels_.end())
         return it->second.size();
     
     return 0;
@@ -294,7 +294,7 @@ size_t QPubsub::PubsubNumpat() const
 {
     std::size_t n = 0;
     
-    for (const auto& elem : m_patternChannels)
+    for (const auto& elem : patternChannels_)
     {
         n += elem.second.size();
     }

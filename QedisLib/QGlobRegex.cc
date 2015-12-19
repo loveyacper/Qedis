@@ -11,23 +11,23 @@ QGlobRegex::QGlobRegex(const char* pattern, std::size_t plen,
 
 void QGlobRegex::SetPattern(const char* pattern, std::size_t plen)
 {
-    m_pattern = pattern;
-    m_pLen = plen;
-    m_pOff = 0;
+    pattern_ = pattern;
+    pLen_ = plen;
+    pOff_ = 0;
 }
 
 void QGlobRegex::SetText(const char* text, std::size_t tlen)
 {
-    m_text = text;
-    m_tLen = tlen;
-    m_tOff = 0;
+    text_ = text;
+    tLen_ = tlen;
+    tOff_ = 0;
 }
 
 bool QGlobRegex::TryMatch()
 {
-    while (m_pOff < m_pLen)
+    while (pOff_ < pLen_)
     {
-        switch (m_pattern[m_pOff])
+        switch (pattern_[pOff_])
         {
         case '*':
             return  _ProcessStar();
@@ -45,17 +45,17 @@ bool QGlobRegex::TryMatch()
             break;
 
         case '\\':
-            if (m_pOff + 1 < m_pLen &&
-                m_pattern[m_pOff + 1] == '[')
-                ++ m_pOff;
+            if (pOff_ + 1 < pLen_ &&
+                pattern_[pOff_ + 1] == '[')
+                ++ pOff_;
             // fall through;
 
         default:
-            if (m_pattern[m_pOff] != m_text[m_tOff])
+            if (pattern_[pOff_] != text_[tOff_])
                 return false;
 
-            ++ m_pOff;
-            ++ m_tOff;
+            ++ pOff_;
+            ++ tOff_;
             break;
         }
     }
@@ -65,26 +65,26 @@ bool QGlobRegex::TryMatch()
 
 bool QGlobRegex::_ProcessStar()
 {
-    assert(m_pattern[m_pOff] == '*');
+    assert(pattern_[pOff_] == '*');
 
     do
     {
-        ++ m_pOff;
-    } while (m_pOff < m_pLen && m_pattern[m_pOff] == '*');
+        ++ pOff_;
+    } while (pOff_ < pLen_ && pattern_[pOff_] == '*');
 
-    if (m_pOff == m_pLen)
+    if (pOff_ == pLen_)
         return  true;
 
-    while (m_tOff < m_tLen)
+    while (tOff_ < tLen_)
     {
-        std::size_t oldpoff = m_pOff;
+        std::size_t oldpoff = pOff_;
         if (TryMatch())
         {
             return true;
         }
 
-        m_pOff = oldpoff;
-        ++ m_tOff;
+        pOff_ = oldpoff;
+        ++ tOff_;
     }
 
     return false;
@@ -92,20 +92,20 @@ bool QGlobRegex::_ProcessStar()
 
 bool QGlobRegex::_ProcessQuestion()
 {
-    assert(m_pattern[m_pOff] == '?');
+    assert(pattern_[pOff_] == '?');
 
-    while (m_pOff < m_pLen)
+    while (pOff_ < pLen_)
     {
-        if (m_pattern[m_pOff] != '?')
+        if (pattern_[pOff_] != '?')
             break;
 
-        if (m_tOff == m_tLen)
+        if (tOff_ == tLen_)
         {
             return false; // str is too short
         }
 
-        ++ m_pOff;
-        ++ m_tOff;
+        ++ pOff_;
+        ++ tOff_;
     }
 
     return true;
@@ -114,38 +114,38 @@ bool QGlobRegex::_ProcessQuestion()
             
 bool  QGlobRegex::_ProcessBracket()
 {
-    assert(m_pattern[m_pOff] == '[');
+    assert(pattern_[pOff_] == '[');
 
-    if (m_pOff + 1 >= m_pLen)
+    if (pOff_ + 1 >= pLen_)
     {
         //std::cerr << "expect ] at end\n";
         return  false;
     }
 
-    ++ m_pOff;
+    ++ pOff_;
 
     bool  include = true;
-    if (m_pattern[m_pOff] == '^')
+    if (pattern_[pOff_] == '^')
     {
         include = false;
-        ++ m_pOff;
+        ++ pOff_;
     }
 
     std::set<char>  chars;
     
-    if (m_pOff < m_pLen && m_pattern[m_pOff] == ']')
+    if (pOff_ < pLen_ && pattern_[pOff_] == ']')
     {
         chars.insert(']'); // No allowed empty brackets.
-        ++ m_pOff;
+        ++ pOff_;
     }
 
     std::set<std::pair<int, int> >  spans;
-    while (m_pOff < m_pLen && m_pattern[m_pOff] != ']')
+    while (pOff_ < pLen_ && pattern_[pOff_] != ']')
     {
-        if ((m_pOff + 3) < m_pLen && m_pattern[m_pOff + 1] == '-')
+        if ((pOff_ + 3) < pLen_ && pattern_[pOff_ + 1] == '-')
         {
-            int start = m_pattern[m_pOff];
-            int end   = m_pattern[m_pOff + 2];
+            int start = pattern_[pOff_];
+            int end   = pattern_[pOff_ + 2];
 
             if (start == end)
             {
@@ -159,31 +159,31 @@ bool  QGlobRegex::_ProcessBracket()
                 spans.insert(std::make_pair(start, end));
             }
 
-            m_pOff += 3;
+            pOff_ += 3;
         }
         else 
         {
-            chars.insert(m_pattern[m_pOff]);
-            ++ m_pOff;
+            chars.insert(pattern_[pOff_]);
+            ++ pOff_;
         }
     }
 
-    if (m_pOff == m_pLen)
+    if (pOff_ == pLen_)
     {
         //std::cerr << "expect ]\n";
         return  false;
     }
     else
     {
-        assert (m_pattern[m_pOff] == ']');
-        ++ m_pOff;
+        assert (pattern_[pOff_] == ']');
+        ++ pOff_;
     }
 
-    if (chars.count(m_text[m_tOff]) > 0)
+    if (chars.count(text_[tOff_]) > 0)
     {
         if (include)
         {
-            ++ m_tOff;
+            ++ tOff_;
             return true;
         }
         else
@@ -194,11 +194,11 @@ bool  QGlobRegex::_ProcessBracket()
 
     for (const auto& pair : spans)
     {
-        if (m_text[m_tOff] >= pair.first && m_text[m_tOff] <= pair.second)
+        if (text_[tOff_] >= pair.first && text_[tOff_] <= pair.second)
         {
             if (include)
             {
-                ++ m_tOff;
+                ++ tOff_;
                 return true;
             }
             else
@@ -214,12 +214,12 @@ bool  QGlobRegex::_ProcessBracket()
     }
     else
     {
-        ++ m_tOff;
+        ++ tOff_;
         return true;
     }
 }
 
 bool QGlobRegex::_IsMatch() const
 {
-    return m_pOff == m_pLen && m_tLen == m_tOff;
+    return pOff_ == pLen_ && tLen_ == tOff_;
 }

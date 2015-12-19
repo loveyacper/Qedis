@@ -18,28 +18,28 @@ class TaskManager
     typedef std::vector<PTCPSOCKET>     NEWTASKS_T;
 
 public:
-    TaskManager() : m_newCnt(0) { }
+    TaskManager() : newCnt_(0) { }
     ~TaskManager();
     
     bool AddTask(PTCPSOCKET );
 
-    bool Empty() const { return m_tcpSockets.empty(); }
-    void Clear()  { m_tcpSockets.clear(); }
+    bool Empty() const { return tcpSockets_.empty(); }
+    void Clear()  { tcpSockets_.clear(); }
     PTCPSOCKET  FindTCP(unsigned int id) const;
     
-    size_t      TCPSize() const  {  return  m_tcpSockets.size(); }
+    size_t      TCPSize() const  {  return  tcpSockets_.size(); }
 
     bool DoMsgParse();
 
 private:
     bool _AddTask(PTCPSOCKET task);
     void _RemoveTask(std::map<int, PTCPSOCKET>::iterator& );
-    std::map<int, PTCPSOCKET>  m_tcpSockets;
+    std::map<int, PTCPSOCKET>  tcpSockets_;
 
     // Lock for new tasks
-    std::mutex      m_lock;
-    NEWTASKS_T      m_newTasks; 
-    std::atomic<int> m_newCnt; // vector::empty() is not thread-safe !!!
+    std::mutex      lock_;
+    NEWTASKS_T      newTasks_; 
+    std::atomic<int> newCnt_; // vector::empty() is not thread-safe !!!
 };
 
 }

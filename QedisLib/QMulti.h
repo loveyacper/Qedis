@@ -28,7 +28,7 @@ private:
     typedef std::vector<std::weak_ptr<QClient> >   Clients;
     typedef std::map<QString, Clients>    WatchedClients;
     
-    WatchedClients  m_clients;
+    WatchedClients  clients_;
 };
 
 #endif

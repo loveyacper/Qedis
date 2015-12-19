@@ -37,19 +37,19 @@ public:
 
     bool  DoMsgParse(); // false if no msg
 
-    void  SetReconn(bool retry) { m_retry = retry; }
+    void  SetReconn(bool retry) { retry_ = retry; }
     
     // send thread
     bool  Send();
 
 private:
-    bool   m_retry;
+    bool   retry_;
 
     int    _Send(const BufferSequence& bf);
     virtual BODY_LENGTH_T _HandlePacket(AttachedBuffer& buf) = 0;
 
 protected:
-    SocketAddr  m_peerAddr;
+    SocketAddr  peerAddr_;
     
 private:
     // For human readability
@@ -60,8 +60,8 @@ private:
         EOFSOCKET     = -2,
     };
 
-    Buffer   m_recvBuf;
-    OutputBuffer   m_sendBuf;
+    Buffer   recvBuf_;
+    OutputBuffer   sendBuf_;
 };
 
 template <int N>

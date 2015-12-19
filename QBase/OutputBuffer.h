@@ -22,12 +22,12 @@ public:
 
 private:
     // for async write
-    Buffer          m_buffer;
+    Buffer          buffer_;
     
-    std::mutex      m_backBufLock;
-    std::atomic<std::size_t>    m_backBytes;
-    UnboundedBuffer m_backBuf;
-    UnboundedBuffer m_tmpBuf;
+    std::mutex      backBufLock_;
+    std::atomic<std::size_t>    backBytes_;
+    UnboundedBuffer backBuf_;
+    UnboundedBuffer tmpBuf_;
 };
 
 #endif
