@@ -3,6 +3,8 @@
 #include "Log/Logger.h"
 #include <cassert>
 
+namespace qedis
+{
 
 QObject  CreateStringObject(const QString&  value)
 {
@@ -742,4 +744,6 @@ QError  bitop(const std::vector<QString>& params, UnboundedBuffer* reply)
     }
 
     return   QError_ok;
+}
+
 }

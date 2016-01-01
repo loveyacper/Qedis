@@ -6,6 +6,8 @@
 #include <unistd.h>
 #include <sstream>
 
+namespace qedis
+{
 
 const char* const g_aofTmp = "qedis_appendonly.aof.tmp";
 
@@ -116,7 +118,7 @@ void   QAOFThreadController::SaveCommand(const std::vector<QString>& params, int
     }
     
     _WriteSelectDB(db, *dst);
-    ::SaveCommand(params, *dst);
+    qedis::SaveCommand(params, *dst);
 }
 
 QAOFThreadController::AOFThread::~AOFThread()
@@ -142,7 +144,7 @@ bool   QAOFThreadController::AOFThread::Flush()
 
 void   QAOFThreadController::AOFThread::SaveCommand(const std::vector<QString>& params)
 {
-    ::SaveCommand(params, buf_);
+    qedis::SaveCommand(params, buf_);
 }
 
 void  QAOFThreadController::AOFThread::Run()
@@ -475,3 +477,4 @@ void QAOFLoader::_Reset()
     cmds_.clear();
 }
 
+}

@@ -1,5 +1,8 @@
 #include "QHelper.h"
 
+namespace qedis
+{
+
 static unsigned dict_hash_function_seed = 5381;
 
 // hash func from redis
@@ -76,3 +79,4 @@ std::size_t BitCount(const uint8_t*  buf, std::size_t len)
     return cnt;
 }
 
+}

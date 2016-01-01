@@ -6,6 +6,9 @@
 #include "QString.h"
 #include <memory>
 
+namespace qedis
+{
+
 class QClient;
 class QMulti
 {
@@ -19,9 +22,6 @@ public:
     void  Discard(QClient* client);
 
     void  NotifyDirty(const QString& key);
-  //  void InitPubsubTimer();
-    //void RecycleClients(QString& startChannel, QString& startPattern);
-
 private:
     QMulti() {}
 
@@ -30,6 +30,8 @@ private:
     
     WatchedClients  clients_;
 };
+
+}
 
 #endif
 

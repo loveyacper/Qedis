@@ -2,6 +2,9 @@
 #include <set>
 #include "QGlobRegex.h"
 
+namespace qedis
+{
+
 QGlobRegex::QGlobRegex(const char* pattern, std::size_t plen,
                        const char* text, std::size_t tlen)
 {
@@ -222,4 +225,6 @@ bool  QGlobRegex::_ProcessBracket()
 bool QGlobRegex::_IsMatch() const
 {
     return pOff_ == pLen_ && tLen_ == tOff_;
+}
+
 }

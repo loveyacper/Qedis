@@ -2,6 +2,9 @@
 
 using std::size_t;
 
+namespace qedis
+{
+
 const QCommandInfo QCommandTable::s_info[] =
 {
     // key
@@ -282,3 +285,4 @@ bool QCommandInfo::CheckParamsCount(int nParams) const
         return nParams + params >= 0;
 }
 
+}

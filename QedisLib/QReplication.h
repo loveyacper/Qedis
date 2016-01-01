@@ -7,6 +7,9 @@
 #include "Socket.h"
 #include "Log/MemoryFile.h"
 
+namespace qedis
+{
+
 // master side
 enum QSlaveState
 {
@@ -105,5 +108,6 @@ private:
     OutputMemoryFile        rdb_;
 };
 
+}
 
 #endif

@@ -4,6 +4,9 @@
 #include <map>
 #include "QString.h"
 
+namespace qedis
+{
+
 struct QConfig
 {
     bool      daemonize;
@@ -56,6 +59,8 @@ struct QConfig
 extern  QConfig  g_config;
 
 extern bool  LoadQedisConfig(const char* cfgFile, QConfig& cfg);
+
+}
 
 #endif
 

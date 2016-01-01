@@ -4,6 +4,8 @@
 #include "QConfig.h"
 #include "ConfigParser.h"
 
+namespace qedis
+{
 
 extern std::vector<QString>  SplitString(const QString& str, char seperator);
 
@@ -169,4 +171,6 @@ bool  QConfig::CheckArgs() const
 #undef RETURN_IF_FAIL
     
     return  true;
+}
+    
 }

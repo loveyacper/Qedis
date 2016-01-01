@@ -26,8 +26,8 @@ private:
     
     std::mutex      backBufLock_;
     std::atomic<std::size_t>    backBytes_;
-    UnboundedBuffer backBuf_;
-    UnboundedBuffer tmpBuf_;
+    qedis::UnboundedBuffer backBuf_;
+    qedis::UnboundedBuffer tmpBuf_;
 };
 
 #endif

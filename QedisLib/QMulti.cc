@@ -3,6 +3,8 @@
 #include "Log/Logger.h"
 #include "Timer.h"
 
+namespace qedis
+{
 
 QMulti&    QMulti::Instance()
 {
@@ -142,4 +144,6 @@ QError  discard(const std::vector<QString>& params, UnboundedBuffer* reply)
     QMulti::Instance().Discard(client);
     FormatOK(reply);
     return QError_ok;
+}
+
 }

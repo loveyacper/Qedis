@@ -5,6 +5,9 @@
 #include <vector> 
 #include <cstdlib> 
 
+namespace qedis
+{
+
 // hash func from redis
 extern unsigned int dictGenHashFunction(const void* key, int len);
 
@@ -101,6 +104,8 @@ inline size_t ScanHashMember(const HASH& container, size_t cursor, size_t count,
     }
 
     return 0;   // never here
+}
+    
 }
 
 #endif

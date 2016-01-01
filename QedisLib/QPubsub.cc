@@ -4,6 +4,9 @@
 #include "Timer.h"
 #include "QGlobRegex.h"
 
+namespace qedis
+{
+
 QPubsub&    QPubsub::Instance()
 {
     static QPubsub  ps;
@@ -485,3 +488,4 @@ QError  pubsub(const std::vector<QString>& params, UnboundedBuffer* reply)
     return QError_ok;
 }
 
+}

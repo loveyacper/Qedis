@@ -3,6 +3,8 @@
 #include "QGlobRegex.h"
 #include <cassert>
 
+namespace qedis
+{
 
 QError  type(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
@@ -561,3 +563,4 @@ QError  sscan(const std::vector<QString>& params, UnboundedBuffer* reply)
     return   QError_ok;
 }
 
+}

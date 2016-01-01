@@ -3,6 +3,8 @@
 #include "Log/Logger.h"
 #include <cassert>
 
+namespace qedis
+{
 
 QObject  CreateHashObject()
 {
@@ -365,4 +367,6 @@ size_t   HScanKey(const QHash& hash, size_t cursor, size_t count, std::vector<QS
         res.push_back(it->first), res.push_back(it->second);
     
     return newCursor;
+}
+
 }

@@ -7,6 +7,9 @@
 #include "QString.h"
 #include <memory>
 
+namespace qedis
+{
+
 class QClient;
 class QPubsub
 {
@@ -41,6 +44,8 @@ private:
 
     static void _RecycleClients(ChannelClients& channels, QString& start);
 };
+    
+}
 
 #endif
 

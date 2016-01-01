@@ -4,6 +4,8 @@
 
 #include "QSlowLog.h"
 
+namespace qedis
+{
 
 QSlowLog& QSlowLog::Instance()
 {
@@ -74,4 +76,6 @@ void QSlowLog::EndAndStat(const std::vector<QString>& cmds)
         if (logs_.size() > logMaxCount_)
             logs_.pop_back();
     }
+}
+
 }

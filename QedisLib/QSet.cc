@@ -3,6 +3,8 @@
 #include "Log/Logger.h"
 #include <cassert>
 
+namespace qedis
+{
 
 QObject  CreateSetObject()
 {
@@ -376,3 +378,4 @@ size_t   SScanKey(const QSet& qset, size_t cursor, size_t count, std::vector<QSt
     return newCursor;
 }
 
+}

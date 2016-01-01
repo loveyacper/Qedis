@@ -16,6 +16,9 @@ extern "C"
 extern "C"
 uint64_t crc64(uint64_t crc, const unsigned char *s, uint64_t l);
 
+namespace qedis
+{
+
 time_t  g_lastQDBSave = 0;
 pid_t   g_qdbPid = -1;
 
@@ -1037,4 +1040,6 @@ QObject     QDBLoader::_LoadIntset()
     }
 
     return obj;
+}
+    
 }

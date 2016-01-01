@@ -5,6 +5,9 @@
 #include <cstring>
 #include <vector>
 
+namespace qedis
+{
+
 class UnboundedBuffer
 {
 public:
@@ -42,6 +45,7 @@ private:
     std::vector<char>  buffer_;
 };
 
+}
 
 #endif
 

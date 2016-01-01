@@ -14,6 +14,9 @@
 // $3   CR LF
 // 345 CR LF
 
+namespace qedis
+{
+
 QClient*  QClient::s_pCurrentClient = 0;
 
 std::set<std::weak_ptr<QClient>, std::owner_less<std::weak_ptr<QClient> > >
@@ -471,4 +474,6 @@ void  QClient::FeedMonitors(const std::vector<QString>& params)
             s_monitors.erase(it ++);
         }
     }
+}
+    
 }

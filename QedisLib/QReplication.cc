@@ -12,6 +12,9 @@
 #include "Server.h"
 
 
+namespace qedis
+{
+
 QReplication& QReplication::Instance()
 {
     static QReplication  rep;
@@ -32,7 +35,7 @@ void  QReplication::SetBgsaving(bool b)
     bgsaving_ = b;
 }
 
-void  QReplication::AddSlave(QClient* cli)
+void  QReplication::AddSlave(qedis::QClient* cli)
 {
     slaves_.push_back(std::static_pointer_cast<QClient>(cli->shared_from_this()));
 }
@@ -277,4 +280,6 @@ void   QReplication::SaveTmpRdb(const char* data, std::size_t len)
         loader.Load(slaveRdbFile);
         masterInfo_.state = QReplState_online;
     }
+}
+
 }

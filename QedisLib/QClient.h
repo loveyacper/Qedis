@@ -9,6 +9,9 @@
 #include "QReplication.h"
 #include <unordered_set>
 
+namespace qedis
+{
+
 enum  class ParseCmdState : std::int8_t
 {
     Init,
@@ -135,6 +138,8 @@ private:
     static  QClient*  s_pCurrentClient;
     static  std::set<std::weak_ptr<QClient>, std::owner_less<std::weak_ptr<QClient> > > s_monitors;
 };
+    
+}
 
 #endif
 

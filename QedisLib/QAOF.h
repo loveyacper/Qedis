@@ -8,6 +8,8 @@
 #include "QString.h"
 #include "QStore.h"
 
+namespace qedis
+{
 
 extern pid_t g_rewritePid;
 
@@ -147,5 +149,6 @@ inline void SaveCommand(const std::vector<QString>& params, DEST& dst)
     }
 }
 
+}
 
 #endif

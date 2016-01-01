@@ -3,7 +3,10 @@
 #include <iostream>
 #include <limits>
 #include <cassert>
-    
+
+namespace qedis
+{
+
 const std::size_t UnboundedBuffer::MAX_BUFFER_SIZE = std::numeric_limits<std::size_t>::max() / 2;
 
 
@@ -166,5 +169,7 @@ int main()
 
     return 0;
 }
+
 #endif
 
+}

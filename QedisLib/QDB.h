@@ -4,6 +4,9 @@
 #include "Log/MemoryFile.h"
 #include "QStore.h"
 
+namespace qedis
+{
+
 class QDBSaver
 {
 public:
@@ -57,5 +60,7 @@ private:
     
     InputMemoryFile qdb_;
 };
+    
+}
 
 #endif

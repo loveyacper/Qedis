@@ -1,6 +1,8 @@
 #include "UnitTest.h"
 #include "QGlobRegex.h"
 
+using namespace qedis;
+
 TEST_CASE(regex_star)
 {
     EXPECT_TRUE(glob_match("a*b?*?", "abxy"));

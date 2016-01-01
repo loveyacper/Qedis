@@ -11,6 +11,10 @@
 
 #define CRLF "\r\n"
 
+
+namespace qedis
+{
+
 enum QType
 {
     QType_invalid,
@@ -183,6 +187,8 @@ enum class QParseInt : int8_t
 QParseInt  GetIntUntilCRLF(const char*& ptr, std::size_t nBytes, int& val);
 
 std::vector<QString>  SplitString(const QString& str, char seperator);
+
+}
 
 #endif
 

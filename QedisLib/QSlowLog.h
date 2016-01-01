@@ -7,6 +7,8 @@
 #include "Log/Logger.h"
 #include "QString.h"
 
+namespace qedis
+{
 
 struct SlowLogItem
 {
@@ -50,6 +52,8 @@ private:
     std::deque<SlowLogItem> logs_;
     
 };
+    
+}
 
 #endif
 

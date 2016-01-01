@@ -4,6 +4,9 @@
 #include "QString.h"
 #include <list>
 
+namespace qedis
+{
+
 enum class ListPosition
 {
     head,
@@ -13,6 +16,8 @@ enum class ListPosition
 typedef std::list<QString>  QList;
 
 QObject  CreateListObject();
+
+}
 
 #endif
 

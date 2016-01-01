@@ -12,6 +12,9 @@
 #include <map>
 #include <memory>
 
+namespace qedis
+{
+
 typedef std::shared_ptr<QString>      PSTRING;
 typedef std::shared_ptr<QList>        PLIST;
 typedef std::shared_ptr<QSet>         PSET;
@@ -236,6 +239,8 @@ private:
 // ugly, but I don't want to write signalModifiedKey() every where
 extern std::vector<QString> g_dirtyKeys;
 extern void Propogate(const std::vector<QString>& params);
+    
+}
 
 #endif
 

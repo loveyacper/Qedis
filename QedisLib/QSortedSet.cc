@@ -3,6 +3,9 @@
 #include "Log/Logger.h"
 #include <cassert>
 
+namespace qedis
+{
+
 QSortedSet::Member2Score::iterator  QSortedSet::FindMember(const QString& member)
 {
     return  members_.find(member);
@@ -558,4 +561,6 @@ QError zremrangebyrank(const std::vector<QString>& params, UnboundedBuffer* repl
 QError zremrangebyscore(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     return GenericRemRange(params, reply, false);
+}
+    
 }

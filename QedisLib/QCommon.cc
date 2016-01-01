@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <iostream>
 
+namespace qedis
+{
 
 struct QErrorInfo  g_errorInfo[] = {
     {sizeof "+OK\r\n"- 1,   "+OK\r\n"},
@@ -381,4 +383,6 @@ std::vector<QString>  SplitString(const QString& str, char seperator)
         results.emplace_back(str.substr(start));
     
     return std::move(results);
+}
+    
 }

@@ -4,6 +4,9 @@
 #include <string.h>
 #include "QString.h"
 
+namespace qedis
+{
+
 class QGlobRegex
 {
 public:
@@ -52,7 +55,6 @@ inline bool glob_match(const QString& pattern,
                       text.c_str(), text.size());
 }
 
-// TODO search
 inline bool glob_search(const char* pattern,
                        const char* str)
 {
@@ -65,6 +67,8 @@ inline bool glob_search(const char* pattern,
     rgx.SetText(str, strlen(str));
 
     return rgx.TryMatch();
+}
+    
 }
 
 #endif

@@ -136,6 +136,8 @@ bool  Qedis::ParseArgs(int ac, char* av[])
 
 std::shared_ptr<StreamSocket>   Qedis::_OnNewConnection(int connfd)
 {
+    using namespace qedis;
+    
     SocketAddr  peer;
     Socket::GetPeerAddr(connfd,  peer);
 
@@ -164,6 +166,8 @@ Time  g_now;
 
 static void  QdbCron()
 {
+    using namespace qedis;
+    
     if (g_qdbPid != -1)
         return;
     
@@ -196,7 +200,7 @@ static void  QdbCron()
 class  ServerCronTimer : public Timer
 {
 public:
-    ServerCronTimer() : Timer(1000 / g_config.hz)
+    ServerCronTimer() : Timer(1000 / qedis::g_config.hz)
     {
     }
 
@@ -218,13 +222,15 @@ public:
 private:
     bool _OnTimer() override
     {
-        QReplication::Instance().Cron();
+        qedis::QReplication::Instance().Cron();
         return  true;
     }
 };
 
 static void LoadDbFromDisk()
 {
+    using namespace qedis;
+    
     //  USE AOF RECOVERY FIRST, IF FAIL, THEN RDB
     QAOFLoader aofLoader;
     if (aofLoader.Load(QAOFThreadController::Instance().GetAofFile().c_str()))
@@ -245,6 +251,8 @@ static void LoadDbFromDisk()
 
 bool Qedis::_Init()
 {
+    using namespace qedis;
+    
     if (!cfgFile_.empty())
     {
         if (!LoadQedisConfig(cfgFile_.c_str(), g_config))
@@ -329,6 +337,8 @@ bool Qedis::_Init()
 
 static void CheckChild()
 {
+    using namespace qedis;
+
     if (g_qdbPid == -1 && g_rewritePid == -1)
         return;
 
@@ -379,7 +389,7 @@ bool Qedis::_RunLogic()
 
 void    Qedis::_Recycle()
 {
-    QAOFThreadController::Instance().Stop();
+    qedis::QAOFThreadController::Instance().Stop();
 }
 
 

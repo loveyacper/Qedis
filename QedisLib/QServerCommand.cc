@@ -13,6 +13,8 @@
 #include "QSlowLog.h"
 
 
+namespace qedis
+{
 
 QError  select(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
@@ -401,4 +403,6 @@ QError  slowlog(const std::vector<QString>& params, UnboundedBuffer* reply)
 
     
     return   QError_ok;
+}
+    
 }

@@ -7,6 +7,9 @@
 #include <limits>
 #include <cassert>
 
+namespace qedis
+{
+
 int QStore::dirty_ = 0;
 
 void QStore::ExpiresDB::SetExpire(const QString& key, uint64_t when)
@@ -573,3 +576,4 @@ void Propogate(const std::vector<QString>& params)
     QReplication::Instance().SendToSlaves(params);
 }
 
+}

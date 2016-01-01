@@ -7,6 +7,8 @@
 
 using std::vector;
 
+namespace qedis
+{
 
 QObject  CreateListObject()
 {
@@ -775,4 +777,6 @@ QError  brpoplpush(const vector<QString>& params, UnboundedBuffer* reply)
     auto dstKeyIter = -- (-- params.end());
     return  _GenericBlockedPop(++ params.begin(), dstKeyIter,
                                reply, ListPosition::tail, timeout, &*dstKeyIter, false);
+}
+
 }

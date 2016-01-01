@@ -6,6 +6,9 @@
 #include "QCommon.h"
 #include "QString.h"
 
+namespace qedis
+{
+
 enum QCommandAttr
 {
     QAttr_read  = 0x1,
@@ -196,6 +199,7 @@ private:
     static std::map<QString, const QCommandInfo* >  s_handlers;
 };
 
+}
 
 #endif
 

@@ -8,6 +8,8 @@
 #include <vector>
 #include <unordered_map>
 
+namespace qedis
+{
 
 QObject  CreateSSetObject();
 
@@ -45,6 +47,8 @@ private:
     Score2Members   scores_;
     Member2Score    members_;
 };
+    
+}
 
-#endif 
+#endif
 

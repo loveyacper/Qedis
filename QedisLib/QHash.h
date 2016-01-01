@@ -5,6 +5,10 @@
 #include "QHelper.h"
 
 #include <unordered_map>
+
+namespace qedis
+{
+
 typedef std::unordered_map<QString, QString,
         my_hash,
         std::equal_to<QString> >  QHash;
@@ -13,6 +17,8 @@ typedef std::unordered_map<QString, QString,
 QObject  CreateHashObject();
 
 size_t   HScanKey(const QHash& hash, size_t cursor, size_t count, std::vector<QString>& res);
+
+}
 
 #endif
 
