@@ -25,7 +25,7 @@ public:
 private:
     bool _OnTimer()
     {
-        USR << " : OnTimer reconnect to " << peer_.GetIP() << ":" << peer_.GetPort();
+        WITH_LOG(USR << " : OnTimer reconnect to " << peer_.GetIP() << ":" << peer_.GetPort());
         Server::Instance()->TCPConnect(peer_, true);
 
         return false;
@@ -84,7 +84,7 @@ bool Server::TCPBind(const SocketAddr& addr)
 
 void Server::TCPReconnect(const SocketAddr& peer)
 {
-    INF << __FUNCTION__ << peer.GetIP();
+    WITH_LOG(INF << __FUNCTION__ << peer.GetIP());
     std::shared_ptr<ReconnTimer>  pTimer(new ReconnTimer(2 * 1000));  // TODO : flexible
     pTimer->peer_ = peer;
 
@@ -93,7 +93,7 @@ void Server::TCPReconnect(const SocketAddr& peer)
 
 void Server::TCPConnect(const SocketAddr& peer, bool retry)
 {
-    INF << __FUNCTION__ << peer.GetIP();
+    WITH_LOG(INF << __FUNCTION__ << peer.GetIP());
     
     std::shared_ptr<ClientSocket>  pClient(new ClientSocket(retry));
     pClient->Connect(peer);
@@ -161,7 +161,7 @@ void Server::MainLoop()
 
 std::shared_ptr<StreamSocket>   Server::_OnNewConnection(int tcpsock)
 {
-    WRN << "implement your tcp accept, now close socket " << tcpsock;
+    WITH_LOG(WRN << "implement your tcp accept, now close socket " << tcpsock);
     return std::shared_ptr<StreamSocket>((StreamSocket* )0);
 }
 
@@ -200,8 +200,8 @@ void   Server::DelListenSock(int sock)
     
     auto n = slistenSocks_.erase(sock);
 
-    if (n != 1)
-        ERR << "DelListenSock failed  " << sock;
-    else
-        INF << "DelListenSock succ " << sock;
+    WITH_LOG(if (n != 1) \
+        ERR << "DelListenSock failed  " << sock; \
+    else \
+        INF << "DelListenSock succ " << sock);
 }

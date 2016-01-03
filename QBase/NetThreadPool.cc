@@ -118,7 +118,7 @@ void RecvThread::Run()
 
             if (firedEvents_[i].events & EventTypeError)
             {
-                ERR << "recv thread, on error, socket " << pSock->GetSocket();
+                WITH_LOG(ERR << "recv thread, on error, socket " << pSock->GetSocket());
                 pSock->OnError();
             }
         }
@@ -207,14 +207,14 @@ void SendThread::Run( )
             {
                 if (!pSock->OnWritable())
                 {
-                    ERR << "on write error, socket " << pSock->GetSocket();
+                    WITH_LOG(ERR << "on write error, socket " << pSock->GetSocket());
                     pSock->OnError();
                 }
             }
             
             if (firedEvents_[i].events & EventTypeError)
             {
-                ERR << "send thread, on error, socket " << pSock->GetSocket();
+                WITH_LOG(ERR << "send thread, on error, socket " << pSock->GetSocket());
                 pSock->OnError();
             }
         }
@@ -229,7 +229,7 @@ void NetThreadPool::StopAllThreads()
     sendThread_->Stop();
     sendThread_.reset();
 
-    INF << "Stop all recv and send threads";
+    WITH_LOG(INF << "Stop all recv and send threads");
 }
 
 bool NetThreadPool::AddSocket(PSOCKET sock, uint32_t  events)

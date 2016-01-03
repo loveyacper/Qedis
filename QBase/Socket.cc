@@ -63,7 +63,7 @@ void Socket::CloseSocket(int& sock)
     {
         ::shutdown(sock, SHUT_RDWR);
         ::close(sock);
-        USR << "CloseSocket " << sock;
+        WITH_LOG(USR << "CloseSocket " << sock);
         sock = INVALID_SOCKET;
     }
 }

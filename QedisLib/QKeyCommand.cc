@@ -76,7 +76,7 @@ QError  del(const std::vector<QString>& params, UnboundedBuffer* reply)
 
 static int _SetExpireByMs(const QString& key, uint64_t absTimeout)
 {
-    INF << "try set expire, key " << key.c_str() << ", timeout is " << absTimeout;
+    WITH_LOG(INF << "try set expire, key " << key.c_str() << ", timeout is " << absTimeout);
 
     int ret = 0;
     if (QSTORE.ExistsKey(key))
@@ -146,7 +146,7 @@ static int64_t _ttl(const QString& key)
     }
     else
     {
-        ERR << "ttl key not exist " << key.c_str();
+        WITH_LOG(ERR << "ttl key not exist " << key.c_str());
     }
 
     return  ret;
@@ -202,7 +202,7 @@ QError  move(const std::vector<QString>& params, UnboundedBuffer* reply)
     QObject* val;
     if (QSTORE.GetValue(key, val) == QError_ok)
     {
-        DBG << "move " << key.c_str() << " to db " << toDb;
+        WITH_LOG(DBG << "move " << key.c_str() << " to db " << toDb);
         int fromDb = QSTORE.SelectDB(toDb);
         if (fromDb >= 0 && fromDb != toDb && !QSTORE.ExistsKey(key))
         {
@@ -216,12 +216,12 @@ QError  move(const std::vector<QString>& params, UnboundedBuffer* reply)
         }
         else
         {
-            ERR << "move " << key.c_str() << " failed to db " << toDb << ", from db " << fromDb;
+            WITH_LOG(ERR << "move " << key.c_str() << " failed to db " << toDb << ", from db " << fromDb);
         }
     }
     else
     {
-        ERR << "move " << key.c_str() << " failed to db " << toDb;
+        WITH_LOG(ERR << "move " << key.c_str() << " failed to db " << toDb);
     }
 
     FormatInt(ret, reply);

@@ -48,7 +48,7 @@ BODY_LENGTH_T QClient::_ProcessInlineCmd(const char* buf, size_t bytes)
             {
                 if (!param.empty())
                 {
-                    INF << "inline cmd param " << param.c_str();
+                    WITH_LOG(INF << "inline cmd param " << param.c_str());
                     params_.emplace_back(std::move(param));
                     param.clear();
                 }
@@ -59,7 +59,7 @@ BODY_LENGTH_T QClient::_ProcessInlineCmd(const char* buf, size_t bytes)
             }
         }
         
-        INF << "inline cmd param " << param.c_str();
+        WITH_LOG(INF << "inline cmd param " << param.c_str());
         params_.emplace_back(std::move(param));
     }
     
@@ -95,7 +95,7 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
                 if (QParseInt::ok == GetIntUntilCRLF(ptr, end - ptr, s))
                 {
                     info.rdbSize = s;
-                    USR << "recv rdb size " << s;
+                    WITH_LOG(USR << "recv rdb size " << s);
                     ptr += 2; // skip CRLF
                 }
             }
@@ -166,13 +166,13 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
                 
             if (!crlf)
             {
-                USR << "wait crlf for arg";
+                WITH_LOG(USR << "wait crlf for arg");
                 break;
             }
                 
             if (crlf - ptr != paramLen_)
             {
-                ERR << "param len said " << paramLen_ << ", but actual get " << (crlf - ptr);
+                WITH_LOG(ERR << "param len said " << paramLen_ << ", but actual get " << (crlf - ptr));
                 OnError();
                 return 0;
             }
@@ -214,7 +214,7 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
     
     QSTORE.SelectDB(db_);
     
-    INF << "client " << GetID() << ", cmd " << params_[0].c_str();
+    WITH_LOG(INF << "client " << GetID() << ", cmd " << params_[0].c_str());
     
     FeedMonitors(params_);
     
@@ -230,7 +230,7 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
         {
             if (!info || !info->CheckParamsCount(static_cast<int>(params_.size())))
             {
-                ERR << "queue failed: cmd " << cmd.c_str() << " has params " << params_.size();
+                WITH_LOG(ERR << "queue failed: cmd " << cmd.c_str() << " has params " << params_.size());
                 ReplyError(info ? QError_param : QError_unknowCmd, &reply_);
                 SendPacket(reply_.ReadAddr(), reply_.ReadableSize());
                 FlagExecWrong();
@@ -241,7 +241,7 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
                     queueCmds_.push_back(params_);
                 
                 SendPacket("+QUEUED\r\n", 9);
-                INF << "queue cmd " << cmd.c_str();
+                WITH_LOG(INF << "queue cmd " << cmd.c_str());
             }
             
             _Reset();
@@ -323,7 +323,7 @@ void QClient::_Reset()
 // multi
 bool QClient::Watch(const QString& key)
 {
-    INF << "Watch " << key.c_str();
+    WITH_LOG(INF << "Watch " << key.c_str());
     return watchKeys_.insert(key).second;
 }
 
@@ -336,19 +336,19 @@ bool QClient::NotifyDirty(const QString& key)
 {
     if (IsFlagOn(ClientFlag_dirty))
     {
-        INF << "client is already dirty";
+        WITH_LOG(INF << "client is already dirty");
         return false;
     }
     
     if (watchKeys_.count(key))
     {
-        INF << "Dirty client because key " << key.c_str();
+        WITH_LOG(INF << "Dirty client because key " << key.c_str());
         SetFlag(ClientFlag_dirty);
         return true;
     }
     else
     {
-        ERR << "BUG: Dirty key is not exist " << key.c_str();
+        WITH_LOG(ERR << "BUG: Dirty key is not exist " << key.c_str());
         assert(0);
     }
     
@@ -373,7 +373,7 @@ bool QClient::Exec()
               it != queueCmds_.end();
               ++ it)
     {
-        INF << "EXEC " << (*it)[0].c_str();
+        WITH_LOG(INF << "EXEC " << (*it)[0].c_str());
         const QCommandInfo* info = QCommandTable::GetCommandInfo((*it)[0]);
         QError err = QCommandTable::ExecuteCmd(*it, info, &reply_);
         SendPacket(reply_.ReadAddr(), reply_.ReadableSize());
@@ -407,7 +407,7 @@ bool  QClient::WaitFor(const QString& key, const QString* target)
     {
         if (!target_.empty())
         {
-            ERR << "Wait failed for key " << key << ", because old target " << target_;
+            WITH_LOG(ERR << "Wait failed for key " << key << ", because old target " << target_);
             waitingKeys_.erase(key);
             return false;
         }
@@ -445,7 +445,7 @@ void  QClient::FeedMonitors(const std::vector<QString>& params)
     assert(n > 0);
     if (n > static_cast<int>(sizeof buf))
     {
-        ERR << "why snprintf return " << n << " bigger than buf size " << sizeof buf;
+        WITH_LOG(ERR << "why snprintf return " << n << " bigger than buf size " << sizeof buf);
         n = sizeof buf;
     }
     

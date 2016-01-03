@@ -23,7 +23,7 @@ void   QAOFThreadController::RewriteDoneHandler(int exitcode, int bysignal)
 {
     if (exitcode == 0 && bysignal == 0)
     {
-        INF << "save aof success";
+        WITH_LOG(INF << "save aof success");
         g_rewritePid = -1;
         
         QAOFThreadController::Instance().Join();
@@ -32,7 +32,7 @@ void   QAOFThreadController::RewriteDoneHandler(int exitcode, int bysignal)
     }
     else
     {
-        ERR << "save aof failed with exitcode " << exitcode << ", signal " << bysignal;
+        WITH_LOG(ERR << "save aof failed with exitcode " << exitcode << ", signal " << bysignal);
         g_rewritePid = -1;
         
         ::unlink(g_aofTmp);
@@ -68,7 +68,7 @@ void  QAOFThreadController::SkipTmpBuffer(size_t n)
 // main thread  call this
 void  QAOFThreadController::Start()
 {
-    DBG << "start aof thread";
+    WITH_LOG(DBG << "start aof thread");
     
     assert(!aofThread_ || !aofThread_->IsAlive());
     
@@ -85,7 +85,7 @@ void   QAOFThreadController::Stop()
     if (!aofThread_)
         return;
     
-    DBG << "stop aof thread";
+    WITH_LOG(DBG << "stop aof thread");
     aofThread_->Stop();
     QAOFThreadController::Instance().Join();
     aofThread_ = nullptr;
@@ -243,7 +243,7 @@ QError bgrewriteaof(const std::vector<QString>& params, UnboundedBuffer* reply)
                 _exit(0);
                 
             case -1:
-                ERR << "fork aof process failed, errno = " << errno;
+                WITH_LOG(ERR << "fork aof process failed, errno = " << errno);
                 break;
                 
             default:
@@ -415,7 +415,7 @@ bool  QAOFLoader::Load(const char* name)
                 
                 if (QParseInt::ok != GetIntUntilCRLF(content, end - content, multi_))
                 {
-                    ERR << "get multi failed";
+                    WITH_LOG(ERR << "get multi failed");
                     return false;
                 }
                 else
@@ -434,7 +434,7 @@ bool  QAOFLoader::Load(const char* name)
                     int   paramLen = 0;
                     if (QParseInt::ok != GetIntUntilCRLF(content, end - content, paramLen))
                     {
-                        ERR << "get param len failed";
+                        WITH_LOG(ERR << "get param len failed");
                         return false;
                     }
                     else
@@ -444,7 +444,7 @@ bool  QAOFLoader::Load(const char* name)
 
                     if (content + paramLen > end)
                     {
-                        ERR << "can not get param, len " << paramLen;
+                        WITH_LOG(ERR << "can not get param, len " << paramLen);
                         return false;
                     }
 

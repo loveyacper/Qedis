@@ -89,7 +89,7 @@ void   QReplication::OnRdbSaveDone()
             cli->SendPacket(data, size);
             cli->SendPacket(buffer_.ReadAddr(), buffer_.ReadableSize());
             
-            INF << "Send to slave rdb " << size << ", buffer " << buffer_.ReadableSize();
+            WITH_LOG(INF << "Send to slave rdb " << size << ", buffer " << buffer_.ReadableSize());
         }
     }
     
@@ -117,12 +117,12 @@ void   QReplication::TryBgsave()
     }
     else if (ret == -1)
     {
-        ERR << "QReplication save rdb FATAL ERROR";
+        WITH_LOG(ERR << "QReplication save rdb FATAL ERROR");
         _OnStartBgsave(false);
     }
     else
     {
-        INF << "QReplication save rdb START";
+        WITH_LOG(INF << "QReplication save rdb START");
         g_qdbPid = ret;
         _OnStartBgsave(true);
     }
@@ -145,7 +145,7 @@ void   QReplication::_OnStartBgsave(bool succ)
         {
             if (succ)
             {
-                INF << "_OnStartBgsave set cli wait bgsave end " << cli->GetName();
+                WITH_LOG(INF << "_OnStartBgsave set cli wait bgsave end " << cli->GetName());
                 cli->GetSlaveInfo()->state = QSlaveState_wait_bgsave_end;
             }
             else
@@ -208,7 +208,7 @@ void   QReplication::Cron()
         {
             case QReplState_none:
             {
-                INF << "Try connect to master " << masterInfo_.addr.GetIP();
+                WITH_LOG(INF << "Try connect to master " << masterInfo_.addr.GetIP());
                 Server::Instance()->TCPConnect(masterInfo_.addr, true);
                 masterInfo_.state = QReplState_connecting;
             }
@@ -220,12 +220,12 @@ void   QReplication::Cron()
                 if (!master)
                 {
                     masterInfo_.state = QReplState_none;
-                    INF << "Master is down from connected to none";
+                    WITH_LOG(INF << "Master is down from connected to none");
                 }
                 else
                 {
                     master->SendPacket("SYNC\r\n", 6);
-                    INF << "Request SYNC";
+                    WITH_LOG(INF << "Request SYNC");
                     
                     rdb_.Open(slaveRdbFile, false);
                     masterInfo_.rdbRecved = 0;
@@ -253,7 +253,7 @@ void   QReplication::Cron()
             {
                 SocketAddr  peer;
                 Socket::GetPeerAddr(master->GetSocket(), peer);
-                INF << master->GetName() << " disconnect with Master " << peer.GetIP();
+                WITH_LOG(INF << master->GetName() << " disconnect with Master " << peer.GetIP());
                 
                 master->SetReconn(false);
                 master->OnError();
@@ -272,7 +272,7 @@ void   QReplication::SaveTmpRdb(const char* data, std::size_t len)
     
     if (masterInfo_.rdbRecved == masterInfo_.rdbSize)
     {
-        INF << "Rdb recv complete, bytes " << masterInfo_.rdbSize;
+        WITH_LOG(INF << "Rdb recv complete, bytes " << masterInfo_.rdbSize);
         
         QSTORE.ResetDb();
         
