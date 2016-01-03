@@ -58,7 +58,7 @@ inline size_t ScanHashMember(const HASH& container, size_t cursor, size_t count,
     }
 
     auto  idx = cursor;
-    for (auto bucket = 0; bucket < container.bucket_count(); ++ bucket)
+    for (auto bucket = 0u; bucket < container.bucket_count(); ++ bucket)
     {
         const auto bktSize = container.bucket_size(bucket);
         if (idx < bktSize)

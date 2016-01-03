@@ -110,7 +110,7 @@ inline int Number2Str(char* ptr, std::size_t nBytes, T val)
         val = -val;
     }
 
-    int  off = 0;
+    std::size_t  off = 0;
     while (val > 0)
     {
         if (off >= nBytes)
