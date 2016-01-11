@@ -143,7 +143,7 @@ std::size_t QPubsub::PublishMsg(const QString& channel, const QString& msg)
             {
                 SocketAddr peer;
                 Socket::GetPeerAddr(cli->GetSocket(), peer);
-                INF << "Publish msg:" << msg.c_str() << " to " << peer.GetIP() << ":" << peer.GetPort();
+                WITH_LOG(INF << "Publish msg:" << msg.c_str() << " to " << peer.GetIP() << ":" << peer.GetPort());
 
                 UnboundedBuffer   reply;
                 PreFormatMultiBulk(3, &reply);
@@ -163,7 +163,7 @@ std::size_t QPubsub::PublishMsg(const QString& channel, const QString& msg)
     {
         if (glob_match(pattern.first, channel))
         {
-            INF << channel.c_str() << " match " << pattern.first.c_str();
+            WITH_LOG(INF << channel.c_str() << " match " << pattern.first.c_str());
             Clients&  clientSet = pattern.second;
             for (auto itCli(clientSet.begin());
                       itCli != clientSet.end();
@@ -178,7 +178,7 @@ std::size_t QPubsub::PublishMsg(const QString& channel, const QString& msg)
                 {
                     SocketAddr peer;
                     Socket::GetPeerAddr(cli->GetSocket(), peer);
-                    INF << "Publish msg:" << msg.c_str() << " to " << peer.GetIP() << ":" << peer.GetPort();
+                    WITH_LOG(INF << "Publish msg:" << msg.c_str() << " to " << peer.GetIP() << ":" << peer.GetPort());
 
                     UnboundedBuffer   reply;
                     PreFormatMultiBulk(4, &reply);
@@ -220,7 +220,7 @@ void QPubsub::_RecycleClients(ChannelClients& channels, QString& start)
         {
             if (itCli->expired())
             {
-                INF << "erase client";
+                WITH_LOG(INF << "erase client");
                 cls.erase(itCli ++);
                 ++ n;
             }
@@ -232,7 +232,7 @@ void QPubsub::_RecycleClients(ChannelClients& channels, QString& start)
         
         if (cls.empty())
         {
-            INF << "erase channel " << it->first.c_str();
+            WITH_LOG(INF << "erase channel " << it->first.c_str());
             channels.erase(it ++);
         }
         else
@@ -321,7 +321,7 @@ QError  subscribe(const std::vector<QString>& params, UnboundedBuffer* reply)
 
             SocketAddr peer;
             Socket::GetPeerAddr(client->GetSocket(), peer);
-            INF << "subscribe " << pa.c_str() << " by " << peer.GetIP() << ":" << peer.GetPort();
+            WITH_LOG(INF << "subscribe " << pa.c_str() << " by " << peer.GetIP() << ":" << peer.GetPort());
         }
     }
 
@@ -343,7 +343,7 @@ QError  psubscribe(const std::vector<QString>& params, UnboundedBuffer* reply)
 
             SocketAddr peer;
             Socket::GetPeerAddr(client->GetSocket(), peer);
-            INF << "psubscribe " << pa.c_str() << " by " << peer.GetIP() << ":" << peer.GetPort();
+            WITH_LOG(INF << "psubscribe " << pa.c_str() << " by " << peer.GetIP() << ":" << peer.GetPort());
         }
     }
 
@@ -378,7 +378,7 @@ QError  unsubscribe(const std::vector<QString>& params, UnboundedBuffer* reply)
 
                 SocketAddr peer;
                 Socket::GetPeerAddr(client->GetSocket(), peer);
-                INF << "unsubscribe " << params[i].c_str() << " by " << peer.GetIP() << ":" << peer.GetPort();
+                WITH_LOG(INF << "unsubscribe " << params[i].c_str() << " by " << peer.GetIP() << ":" << peer.GetPort());
             }
         }
 
@@ -419,7 +419,7 @@ QError  punsubscribe(const std::vector<QString>& params, UnboundedBuffer* reply)
 
                 SocketAddr peer;
                 Socket::GetPeerAddr(client->GetSocket(), peer);
-                INF << "punsubscribe " << params[i].c_str() << " by " << peer.GetIP() << ":" << peer.GetPort();
+                WITH_LOG(INF << "punsubscribe " << params[i].c_str() << " by " << peer.GetIP() << ":" << peer.GetPort());
             }
         }
 
@@ -482,7 +482,7 @@ QError  pubsub(const std::vector<QString>& params, UnboundedBuffer* reply)
     }
     else
     {
-        ERR << "Unknown pubsub subcmd " << params[1].c_str();
+        WITH_LOG(ERR << "Unknown pubsub subcmd " << params[1].c_str());
     }
 
     return QError_ok;

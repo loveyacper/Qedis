@@ -159,7 +159,7 @@ const QCommandInfo QCommandTable::s_info[] =
 };
 
 
-std::map<QString, const QCommandInfo* >  QCommandTable::s_handlers;
+QCommandMap  QCommandTable::s_handlers;
 
 QCommandTable::QCommandTable()
 {
@@ -259,7 +259,7 @@ QError QCommandTable::ExecuteCmd(const std::vector<QString>& params, UnboundedBu
         return   QError_param;
     }
     
-    std::map<QString, const QCommandInfo* >::const_iterator it(s_handlers.find(params[0]));
+    QCommandMap::const_iterator it(s_handlers.find(params[0]));
     if (it == s_handlers.end())
     {
         ReplyError(QError_unknowCmd, reply);

@@ -16,7 +16,7 @@ namespace Epoll
         if (socket < 0)
             return false;
 
-        USR << "add socket: fd " << socket << " with events " << events;
+        WITH_LOG(USR << "add socket: fd " << socket << " with events " << events);
 
         epoll_event  ev;
         ev.data.ptr= ptr;
@@ -35,7 +35,7 @@ namespace Epoll
         if (socket < 0)
             return false;
 
-        USR << "del events socket " << socket;
+        WITH_LOG(USR << "del events socket " << socket);
 
         epoll_event dummy;
 
@@ -47,7 +47,7 @@ namespace Epoll
         if (socket < 0)
             return false;
 
-        USR << "mod socket: fd " << socket << ", new events " << events;
+        WITH_LOG(USR << "mod socket: fd " << socket << ", new events " << events);
 
         epoll_event  ev;
         ev.data.ptr= ptr;
@@ -66,12 +66,12 @@ namespace Epoll
 Epoller::Epoller()
 {
     multiplexer_ = ::epoll_create(512);
-    INF << "create epoll:  " << multiplexer_;
+    WITH_LOG(INF << "create epoll:  " << multiplexer_);
 }
 
 Epoller::~Epoller()
 {
-    INF << "close epoll:  " << multiplexer_;
+    WITH_LOG(INF << "close epoll:  " << multiplexer_);
     if (multiplexer_ != -1)  
         ::close(multiplexer_);
 }

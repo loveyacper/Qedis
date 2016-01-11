@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <map>
+//#include <unordered_map>
 #include "QCommon.h"
 #include "QString.h"
 
@@ -177,6 +178,9 @@ struct QCommandInfo
     bool  CheckParamsCount(int nParams) const;
 };
 
+//typedef std::unordered_map<QString, const QCommandInfo* >  QCommandMap;
+typedef std::map<QString, const QCommandInfo* >  QCommandMap;
+
 class QCommandTable
 {
 public:
@@ -196,7 +200,7 @@ private:
     static bool  AddCommand(const QString& cmd, const QCommandInfo* info);
 
     static const QCommandInfo s_info[];
-    static std::map<QString, const QCommandInfo* >  s_handlers;
+    static QCommandMap  s_handlers;
 };
 
 }

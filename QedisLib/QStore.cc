@@ -15,7 +15,7 @@ int QStore::dirty_ = 0;
 void QStore::ExpiresDB::SetExpire(const QString& key, uint64_t when)
 {
     expireKeys_[key] = when;
-    INF << "Set timeout key " << key.c_str() << ", timeout is " << when;
+    WITH_LOG(INF << "Set timeout key " << key.c_str() << ", timeout is " << when);
 }
 
 int64_t  QStore::ExpiresDB::TTL(const QString& key, uint64_t now)
@@ -54,7 +54,7 @@ QStore::ExpireResult  QStore::ExpiresDB::ExpireIfNeed(const QString& key, uint64
         if (it->second > now)
             return ExpireResult::notExpire; // not expire
         
-        WRN << "Delete timeout key " << it->first.c_str() << ", timeout is " << it->second;
+        WITH_LOG(WRN << "Delete timeout key " << it->first.c_str() << ", timeout is " << it->second);
         expireKeys_.erase(it);
         return ExpireResult::expired;
     }
@@ -76,7 +76,7 @@ int   QStore::ExpiresDB::LoopCheck(uint64_t now)
         if (it->second <= now)
         {
             // time to delete
-            WRN << "LoopCheck try delete key " << it->first.c_str() << ", " << ::Now();
+            WITH_LOG(WRN << "LoopCheck try delete key " << it->first.c_str() << ", " << ::Now());
             
             QSTORE.DeleteKey(it->first);
             expireKeys_.erase(it ++);
@@ -109,13 +109,13 @@ bool QStore::BlockedClients::BlockClient(const QString& key,
 {
     if (!client->WaitFor(key, target))
     {
-        ERR << key << " is already waited by " << client->GetName();
+        WITH_LOG(ERR << key << " is already waited by " << client->GetName());
         return  false;
     }
         
     Clients& clients = blockedClients_[key];
     clients.push_back(Clients::value_type(std::static_pointer_cast<QClient>(client->shared_from_this()), timeout, pos));
-    INF << key << " is waited by " << client->GetName() << ", timeout " << timeout;
+    WITH_LOG(INF << key << " is waited by " << client->GetName() << ", timeout " << timeout);
     return true;
 }
 
@@ -134,7 +134,7 @@ size_t QStore::BlockedClients::UnblockClient(QClient* client)
             auto  cli(std::get<0>(*it).lock());
             if (cli && cli.get() == client)
             {
-                INF << "unblock " << client->GetName() << " for key " << key;
+                WITH_LOG(INF << "unblock " << client->GetName() << " for key " << key);
                 clients.erase(it);
                 
                 ++ n;
@@ -176,7 +176,7 @@ size_t  QStore::BlockedClients::ServeClient(const QString& key, const PLIST& lis
 
             if (!target.empty())
             {
-                INF << list->front() << " is try lpush to target list " << target;
+                WITH_LOG(INF << list->front() << " is try lpush to target list " << target);
                 
                 // check target list
                 QError  err = QSTORE.GetValueByType(target, dst, QType_list);
@@ -204,7 +204,7 @@ size_t  QStore::BlockedClients::ServeClient(const QString& key, const PLIST& lis
                 {
                     const PLIST& dstlist = dst->CastList();
                     dstlist->push_front(list->back());
-                    INF << list->front() << " success lpush to target list " << target;
+                    WITH_LOG(INF << list->front() << " success lpush to target list " << target);
 
                     std::vector<QString> params;
                     params.push_back("lpush");
@@ -246,7 +246,7 @@ size_t  QStore::BlockedClients::ServeClient(const QString& key, const PLIST& lis
                 }
                 
                 cli->SendPacket(reply.ReadAddr(), reply.ReadableSize());
-                INF << "Serve client " << cli->GetName() << " list key : " << key;
+                WITH_LOG(INF << "Serve client " << cli->GetName() << " list key : " << key);
             }
             
             UnblockClient(cli.get());
@@ -280,7 +280,7 @@ int QStore::BlockedClients::LoopCheck(uint64_t now)
                 auto  scli(std::get<0>(*cli).lock());
                 if (scli && scli->WaitingKeys().count(key))
                 {
-                    INF << scli->GetName() << " is timeout for waiting key " << key;
+                    WITH_LOG(INF << scli->GetName() << " is timeout for waiting key " << key);
                     UnboundedBuffer  reply;
                     FormatNull(&reply);
                     scli->SendPacket(reply.ReadAddr(), reply.ReadableSize());

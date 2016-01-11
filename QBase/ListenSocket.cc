@@ -22,7 +22,7 @@ ListenSocket::ListenSocket()
 ListenSocket::~ListenSocket()
 {
     Server::Instance()->DelListenSock(localSock_);
-    USR << "close LISTEN socket " << localSock_;
+    WITH_LOG(USR << "close LISTEN socket " << localSock_);
 }
 
 bool ListenSocket::Bind(const SocketAddr& addr)
@@ -48,21 +48,21 @@ bool ListenSocket::Bind(const SocketAddr& addr)
     if (SOCKET_ERROR == ret)
     {
         CloseSocket(localSock_);
-        ERR << "Cannot bind port " << addr.GetPort();
+        WITH_LOG(ERR << "Cannot bind port " << addr.GetPort());
         return false;
     }
     ret = ::listen(localSock_, ListenSocket::LISTENQ);
     if (SOCKET_ERROR == ret)
     {
         CloseSocket(localSock_);
-        ERR << "Cannot listen on port " << addr.GetPort();
+        WITH_LOG(ERR << "Cannot listen on port " << addr.GetPort());
         return false;
     }
 
     if (!NetThreadPool::Instance().AddSocket(shared_from_this(), EventTypeRead))
         return false;
 
-    INF << "CREATE LISTEN socket " << localSock_ << " on port " <<  localPort_;
+    WITH_LOG(INF << "CREATE LISTEN socket " << localSock_ << " on port " <<  localPort_);
     return true;
 }
 
@@ -94,16 +94,16 @@ bool ListenSocket::OnReadable()
 
             case EMFILE:
             case ENFILE:
-                ERR << "Not enough file descriptor available!!!";
+                WITH_LOG(ERR << "Not enough file descriptor available!!!");
                 result = true;
                 break;
 
             case ENOBUFS:
-                ERR << "Not enough memory";          
+                WITH_LOG(ERR << "Not enough memory");
                 result = true;
 
             default:
-                ERR << "When accept, unknown error happened : " << errno;          
+                WITH_LOG(ERR << "When accept, unknown error happened : " << errno);
                 break;
             }
 

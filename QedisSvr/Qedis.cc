@@ -193,7 +193,7 @@ static void  QdbCron()
             g_qdbPid = ret;
         }
             
-        INF << "ServerCron save rdb file " << g_config.rdbfullname;
+        WITH_LOG(INF << "ServerCron save rdb file " << g_config.rdbfullname);
     }
 }
 
@@ -362,7 +362,7 @@ static void CheckChild()
         }
         else if (pid == g_rewritePid)
         {
-            INF << pid << " rewrite process success done.";
+            WITH_LOG(INF << pid << " rewrite process success done.");
             QAOFThreadController::RewriteDoneHandler(exitcode, bysignal);
         }
         else

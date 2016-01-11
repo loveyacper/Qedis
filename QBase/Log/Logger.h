@@ -10,6 +10,12 @@
 #include "MemoryFile.h"
 #include "../Timer.h"
 
+#ifndef USE_WITH_LOG
+	#define WITH_LOG(x)
+#else
+	#define WITH_LOG(x) x
+#endif
+
 enum LogLevel
 {
     logINFO     = 0x01 << 0,

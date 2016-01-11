@@ -11,12 +11,12 @@
 Kqueue::Kqueue()
 {
     multiplexer_ = ::kqueue();
-    INF << "create kqueue:  " << multiplexer_;
+    WITH_LOG(INF << "create kqueue:  " << multiplexer_);
 }
 
 Kqueue::~Kqueue()
 {
-    INF << "close kqueue: " << multiplexer_;
+    WITH_LOG(INF << "close kqueue: " << multiplexer_);
     if (multiplexer_ != -1)  
         ::close(multiplexer_);
 }
@@ -44,7 +44,7 @@ bool Kqueue::AddSocket(int sock, int events, void* userPtr)
     
 bool Kqueue::DelSocket(int sock, int events)
 {
-    INF << "Delete socket " << sock << " with events " << events;
+    WITH_LOG(INF << "Delete socket " << sock << " with events " << events);
 
     struct kevent change[2];
     int cnt = 0;

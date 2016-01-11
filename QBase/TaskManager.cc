@@ -61,10 +61,10 @@ bool TaskManager::DoMsgParse()
         {
             if (!_AddTask(*it))
             {
-                ERR << "Why can not insert tcp socket "
-                    << (*it)->GetSocket()
-                    << ", id = "
-                    << (*it)->GetID();
+                WITH_LOG(ERR << "Why can not insert tcp socket " \
+                    << (*it)->GetSocket() \
+                    << ", id = " \
+                    << (*it)->GetID());
             }
         }
     }
@@ -77,7 +77,7 @@ bool TaskManager::DoMsgParse()
     {
         if (!it->second || it->second->Invalid())
         {
-            USR << "Remove tcp task from do msg parse " << (it->second ? it->second->GetSocket() : -1);
+            WITH_LOG(USR << "Remove tcp task from do msg parse " << (it->second ? it->second->GetSocket() : -1));
             _RemoveTask(it);
         }
         else
