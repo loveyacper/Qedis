@@ -16,8 +16,8 @@ enum QCommandAttr
 };
 
 
-class   UnboundedBuffer;
-typedef QError  QCommandHandler(const std::vector<QString>& params, UnboundedBuffer* reply);
+class UnboundedBuffer;
+using QCommandHandler = QError (const std::vector<QString>& params, UnboundedBuffer* reply);
 
 // key commands
 QCommandHandler  type;

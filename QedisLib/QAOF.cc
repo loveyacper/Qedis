@@ -72,7 +72,7 @@ void  QAOFThreadController::Start()
     
     assert(!aofThread_ || !aofThread_->IsAlive());
     
-    aofThread_.reset(new AOFThread);
+    aofThread_ = std::make_shared<AOFThread>();
     aofThread_->Open(aofFile_.c_str());
     aofThread_->SetAlive();
     

@@ -13,7 +13,7 @@ enum class ListPosition
     tail,
 };
 
-typedef std::list<QString>  QList;
+using QList = std::list<QString>;
 
 QObject  CreateListObject();
 

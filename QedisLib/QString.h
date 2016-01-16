@@ -7,7 +7,7 @@
 namespace qedis
 {
 
-typedef std::string  QString;
+using QString = std::string;
 
 //typedef std::basic_string<char, std::char_traits<char>, Bert::Allocator<char> >  QString;
 

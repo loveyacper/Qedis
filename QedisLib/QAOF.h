@@ -52,7 +52,7 @@ private:
         
         bool  Flush();
     
-        virtual void Run();
+        void  Run();
         
         std::atomic<bool>   alive_;
 
@@ -143,9 +143,9 @@ inline void SaveCommand(const std::vector<QString>& params, DEST& dst)
 {
     WriteMultiBulkLong(params.size(), dst);
     
-    for (size_t i = 0; i < params.size(); ++ i)
+    for (const auto& s : params)
     {
-        WriteBulkString(params[i], dst);
+        WriteBulkString(s, dst);
     }
 }
 

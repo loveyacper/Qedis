@@ -177,7 +177,7 @@ QError  smove(const std::vector<QString>& params, UnboundedBuffer* reply)
         {
             err = QError_ok;
             QObject val(CreateSetObject());
-            val.value.reset(new QSet());
+            val.value = std::make_shared<QSet>();
             dst = QSTORE.SetValue(params[2], val);
         }
         
@@ -289,7 +289,7 @@ static void  _set_operation(const std::vector<QString>& params,
 QError  sdiffstore(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     QObject   obj = CreateSetObject();
-    obj.value.reset(new QSet);
+    obj.value = std::make_shared<QSet>();
     QSTORE.SetValue(params[1], obj);
 
     const PSET& res = obj.CastSet();
@@ -327,7 +327,7 @@ QError  sinter(const std::vector<QString>& params, UnboundedBuffer* reply)
 QError  sinterstore(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     QObject   obj = CreateSetObject();
-    obj.value.reset(new QSet);
+    obj.value = std::make_shared<QSet>();
     QSTORE.SetValue(params[1], obj);
 
     const PSET& res = obj.CastSet();
@@ -353,7 +353,7 @@ QError  sunion(const std::vector<QString>& params, UnboundedBuffer* reply)
 QError  sunionstore(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     QObject   obj = CreateSetObject();
-    obj.value.reset(new QSet);
+    obj.value = std::make_shared<QSet>();
     QSTORE.SetValue(params[1], obj);
 
     const PSET& res = obj.CastSet();

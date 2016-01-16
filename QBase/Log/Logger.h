@@ -153,7 +153,7 @@ private:
         bool  IsAlive() const { return alive_; }
         void  Stop() {  alive_ = false; }
         
-        virtual void Run();
+        void  Run();
     private:
         std::atomic<bool> alive_;
     };

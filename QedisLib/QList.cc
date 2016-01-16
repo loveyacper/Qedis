@@ -306,21 +306,15 @@ QError  lindex(const vector<QString>& params, UnboundedBuffer* reply)
     
     if (2 * idx < size)
     {
-        QList::const_iterator it = list->begin();
-        while (idx -- > 0)
-        {
-            ++ it;
-        }
+        auto it = list->begin();
+        std::advance(it, idx);
         result = &*it;
     }
     else
     {
-        QList::const_reverse_iterator  it = list->rbegin();
+        auto it = list->rbegin();
         idx = size - 1 - idx;
-        while (idx -- > 0)
-        {
-            ++ it;
-        }
+        std::advance(it, idx);
         result = &*it;
     }
     
@@ -362,21 +356,15 @@ QError  lset(const vector<QString>& params, UnboundedBuffer* reply)
     
     if (2 * idx < size)
     {
-        QList::iterator it = list->begin();
-        while (idx -- > 0)
-        {
-            ++ it;
-        }
+        auto it = list->begin();
+        std::advance(it, idx);
         result = &*it;
     }
     else
     {
-        QList::reverse_iterator it = list->rbegin();
+        auto it = list->rbegin();
         idx = size - 1 - idx;
-        while (idx -- > 0)
-        {
-            ++ it;
-        }
+        std::advance(it, idx);
         result = &*it;
     }
     

@@ -7,9 +7,9 @@
 namespace qedis
 {
 
-typedef std::unordered_set<QString,
+using QSet = std::unordered_set<QString,
         my_hash,
-        std::equal_to<QString> >  QSet;
+        std::equal_to<QString> >;
 
 QObject CreateSetObject();
 

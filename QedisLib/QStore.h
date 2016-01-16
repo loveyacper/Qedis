@@ -15,11 +15,11 @@
 namespace qedis
 {
 
-typedef std::shared_ptr<QString>      PSTRING;
-typedef std::shared_ptr<QList>        PLIST;
-typedef std::shared_ptr<QSet>         PSET;
-typedef std::shared_ptr<QSortedSet>   PSSET;
-typedef std::shared_ptr<QHash>        PHASH;
+using PSTRING = std::shared_ptr<QString>;
+using PLIST = std::shared_ptr<QList>;
+using PSET = std::shared_ptr<QSet>;
+using PSSET = std::shared_ptr<QSortedSet>;
+using PHASH = std::shared_ptr<QHash>;
 
 struct  QObject
 {
@@ -61,16 +61,6 @@ struct  QObject
     
     QObject(const QObject& obj) = default;
     QObject& operator= (const QObject& obj) =  default;
-
-    QObject(QObject&& obj)
-    {
-        type = obj.type;
-        nouse = obj.nouse;
-        encoding = obj.encoding;
-        lru = obj.lru;
-        
-        value = std::move(obj.value);
-    }
     
     PSTRING  CastString()       const { return std::static_pointer_cast<QString>(value); }
     PLIST    CastList()         const { return std::static_pointer_cast<QList>(value);   }
@@ -81,9 +71,9 @@ struct  QObject
 
 class QClient;
 
-typedef std::unordered_map<QString, QObject,
+using QDB = std::unordered_map<QString, QObject,
         my_hash,
-        std::equal_to<QString> >  QDB;
+        std::equal_to<QString> >;
 
 
 
@@ -198,10 +188,9 @@ private:
         int     LoopCheck(uint64_t now);
         
     private:
-        typedef std::unordered_map<QString, uint64_t,
+        using Q_EXPIRE_DB = std::unordered_map<QString, uint64_t,
                                     my_hash,
-                                    std::equal_to<QString> >
-                               Q_EXPIRE_DB;
+                                    std::equal_to<QString> >;
         Q_EXPIRE_DB            expireKeys_;  // all the keys to be expired, unorder.
     };
     
@@ -219,8 +208,8 @@ private:
         int    LoopCheck(uint64_t now);
         size_t Size() const { return blockedClients_.size(); }
     private:
-        typedef std::list<std::tuple<std::weak_ptr<QClient>, uint64_t, ListPosition> >   Clients;
-        typedef std::unordered_map<QString, Clients>  WaitingList;
+        using Clients = std::list<std::tuple<std::weak_ptr<QClient>, uint64_t, ListPosition> >;
+        using WaitingList = std::unordered_map<QString, Clients>;
         
         WaitingList  blockedClients_;
     };

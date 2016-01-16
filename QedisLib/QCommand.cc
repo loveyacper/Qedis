@@ -168,9 +168,8 @@ QCommandTable::QCommandTable()
 
 void QCommandTable::Init()
 {
-    for (size_t i = 0; i < sizeof s_info / sizeof s_info[0]; ++ i)
+    for (const auto& info : s_info)
     {
-        const QCommandInfo& info = s_info[i];
         s_handlers[info.cmd] = &info;
     }
 }
@@ -224,7 +223,6 @@ bool  QCommandTable::AddCommand(const QString& cmd, const QCommandInfo* info)
     if (cmd.empty() || cmd == "\"\"")
         return true;
 
-    printf("newcmd %s, type %d\n", cmd.c_str(), info->attr);
     return s_handlers.insert(std::make_pair(cmd, info)).second;
 }
 
@@ -259,7 +257,7 @@ QError QCommandTable::ExecuteCmd(const std::vector<QString>& params, UnboundedBu
         return   QError_param;
     }
     
-    std::map<QString, const QCommandInfo* >::const_iterator it(s_handlers.find(params[0]));
+    auto it(s_handlers.find(params[0]));
     if (it == s_handlers.end())
     {
         ReplyError(QError_unknowCmd, reply);

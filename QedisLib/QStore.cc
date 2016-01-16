@@ -508,7 +508,7 @@ QStore::ExpireResult QStore::_ExpireIfNeed(const QString& key, uint64_t now)
 void    QStore::InitExpireTimer()
 {
     for (int i = 0; i < static_cast<int>(expiresDb_.size()); ++ i)
-        TimerManager::Instance().AddTimer(PTIMER(new ExpireTimer(i)));
+        TimerManager::Instance().AddTimer(std::make_shared<ExpireTimer>(i));
 }
 
 void    QStore::ResetDb()
@@ -544,7 +544,7 @@ size_t  QStore::ServeClient(const QString& key, const PLIST& list)
 void    QStore::InitBlockedTimer()
 {
     for (int i = 0; i < static_cast<int>(blockedClients_.size()); ++ i)
-        TimerManager::Instance().AddTimer(PTIMER(new BlockedListTimer(i)));
+        TimerManager::Instance().AddTimer(std::make_shared<BlockedListTimer>(i));
 }
 
 

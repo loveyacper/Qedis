@@ -36,8 +36,8 @@ public:
 private:
     QPubsub() {}
 
-    typedef std::set<std::weak_ptr<QClient>, std::owner_less<std::weak_ptr<QClient> > >   Clients;
-    typedef std::map<QString, Clients>  ChannelClients;
+    using Clients = std::set<std::weak_ptr<QClient>, std::owner_less<std::weak_ptr<QClient> > >;
+    using ChannelClients = std::map<QString, Clients>;
 
     ChannelClients   channels_;
     ChannelClients   patternChannels_;

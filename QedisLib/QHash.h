@@ -9,9 +9,7 @@
 namespace qedis
 {
 
-typedef std::unordered_map<QString, QString,
-        my_hash,
-        std::equal_to<QString> >  QHash;
+using QHash = std::unordered_map<QString, QString, my_hash, std::equal_to<QString> >;
 
 
 QObject  CreateHashObject();

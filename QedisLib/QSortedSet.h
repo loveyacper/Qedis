@@ -16,12 +16,12 @@ QObject  CreateSSetObject();
 class QSortedSet
 {
 public:
-    typedef std::set<QString> Members;
-    typedef std::map<double, Members>  Score2Members;
+    using Members = std::set<QString>;
+    using Score2Members = std::map<double, Members>;
 
-    typedef std::unordered_map<QString, double,
+    using Member2Score = std::unordered_map<QString, double,
             my_hash,
-            std::equal_to<QString> >   Member2Score;
+            std::equal_to<QString> >;
 
     Member2Score::iterator FindMember(const QString& member);
     Member2Score::const_iterator begin() const {  return members_.begin(); };

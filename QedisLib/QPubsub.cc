@@ -266,7 +266,7 @@ private:
 
 void QPubsub::InitPubsubTimer()
 {
-    TimerManager::Instance().AddTimer(PTIMER(new PubsubTimer));
+    TimerManager::Instance().AddTimer(std::make_shared<PubsubTimer>());
 }
 
 void QPubsub::PubsubChannels(std::vector<QString>& res, const char* pattern) const

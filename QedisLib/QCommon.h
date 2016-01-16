@@ -15,6 +15,8 @@
 namespace qedis
 {
 
+const int kStringMaxBytes = 1 * 1024 * 1024 * 1024;
+    
 enum QType
 {
     QType_invalid,
@@ -98,7 +100,7 @@ extern struct QErrorInfo
 } g_errorInfo[] ;
 
 template <typename T>
-inline int Number2Str(char* ptr, std::size_t nBytes, T val)
+inline std::size_t Number2Str(char* ptr, std::size_t nBytes, T val)
 {
     if (!ptr || !nBytes)
         return 0;
@@ -110,7 +112,7 @@ inline int Number2Str(char* ptr, std::size_t nBytes, T val)
         val = -val;
     }
 
-    int  off = 0;
+    std::size_t off = 0;
     while (val > 0)
     {
         if (off >= nBytes)

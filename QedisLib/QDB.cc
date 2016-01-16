@@ -220,9 +220,9 @@ void QDBSaver::_SaveList(const PLIST& l)
 {
     SaveLength(l->size());
     
-    for (auto elem(l->begin()); elem != l->end(); ++ elem)
+    for (const auto& e : *l)
     {
-        SaveString(*elem);
+        SaveString(e);
     }
 }
 
@@ -231,9 +231,9 @@ void  QDBSaver::_SaveSet(const PSET& s)
 {
     SaveLength(s->size());
     
-    for (auto elem(s->begin()); elem != s->end(); ++ elem)
+    for (const auto& e : *s)
     {
-        SaveString(*elem);
+        SaveString(e);
     }
 }
 
@@ -241,10 +241,10 @@ void  QDBSaver::_SaveHash(const PHASH& h)
 {
     SaveLength(h->size());
     
-    for (auto elem(h->begin()); elem != h->end(); ++ elem)
+    for (const auto& e : *h)
     {
-        SaveString(elem->first);
-        SaveString(elem->second);
+        SaveString(e.first);
+        SaveString(e.second);
     }
 }
 
@@ -253,10 +253,10 @@ void    QDBSaver::_SaveSSet(const PSSET& ss)
 {
     SaveLength(ss->Size());
     
-    for (auto elem(ss->begin()); elem != ss->end(); ++ elem)
+    for (const auto& e : *ss)
     {
-        SaveString(elem->first);
-        _SaveDoubleValue(elem->second);
+        SaveString(e.first);
+        _SaveDoubleValue(e.second);
     }
 }
 
@@ -918,7 +918,7 @@ struct ZipListElement
         assert(!sval);
 
         QString  str(16, 0);
-        int len = Number2Str(&str[0], 16, lval);
+        auto len = Number2Str(&str[0], 16, lval);
         str.resize(len);
         
         DBG << "long zip list element " << str;
@@ -926,7 +926,7 @@ struct ZipListElement
     }
 };
 
-QObject     QDBLoader::_LoadZipList(int8_t type)
+QObject QDBLoader::_LoadZipList(int8_t type)
 {
     QString str = _LoadGenericString();
     
@@ -1006,7 +1006,7 @@ QObject     QDBLoader::_LoadZipList(int8_t type)
         }
             
         default:
-            assert(0);
+            assert(!!!"illegal data type");
             break;
     }
     
@@ -1035,7 +1035,7 @@ QObject     QDBLoader::_LoadIntset()
     for (auto v : elements)
     {
         char buf[64];
-        int bytes = Number2Str<int64_t>(buf, sizeof buf, v);
+        auto bytes = Number2Str<int64_t>(buf, sizeof buf, v);
         set->insert(QString(buf, bytes));
     }
 

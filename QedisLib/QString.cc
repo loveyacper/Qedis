@@ -49,7 +49,7 @@ PSTRING GetDecodedString(const QObject* value)
         
         char ret[32];
         snprintf(ret, sizeof ret - 1, "%ld",  val);
-        return PSTRING(new QString(ret));
+        return std::make_shared<QString>(ret);
     }
     else
     {
@@ -464,7 +464,7 @@ QError  setbit(const std::vector<QString>& params, UnboundedBuffer* reply)
         return QError_nan;
     }
 
-    if (offset < 0 || offset > 8 * 1024 * 1024)
+    if (offset < 0 || offset > kStringMaxBytes)
     {
         Format0(reply);
         return QError_ok;
@@ -520,7 +520,7 @@ static QError  ChangeFloatValue(const QString& key, float delta, UnboundedBuffer
     char newVal[32];
     int  len = snprintf(newVal, sizeof newVal - 1, "%.6g", (oldVal + delta));
     value->encoding = QEncode_raw;
-    value->value.reset(new QString(newVal, len));
+    value->value = std::make_shared<QString>(newVal, len);
 
     FormatSingle(newVal, len, reply);
     return QError_ok;

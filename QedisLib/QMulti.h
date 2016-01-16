@@ -3,8 +3,8 @@
 
 #include <map>
 #include <vector>
-#include "QString.h"
 #include <memory>
+#include "QString.h"
 
 namespace qedis
 {
@@ -25,8 +25,8 @@ public:
 private:
     QMulti() {}
 
-    typedef std::vector<std::weak_ptr<QClient> >   Clients;
-    typedef std::map<QString, Clients>    WatchedClients;
+    using Clients = std::vector<std::weak_ptr<QClient> >;
+    using WatchedClients = std::map<QString, Clients>;
     
     WatchedClients  clients_;
 };

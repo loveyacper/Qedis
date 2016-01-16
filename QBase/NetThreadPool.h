@@ -5,6 +5,7 @@
 #include <vector>
 #include <unistd.h>
 #include <memory>
+#include <atomic>
 #include <mutex>
 #include "Poller.h"
 #include "Threads/ThreadPool.h"
@@ -41,12 +42,12 @@ protected:
     void  _TryAddNewTasks();
 
 private:
-    volatile bool running_;
+    std::atomic<bool> running_;
 
     std::mutex   mutex_;
     typedef std::vector<std::pair<std::shared_ptr<Socket>, uint32_t> >    NewTasks; 
     NewTasks     newTasks_; 
-    volatile int newCnt_;
+    std::atomic<int> newCnt_;
     void _AddSocket(PSOCKET , uint32_t  event);
 };
 
