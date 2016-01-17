@@ -557,14 +557,14 @@ void Propogate(const std::vector<QString>& params)
         for (const auto& k : g_dirtyKeys)
         {
             ++ QStore::dirty_;
-            QMulti::Instance().NotifyDirty(k);
+            QMulti::Instance().NotifyDirty(QSTORE.GetDB(), k);
         }
         g_dirtyKeys.clear();
     }
     else
     {
         ++ QStore::dirty_;
-        QMulti::Instance().NotifyDirty(params[1]);
+        QMulti::Instance().NotifyDirty(QSTORE.GetDB(), params[1]);
     }
 
     if (params.empty())

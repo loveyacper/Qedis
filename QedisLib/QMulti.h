@@ -15,18 +15,18 @@ class QMulti
 public:
     static QMulti& Instance();
 
-    void  Watch(QClient* client, const QString& key);
+    void  Watch(QClient* client, int dbno, const QString& key);
     void  Unwatch(QClient* client);
     void  Multi(QClient* client);
     bool  Exec(QClient* client);
     void  Discard(QClient* client);
 
-    void  NotifyDirty(const QString& key);
+    void  NotifyDirty(int dbno, const QString& key);
 private:
     QMulti() {}
 
     using Clients = std::vector<std::weak_ptr<QClient> >;
-    using WatchedClients = std::map<QString, Clients>;
+    using WatchedClients = std::map<int, std::map<QString, Clients> >;
     
     WatchedClients  clients_;
 };

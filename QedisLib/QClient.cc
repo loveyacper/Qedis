@@ -321,10 +321,10 @@ void QClient::_Reset()
 }
 
 // multi
-bool QClient::Watch(const QString& key)
+bool QClient::Watch(int dbno, const QString& key)
 {
-    INF << "Watch " << key.c_str();
-    return watchKeys_.insert(key).second;
+    INF << "Watch " << key.c_str() << ", db no = " << dbno;
+    return watchKeys_[dbno].insert(key).second;
 }
 
 void QClient::UnWatch()
@@ -332,31 +332,33 @@ void QClient::UnWatch()
     watchKeys_.clear();
 }
 
-bool QClient::NotifyDirty(const QString& key)
+bool QClient::NotifyDirty(int dbno, const QString& key)
 {
     if (IsFlagOn(ClientFlag_dirty))
     {
-        INF << "client is already dirty";
-        return false;
+        INF << "client is already dirty " << GetID();
+        return true;
     }
     
-    if (watchKeys_.count(key))
+    if (watchKeys_[dbno].count(key))
     {
-        INF << "Dirty client because key " << key.c_str();
+        INF << GetID() << " client become dirty because key " << key << ", dbno " << dbno;
         SetFlag(ClientFlag_dirty);
         return true;
     }
     else
     {
-        ERR << "BUG: Dirty key is not exist " << key.c_str();
+        ERR << "BUG: Dirty key is not exist " << key;
         assert(0);
     }
     
-    return false;
+    return false; // never here
 }
 
 bool QClient::Exec()
 {
+    ExecuteOnScopeExit  resetState(&QClient::ClearMultiAndWatch, this);
+    
     if (IsFlagOn(ClientFlag_wrongExec))
     {
         return false;
@@ -369,20 +371,18 @@ bool QClient::Exec()
     }
     
     PreFormatMultiBulk(queueCmds_.size(), &reply_);
-    for (auto it(queueCmds_.begin());
-              it != queueCmds_.end();
-              ++ it)
+    for (const auto& cmd : queueCmds_)
     {
-        INF << "EXEC " << (*it)[0].c_str();
-        const QCommandInfo* info = QCommandTable::GetCommandInfo((*it)[0]);
-        QError err = QCommandTable::ExecuteCmd(*it, info, &reply_);
+        INF << "EXEC " << cmd[0] << ", for " << GetID();
+        const QCommandInfo* info = QCommandTable::GetCommandInfo(cmd[0]);
+        QError err = QCommandTable::ExecuteCmd(cmd, info, &reply_);
         SendPacket(reply_.ReadAddr(), reply_.ReadableSize());
         _Reset();
         
         // may dirty clients;
         if (err == QError_ok && (info->attr & QAttr_write))
         {
-            Propogate(*it);
+            Propogate(cmd);
         }
     }
     
@@ -391,11 +391,16 @@ bool QClient::Exec()
 
 void QClient::ClearMulti()
 {
-//    watchKeys_.clear();
     queueCmds_.clear();
     ClearFlag(ClientFlag_multi);
-    ClearFlag(ClientFlag_dirty);
     ClearFlag(ClientFlag_wrongExec);
+}
+    
+void QClient::ClearMultiAndWatch()
+{
+    ClearMulti();
+    watchKeys_.clear();
+    ClearFlag(ClientFlag_dirty);
 }
 
 

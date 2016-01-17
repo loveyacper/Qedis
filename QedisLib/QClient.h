@@ -8,6 +8,7 @@
 #include "QSlowLog.h"
 #include "QReplication.h"
 #include <unordered_set>
+#include <unordered_map>
 
 namespace qedis
 {
@@ -35,7 +36,7 @@ struct QSlaveInfo;
 class QClient: public StreamSocket
 {
 private:
-    BODY_LENGTH_T _HandlePacket(AttachedBuffer& buf);
+    BODY_LENGTH_T _HandlePacket(AttachedBuffer& buf) override;
 
 public:
     QClient();
@@ -51,11 +52,12 @@ public:
     bool IsFlagOn(unsigned flag) { return flag_ & flag; }
     void FlagExecWrong() { if (IsFlagOn(ClientFlag_multi)) SetFlag(ClientFlag_wrongExec);   }
     
-    bool Watch(const QString& key);
+    bool Watch(int dbno, const QString& key);
     void UnWatch();
-    bool NotifyDirty(const QString& key);
+    bool NotifyDirty(int dbno, const QString& key);
     bool Exec();
     void ClearMulti();
+    void ClearMultiAndWatch();
 
     // pubsub
     std::size_t Subscribe(const QString& channel)
@@ -89,8 +91,8 @@ public:
     void  ClearWaitingKeys()    {  waitingKeys_.clear(), target_.clear(); }
     const QString&  GetTarget() const { return target_; }
     
-    void    SetName(const QString& name) { name_ = name; }
-    const   QString&    GetName() const { return name_; }
+    void  SetName(const QString& name) { name_ = name; }
+    const QString&     GetName() const { return name_; }
     
     void         SetSlaveInfo();
     QSlaveInfo*  GetSlaveInfo() const { return slaveInfo_.get(); }
@@ -119,7 +121,7 @@ private:
     std::unordered_set<QString>  patternChannels_;
     
     unsigned flag_;
-    std::unordered_set<QString>  watchKeys_;
+    std::unordered_map<int, std::unordered_set<QString> > watchKeys_;
     std::vector<std::vector<QString> > queueCmds_;
     
     // blocked list

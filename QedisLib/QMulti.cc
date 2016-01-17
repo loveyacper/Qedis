@@ -1,5 +1,6 @@
 #include "QMulti.h"
 #include "QClient.h"
+#include "QStore.h"
 #include "Log/Logger.h"
 #include "Timer.h"
 
@@ -12,11 +13,11 @@ QMulti&    QMulti::Instance()
     return mt;
 }
     
-void  QMulti::Watch(QClient* client, const QString& key)
+void  QMulti::Watch(QClient* client, int dbno, const QString& key)
 {
-    if (client->Watch(key))
+    if (client->Watch(dbno, key))
     {
-        Clients& cls = clients_[key];
+        Clients& cls = clients_[dbno][key];
         cls.push_back(std::static_pointer_cast<QClient>(client->shared_from_this()));
     }
 }
@@ -49,30 +50,33 @@ void QMulti::Discard(QClient* client)
 }
 
 
-void  QMulti::NotifyDirty(const QString& key)
+void  QMulti::NotifyDirty(int dbno, const QString& key)
 {
-    INF << "Try NotifyDirty " << key.c_str();
-    auto it = clients_.find(key);
-    if (it == clients_.end())
+    INF << "Try NotifyDirty " << key.c_str() << ", dbno " << dbno;
+    auto tmpDbIter = clients_.find(dbno);
+    if (tmpDbIter == clients_.end())
+        return;
+    
+    auto& dbWatchedKeys = tmpDbIter->second;
+    auto it = dbWatchedKeys.find(key);
+    if (it == dbWatchedKeys.end())
         return;
     
     Clients& cls = it->second;
-    for (auto itCli(cls.begin());
-              itCli != cls.end();
-         )
+    for (auto itCli(cls.begin()); itCli != cls.end(); )
     {
         auto client(itCli->lock());
         if (!client)
         {
             WRN << "erase not exist client ";
-            cls.erase(itCli ++);
+            itCli = cls.erase(itCli);
         }
         else
         {
-            if (!client->NotifyDirty(key))
+            if (client.get() != QClient::Current() && client->NotifyDirty(dbno, key))
             {
                 WRN << "erase dirty client ";
-                cls.erase(itCli ++);
+                itCli = cls.erase(itCli);
             }
             else
             {
@@ -83,7 +87,7 @@ void  QMulti::NotifyDirty(const QString& key)
         
     if (cls.empty())
     {
-        clients_.erase(it);
+        dbWatchedKeys.erase(it);
     }
 }
 
@@ -97,10 +101,9 @@ QError  watch(const std::vector<QString>& params, UnboundedBuffer* reply)
         return  QError_watch;
     }
     
-    for (size_t i = 1; i < params.size(); ++ i)
-    {
-        QMulti::Instance().Watch(client, params[i]);
-    }
+    std::for_each(++ params.begin(), params.end(), [client](const QString& s) {
+        QMulti::Instance().Watch(client, QSTORE.GetDB(), s);
+    } );
     
     FormatOK(reply);
     return QError_ok;

@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <vector>
 #include <algorithm>
+#include <functional>
 #include "QString.h"
 
 #define QEDIS static_cast<Qedis* >(Server::Instance())
@@ -189,6 +190,24 @@ enum class QParseInt : int8_t
 QParseInt  GetIntUntilCRLF(const char*& ptr, std::size_t nBytes, int& val);
 
 std::vector<QString>  SplitString(const QString& str, char seperator);
+    
+class ExecuteOnScopeExit
+{
+public:
+    template <typename F, typename... Args>
+    ExecuteOnScopeExit(F&& f, Args&&... args)
+    {
+        func_ = std::bind(std::forward<F>(f), std::forward<Args>(args)...);
+    }
+        
+    ~ExecuteOnScopeExit()
+    {
+        func_();
+    }
+    
+private:
+    std::function< void ()> func_;
+};
 
 }
 
