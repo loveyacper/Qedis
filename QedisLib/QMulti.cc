@@ -37,10 +37,7 @@ void QMulti::Multi(QClient* client)
 
 bool QMulti::Exec(QClient* client)
 {
-    bool succ = client->Exec();
-    client->ClearMulti();
-    client->UnWatch();
-    return  succ;
+    return client->Exec();
 }
 
 void QMulti::Discard(QClient* client)

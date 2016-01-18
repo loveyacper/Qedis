@@ -348,8 +348,7 @@ bool QClient::NotifyDirty(int dbno, const QString& key)
     }
     else
     {
-        ERR << "BUG: Dirty key is not exist " << key;
-        assert(0);
+        INF << "Dirty key is not exist: " << key << ", because client unwatch before dity";
     }
     
     return false; // never here

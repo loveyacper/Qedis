@@ -197,7 +197,8 @@ public:
     template <typename F, typename... Args>
     ExecuteOnScopeExit(F&& f, Args&&... args)
     {
-        func_ = std::bind(std::forward<F>(f), std::forward<Args>(args)...);
+        auto temp = std::bind(std::forward<F>(f), std::forward<Args>(args)...);
+        func_ = [temp]() { (void)temp(); };
     }
         
     ~ExecuteOnScopeExit()
