@@ -191,24 +191,41 @@ QParseInt  GetIntUntilCRLF(const char*& ptr, std::size_t nBytes, int& val);
 
 std::vector<QString>  SplitString(const QString& str, char seperator);
     
+// The defer class for C++11
 class ExecuteOnScopeExit
 {
 public:
+    ExecuteOnScopeExit() { }
+    
+    ExecuteOnScopeExit(ExecuteOnScopeExit&& e)
+    {
+        func_ = std::move(e.func_);
+    }
+    
+    ExecuteOnScopeExit(const ExecuteOnScopeExit& e) = delete;
+    void operator=(const ExecuteOnScopeExit& f) = delete;
+    
     template <typename F, typename... Args>
     ExecuteOnScopeExit(F&& f, Args&&... args)
     {
         auto temp = std::bind(std::forward<F>(f), std::forward<Args>(args)...);
         func_ = [temp]() { (void)temp(); };
     }
-        
-    ~ExecuteOnScopeExit()
+    
+    ~ExecuteOnScopeExit() noexcept
     {
-        func_();
+        if (func_)  func_();
     }
     
 private:
-    std::function< void ()> func_;
+    std::function<void ()> func_;
 };
+    
+#define CONCAT(a, b) a##b
+#define QEDIS_DEFER _MAKE_DEFER_HELPER_(__LINE__)
+#define _MAKE_DEFER_HELPER_(line)  ExecuteOnScopeExit CONCAT(defer, line) = [&]()
+    
+
 
 }
 

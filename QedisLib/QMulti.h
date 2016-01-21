@@ -16,7 +16,6 @@ public:
     static QMulti& Instance();
 
     void  Watch(QClient* client, int dbno, const QString& key);
-    void  Unwatch(QClient* client);
     void  Multi(QClient* client);
     bool  Exec(QClient* client);
     void  Discard(QClient* client);

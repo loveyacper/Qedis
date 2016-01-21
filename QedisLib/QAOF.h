@@ -4,7 +4,7 @@
 #include <memory>
 #include <future>
 #include "Log/MemoryFile.h"
-#include "OutputBuffer.h"
+#include "AsyncBuffer.h"
 #include "QString.h"
 #include "QStore.h"
 
@@ -57,15 +57,15 @@ private:
         std::atomic<bool>   alive_;
 
         OutputMemoryFile    file_;
-        OutputBuffer        buf_;
+        AsyncBuffer         buf_;
         
         std::promise<void>  pro_; // Effective modern C++ : Item 39
     };
     
-    void _WriteSelectDB(int db, OutputBuffer& dst);
+    void _WriteSelectDB(int db, AsyncBuffer& dst);
     
     std::shared_ptr<AOFThread>  aofThread_;
-    OutputBuffer                aofBuffer_;
+    AsyncBuffer                 aofBuffer_;
     int                         lastDb_;
     
     QString                     aofFile_;

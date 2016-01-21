@@ -4,23 +4,23 @@
 #include <unistd.h>
 #endif
 
-#include "OutputBuffer.h"
+#include "AsyncBuffer.h"
 
 using std::size_t;
 
-OutputBuffer::OutputBuffer(size_t size) : buffer_(size),
+AsyncBuffer::AsyncBuffer(size_t size) : buffer_(size),
                                           backBytes_(0)
 {
 }
 
-OutputBuffer::~OutputBuffer()
+AsyncBuffer::~AsyncBuffer()
 {
   //  assert (buffer_.IsEmpty());
    // assert (backBytes_ == 0);
 }
 
 
-void   OutputBuffer::Write(const void* data, size_t len)
+void   AsyncBuffer::Write(const void* data, size_t len)
 {
     BufferSequence  bf;
     bf.buffers[0].iov_base = const_cast<void* >(data);
@@ -30,7 +30,7 @@ void   OutputBuffer::Write(const void* data, size_t len)
     this->Write(bf);
 }
 
-void   OutputBuffer::Write(const BufferSequence& data)
+void   AsyncBuffer::Write(const BufferSequence& data)
 {
     auto len = data.TotalBytes();
 
@@ -61,10 +61,11 @@ void   OutputBuffer::Write(const BufferSequence& data)
     }
 }
 
-void  OutputBuffer::ProcessBuffer(BufferSequence& data)
+void  AsyncBuffer::ProcessBuffer(BufferSequence& data)
 {
     data.count = 0;
     
+    // Here be dragons! see below...
     if (!tmpBuf_.IsEmpty())
     {
         data.count = 1;
@@ -82,6 +83,7 @@ void  OutputBuffer::ProcessBuffer(BufferSequence& data)
     {
         if (backBytes_ > 0 && backBufLock_.try_lock())
         {
+            // tmpBuf_ is used for process backBuf_ without held mutex!
             backBytes_ = 0;
             tmpBuf_.Swap(backBuf_);
             backBufLock_.unlock();
@@ -93,7 +95,7 @@ void  OutputBuffer::ProcessBuffer(BufferSequence& data)
     }
 }
 
-void  OutputBuffer::Skip(size_t  size)
+void  AsyncBuffer::Skip(size_t  size)
 {
     if (!tmpBuf_.IsEmpty())
     {

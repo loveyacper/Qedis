@@ -92,7 +92,7 @@ void   QAOFThreadController::Stop()
 }
 
 // main thread call this
-void   QAOFThreadController::_WriteSelectDB(int db, OutputBuffer& dst)
+void   QAOFThreadController::_WriteSelectDB(int db, AsyncBuffer& dst)
 {
     if (db == lastDb_)
         return;
@@ -106,7 +106,7 @@ void   QAOFThreadController::_WriteSelectDB(int db, OutputBuffer& dst)
 
 void   QAOFThreadController::SaveCommand(const std::vector<QString>& params, int db)
 {
-    OutputBuffer* dst;
+    AsyncBuffer* dst;
     
     if (aofThread_ && aofThread_->IsAlive())
     {

@@ -53,11 +53,10 @@ public:
     void FlagExecWrong() { if (IsFlagOn(ClientFlag_multi)) SetFlag(ClientFlag_wrongExec);   }
     
     bool Watch(int dbno, const QString& key);
-    void UnWatch();
     bool NotifyDirty(int dbno, const QString& key);
     bool Exec();
     void ClearMulti();
-    void ClearMultiAndWatch();
+    void ClearWatch();
 
     // pubsub
     std::size_t Subscribe(const QString& channel)

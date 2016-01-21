@@ -327,11 +327,6 @@ bool QClient::Watch(int dbno, const QString& key)
     return watchKeys_[dbno].insert(key).second;
 }
 
-void QClient::UnWatch()
-{
-    watchKeys_.clear();
-}
-
 bool QClient::NotifyDirty(int dbno, const QString& key)
 {
     if (IsFlagOn(ClientFlag_dirty))
@@ -356,7 +351,10 @@ bool QClient::NotifyDirty(int dbno, const QString& key)
 
 bool QClient::Exec()
 {
-    ExecuteOnScopeExit  resetState(&QClient::ClearMultiAndWatch, this);
+    QEDIS_DEFER  {
+        this->ClearMulti();
+        this->ClearWatch();
+    };
     
     if (IsFlagOn(ClientFlag_wrongExec))
     {
@@ -395,9 +393,8 @@ void QClient::ClearMulti()
     ClearFlag(ClientFlag_wrongExec);
 }
     
-void QClient::ClearMultiAndWatch()
+void QClient::ClearWatch()
 {
-    ClearMulti();
     watchKeys_.clear();
     ClearFlag(ClientFlag_dirty);
 }

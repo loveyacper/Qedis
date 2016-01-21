@@ -23,12 +23,6 @@ void  QMulti::Watch(QClient* client, int dbno, const QString& key)
 }
 
 
-void QMulti::Unwatch(QClient* client)
-{
-    client->UnWatch();
-}
-
-
 void QMulti::Multi(QClient* client)
 {
     client->ClearMulti();
@@ -43,7 +37,7 @@ bool QMulti::Exec(QClient* client)
 void QMulti::Discard(QClient* client)
 {
     client->ClearMulti();
-    client->UnWatch();
+    client->ClearWatch();
 }
 
 
@@ -109,7 +103,7 @@ QError  watch(const std::vector<QString>& params, UnboundedBuffer* reply)
 QError  unwatch(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     QClient* client = QClient::Current();
-    QMulti::Instance().Unwatch(client);
+    client->ClearWatch();
     FormatOK(reply);
     return QError_ok;
 }

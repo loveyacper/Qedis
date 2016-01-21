@@ -6,7 +6,7 @@
 #include <memory>
 
 #include "../Threads/ThreadPool.h"
-#include "../OutputBuffer.h"
+#include "../AsyncBuffer.h"
 #include "MemoryFile.h"
 #include "../Timer.h"
 
@@ -83,7 +83,7 @@ private:
 
     unsigned int    curLevel_;
 
-    OutputBuffer    buffer_;
+    AsyncBuffer    buffer_;
     OutputMemoryFile file_;
     
     // for optimization

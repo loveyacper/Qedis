@@ -2,7 +2,7 @@
 #ifndef BERT_STREAMSOCKET_H
 #define BERT_STREAMSOCKET_H
 
-#include "OutputBuffer.h"
+#include "AsyncBuffer.h"
 #include "Socket.h"
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -61,7 +61,7 @@ private:
     };
 
     Buffer   recvBuf_;
-    OutputBuffer   sendBuf_;
+    AsyncBuffer   sendBuf_;
 };
 
 template <int N>
