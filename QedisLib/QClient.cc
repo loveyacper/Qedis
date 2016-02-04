@@ -201,11 +201,14 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
     /// handle packet
     s_pCurrentClient = this;
     
+    QEDIS_DEFER {
+        _Reset();
+    };
+
     if (!auth_ && params_[0] != "auth")
     {
         ReplyError(QError_needAuth, &reply_);
         SendPacket(reply_.ReadAddr(), reply_.ReadableSize());
-        _Reset();
         return static_cast<BODY_LENGTH_T>(ptr - start);
     }
     
@@ -244,7 +247,6 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
                 INF << "queue cmd " << cmd.c_str();
             }
             
-            _Reset();
             return static_cast<BODY_LENGTH_T>(ptr - start);
         }
     }
@@ -274,8 +276,6 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
     {
         Propogate(params_);
     }
-    
-    _Reset();
     
     return static_cast<BODY_LENGTH_T>(ptr - start);
 }
@@ -343,10 +343,10 @@ bool QClient::NotifyDirty(int dbno, const QString& key)
     }
     else
     {
-        INF << "Dirty key is not exist: " << key << ", because client unwatch before dity";
+        INF << "Dirty key is not exist: " << key << ", because client unwatch before dirty";
     }
     
-    return false; // never here
+    return false;
 }
 
 bool QClient::Exec()

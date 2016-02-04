@@ -21,6 +21,7 @@ public:
     void  Discard(QClient* client);
 
     void  NotifyDirty(int dbno, const QString& key);
+    void  NotifyDirtyAll(int dbno);
 private:
     QMulti() {}
 

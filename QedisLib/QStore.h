@@ -228,6 +228,7 @@ private:
 // ugly, but I don't want to write signalModifiedKey() every where
 extern std::vector<QString> g_dirtyKeys;
 extern void Propogate(const std::vector<QString>& params);
+extern void Propogate(int dbno, const std::vector<QString>& params);
     
 }
 

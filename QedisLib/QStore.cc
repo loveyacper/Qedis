@@ -552,6 +552,8 @@ std::vector<QString>  g_dirtyKeys;
 
 void Propogate(const std::vector<QString>& params)
 {
+    assert (!params.empty());
+
     if (!g_dirtyKeys.empty())
     {
         for (const auto& k : g_dirtyKeys)
@@ -561,14 +563,11 @@ void Propogate(const std::vector<QString>& params)
         }
         g_dirtyKeys.clear();
     }
-    else
+    else if (params.size() > 1)
     {
         ++ QStore::dirty_;
         QMulti::Instance().NotifyDirty(QSTORE.GetDB(), params[1]);
     }
-
-    if (params.empty())
-        return;
 
     if (g_config.appendonly)
         QAOFThreadController::Instance().SaveCommand(params, QSTORE.GetDB());
@@ -576,4 +575,11 @@ void Propogate(const std::vector<QString>& params)
     QReplication::Instance().SendToSlaves(params);
 }
 
+void Propogate(int dbno, const std::vector<QString>& params)
+{
+    QMulti::Instance().NotifyDirtyAll(dbno);
+    Propogate(params);
 }
+
+}
+

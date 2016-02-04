@@ -222,9 +222,10 @@ private:
 };
     
 #define CONCAT(a, b) a##b
+#define _MAKE_DEFER_HELPER_(line)  qedis::ExecuteOnScopeExit CONCAT(defer, line) = [&]()
+
+
 #define QEDIS_DEFER _MAKE_DEFER_HELPER_(__LINE__)
-#define _MAKE_DEFER_HELPER_(line)  ExecuteOnScopeExit CONCAT(defer, line) = [&]()
-    
 
 
 }

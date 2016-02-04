@@ -82,6 +82,39 @@ void  QMulti::NotifyDirty(int dbno, const QString& key)
     }
 }
 
+void  QMulti::NotifyDirtyAll(int dbno)
+{
+    if (dbno == -1)
+    {
+        for (auto& db_set : clients_)
+        {
+            for (auto& key_clients : db_set.second)
+            {
+                std::for_each(key_clients.second.begin(), key_clients.second.end(), [&] (const std::weak_ptr<QClient>& wcli)
+                {
+                     auto scli = wcli.lock();
+                     if (scli) scli->SetFlag(ClientFlag_dirty);
+                } );
+            }
+        }
+    }
+    else
+    {
+        auto it = clients_.find(dbno);
+        if (it != clients_.end())
+        {
+            for (auto& key_clients : it->second)
+            {
+                std::for_each(key_clients.second.begin(), key_clients.second.end(), [&] (const std::weak_ptr<QClient>& wcli)
+                {
+                     auto scli = wcli.lock();
+                     if (scli) scli->SetFlag(ClientFlag_dirty);
+                } );
+            }
+        }
+    }
+}
+
 // multi commands
 QError  watch(const std::vector<QString>& params, UnboundedBuffer* reply)
 {

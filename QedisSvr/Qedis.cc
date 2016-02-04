@@ -10,7 +10,6 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
-#include "Server.h"
 #include "Log/Logger.h"
 #include "Timer.h"
 
@@ -24,31 +23,11 @@
 #include "QConfig.h"
 #include "QSlowLog.h"
 
+#include "Qedis.h"
 
-class Qedis : public Server
-{
-public:
-    Qedis();
-    ~Qedis();
-    
-    bool  ParseArgs(int ac, char* av[]);
-    
-private:
-    std::shared_ptr<StreamSocket>   _OnNewConnection(int fd) override;
-    bool    _Init() override;
-    bool    _RunLogic() override;
-    void    _Recycle() override;
-    
-    std::string cfgFile_;
-    unsigned short port_;
-    std::string logLevel_;
-    
-    std::string master_;
-    unsigned short masterPort_;
-};
+const unsigned Qedis::kRunidSize = 40;
 
-
-Qedis::Qedis() : port_(0), masterPort_(0)
+Qedis::Qedis() : port_(0), masterPort_(0), runid_(new char[kRunidSize + 1]())
 {
 }
 
@@ -252,6 +231,8 @@ static void LoadDbFromDisk()
 bool Qedis::_Init()
 {
     using namespace qedis;
+    
+    getRandomHexChars(runid_.get(), kRunidSize);
     
     if (!cfgFile_.empty())
     {

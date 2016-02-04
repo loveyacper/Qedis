@@ -52,7 +52,9 @@ QError  flushdb(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "flushdb");
 
+    QSTORE.dirty_ += QSTORE.DBSize();
     QSTORE.ClearCurrentDB();
+    Propogate(QSTORE.GetDB(), params);
     
     FormatOK(reply);
     return   QError_ok;
@@ -62,7 +64,21 @@ QError  flushall(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     assert (params[0] == "flushall");
     
-    QSTORE.ResetDb();
+    int currentDb = QSTORE.GetDB();
+    
+    QEDIS_DEFER {
+        QSTORE.SelectDB(currentDb);
+        Propogate(-1, params);
+        QSTORE.ResetDb();
+    };
+    
+    for (int dbno = 0; true; ++ dbno)
+    {
+        if (QSTORE.SelectDB(dbno) == -1)
+            break;
+  
+        QSTORE.dirty_ += QSTORE.DBSize();
+    }
     
     FormatOK(reply);
     return   QError_ok;

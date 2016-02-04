@@ -252,8 +252,8 @@ bool NetThreadPool::StartAllThreads()
     recvThread_.reset(new RecvThread);
     sendThread_.reset(new SendThread);
     
-    ThreadPool::Instance().ExecuteTask(std::bind(&RecvThread::Run, recvThread_.get()));
-    ThreadPool::Instance().ExecuteTask(std::bind(&SendThread::Run, sendThread_.get()));
+    ThreadPool::Instance().ExecuteTask(std::bind(&RecvThread::Run, recvThread_));
+    ThreadPool::Instance().ExecuteTask(std::bind(&SendThread::Run, sendThread_));
 
     return  true;
 }

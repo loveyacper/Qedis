@@ -106,6 +106,9 @@ inline size_t ScanHashMember(const HASH& container, size_t cursor, size_t count,
     return 0;   // never here
 }
     
+
+extern void getRandomHexChars(char *p, unsigned int len);
+    
 }
 
 #endif
