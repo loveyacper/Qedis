@@ -32,7 +32,6 @@ QObject  CreateStringObject(long val)
     
     obj.encoding = QEncode_int;
     obj.value.reset((void*)val, [](void* ) {});
-    DBG << "set long val " << val;
     
     return obj;
 }
@@ -53,7 +52,7 @@ PSTRING GetDecodedString(const QObject* value)
     }
     else
     {
-        assert (false);
+        assert (!!!"error string encoding");
     }
         
     return PSTRING();
@@ -369,7 +368,6 @@ QError  bitcount(const std::vector<QString>& params, UnboundedBuffer* reply)
 
     if (params.size() != 2 && params.size() != 4)
     {
-        LOG_ERR(g_log) << "bitcount wrong params size = " << params.size();
         ReplyError(QError_param, reply);
         return QError_param;
     }
@@ -392,7 +390,6 @@ QError  bitcount(const std::vector<QString>& params, UnboundedBuffer* reply)
     size_t cnt = 0;
     if (end >= start)
     {
-        LOG_DBG(g_log) << "start = " << start << ", end = " << end << ", size = " << str->size();
         cnt = BitCount((const uint8_t*)str->data() + start,  end - start + 1);
     }
 
@@ -430,7 +427,6 @@ QError  getbit(const std::vector<QString>& params, UnboundedBuffer* reply)
     size_t  bytesOffset = offset / 8;
     size_t  bitsOffset  = offset % 8;
     uint8_t byte = buf[bytesOffset];
-    LOG_DBG(g_log) << "bytes offset " << bytesOffset << ", bitsOff " << bitsOffset << ", byte = " << byte;
     if (byte & (0x1 << bitsOffset))
         Format1(reply);
     else

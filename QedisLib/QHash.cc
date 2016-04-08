@@ -40,9 +40,7 @@ QHash::iterator  _set_hash_force(QHash& hash, const QString& key, const QString&
     if (it != hash.end())
         it->second = val;
     else
-    {
         it = hash.insert(QHash::value_type(key, val)).first;
-    }
 
     return it;
 }
@@ -54,9 +52,6 @@ bool _set_hash_if_notexist(QHash& hash, const QString& key, const QString& val)
 
 QError  hset(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    assert (params[0] == "hset");
-    assert (params.size() == 4);
-    
     GET_OR_SET_HASH(params[1]);
     
     const PHASH& hash= value->CastHash();
@@ -69,8 +64,6 @@ QError  hset(const std::vector<QString>& params, UnboundedBuffer* reply)
 
 QError  hmset(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    assert (params[0] == "hmset");
-
     if (params.size() % 2 != 0)
     {
         ReplyError(QError_param, reply);
@@ -90,8 +83,6 @@ QError  hmset(const std::vector<QString>& params, UnboundedBuffer* reply)
 
 QError  hget(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    assert (params[0] == "hget");
-
     GET_HASH(params[1]);
     
     const PHASH& hash= value->CastHash();
@@ -108,8 +99,6 @@ QError  hget(const std::vector<QString>& params, UnboundedBuffer* reply)
 
 QError  hmget(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    assert (params[0] == "hmget");
-
     GET_HASH(params[1]);
 
     PreFormatMultiBulk(params.size() - 2, reply);
@@ -129,8 +118,6 @@ QError  hmget(const std::vector<QString>& params, UnboundedBuffer* reply)
 
 QError  hgetall(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    assert (params[0] == "hgetall");
-
     GET_HASH(params[1]);
 
     const PHASH& hash= value->CastHash();
@@ -147,8 +134,6 @@ QError  hgetall(const std::vector<QString>& params, UnboundedBuffer* reply)
 
 QError  hkeys(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    assert (params[0] == "hkeys");
-
     GET_HASH(params[1]);
 
     const PHASH& hash= value->CastHash();
@@ -164,8 +149,6 @@ QError  hkeys(const std::vector<QString>& params, UnboundedBuffer* reply)
 
 QError  hvals(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    assert (params[0] == "hvals");
-
     GET_HASH(params[1]);
 
     const PHASH& hash= value->CastHash();
@@ -181,8 +164,6 @@ QError  hvals(const std::vector<QString>& params, UnboundedBuffer* reply)
 
 QError  hdel(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    assert (params[0] == "hdel");
-
     QObject* value;
     QError err = QSTORE.GetValueByType(params[1], value, QType_hash);
     if (err != QError_ok)
@@ -195,7 +176,7 @@ QError  hdel(const std::vector<QString>& params, UnboundedBuffer* reply)
     const PHASH&  hash = value->CastHash();
     for (size_t i = 2; i < params.size(); ++ i)
     {
-        QHash::iterator it = hash->find(params[i]);
+        auto it = hash->find(params[i]);
 
         if (it != hash->end())
         {
@@ -211,12 +192,10 @@ QError  hdel(const std::vector<QString>& params, UnboundedBuffer* reply)
 
 QError  hexists(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    assert (params[0] == "hexists");
-  
     GET_HASH(params[1]);
 
     const PHASH& hash= value->CastHash();
-    QHash::const_iterator it = hash->find(params[2]);
+    auto it = hash->find(params[2]);
 
     if (it != hash->end())
         FormatInt(1, reply);
@@ -228,8 +207,6 @@ QError  hexists(const std::vector<QString>& params, UnboundedBuffer* reply)
 
 QError  hlen(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    assert (params[0] == "hlen");
-
     GET_HASH(params[1]);
 
     const PHASH& hash= value->CastHash();
@@ -240,14 +217,12 @@ QError  hlen(const std::vector<QString>& params, UnboundedBuffer* reply)
 
 QError  hincrby(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    assert (params[0] == "hincrby");
-
     GET_OR_SET_HASH(params[1]);
     
     const PHASH& hash = value->CastHash();
     long    val  = 0;
     QString* str = 0;
-    QHash::iterator it(hash->find(params[2]));
+    auto it(hash->find(params[2]));
     if (it != hash->end())
     {
         str = &it->second;
@@ -281,14 +256,12 @@ QError  hincrby(const std::vector<QString>& params, UnboundedBuffer* reply)
 
 QError  hincrbyfloat(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    assert (params[0] == "hincrbyfloat");
-
     GET_OR_SET_HASH(params[1]);
     
     const PHASH& hash = value->CastHash();
     float  val  = 0;
     QString* str = 0;
-    QHash::iterator it(hash->find(params[2]));
+    auto it(hash->find(params[2]));
     if (it != hash->end())
     {
         str = &it->second;
@@ -321,8 +294,6 @@ QError  hincrbyfloat(const std::vector<QString>& params, UnboundedBuffer* reply)
 
 QError  hsetnx(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    assert (params[0] == "hsetnx");
-
     GET_OR_SET_HASH(params[1]);
     
     const PHASH& hash= value->CastHash();

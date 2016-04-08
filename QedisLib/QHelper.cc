@@ -1,5 +1,7 @@
 #include <unistd.h>
 #include <sys/time.h>
+#include <string.h>
+
 #include "QHelper.h"
 
 namespace qedis
