@@ -99,7 +99,7 @@ void Server::TCPConnect(const SocketAddr& peer, bool retry)
     pClient->Connect(peer);
 }
 
-void Server::MainLoop()
+void Server::MainLoop(bool daemon)
 {
     struct sigaction sig;
     ::memset(&sig, 0, sizeof(sig));
@@ -118,22 +118,13 @@ void Server::MainLoop()
     
     ::srand(static_cast<unsigned int>(time(NULL)));
     ::srandom(static_cast<unsigned int>(time(NULL)));
-#if 0
-    // set the max fd number
-    struct rlimit   rlim; 
-    getrlimit(RLIMIT_NOFILE, &rlim); 
-    if (rlim.rlimax_ < 30000) 
-    { 
-        rlim.rlimax_ = rlim.rlicur_ = 30000;
-        if (0 != setrlimit(RLIMIT_NOFILE, &rlim)) 
-        { 
-            perror("setrlimit error "); 
-            ERR << "Failed to setrlimit ";
-        } 
-    }
-#endif
 
-//  int threadNum = (GetCpuNum() + 1) / 2;
+    // daemon must be first, before descriptor open, threads create
+    if (daemon)
+    {
+        ::daemon(1, 0);
+    }
+    
     if (NetThreadPool::Instance().StartAllThreads() &&
         _Init() &&
         LogManager::Instance().StartLog())

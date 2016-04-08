@@ -16,6 +16,7 @@ public:
     
     bool  ParseArgs(int ac, char* av[]);
     const char* GetRunId() const { return runid_.get(); }
+    const qedis::QString& GetConfigName() const { return cfgFile_; }
 
 private:
     std::shared_ptr<StreamSocket>  _OnNewConnection(int fd) override;

@@ -622,7 +622,7 @@ bool LogManager::StartLog()
     assert (!logThread_->IsAlive());
     logThread_->SetAlive();
 
-    ThreadPool::Instance().ExecuteTask(std::bind(&LogThread::Run, logThread_.get()));
+    ThreadPool::Instance().ExecuteTask(std::bind(&LogThread::Run, logThread_));
     return true;
 }
 

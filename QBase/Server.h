@@ -28,7 +28,7 @@ public:
     bool IsTerminate() const { return bTerminate_; }
     void Terminate()  { bTerminate_ = true; }
 
-    void MainLoop();
+    void MainLoop(bool daemon = false);
     void NewConnection(int sock, bool retry = false);
 
     size_t  TCPSize() const  {  return  tasks_.TCPSize(); }

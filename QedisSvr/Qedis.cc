@@ -234,19 +234,6 @@ bool Qedis::_Init()
     
     getRandomHexChars(runid_.get(), kRunidSize);
     
-    if (!cfgFile_.empty())
-    {
-        if (!LoadQedisConfig(cfgFile_.c_str(), g_config))
-        {
-            std::cerr << "Load config file [" << cfgFile_ << "] failed!\n";
-            return false;
-        }
-    }
-    else
-    {
-        std::cerr << "No config file specified, using the default config.\n";
-    }
-    
     if (port_ != 0)
         g_config.port = port_;
 
@@ -257,12 +244,6 @@ bool Qedis::_Init()
     {
         g_config.masterIp = master_;
         g_config.masterPort = masterPort_;
-    }
-    
-    // daemon must be first, before descriptor open, threads create
-    if (g_config.daemonize)
-    {
-        daemon(1, 0);
     }
     
     // process log
@@ -382,8 +363,21 @@ int main(int ac, char* av[])
         Usage();
         return -1;
     }
+
+    if (!svr.GetConfigName().empty())
+    {
+        if (!LoadQedisConfig(svr.GetConfigName().c_str(), qedis::g_config))
+        {
+            std::cerr << "Load config file [" << svr.GetConfigName() << "] failed!\n";
+            return false;
+        }
+    }
+    else
+    {
+        std::cerr << "No config file specified, using the default config.\n";
+    }
     
-    svr.MainLoop();
+    svr.MainLoop(qedis::g_config.daemonize);
     
     return 0;
 }

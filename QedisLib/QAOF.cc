@@ -76,7 +76,7 @@ void  QAOFThreadController::Start()
     aofThread_->Open(aofFile_.c_str());
     aofThread_->SetAlive();
     
-    ThreadPool::Instance().ExecuteTask(std::bind(&AOFThread::Run, aofThread_.get()));
+    ThreadPool::Instance().ExecuteTask(std::bind(&AOFThread::Run, aofThread_));
 }
 
 // when fork(), parent call stop;
