@@ -18,7 +18,7 @@ void QStore::ExpiresDB::SetExpire(const QString& key, uint64_t when)
     INF << "Set timeout key " << key.c_str() << ", timeout is " << when;
 }
 
-int64_t  QStore::ExpiresDB::TTL(const QString& key, uint64_t now)
+int64_t QStore::ExpiresDB::TTL(const QString& key, uint64_t now)
 {
     if (!QSTORE.ExistsKey(key))
         return ExpireResult::notExist;
@@ -50,7 +50,7 @@ QStore::ExpireResult  QStore::ExpiresDB::ExpireIfNeed(const QString& key, uint64
     if (it != expireKeys_.end())
     {
         if (it->second > now)
-            return ExpireResult::notExpire; // not expire
+            return ExpireResult::notExpire;
         
         WRN << "Delete timeout key " << it->first.c_str() << ", timeout is " << it->second;
         expireKeys_.erase(it);
@@ -60,7 +60,7 @@ QStore::ExpireResult  QStore::ExpiresDB::ExpireIfNeed(const QString& key, uint64
     return  ExpireResult::persist;
 }
 
-int   QStore::ExpiresDB::LoopCheck(uint64_t now)
+int QStore::ExpiresDB::LoopCheck(uint64_t now)
 {
     const int kMaxDel = 100;
     const int kMaxCheck = 2000;
@@ -106,9 +106,8 @@ bool QStore::BlockedClients::BlockClient(const QString& key,
     }
         
     Clients& clients = blockedClients_[key];
-    clients.push_back({std::static_pointer_cast<QClient>(client->shared_from_this()),
-                                                                             timeout,
-                                                                                pos});
+    clients.push_back(Clients::value_type(std::static_pointer_cast<QClient>(client->shared_from_this()), timeout, pos));
+    
     INF << key << " is waited by " << client->GetName() << ", timeout " << timeout;
     return true;
 }
@@ -180,7 +179,7 @@ size_t  QStore::BlockedClients::ServeClient(const QString& key, const PLIST& lis
                     {
                         UnboundedBuffer  reply;
                         ReplyError(err, &reply);
-                        cli->SendPacket(reply.ReadAddr(), reply.ReadableSize());
+                        cli->SendPacket(reply);
                         errorTarget = true;
                     }
                     else
@@ -239,7 +238,7 @@ size_t  QStore::BlockedClients::ServeClient(const QString& key, const PLIST& lis
                     Propogate(params);
                 }
                 
-                cli->SendPacket(reply.ReadAddr(), reply.ReadableSize());
+                cli->SendPacket(reply);
                 INF << "Serve client " << cli->GetName() << " list key : " << key;
             }
             
@@ -260,8 +259,7 @@ int QStore::BlockedClients::LoopCheck(uint64_t now)
     int  n = 0;
 
     for (auto  it(blockedClients_.begin());
-         it != blockedClients_.end() && n < 100;
-         )
+         it != blockedClients_.end() && n < 100; )
     {
         Clients&  clients = it->second;
         for (auto cli(clients.begin()); cli != clients.end(); )
@@ -277,7 +275,7 @@ int QStore::BlockedClients::LoopCheck(uint64_t now)
                     INF << scli->GetName() << " is timeout for waiting key " << key;
                     UnboundedBuffer  reply;
                     FormatNull(&reply);
-                    scli->SendPacket(reply.ReadAddr(), reply.ReadableSize());
+                    scli->SendPacket(reply);
                     scli->ClearWaitingKeys();
                 }
 
@@ -577,7 +575,7 @@ void Propogate(const std::vector<QString>& params)
     if (g_config.appendonly)
         QAOFThreadController::Instance().SaveCommand(params, QSTORE.GetDB());
 
-    QReplication::Instance().SendToSlaves(params);
+    QREPL.SendToSlaves(params);
 }
 
 void Propogate(int dbno, const std::vector<QString>& params)

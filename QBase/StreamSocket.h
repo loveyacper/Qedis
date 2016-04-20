@@ -28,6 +28,7 @@ public:
     bool   SendPacket(const char* pData, std::size_t nBytes);
     bool   SendPacket(Buffer&  bf);
     bool   SendPacket(AttachedBuffer& abf);
+    bool   SendPacket(qedis::UnboundedBuffer& ubf);
     template <int N>
     bool   SendPacket(StackBuffer<N>&  sb);
 

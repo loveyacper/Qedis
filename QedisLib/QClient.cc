@@ -59,7 +59,7 @@ BODY_LENGTH_T QClient::_ProcessInlineCmd(const char* buf, size_t bytes)
             }
         }
         
-        INF << "inline cmd param " << param.c_str();
+        DBG << "inline cmd param " << param.c_str();
         params_.emplace_back(std::move(param));
     }
     
@@ -75,26 +75,23 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
     const char* ptr  = start;
     
     {
-        auto& repl = QReplication::Instance();
-        auto& info = repl.GetMasterInfo();
-        
+        auto state = QREPL.GetMasterState();
+
         // discard all data before request sync;
         // or support service use old data? TODO
-        if (info.state == QReplState_connected)
-            return  static_cast<BODY_LENGTH_T>(bytes);
+        if (state == QReplState_connected)
+            return static_cast<BODY_LENGTH_T>(bytes);
             
-        if (info.state == QReplState_wait_rdb)
+        if (state == QReplState_wait_rdb)
         {
             //RECV RDB FILE
-            if (info.rdbSize == std::size_t(-1))
+            if (QREPL.GetRdbSize() == std::size_t(-1))
             {
-                assert(info.state == QReplState_wait_rdb);
-     
                 ++ ptr; // skip $
                 int s;
                 if (QParseInt::ok == GetIntUntilCRLF(ptr, end - ptr, s))
                 {
-                    info.rdbSize = s;
+                    QREPL.SetRdbSize(s);
                     USR << "recv rdb size " << s;
                     ptr += 2; // skip CRLF
                 }
@@ -102,10 +99,10 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
             else
             {
                 auto rdb = bytes;
-                if (rdb > info.rdbSize)
-                    rdb = info.rdbSize;
+                if (rdb > QREPL.GetRdbSize())
+                    rdb = QREPL.GetRdbSize();
                 
-                QReplication::Instance().SaveTmpRdb(start, rdb);
+                QREPL.SaveTmpRdb(start, rdb);
                 ptr += rdb;
             }
 
@@ -208,7 +205,7 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
     if (!auth_ && params_[0] != "auth")
     {
         ReplyError(QError_needAuth, &reply_);
-        SendPacket(reply_.ReadAddr(), reply_.ReadableSize());
+        SendPacket(reply_);
         return static_cast<BODY_LENGTH_T>(ptr - start);
     }
     
@@ -217,7 +214,7 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
     
     QSTORE.SelectDB(db_);
     
-    INF << "client " << GetID() << ", cmd " << params_[0].c_str();
+    DBG << "client " << GetID() << ", cmd " << params_[0].c_str();
     
     FeedMonitors(params_);
     
@@ -226,7 +223,7 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
     if (!info)
     {
         ReplyError(QError_unknowCmd, &reply_);
-        SendPacket(reply_.ReadAddr(), reply_.ReadableSize());
+        SendPacket(reply_);
         return static_cast<BODY_LENGTH_T>(ptr - start);
     }
 
@@ -242,7 +239,7 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
             {
                 ERR << "queue failed: cmd " << cmd.c_str() << " has params " << params_.size();
                 ReplyError(info ? QError_param : QError_unknowCmd, &reply_);
-                SendPacket(reply_.ReadAddr(), reply_.ReadableSize());
+                SendPacket(reply_);
                 FlagExecWrong();
             }
             else
@@ -259,7 +256,7 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
     }
     
     QError err = QError_ok;
-    if (QReplication::Instance().GetMasterInfo().state != QReplState_none &&
+    if (QREPL.GetMasterState() != QReplState_none &&
         !IsFlagOn(ClientFlag_master) &&
         (info->attr & QCommandAttr::QAttr_write))
     {
@@ -276,7 +273,7 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
     
     if (!reply_.IsEmpty())
     {
-        SendPacket(reply_.ReadAddr(), reply_.ReadableSize());
+        SendPacket(reply_);
     }
     
     if (err == QError_ok && (info->attr & QAttr_write))
@@ -380,7 +377,7 @@ bool QClient::Exec()
         INF << "EXEC " << cmd[0] << ", for " << GetID();
         const QCommandInfo* info = QCommandTable::GetCommandInfo(cmd[0]);
         QError err = QCommandTable::ExecuteCmd(cmd, info, &reply_);
-        SendPacket(reply_.ReadAddr(), reply_.ReadableSize());
+        SendPacket(reply_);
         _Reset();
         
         // may dirty clients;

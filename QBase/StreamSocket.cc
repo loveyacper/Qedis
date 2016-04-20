@@ -12,7 +12,7 @@ using std::size_t;
 
 StreamSocket::StreamSocket()
 {
-    retry_   = false;
+    retry_ = false;
 }
 
 StreamSocket::~StreamSocket()
@@ -113,6 +113,10 @@ bool  StreamSocket::SendPacket(AttachedBuffer& af)
     return  SendPacket(af.ReadAddr(), af.ReadableSize());
 }
 
+bool  StreamSocket::SendPacket(qedis::UnboundedBuffer& ubf)
+{
+    return  SendPacket(ubf.ReadAddr(), ubf.ReadableSize());
+}
 
 bool  StreamSocket::OnReadable()
 {

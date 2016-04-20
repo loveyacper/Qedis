@@ -107,7 +107,6 @@ private:
 
     // timer pool
     std::set<Timer* > freepool_;
-    std::set<Timer* > workpool_;
 
     // async add
     std::mutex lock_;

@@ -123,11 +123,11 @@ std::shared_ptr<StreamSocket>   Qedis::_OnNewConnection(int connfd)
     std::shared_ptr<QClient>    pNewTask(new QClient());
     if (pNewTask->Init(connfd))
     {
-        const bool peerIsMaster = (peer == QReplication::Instance().GetMasterInfo().addr);
+        const bool peerIsMaster = (peer == QREPL.GetMasterAddr());
         if (peerIsMaster)
         {
-            QReplication::Instance().GetMasterInfo().state = QReplState_connected;
-            QReplication::Instance().SetMaster(pNewTask);
+            QREPL.SetMasterState(QReplState_connected);
+            QREPL.SetMaster(pNewTask);
             
             pNewTask->SetName("MasterConnection");
             pNewTask->SetFlag(ClientFlag_master);
@@ -150,7 +150,7 @@ static void  QdbCron()
     if (g_qdbPid != -1)
         return;
     
-    if (g_now.MilliSeconds() > 1000UL * (g_lastQDBSave + static_cast<unsigned>(g_config.saveseconds)) &&
+    if (g_now.MilliSeconds() > (g_lastQDBSave + unsigned(g_config.saveseconds)) * 1000UL &&
         QStore::dirty_ >= g_config.savechanges)
     {
         int ret = fork();
@@ -235,6 +235,7 @@ bool Qedis::_Init()
         ERR << "can not bind socket on port " << addr.GetPort();
         return false;
     }
+    std::cerr << "Now listen port " << addr.GetPort() << ", ready to accept.\n";
 
     QCommandTable::Init();
     QCommandTable::AliasCommand(g_config.aliases);
@@ -267,7 +268,7 @@ bool Qedis::_Init()
         auto repTimer = TimerManager::Instance().CreateTimer();
         repTimer->Init(100 * 5);
         repTimer->SetCallback([&]() {
-            qedis::QReplication::Instance().Cron();
+            QREPL.Cron();
         });
         TimerManager::Instance().AddTimer(repTimer);
     }
@@ -275,8 +276,8 @@ bool Qedis::_Init()
     // master ip
     if (!g_config.masterIp.empty())
     {
-        QReplication::Instance().GetMasterInfo().addr.Init(g_config.masterIp.c_str(),
-                                                           g_config.masterPort);
+        QREPL.SetMasterAddr(g_config.masterIp.c_str(),
+                            g_config.masterPort);
     }
     
     return  true;
@@ -289,9 +290,9 @@ static void CheckChild()
     if (g_qdbPid == -1 && g_rewritePid == -1)
         return;
 
-    int    statloc;
+    int statloc = 0;
+    pid_t pid = wait3(&statloc,WNOHANG,NULL);
 
-    pid_t  pid = wait3(&statloc,WNOHANG,NULL);
     if (pid != 0 && pid != -1)
     {
         int exitcode = WEXITSTATUS(statloc);
@@ -302,10 +303,10 @@ static void CheckChild()
         if (pid == g_qdbPid)
         {
             QDBSaver::SaveDoneHandler(exitcode, bysignal);
-            if (QReplication::Instance().IsBgsaving())
-                QReplication::Instance().OnRdbSaveDone();
+            if (QREPL.IsBgsaving())
+                QREPL.OnRdbSaveDone();
             else
-                QReplication::Instance().TryBgsave();
+                QREPL.TryBgsave();
         }
         else if (pid == g_rewritePid)
         {
@@ -315,7 +316,7 @@ static void CheckChild()
         else
         {
             ERR << pid << " is not rdb or aof process ";
-            assert (false);
+            assert (!!!"Is there any back process except rdb and aof?");
         }
     }
 }
@@ -334,7 +335,7 @@ bool Qedis::_RunLogic()
 }
 
 
-void    Qedis::_Recycle()
+void Qedis::_Recycle()
 {
     qedis::QAOFThreadController::Instance().Stop();
 }

@@ -104,10 +104,10 @@ void  QDBSaver::Save(const char* qdbFile)
     InputMemoryFile  file;
     file.Open(tmpFile);
     
-    auto  len  = qdb_.Size();
-    auto  data = file.Read(len);
+    auto len  = qdb_.Offset();
+    auto data = file.Read(len);
     
-    const uint64_t  crc = crc64(0, (const unsigned char* )data, len);
+    const uint64_t crc = crc64(0, (const unsigned char* )data, len);
     qdb_.Write(&crc, sizeof crc);
     
     if (::rename(tmpFile, qdbFile) != 0)

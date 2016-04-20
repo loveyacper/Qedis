@@ -230,6 +230,7 @@ TimerManager::~TimerManager()
         while ((pTimer = m_list1[i]->next_) )
         {
             KillTimer(pTimer);
+            delete pTimer;
         }
     
         delete m_list1[i];
@@ -240,32 +241,33 @@ TimerManager::~TimerManager()
         while ((pTimer = m_list2[i]->next_) )
         {
             KillTimer(pTimer);
+            delete pTimer;
         }
         delete m_list2[i];
 
         while ((pTimer = m_list3[i]->next_) )
         {
             KillTimer(pTimer);
+            delete pTimer;
         }
         delete m_list3[i];
 
         while ((pTimer = m_list4[i]->next_) )
         {
             KillTimer(pTimer);
+            delete pTimer;
         }
         delete m_list4[i];
 
         while ((pTimer = m_list5[i]->next_) )
         {
             KillTimer(pTimer);
+            delete pTimer;
         }
         delete m_list5[i];
     }
     
     for (auto t : freepool_)
-        delete t;
-    
-    for (auto t : workpool_)
         delete t;
 }
 
@@ -278,10 +280,13 @@ TimerManager&  TimerManager::Instance()
 Timer* TimerManager::CreateTimer()
 {
     Timer* timer = nullptr;
-    if (freepool_.empty()) {
+    if (freepool_.empty())
+    {
         timer = new Timer();
         freepool_.insert(timer);
-    } else {
+    }
+    else
+    {
         timer = *(freepool_.begin());
         freepool_.erase(freepool_.begin());
     }
@@ -291,13 +296,15 @@ Timer* TimerManager::CreateTimer()
 
 bool TimerManager::UpdateTimers(const Time& now)
 {
-    if (count_ > 0 && lock_.try_lock()) {
+    if (count_ > 0 && lock_.try_lock())
+    {
         decltype(timers_) tmp;
         tmp.swap(timers_);
         count_ = 0;
         lock_.unlock();
 
-        for (auto timer : tmp) {
+        for (auto timer : tmp)
+        {
             AddTimer(timer);
         }
     }
@@ -323,6 +330,8 @@ bool TimerManager::UpdateTimers(const Time& now)
             KillTimer(pTimer);
             if (pTimer->OnTimer())
                 AddTimer(pTimer);
+            else
+                freepool_.insert(pTimer);
         }
     }        
 
@@ -332,12 +341,10 @@ bool TimerManager::UpdateTimers(const Time& now)
 
 void TimerManager::AddTimer(Timer* timer)
 {
-    KillTimer(timer);
-
     uint32_t diff      =  static_cast<uint32_t>(timer->triggerTime_ - m_lastCheckTime);
-    Timer* pListHead ;
     uint64_t trigTime  =  timer->triggerTime_.MilliSeconds();
-
+    Timer* pListHead   = nullptr;
+    
     if ((int32_t)diff < 0)
     {
         pListHead = m_list1[m_lastCheckTime.MilliSeconds() & (LIST1_SIZE - 1)];
@@ -372,7 +379,6 @@ void TimerManager::AddTimer(Timer* timer)
     pListHead->next_ = timer;
     
     freepool_.erase(timer);
-    workpool_.insert(timer);
 }
 
 void TimerManager::AsyncAddTimer(Timer* timer)
@@ -409,11 +415,7 @@ void TimerManager::KillTimer(Timer* pTimer)
             pTimer->next_ = nullptr;
         }
 
-        if (pTimer->prev_)
-            pTimer->prev_ = nullptr;
-
-        workpool_.erase(pTimer);
-        freepool_.insert(pTimer);
+        pTimer->prev_ = nullptr;
     }
 }
 
@@ -436,10 +438,10 @@ bool TimerManager::_Cacsade(Timer* pList[], int index)
     while (tmpListHead)
     {
         Timer* next = tmpListHead->next_;
-        if (tmpListHead->next_)
-            tmpListHead->next_ = nullptr;
-        if (tmpListHead->prev_)
-            tmpListHead->prev_ = nullptr;
+
+        tmpListHead->next_ = nullptr;
+        tmpListHead->prev_ = nullptr;
+        
         AddTimer(tmpListHead);
         tmpListHead = next;
     }

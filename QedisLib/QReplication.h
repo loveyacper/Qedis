@@ -42,7 +42,6 @@ enum QReplState
 struct QMasterInfo
 {
     SocketAddr  addr;
-    
     QReplState  state;
     
     // For recv rdb
@@ -67,47 +66,45 @@ class QReplication
 public:
     static QReplication& Instance();
     
-    bool   IsBgsaving() const;
-    void   SetBgsaving(bool b);
+    void Cron();
     
-    void   AddSlave(QClient* cli);
+    // master side
+    bool IsBgsaving() const;
+    bool HasAnyWaitingBgsave() const;
+    void AddSlave(QClient* cli);
+    void TryBgsave();
+    bool StartBgsave();
+    void OnStartBgsave();
+    void OnRdbSaveDone();
+    void SendToSlaves(const std::vector<QString>& params);
     
-    void   TryBgsave();
-    bool   StartBgsave();
-    void   OnStartBgsave();
-    
-    bool   HasAnyWaitingBgsave() const;
-
-    void   OnRdbSaveDone();
-    // RDB期间缓存变化
-    void   SaveChanges(const std::vector<QString>& params);
-    
-    void   SendToSlaves(const std::vector<QString>& params);
-    
-    void   Cron();
-    
-    void   SetMaster(const std::shared_ptr<QClient>&  cli) { master_ = cli; }
-    QMasterInfo& GetMasterInfo() { return masterInfo_; }
-    
-    void   SaveTmpRdb(const char* data, std::size_t len);
+    // slave side
+    void SaveTmpRdb(const char* data, std::size_t len);
+    void SetMaster(const std::shared_ptr<QClient>&  cli);
+    void SetMasterState(QReplState s);
+    void SetMasterAddr(const char* ip, unsigned short port);
+    void SetRdbSize(std::size_t s);
+    QReplState GetMasterState() const;
+    SocketAddr GetMasterAddr() const;
+    std::size_t GetRdbSize() const;
     
 private:
     QReplication();
-    void    _OnStartBgsave(bool succ);
+    void _OnStartBgsave(bool succ);
     
-    bool    bgsaving_;
-    
-    std::list<std::weak_ptr<QClient> >  slaves_;
-    
-    UnboundedBuffer  buffer_; // 存rdb期间，缓冲变化
-    // SOCKET::SENDPACKET是一定成功的，所以，当文件发送完毕，立即将此buffer SEND
+    // master side
+    bool bgsaving_;
+    UnboundedBuffer buffer_;
+    std::list<std::weak_ptr<QClient> > slaves_;
 
-    QMasterInfo             masterInfo_;
-    std::weak_ptr<QClient>  master_;
-
-    OutputMemoryFile        rdb_;
+    //slave side
+    QMasterInfo masterInfo_;
+    std::weak_ptr<QClient> master_;
+    OutputMemoryFile rdb_;
 };
 
 }
+
+#define QREPL  qedis::QReplication::Instance()
 
 #endif

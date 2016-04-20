@@ -253,24 +253,24 @@ QError  shutdown(const std::vector<QString>& params, UnboundedBuffer* reply)
 QError  sync(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     QClient* cli = QClient::Current();
-    auto   slave = cli->GetSlaveInfo();
+    auto slave = cli->GetSlaveInfo();
     if (!slave)
     {
         cli->SetSlaveInfo();
         slave = cli->GetSlaveInfo();
-        QReplication::Instance().AddSlave(cli);
+        QREPL.AddSlave(cli);
     }
     
     if (slave->state == QSlaveState_wait_bgsave_end ||
         slave->state == QSlaveState_online)
     {
         WRN << cli->GetName() << " state is "
-            << slave->state << ", ignore this request sync";
+            << slave->state << ", ignore this sync request";
         return QError_ok;
     }
     
     slave->state = QSlaveState_wait_bgsave_start;
-    QReplication::Instance().TryBgsave();
+    QREPL.TryBgsave();
 
     return QError_ok;
 }
@@ -290,16 +290,14 @@ QError  echo(const std::vector<QString>& params, UnboundedBuffer* reply)
 
 QError  slaveof(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    auto& info = QReplication::Instance().GetMasterInfo();
-    
     if (params[1] == "no" && params[2] == "one")
     {
-        info.addr.Clear();
+        QREPL.SetMasterAddr(nullptr, 0);
     }
     else
     {
-        info.addr.Init(params[1].c_str(), std::stoi(params[2]));
-        info.state = QReplState_none;
+        QREPL.SetMasterAddr(params[1].c_str(), std::stoi(params[2]));
+        QREPL.SetMasterState(QReplState_none);
     }
     
     FormatOK(reply);
@@ -416,7 +414,6 @@ QError  slowlog(const std::vector<QString>& params, UnboundedBuffer* reply)
         ReplyError(QError_syntax, reply);
         return QError_syntax;
     }
-
     
     return   QError_ok;
 }

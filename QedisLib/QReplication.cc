@@ -8,7 +8,7 @@
 #include "QDB.h"
 #include "QReplication.h"
 
-#include "QAOF.h" // FOR save changes commands
+#include "QAOF.h"
 #include "Server.h"
 
 
@@ -25,22 +25,17 @@ QReplication::QReplication()
 {
 }
 
-bool  QReplication::IsBgsaving() const
+bool QReplication::IsBgsaving() const
 {
     return  bgsaving_;
 }
 
-void  QReplication::SetBgsaving(bool b)
-{
-    bgsaving_ = b;
-}
-
-void  QReplication::AddSlave(qedis::QClient* cli)
+void QReplication::AddSlave(qedis::QClient* cli)
 {
     slaves_.push_back(std::static_pointer_cast<QClient>(cli->shared_from_this()));
 }
 
-bool  QReplication::HasAnyWaitingBgsave() const
+bool QReplication::HasAnyWaitingBgsave() const
 {
     for (const auto& c : slaves_)
     {
@@ -54,13 +49,13 @@ bool  QReplication::HasAnyWaitingBgsave() const
     return false;
 }
 
-void   QReplication::OnRdbSaveDone()
+void QReplication::OnRdbSaveDone()
 {
-    SetBgsaving(false);
+    bgsaving_ = false;
     
     InputMemoryFile  rdb;
     
-    // send rdb to slaves that  wait rdb end, set state
+    // send rdb to slaves that wait rdb end, set state
     for (auto& wptr : slaves_)
     {
         auto cli = wptr.lock();
@@ -71,14 +66,13 @@ void   QReplication::OnRdbSaveDone()
         {
             cli->GetSlaveInfo()->state = QSlaveState_online;
             
-            
             if (!rdb.IsOpen() && !rdb.Open(g_config.rdbfullname.c_str()))
             {
                 ERR << "can not open rdb when replication\n";
                 return;  // fatal error;
             }
             
-            std::size_t   size = std::size_t(-1);
+            std::size_t size = std::size_t(-1);
             const char* data = rdb.Read(size);
             
             // $file_len + filedata
@@ -97,7 +91,7 @@ void   QReplication::OnRdbSaveDone()
 }
 
 
-void   QReplication::TryBgsave()
+void QReplication::TryBgsave()
 {
     if (IsBgsaving())
         return;
@@ -129,10 +123,10 @@ void   QReplication::TryBgsave()
 }
 
 
-void   QReplication::_OnStartBgsave(bool succ)
+void QReplication::_OnStartBgsave(bool succ)
 {
     buffer_.Clear();
-    SetBgsaving(succ);
+    bgsaving_ = succ;
     
     for (auto& c : slaves_)
     {
@@ -156,20 +150,14 @@ void   QReplication::_OnStartBgsave(bool succ)
     }
 }
 
-
-void  QReplication::SaveChanges(const std::vector<QString>& params)
+void QReplication::SendToSlaves(const std::vector<QString>& params)
 {
-    if (!IsBgsaving())
+    if (IsBgsaving())
+    {
+        // 在执行rdb期间，缓存变化
+        SaveCommand(params, buffer_);
         return;
-    
-    SaveCommand(params, buffer_);
-}
-
-
-
-void   QReplication::SendToSlaves(const std::vector<QString>& params)
-{
-    //StackBuffer<8 * 1024>  sb; TODO stack buffer
+    }
     
     UnboundedBuffer   ub;
     
@@ -182,23 +170,30 @@ void   QReplication::SendToSlaves(const std::vector<QString>& params)
         if (ub.IsEmpty())
             SaveCommand(params, ub);
         
-        cli->SendPacket(ub.ReadAddr(), ub.ReadableSize());
+        cli->SendPacket(ub);
     }
 }
 
-void   QReplication::Cron()
+void QReplication::Cron()
 {
     static unsigned  pingCron = 0;
     
     if (pingCron ++ % 50 == 0)
     {
-        for (const auto& wptr : slaves_)
+        for (auto it = slaves_.begin(); it != slaves_.end(); )
         {
-            auto cli = wptr.lock();
-            if (!cli || cli->GetSlaveInfo()->state != QSlaveState_online)
-                continue;
-        
-            cli->SendPacket("PING\r\n", 6);
+            auto cli = it->lock();
+            if (!cli)
+            {
+                it = slaves_.erase(it);
+            }
+            else
+            {
+                ++ it;
+
+                if (cli->GetSlaveInfo()->state == QSlaveState_online)
+                    cli->SendPacket("PING\r\n", 6);
+            }
         }
     }
     
@@ -265,7 +260,7 @@ void   QReplication::Cron()
 }
 
 
-void   QReplication::SaveTmpRdb(const char* data, std::size_t len)
+void QReplication::SaveTmpRdb(const char* data, std::size_t len)
 {
     rdb_.Write(data, len);
     masterInfo_.rdbRecved += len;
@@ -280,6 +275,44 @@ void   QReplication::SaveTmpRdb(const char* data, std::size_t len)
         loader.Load(slaveRdbFile);
         masterInfo_.state = QReplState_online;
     }
+}
+    
+void QReplication::SetMaster(const std::shared_ptr<QClient>&  cli)
+{
+    master_ = cli;
+}
+
+void QReplication::SetMasterState(QReplState s)
+{
+    masterInfo_.state = s;
+}
+
+QReplState QReplication::GetMasterState() const
+{
+    return masterInfo_.state;
+}
+
+SocketAddr QReplication::GetMasterAddr() const
+{
+    return masterInfo_.addr;
+}
+
+void QReplication::SetMasterAddr(const char* ip, unsigned short port)
+{
+    if (ip)
+        masterInfo_.addr.Init(ip, port);
+    else
+        masterInfo_.addr.Clear();
+}
+    
+void QReplication::SetRdbSize(std::size_t s)
+{
+    masterInfo_.rdbSize = s;
+}
+
+std::size_t QReplication::GetRdbSize() const
+{
+    return masterInfo_.rdbSize;
 }
 
 }
