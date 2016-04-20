@@ -222,7 +222,14 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
     FeedMonitors(params_);
     
     const QCommandInfo* info = QCommandTable::GetCommandInfo(params_[0]);
-    // if is multi state,  GetCmdInfo, CheckParamsCount;
+    
+    if (!info)
+    {
+        ReplyError(QError_unknowCmd, &reply_);
+        SendPacket(reply_.ReadAddr(), reply_.ReadableSize());
+        return static_cast<BODY_LENGTH_T>(ptr - start);
+    }
+
     if (IsFlagOn(ClientFlag_multi))
     {
         if (cmd != "multi" &&
@@ -231,7 +238,7 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
             cmd != "unwatch" &&
             cmd != "discard")
         {
-            if (!info || !info->CheckParamsCount(static_cast<int>(params_.size())))
+            if (!info->CheckParamsCount(static_cast<int>(params_.size())))
             {
                 ERR << "queue failed: cmd " << cmd.c_str() << " has params " << params_.size();
                 ReplyError(info ? QError_param : QError_unknowCmd, &reply_);

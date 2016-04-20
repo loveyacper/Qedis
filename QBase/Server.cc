@@ -13,24 +13,6 @@
 
 using Internal::NetThreadPool;
 
-class ReconnTimer : public Timer
-{   
-public:
-    ReconnTimer(int interval) : Timer(interval, 1)
-    {
-    }
-    
-    SocketAddr  peer_;
-
-private:
-    bool _OnTimer()
-    {
-        USR << " : OnTimer reconnect to " << peer_.GetIP() << ":" << peer_.GetPort();
-        Server::Instance()->TCPConnect(peer_, true);
-
-        return false;
-    }
-};
 
 void Server::IntHandler(int signum)
 {
@@ -85,8 +67,14 @@ bool Server::TCPBind(const SocketAddr& addr)
 void Server::TCPReconnect(const SocketAddr& peer)
 {
     INF << __FUNCTION__ << peer.GetIP();
-    std::shared_ptr<ReconnTimer>  pTimer(new ReconnTimer(2 * 1000));  // TODO : flexible
-    pTimer->peer_ = peer;
+
+    Timer* pTimer = TimerManager::Instance().CreateTimer();
+    pTimer->Init(2 * 1000, 1);
+    pTimer->SetCallback([&, peer]() {
+            USR << " : OnTimer reconnect to " << peer.GetIP() << ":" << peer.GetPort();
+            Server::Instance()->TCPConnect(peer, true);
+            });
+
 
     TimerManager::Instance().AsyncAddTimer(pTimer);
 }

@@ -389,6 +389,13 @@ bool  QAOFLoader::Load(const char* name)
     
     const int kCRLFLen = 2;
     
+    {
+        // truncate tail trash zeroes
+        OutputMemoryFile file;
+        file.Open(name);
+        file.TruncateTailZero();
+    }
+    
     // load file to memory
     InputMemoryFile  file;
     if (!file.Open(name))

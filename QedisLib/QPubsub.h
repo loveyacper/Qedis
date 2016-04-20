@@ -41,7 +41,9 @@ private:
 
     ChannelClients   channels_;
     ChannelClients   patternChannels_;
-
+    
+    QString  startChannel_;
+    QString  startPattern_;
     static void _RecycleClients(ChannelClients& channels, QString& start);
 };
     

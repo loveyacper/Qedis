@@ -76,31 +76,6 @@ using QDB = std::unordered_map<QString, QObject,
         std::equal_to<QString> >;
 
 
-
-class ExpireTimer  : public Timer
-{
-public:
-    ExpireTimer(int db) : Timer(1)
-    {
-        dbno_ = db;
-    }
-private:
-    int  dbno_;
-    bool _OnTimer();
-};
-
-class BlockedListTimer  : public Timer
-{
-public:
-    BlockedListTimer(int db) : Timer(3)
-    {
-        dbno_ = db;
-    }
-private:
-    int  dbno_;
-    bool _OnTimer();
-};
-
 const int kMaxDbNum = 65536;
 
 class QStore
@@ -219,7 +194,7 @@ private:
     std::vector<QDB>  store_;
     std::vector<ExpiresDB> expiresDb_;
     std::vector<BlockedClients> blockedClients_;
-    int               dbno_;
+    int dbno_;
 };
 
 #define QSTORE  QStore::Instance()

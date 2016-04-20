@@ -3,6 +3,7 @@
 #define BERT_TIMER_H
 
 #include <vector>
+#include <set>
 #include <ctime>
 #include <sys/time.h>
 #include <stdint.h>
@@ -43,23 +44,28 @@ private:
 };
 
 
-class Timer;
-typedef std::shared_ptr<Timer>  PTIMER;
-
 class Timer
 {
     friend class TimerManager;
 public:
-    explicit Timer(uint32_t interval = uint32_t(-1), int32_t count = -1);
-    virtual ~Timer() {}
-    bool     OnTimer();
-    void     SetRemainCnt(int32_t remain) {  count_ = remain; }
-    bool     IsWorking() const {  return  prev_.get() != nullptr; }
+    void  Init(uint32_t interval, int32_t count = -1);
+    bool  OnTimer();
+    void  SetRemainCnt(int32_t remain) {  count_ = remain; }
+    bool  IsWorking() const {  return  prev_ != nullptr; }
+
+    template <typename F, typename... Args>
+    void SetCallback(F&& f, Args&&... args)
+    {
+        auto temp = std::bind(std::forward<F>(f), std::forward<Args>(args)...);
+        func_ = [temp]() { (void)temp(); };
+    }
 
 private:
-    virtual  bool _OnTimer() { return false; }
-    PTIMER   next_;
-    PTIMER   prev_;
+    Timer();
+
+    std::function<void ()> func_;
+    Timer* next_;
+    Timer* prev_;
     Time     triggerTime_;
     uint32_t interval_;
     int32_t  count_;
@@ -71,18 +77,20 @@ public:
     ~TimerManager();
 
     bool    UpdateTimers(const Time& now);
-    void    ScheduleAt(const PTIMER& pTimer, const Time& triggerTime);
-    void    AddTimer(const PTIMER& pTimer);
-    void    AsyncAddTimer(const PTIMER& pTimer);
-    void    KillTimer(const PTIMER& pTimer);
+    void    ScheduleAt(Timer* pTimer, const Time& triggerTime);
+    void    AddTimer(Timer* timer);
+    void    AsyncAddTimer(Timer* timer);
+    void    KillTimer(Timer* pTimer);
+
+    Timer*  CreateTimer();
 
     static  TimerManager&   Instance();
 
 private:
     TimerManager();
 
-    bool    _Cacsade(PTIMER pList[], int index);
-    int     _Index(int level);
+    bool _Cacsade(Timer* pList[], int index);
+    int _Index(int level);
 
     static const int LIST1_BITS = 8;
     static const int LIST_BITS  = 6;
@@ -91,23 +99,27 @@ private:
 
     Time  m_lastCheckTime;
 
-    PTIMER m_list1[LIST1_SIZE]; // 256 ms
-    PTIMER m_list2[LIST_SIZE];  // 64 * 256ms = 16s
-    PTIMER m_list3[LIST_SIZE];  // 64 * 64 * 256ms = 17m
-    PTIMER m_list4[LIST_SIZE];  // 64 * 64 * 64 * 256ms = 18h
-    PTIMER m_list5[LIST_SIZE];  // 64 * 64 * 64 * 64 * 256ms = 49d
+    Timer* m_list1[LIST1_SIZE]; // 256 ms
+    Timer* m_list2[LIST_SIZE];  // 64 * 256ms = 16s
+    Timer* m_list3[LIST_SIZE];  // 64 * 64 * 256ms = 17m
+    Timer* m_list4[LIST_SIZE];  // 64 * 64 * 64 * 256ms = 18h
+    Timer* m_list5[LIST_SIZE];  // 64 * 64 * 64 * 64 * 256ms = 49 days
+
+    // timer pool
+    std::set<Timer* > freepool_;
+    std::set<Timer* > workpool_;
 
     // async add
-    std::mutex               lock_;
+    std::mutex lock_;
     std::atomic<std::size_t> count_;
-    std::vector<PTIMER >  timers_;
+    std::vector<Timer* > timers_;
 };
 
 inline int TimerManager::_Index(int level)
 {
     uint64_t current = m_lastCheckTime;
     current >>= (LIST1_BITS + level * LIST_BITS);
-    return  current & (LIST_SIZE - 1);
+    return current & (LIST_SIZE - 1);
 }
 
 #endif

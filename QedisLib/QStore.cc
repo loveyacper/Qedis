@@ -21,9 +21,7 @@ void QStore::ExpiresDB::SetExpire(const QString& key, uint64_t when)
 int64_t  QStore::ExpiresDB::TTL(const QString& key, uint64_t now)
 {
     if (!QSTORE.ExistsKey(key))
-    {
         return ExpireResult::notExist;
-    }
 
     ExpireResult ret = ExpireIfNeed(key, now);
     switch (ret)
@@ -64,13 +62,14 @@ QStore::ExpireResult  QStore::ExpiresDB::ExpireIfNeed(const QString& key, uint64
 
 int   QStore::ExpiresDB::LoopCheck(uint64_t now)
 {
-    const int MAX_DEL = 100;
-    const int MAX_CHECK = 2000;
+    const int kMaxDel = 100;
+    const int kMaxCheck = 2000;
+
     int  nDel = 0;
     int  nLoop = 0;
 
     for (auto  it = expireKeys_.begin();
-               it!= expireKeys_.end() && nDel < MAX_DEL && nLoop < MAX_CHECK;
+               it!= expireKeys_.end() && nDel < kMaxDel && nLoop < kMaxCheck;
                ++ nLoop)
     {
         if (it->second <= now)
@@ -93,13 +92,6 @@ int   QStore::ExpiresDB::LoopCheck(uint64_t now)
 
 }
 
-bool ExpireTimer::_OnTimer()
-{
-    int oldDb = QSTORE.SelectDB(dbno_);
-    QSTORE.LoopCheckExpire(::Now());
-    QSTORE.SelectDB(oldDb);
-    return  true;
-}
 
 bool QStore::BlockedClients::BlockClient(const QString& key,
                                          QClient* client,
@@ -114,7 +106,9 @@ bool QStore::BlockedClients::BlockClient(const QString& key,
     }
         
     Clients& clients = blockedClients_[key];
-    clients.push_back(Clients::value_type(std::static_pointer_cast<QClient>(client->shared_from_this()), timeout, pos));
+    clients.push_back({std::static_pointer_cast<QClient>(client->shared_from_this()),
+                                                                             timeout,
+                                                                                pos});
     INF << key << " is waited by " << client->GetName() << ", timeout " << timeout;
     return true;
 }
@@ -308,13 +302,6 @@ int QStore::BlockedClients::LoopCheck(uint64_t now)
     return n;
 }
 
-bool BlockedListTimer::_OnTimer()
-{
-    int oldDb = QSTORE.SelectDB(dbno_);
-    QSTORE.LoopCheckBlocked(::Now());
-    QSTORE.SelectDB(oldDb);
-    return  true;
-}
 
 QStore& QStore::Instance()
 {
@@ -407,9 +394,7 @@ QString QStore::RandomKey() const
 {
     QString  res;
     if (!store_.empty() && !store_[dbno_].empty())
-    {
         RandomMember(store_[dbno_], res);
-    }
 
     return  res;
 }
@@ -508,7 +493,17 @@ QStore::ExpireResult QStore::_ExpireIfNeed(const QString& key, uint64_t now)
 void    QStore::InitExpireTimer()
 {
     for (int i = 0; i < static_cast<int>(expiresDb_.size()); ++ i)
-        TimerManager::Instance().AddTimer(std::make_shared<ExpireTimer>(i));
+    {
+        auto timer = TimerManager::Instance().CreateTimer();
+        timer->Init(1);
+        timer->SetCallback([&, i] () {
+                int oldDb = QSTORE.SelectDB(i);
+                QSTORE.LoopCheckExpire(::Now());
+                QSTORE.SelectDB(oldDb);
+        });
+
+        TimerManager::Instance().AddTimer(timer);
+    }
 }
 
 void    QStore::ResetDb()
@@ -544,7 +539,17 @@ size_t  QStore::ServeClient(const QString& key, const PLIST& list)
 void    QStore::InitBlockedTimer()
 {
     for (int i = 0; i < static_cast<int>(blockedClients_.size()); ++ i)
-        TimerManager::Instance().AddTimer(std::make_shared<BlockedListTimer>(i));
+    {
+        auto timer = TimerManager::Instance().CreateTimer();
+        timer->Init(3);
+        timer->SetCallback([&, i] () {
+                int oldDb = QSTORE.SelectDB(i);
+                QSTORE.LoopCheckBlocked(::Now());
+                QSTORE.SelectDB(oldDb);
+        });
+
+        TimerManager::Instance().AddTimer(timer);
+    }
 }
 
 
@@ -582,4 +587,3 @@ void Propogate(int dbno, const std::vector<QString>& params)
 }
 
 }
-

@@ -2,7 +2,6 @@
 #include "QClient.h"
 #include "QStore.h"
 #include "Log/Logger.h"
-#include "Timer.h"
 
 namespace qedis
 {
@@ -59,14 +58,18 @@ void  QMulti::NotifyDirty(int dbno, const QString& key)
         auto client(itCli->lock());
         if (!client)
         {
-            WRN << "erase not exist client ";
+            WRN << "Erase not exist client when notify dirty key[" << key << "]";
             itCli = cls.erase(itCli);
         }
         else
         {
             if (client.get() != QClient::Current() && client->NotifyDirty(dbno, key))
             {
-                WRN << "erase dirty client ";
+                
+                WRN << "Erase dirty client "
+                    << client->GetName()
+                    << " when notify dirty key["
+                    << key << "]";
                 itCli = cls.erase(itCli);
             }
             else

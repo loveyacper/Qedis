@@ -123,7 +123,7 @@ bool Logger::_CheckChangeFile()
     if (!file_.IsOpen())
         return true;
     
-    return file_.Size() + MAXLINE_LOG > DEFAULT_LOGFILESIZE;
+    return file_.Offset() + MAXLINE_LOG > DEFAULT_LOGFILESIZE;
 }
 
 const std::string& Logger::_MakeFileName()

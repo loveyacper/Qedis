@@ -247,26 +247,17 @@ void QPubsub::_RecycleClients(ChannelClients& channels, QString& start)
         start.clear();
 }
 
-class PubsubTimer : public Timer
-{
-public:
-    PubsubTimer() : Timer(100)
-    {
-    }
-private:
-    QString  startChannel_;
-    QString  startPattern_;
-
-    bool    _OnTimer()
-    {
-        QPubsub::Instance().RecycleClients(startChannel_, startPattern_);
-        return  true;
-    }
-};
-
 void QPubsub::InitPubsubTimer()
 {
-    TimerManager::Instance().AddTimer(std::make_shared<PubsubTimer>());
+    auto timer = TimerManager::Instance().CreateTimer();
+    timer->Init(100);
+    timer->SetCallback([&] (std::string& channel, std::string& pattern) {
+            QPubsub::Instance().RecycleClients(channel, pattern);
+        },
+        std::ref(startChannel_),
+        std::ref(startPattern_));
+    
+    TimerManager::Instance().AddTimer(timer);
 }
 
 void QPubsub::PubsubChannels(std::vector<QString>& res, const char* pattern) const

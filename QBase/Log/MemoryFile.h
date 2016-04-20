@@ -2,31 +2,30 @@
 #define BERT_MEMORYFILE_H
 
 #include <string>
-    
+
 class InputMemoryFile
 {
 public:
     InputMemoryFile();
    ~InputMemoryFile();
 
-    bool        Open(const char* file);
-    void        Close();
+    bool Open(const char* file);
+    void Close();
 
     const char* Read(std::size_t& len);
-    void        Skip(std::size_t len);
-    
     template <typename T>
-    T           Read();
+    T Read();
+    void Skip(std::size_t len);
 
-    bool        IsOpen() const;
+    bool IsOpen() const;
 
 private:
-    bool            _MapReadOnly();
+    bool _MapReadOnly();
 
-    int				file_;
-    char*           pMemory_;
-    std::size_t     offset_;
-    std::size_t     size_;
+    int file_;
+    char* pMemory_;
+    std::size_t offset_;
+    std::size_t size_;
 };
 
 template <typename T>
@@ -45,29 +44,40 @@ public:
     OutputMemoryFile();
    ~OutputMemoryFile();
 
-    bool        Open(const std::string& file, bool bAppend = true);
-    bool        Open(const char* file, bool bAppend = true);
-    void        Close();
-    bool        Sync();
+    bool Open(const std::string& file, bool bAppend = true);
+    bool Open(const char* file, bool bAppend = true);
+    void Close();
+    bool Sync();
 
-    size_t      Write(const void* data, std::size_t len);
+    void Truncate(std::size_t size);
+    //!! if process terminated abnormally, erase the trash data
+    void TruncateTailZero();
+
+    void Write(const void* data, std::size_t len);
     template <typename T>
-    size_t      Write(const T& t);
+    void Write(const T& t);
     
-    
-    std::size_t Size()   const { return size_;   }
-    bool        IsOpen() const;
+    std::size_t Size() const { return size_; }
+    std::size_t Offset() const { return offset_; }
+    bool IsOpen() const;
 
 private:
-    int			file_;
-    size_t      size_;
+    bool _MapWriteOnly();
+    void _ExtendFileSize(std::size_t size);
+    void _AssureSpace(std::size_t size);
+
+    int file_;
+    char* pMemory_;
+    std::size_t offset_;
+    std::size_t size_;
+    std::size_t syncPos_;
 };
 
 
 template <typename T>
-inline size_t   OutputMemoryFile::Write(const T& t)
+inline void OutputMemoryFile::Write(const T& t)
 {
-    return  this->Write(&t, sizeof t);
+    this->Write(&t, sizeof t);
 }
 
 #endif

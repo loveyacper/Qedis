@@ -176,36 +176,6 @@ static void  QdbCron()
     }
 }
 
-class  ServerCronTimer : public Timer
-{
-public:
-    ServerCronTimer() : Timer(1000 / qedis::g_config.hz)
-    {
-    }
-
-private:
-    bool _OnTimer() override
-    {
-        QdbCron();
-        return  true;
-    }
-};
-
-class  ReplicationCronTimer : public Timer
-{
-public:
-    ReplicationCronTimer() : Timer(100 * 5)
-    {
-    }
-    
-private:
-    bool _OnTimer() override
-    {
-        qedis::QReplication::Instance().Cron();
-        return  true;
-    }
-};
-
 static void LoadDbFromDisk()
 {
     using namespace qedis;
@@ -284,8 +254,23 @@ bool Qedis::_Init()
     QSlowLog::Instance().SetThreshold(g_config.slowlogtime);
     QSlowLog::Instance().SetLogLimit(static_cast<std::size_t>(g_config.slowlogmaxlen));
     
-    TimerManager::Instance().AddTimer(PTIMER(new ServerCronTimer));
-    TimerManager::Instance().AddTimer(PTIMER(new ReplicationCronTimer));
+    {
+        auto cronTimer = TimerManager::Instance().CreateTimer();
+        cronTimer->Init(1000 / qedis::g_config.hz);
+        cronTimer->SetCallback([]() {
+                QdbCron();
+        });
+        TimerManager::Instance().AddTimer(cronTimer);
+    }
+
+    {
+        auto repTimer = TimerManager::Instance().CreateTimer();
+        repTimer->Init(100 * 5);
+        repTimer->SetCallback([&]() {
+            qedis::QReplication::Instance().Cron();
+        });
+        TimerManager::Instance().AddTimer(repTimer);
+    }
     
     // master ip
     if (!g_config.masterIp.empty())
