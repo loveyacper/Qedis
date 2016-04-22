@@ -57,7 +57,6 @@ public:
     template <typename T>
     void Write(const T& t);
     
-    std::size_t Size() const { return size_; }
     std::size_t Offset() const { return offset_; }
     bool IsOpen() const;
 

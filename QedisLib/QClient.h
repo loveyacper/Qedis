@@ -7,20 +7,12 @@
 
 #include "QSlowLog.h"
 #include "QReplication.h"
+#include "QProtoParser.h"
 #include <unordered_set>
 #include <unordered_map>
 
 namespace qedis
 {
-
-enum  class ParseCmdState : std::int8_t
-{
-    Init,
-    MultiBulk,
-    Arglen,
-    Arg,
-    Ready,
-};
 
 enum ClientFlag
 {
@@ -99,22 +91,17 @@ public:
     static void  AddCurrentToMonitor();
     static void  FeedMonitors(const std::vector<QString>& params);
     
-    void    SetAuth() { auth_ = true; }
-    
-    void    RewriteCmd(std::vector<QString>& params) { params_.swap(params); }
+    void SetAuth() { auth_ = true; }
+    void RewriteCmd(std::vector<QString>& params) { parser_.SetParams(params); }
 
 private:
-    BODY_LENGTH_T    _ProcessInlineCmd(const char* , size_t);
-    void    _Reset();
+    BODY_LENGTH_T _ProcessInlineCmd(const char* , size_t, std::vector<QString>& );
+    void _Reset();
 
-    ParseCmdState  state_;
-    int   multibulk_;
-    int   paramLen_;
-    
-    std::vector<QString> params_;
-    UnboundedBuffer  reply_;
+    QProtoParser parser_;
+    UnboundedBuffer reply_;
 
-    int   db_;
+    int db_;
 
     std::unordered_set<QString>  channels_;
     std::unordered_set<QString>  patternChannels_;

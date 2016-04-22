@@ -337,6 +337,7 @@ bool Qedis::_RunLogic()
 
 void Qedis::_Recycle()
 {
+    std::cerr << "Qedis::_Recycle: server is exiting.. BYE BYE\n";
     qedis::QAOFThreadController::Instance().Stop();
 }
 

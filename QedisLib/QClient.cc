@@ -22,48 +22,78 @@ QClient*  QClient::s_pCurrentClient = 0;
 std::set<std::weak_ptr<QClient>, std::owner_less<std::weak_ptr<QClient> > >
           QClient::s_monitors;
 
-BODY_LENGTH_T QClient::_ProcessInlineCmd(const char* buf, size_t bytes)
+BODY_LENGTH_T QClient::_ProcessInlineCmd(const char* buf, size_t bytes, std::vector<QString>& params)
 {
     if (bytes < 2)
         return 0;
-    
-    BODY_LENGTH_T  len = 0;
-    size_t cursor = 0;
-    for (cursor = 0; cursor + 1 < bytes; ++ cursor)
+
+    QString res;
+
+    for (size_t i = 0; i + 1 < bytes; ++ i)
     {
-        if (buf[cursor] == '\r' && buf[cursor+1] == '\n')
+        if (buf[i] == '\r' && buf[i+1] == '\n')
         {
-            len = static_cast<BODY_LENGTH_T>(cursor + 2);
-            state_ = ParseCmdState::Ready;
-            break;
+            if (!res.empty())
+                params.emplace_back(std::move(res));
+
+            return static_cast<BODY_LENGTH_T>(i + 2);
+        }
+
+        if (isblank(buf[i]))
+        {
+            if (!res.empty())
+            {
+                params.reserve(4);
+                params.emplace_back(std::move(res));
+            }
+        }
+        else
+        {
+            res.reserve(16);
+            res.push_back(buf[i]);
         }
     }
-    
-    if (state_ == ParseCmdState::Ready)
-    {
-        QString   param;
-        for (size_t i = 0; i < cursor; ++ i)
-        {
-            if (isblank(buf[i]))
-            {
-                if (!param.empty())
-                {
-                    INF << "inline cmd param " << param.c_str();
-                    params_.emplace_back(std::move(param));
-                    param.clear();
-                }
-            }
-            else
-            {
-                param.push_back(buf[i]);
-            }
-        }
+
+    return 0;
+}
+
+static int TryRecvRdb(const char* start, const char* end)
+{
+    auto state = QREPL.GetMasterState();
+
+    // discard all requests before sync;
+    // or continue serve with old data? TODO
+    if (state == QReplState_connected)
+        return static_cast<int>(end - start);
         
-        DBG << "inline cmd param " << param.c_str();
-        params_.emplace_back(std::move(param));
+    const char* ptr = start;
+    if (state == QReplState_wait_rdb)
+    {
+        //recv RDB file
+        if (QREPL.GetRdbSize() == std::size_t(-1))
+        {
+            ++ ptr; // skip $
+            int s;
+            if (QParseResult::ok == GetIntUntilCRLF(ptr, end - ptr, s))
+            {
+                QREPL.SetRdbSize(s);
+                USR << "recv rdb size " << s;
+            }
+        }
+        else
+        {
+            std::size_t rdb = static_cast<std::size_t>(end - ptr);
+            if (rdb > QREPL.GetRdbSize())
+                rdb = QREPL.GetRdbSize();
+            
+            QREPL.SaveTmpRdb(ptr, rdb);
+            ptr += rdb;
+        }
+
+        return static_cast<int>(ptr - start);
     }
-    
-    return len;
+
+    return -1; // do nothing
 }
 
 BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
@@ -75,125 +105,35 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
     const char* ptr  = start;
     
     {
-        auto state = QREPL.GetMasterState();
-
-        // discard all data before request sync;
-        // or support service use old data? TODO
-        if (state == QReplState_connected)
-            return static_cast<BODY_LENGTH_T>(bytes);
-            
-        if (state == QReplState_wait_rdb)
-        {
-            //RECV RDB FILE
-            if (QREPL.GetRdbSize() == std::size_t(-1))
-            {
-                ++ ptr; // skip $
-                int s;
-                if (QParseInt::ok == GetIntUntilCRLF(ptr, end - ptr, s))
-                {
-                    QREPL.SetRdbSize(s);
-                    USR << "recv rdb size " << s;
-                    ptr += 2; // skip CRLF
-                }
-            }
-            else
-            {
-                auto rdb = bytes;
-                if (rdb > QREPL.GetRdbSize())
-                    rdb = QREPL.GetRdbSize();
-                
-                QREPL.SaveTmpRdb(start, rdb);
-                ptr += rdb;
-            }
-
-            return static_cast<BODY_LENGTH_T>(ptr - start);
-        }
+        // check slave state
+        auto recved = TryRecvRdb(start, end);
+        if (recved != -1)
+            return static_cast<BODY_LENGTH_T>(recved);
     }
-    
-    QParseInt parseIntRet = QParseInt::ok;
-    
-    switch (state_)
+
+    auto parseRet = parser_.ParseRequest(ptr, end);
+    if (parseRet == QParseResult::error)
     {
-        case ParseCmdState::Init:
-            assert (multibulk_ == 0);
-            if (*ptr == '*')
-            {
-                ++ ptr;
-                
-                parseIntRet = GetIntUntilCRLF(ptr, end - ptr, multibulk_);
-                if (parseIntRet == QParseInt::ok)
-                {
-                    state_ = ParseCmdState::Arglen;
-                    ptr += 2; // skip CRLF
-                }
-                else if (parseIntRet == QParseInt::error)
-                {
-                    OnError();
-                    return 0;
-                }
-            }
-            else
-            {
-                ptr += _ProcessInlineCmd(ptr, bytes);
-            }
-                
-            break;
-                
-        case ParseCmdState::Arglen:
-            assert(*ptr == '$');
-            ++ ptr;
-                
-            parseIntRet = GetIntUntilCRLF(ptr, end - ptr, paramLen_);
-            if (parseIntRet == QParseInt::ok)
-            {
-                state_ = ParseCmdState::Arg;
-                ptr += 2; // skip CRLF
-            }
-            else if (parseIntRet == QParseInt::error)
-            {
-                OnError();
-                return 0;
-            }
-                
-            break;
-                
-        case ParseCmdState::Arg:
+        if (!parser_.IsInitialState())
         {
-            const char* crlf = SearchCRLF(ptr, end - ptr);
-                
-            if (!crlf)
-            {
-                USR << "wait crlf for arg";
-                break;
-            }
-                
-            if (crlf - ptr != paramLen_)
-            {
-                ERR << "param len said " << paramLen_ << ", but actual get " << (crlf - ptr);
-                OnError();
-                return 0;
-            }
-                
-            params_.emplace_back(QString(ptr, crlf - ptr));
-            if (params_.size() == static_cast<size_t>(multibulk_))
-            {
-                state_ =  ParseCmdState::Ready;
-            }
-            else
-            {
-                state_ =  ParseCmdState::Arglen;
-            }
-                
-            ptr = crlf + 2; // skip CRLF
-            break;
+            this->OnError(); 
+            return 0;
         }
-                
-        default:
-            break;
+
+        // try inline command
+        std::vector<QString> params;
+        auto len = _ProcessInlineCmd(ptr, bytes, params); 
+        if (len == 0)
+            return 0;
+
+        ptr += len;
+        parser_.SetParams(params);
+        parseRet = QParseResult::ok;
     }
-    
-    if (state_ != ParseCmdState::Ready)
+    else if (parseRet != QParseResult::ok)
+    {
         return static_cast<BODY_LENGTH_T>(ptr - start);
+    }
 
     /// handle packet
     s_pCurrentClient = this;
@@ -202,23 +142,22 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
         _Reset();
     };
 
-    if (!auth_ && params_[0] != "auth")
+    const auto& params = parser_.GetParams();
+    if (!auth_ && strncasecmp(params[0].data(), "auth", 4) != 0)
     {
         ReplyError(QError_needAuth, &reply_);
         SendPacket(reply_);
         return static_cast<BODY_LENGTH_T>(ptr - start);
     }
     
-    QString& cmd = params_[0];
-    std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::tolower);
-    
+    const QString& cmd = params[0];
     QSTORE.SelectDB(db_);
     
-    DBG << "client " << GetID() << ", cmd " << params_[0].c_str();
+    DBG << "client " << GetID() << ", cmd " << cmd;
     
-    FeedMonitors(params_);
+    FeedMonitors(params);
     
-    const QCommandInfo* info = QCommandTable::GetCommandInfo(params_[0]);
+    const QCommandInfo* info = QCommandTable::GetCommandInfo(cmd);
     
     if (!info)
     {
@@ -235,9 +174,9 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
             cmd != "unwatch" &&
             cmd != "discard")
         {
-            if (!info->CheckParamsCount(static_cast<int>(params_.size())))
+            if (!info->CheckParamsCount(static_cast<int>(params.size())))
             {
-                ERR << "queue failed: cmd " << cmd.c_str() << " has params " << params_.size();
+                ERR << "queue failed: cmd " << cmd.c_str() << " has params " << params.size();
                 ReplyError(info ? QError_param : QError_unknowCmd, &reply_);
                 SendPacket(reply_);
                 FlagExecWrong();
@@ -245,7 +184,7 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
             else
             {
                 if (!IsFlagOn(ClientFlag_wrongExec))
-                    queueCmds_.push_back(params_);
+                    queueCmds_.push_back(params);
                 
                 SendPacket("+QUEUED\r\n", 9);
                 INF << "queue cmd " << cmd.c_str();
@@ -265,10 +204,10 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
     else
     {
         QSlowLog::Instance().Begin();
-        err = QCommandTable::ExecuteCmd(params_,
+        err = QCommandTable::ExecuteCmd(params,
                                         info,
                                         IsFlagOn(ClientFlag_master) ? nullptr : &reply_);
-        QSlowLog::Instance().EndAndStat(params_);
+        QSlowLog::Instance().EndAndStat(params);
     }
     
     if (!reply_.IsEmpty())
@@ -278,7 +217,7 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
     
     if (err == QError_ok && (info->attr & QAttr_write))
     {
-        Propogate(params_);
+        Propogate(params);
     }
     
     return static_cast<BODY_LENGTH_T>(ptr - start);
@@ -317,10 +256,7 @@ void QClient::_Reset()
 {
     s_pCurrentClient = 0;
 
-    state_     = ParseCmdState::Init;
-    multibulk_ = 0;
-    paramLen_  = 0;
-    params_.clear();
+    parser_.Reset();
     reply_.Clear();
 }
 

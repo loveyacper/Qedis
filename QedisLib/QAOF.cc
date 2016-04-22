@@ -3,6 +3,7 @@
 #include "Log/Logger.h"
 #include "Threads/ThreadPool.h"
 #include "QStore.h"
+#include "QProtoParser.h"
 #include <unistd.h>
 #include <sstream>
 
@@ -165,6 +166,7 @@ void  QAOFThreadController::AOFThread::Run()
     
     while (IsAlive())
     {
+        // sync immediately, the redis sync policy is redundant
         if (Flush())
             file_.Sync();
         else
@@ -380,15 +382,10 @@ static void SaveObject(const QString& key, const QObject& obj, OutputMemoryFile&
 
 QAOFLoader::QAOFLoader()
 {
-    _Reset();
 }
 
 bool  QAOFLoader::Load(const char* name)
 {
-    _Reset();
-    
-    const int kCRLFLen = 2;
-    
     {
         // truncate tail trash zeroes
         OutputMemoryFile file;
@@ -404,84 +401,19 @@ bool  QAOFLoader::Load(const char* name)
     size_t  maxLen = std::numeric_limits<size_t>::max();
     const char* content = file.Read(maxLen);
 
+    QProtoParser  parser;
     // extract commands from file content
     const char* const end = content + maxLen;
     while (content < end)
     {
-        switch (state_)
-        {
-            case State::Init:
-                cmds_.resize(cmds_.size() + 1);
+        parser.Reset();
+        if (QParseResult::ok != parser.ParseRequest(content, end))
+            return false;
 
-                state_ = State::Multi;
-                break;
-
-            case Multi:
-                assert (*content == '*');
-                ++ content;
-                
-                if (QParseInt::ok != GetIntUntilCRLF(content, end - content, multi_))
-                {
-                    ERR << "get multi failed";
-                    return false;
-                }
-                else
-                {
-                    content += kCRLFLen;
-                }
-
-                state_ = State::Param;
-                break;
-
-            case Param:
-                assert (*content == '$');
-                ++ content;
-
-                {
-                    int   paramLen = 0;
-                    if (QParseInt::ok != GetIntUntilCRLF(content, end - content, paramLen))
-                    {
-                        ERR << "get param len failed";
-                        return false;
-                    }
-                    else
-                    {
-                        content += kCRLFLen;
-                    }
-
-                    if (content + paramLen > end)
-                    {
-                        ERR << "can not get param, len " << paramLen;
-                        return false;
-                    }
-
-                    auto&  params = cmds_.back();
-                    params.push_back(QString(content, paramLen));
-                    content += paramLen + kCRLFLen;
-
-                    if (static_cast<int>(params.size()) == multi_)
-                        state_ = Ready;
-                }
-
-                break;
-
-            case Ready:
-                state_ = State::Init;
-                break;
-        }
+        cmds_.push_back(parser.GetParams());
     }
 
-    if (state_ == State::Ready)
-        state_ = State::AllReady;
-
-    return state_ == State::AllReady;
+    return true;
 }
     
-void QAOFLoader::_Reset()
-{
-    state_ = State::Init;
-    multi_ = 0;
-    cmds_.clear();
-}
-
 }

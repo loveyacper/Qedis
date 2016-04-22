@@ -78,7 +78,6 @@ public:
     QAOFLoader();
     
     bool  Load(const char* name);
-    bool  IsReady() const  {  return state_ == State::AllReady; }
 
     const std::vector<std::vector<QString> >& GetCmds() const
     {
@@ -86,20 +85,7 @@ public:
     }
 
 private:
-    void _Reset();
-
-    enum State : int8_t
-    {
-        Init,
-        Multi,
-        Param,
-        Ready,
-        AllReady,
-    } ;
-
-    int                   multi_;
-    std::vector<std::vector<QString> >  cmds_;
-    int state_;
+    std::vector<std::vector<QString> > cmds_;
 };
 
 template <typename DEST>

@@ -218,8 +218,6 @@ static void AddReply(QObject* value, UnboundedBuffer* reply)
 
 QError  get(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    assert (params[0] == "get");
-
     QObject* value;
     QError err = QSTORE.GetValueByType(params[1], value, QType_string);
     if (err != QError_ok) 

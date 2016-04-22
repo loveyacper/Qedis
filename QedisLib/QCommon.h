@@ -6,6 +6,7 @@
 #include <vector>
 #include <algorithm>
 #include <functional>
+#include <strings.h>
 #include "QString.h"
 
 #define QEDIS static_cast<Qedis* >(Server::Instance())
@@ -179,15 +180,32 @@ inline void AdjustIndex(long& start, long& end, size_t  size)
     if (end >= static_cast<long>(size))  end = size - 1;
 }
 
+struct NocaseComp
+{
+    bool operator() (const QString& s1, const QString& s2) const
+    {
+        return strcasecmp(s1.c_str(), s2.c_str()) < 0;
+    }
 
-enum class QParseInt : int8_t
+    bool operator() (const char* s1, const QString& s2) const
+    {
+        return strcasecmp(s1, s2.c_str()) < 0;
+    }
+
+    bool operator() (const QString& s1, const char* s2) const
+    {
+        return strcasecmp(s1.c_str(), s2) < 0;
+    }
+};
+
+enum class QParseResult : int8_t
 {
     ok,
-    waitCrlf,
+    wait,
     error,
 };
 
-QParseInt  GetIntUntilCRLF(const char*& ptr, std::size_t nBytes, int& val);
+QParseResult  GetIntUntilCRLF(const char*& ptr, std::size_t nBytes, int& val);
 
 std::vector<QString>  SplitString(const QString& str, char seperator);
     

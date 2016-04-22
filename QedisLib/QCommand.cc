@@ -159,7 +159,7 @@ const QCommandInfo QCommandTable::s_info[] =
 };
 
 
-std::map<QString, const QCommandInfo* >  QCommandTable::s_handlers;
+std::map<QString, const QCommandInfo*, NocaseComp>  QCommandTable::s_handlers;
 
 QCommandTable::QCommandTable()
 {

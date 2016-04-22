@@ -18,8 +18,6 @@ namespace qedis
 
 QError  select(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    assert (params[0] == "select");
-
     int newDb = atoi(params[1].c_str());
     
     auto client = QClient::Current();
@@ -42,16 +40,12 @@ QError  select(const std::vector<QString>& params, UnboundedBuffer* reply)
 
 QError  dbsize(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    assert (params[0] == "dbsize");
-
     FormatInt(static_cast<long>(QSTORE.DBSize()), reply);
     return   QError_ok;
 }
 
 QError  flushdb(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    assert (params[0] == "flushdb");
-
     QSTORE.dirty_ += QSTORE.DBSize();
     QSTORE.ClearCurrentDB();
     Propogate(QSTORE.GetDB(), params);
@@ -62,8 +56,6 @@ QError  flushdb(const std::vector<QString>& params, UnboundedBuffer* reply)
 
 QError  flushall(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    assert (params[0] == "flushall");
-    
     int currentDb = QSTORE.GetDB();
     
     QEDIS_DEFER {
@@ -86,8 +78,6 @@ QError  flushall(const std::vector<QString>& params, UnboundedBuffer* reply)
 
 QError  bgsave(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    assert (params[0] == "bgsave");
-    
     if (g_qdbPid != -1 || g_rewritePid != -1)
     {
         FormatBulk("-ERR Background save or aof already in progress",
@@ -121,8 +111,6 @@ QError  bgsave(const std::vector<QString>& params, UnboundedBuffer* reply)
 
 QError  save(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    assert (params[0] == "save");
-    
     if (g_qdbPid != -1 || g_rewritePid != -1)
     {
         FormatBulk("-ERR Background save or aof already in progress",
@@ -142,8 +130,6 @@ QError  save(const std::vector<QString>& params, UnboundedBuffer* reply)
 
 QError  lastsave(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    assert (params[0] == "lastsave");
-    
     FormatInt(g_lastQDBSave, reply);
     return   QError_ok;
 }
@@ -151,8 +137,6 @@ QError  lastsave(const std::vector<QString>& params, UnboundedBuffer* reply)
 QError  client(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     // getname   setname    kill  list
-    assert (params[0] == "client");
-    
     QError   err = QError_ok;
     
     if (params[1].size() == 7 && strncasecmp(params[1].c_str(), "getname", 7) == 0)
@@ -203,8 +187,6 @@ static int Suicide()
 
 QError  debug(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    assert (params[0] == "debug");
-    
     QError err = QError_ok;
     
     if (strncasecmp(params[1].c_str(), "segfault", 8) == 0 && params.size() == 2)
@@ -242,8 +224,6 @@ QError  debug(const std::vector<QString>& params, UnboundedBuffer* reply)
 
 QError  shutdown(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    assert (params[0] == "shutdown");
-    
     Server::Instance()->Terminate();
     return   QError_ok;
 }

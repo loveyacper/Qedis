@@ -50,15 +50,20 @@ inline typename HASH::const_local_iterator RandomHashMember(const HASH& containe
 
 // scan
 template <typename HASH>
-inline size_t ScanHashMember(const HASH& container, size_t cursor, size_t count, std::vector<typename HASH::const_local_iterator>& res)
+inline size_t ScanHashMember(const HASH& container,
+                             size_t cursor,
+                             size_t count,
+                             std::vector<typename HASH::const_local_iterator>& res)
 {
     if (cursor >= container.size())
     {
         return 0;
     }
 
-    auto  idx = cursor;
-    for (auto bucket = 0; bucket < container.bucket_count(); ++ bucket)
+    auto idx = cursor;
+    for (decltype(container.bucket_count()) bucket = 0;
+         bucket < container.bucket_count();
+         ++ bucket)
     {
         const auto bktSize = container.bucket_size(bucket);
         if (idx < bktSize)

@@ -8,8 +8,6 @@ namespace qedis
 
 QError  type(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    assert (params[0] == "type");
-
     const char* info = 0;
     QType type = QSTORE.KeyType(params[1]);
     switch (type) {
@@ -44,8 +42,6 @@ QError  type(const std::vector<QString>& params, UnboundedBuffer* reply)
 
 QError  exists(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    assert (params[0] == "exists");
-
     if (QSTORE.ExistsKey(params[1]))
         Format1(reply);
     else
@@ -56,8 +52,6 @@ QError  exists(const std::vector<QString>& params, UnboundedBuffer* reply)
 
 QError  del(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    assert (params[0] == "del");
-    
     int nDel = 0;
     for (size_t i = 1; i < params.size(); ++ i)
     {
@@ -154,8 +148,6 @@ static int64_t _ttl(const QString& key)
 
 QError  ttl(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    assert (params[0] == "ttl");
-    
     const QString& key = params[1];
 
     int64_t ret = _ttl(key);
@@ -168,8 +160,6 @@ QError  ttl(const std::vector<QString>& params, UnboundedBuffer* reply)
 
 QError  pttl(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    assert (params[0] == "pttl");
-    
     const QString& key = params[1];
 
     int64_t ret = _ttl(key); // by milliseconds
@@ -180,8 +170,6 @@ QError  pttl(const std::vector<QString>& params, UnboundedBuffer* reply)
 
 QError  persist(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    assert (params[0] == "persist");
-    
     const QString& key = params[1];
 
     int ret = QSTORE.ClearExpire(key) ? 1 : 0;
@@ -192,8 +180,6 @@ QError  persist(const std::vector<QString>& params, UnboundedBuffer* reply)
 
 QError  move(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    assert (params[0] == "move");
-    
     const QString& key = params[1];
     int   toDb         = atoi(params[2].c_str());
 
@@ -230,8 +216,6 @@ QError  move(const std::vector<QString>& params, UnboundedBuffer* reply)
 
 QError  keys(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    assert (params[0] == "keys");
-    
     const QString& pattern = params[1];
     
     std::vector<const QString* > results;

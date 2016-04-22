@@ -320,10 +320,10 @@ size_t Format0(UnboundedBuffer* reply)
     return reply->ReadableSize() - oldSize;
 }
 
-QParseInt  GetIntUntilCRLF(const char*& ptr, std::size_t nBytes, int& val)
+QParseResult  GetIntUntilCRLF(const char*& ptr, std::size_t nBytes, int& val)
 {
     if (nBytes < 3)
-        return QParseInt::waitCrlf;
+        return QParseResult::wait;
     
     std::size_t i = 0;
     bool negtive = false;
@@ -348,10 +348,10 @@ QParseInt  GetIntUntilCRLF(const char*& ptr, std::size_t nBytes, int& val)
         else
         {
             if (ptr[i] != '\r' || (i+1 < nBytes && ptr[i+1] != '\n'))
-                return QParseInt::error;
+                return QParseResult::error;
             
             if (i + 1 == nBytes)
-                return QParseInt::waitCrlf;
+                return QParseResult::wait;
             
             break;
         }
@@ -361,7 +361,8 @@ QParseInt  GetIntUntilCRLF(const char*& ptr, std::size_t nBytes, int& val)
         val *= -1;
     
     ptr += i;
-    return QParseInt::ok;
+    ptr += 2;
+    return QParseResult::ok;
 }
 
 std::vector<QString>  SplitString(const QString& str, char seperator)

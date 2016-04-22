@@ -196,7 +196,8 @@ private:
     static bool  AddCommand(const QString& cmd, const QCommandInfo* info);
 
     static const QCommandInfo s_info[];
-    static std::map<QString, const QCommandInfo* >  s_handlers;
+
+    static std::map<QString, const QCommandInfo*, NocaseComp>  s_handlers;
 };
 
 }

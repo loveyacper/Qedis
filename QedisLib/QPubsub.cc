@@ -150,7 +150,7 @@ std::size_t QPubsub::PublishMsg(const QString& channel, const QString& msg)
                 FormatSingle("message", 7, &reply);
                 FormatSingle(channel, &reply);
                 FormatSingle(msg, &reply);
-                cli->SendPacket(reply.ReadAddr(), reply.ReadableSize());
+                cli->SendPacket(reply);
 
                 ++ itCli;
                 ++ n;
@@ -186,7 +186,7 @@ std::size_t QPubsub::PublishMsg(const QString& channel, const QString& msg)
                     FormatSingle(pattern.first, &reply);
                     FormatSingle(channel, &reply);
                     FormatSingle(msg, &reply);
-                    cli->SendPacket(reply.ReadAddr(), reply.ReadableSize());
+                    cli->SendPacket(reply);
 
                     ++ itCli;
                     ++ n;

@@ -590,7 +590,7 @@ LogManager::~LogManager()
         int i = 0;
         while (log->Update())
         {
-            std::cerr << i++ << " when exit update log ptr " << (void*)log << std::endl;
+            (void)log;
         }
         delete log;
     }
