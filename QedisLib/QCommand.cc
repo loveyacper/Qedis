@@ -24,6 +24,7 @@ const QCommandInfo QCommandTable::s_info[] =
     {"rename",      QAttr_write,               3,  &rename},
     {"renamenx",    QAttr_write,               3,  &renamenx},
     {"scan",        QAttr_read,               -2,  &scan},
+    {"sort",        QAttr_read,               -2,  &sort},
 
     // server
     {"select",      QAttr_read,                2,  &select},

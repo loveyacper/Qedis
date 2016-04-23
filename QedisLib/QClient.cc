@@ -6,14 +6,6 @@
 #include "QSlowLog.h"
 #include "QClient.h"
 
-// *3  CR LF
-// $4  CR LF
-// sadd CR LF
-// $5  CR LF
-// myset CR LF
-// $3   CR LF
-// 345 CR LF
-
 namespace qedis
 {
 
@@ -22,7 +14,9 @@ QClient*  QClient::s_pCurrentClient = 0;
 std::set<std::weak_ptr<QClient>, std::owner_less<std::weak_ptr<QClient> > >
           QClient::s_monitors;
 
-BODY_LENGTH_T QClient::_ProcessInlineCmd(const char* buf, size_t bytes, std::vector<QString>& params)
+BODY_LENGTH_T QClient::_ProcessInlineCmd(const char* buf,
+                                         size_t bytes,
+                                         std::vector<QString>& params)
 {
     if (bytes < 2)
         return 0;
@@ -135,7 +129,7 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
         return static_cast<BODY_LENGTH_T>(ptr - start);
     }
 
-    /// handle packet
+    // handle packet
     s_pCurrentClient = this;
     
     QEDIS_DEFER {
@@ -143,22 +137,21 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
     };
 
     const auto& params = parser_.GetParams();
-    if (!auth_ && strncasecmp(params[0].data(), "auth", 4) != 0)
+    const QString& cmd = params[0];
+    if (!auth_ && strncasecmp(cmd.data(), "auth", 4) != 0)
     {
         ReplyError(QError_needAuth, &reply_);
         SendPacket(reply_);
         return static_cast<BODY_LENGTH_T>(ptr - start);
     }
     
-    const QString& cmd = params[0];
-    QSTORE.SelectDB(db_);
-    
     DBG << "client " << GetID() << ", cmd " << cmd;
     
+    QSTORE.SelectDB(db_);
     FeedMonitors(params);
     
     const QCommandInfo* info = QCommandTable::GetCommandInfo(cmd);
-    
+
     if (!info)
     {
         ReplyError(QError_unknowCmd, &reply_);
@@ -166,6 +159,7 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
         return static_cast<BODY_LENGTH_T>(ptr - start);
     }
 
+    // check transaction
     if (IsFlagOn(ClientFlag_multi))
     {
         if (cmd != "multi" &&
@@ -194,6 +188,7 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
         }
     }
     
+    // check readonly slave and execute command
     QError err = QError_ok;
     if (QREPL.GetMasterState() != QReplState_none &&
         !IsFlagOn(ClientFlag_master) &&
@@ -210,10 +205,7 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
         QSlowLog::Instance().EndAndStat(params);
     }
     
-    if (!reply_.IsEmpty())
-    {
-        SendPacket(reply_);
-    }
+    SendPacket(reply_);
     
     if (err == QError_ok && (info->attr & QAttr_write))
     {
@@ -260,7 +252,6 @@ void QClient::_Reset()
     reply_.Clear();
 }
 
-// multi
 bool QClient::Watch(int dbno, const QString& key)
 {
     INF << "Watch " << key.c_str() << ", db no = " << dbno;

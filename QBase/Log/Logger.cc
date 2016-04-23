@@ -587,7 +587,6 @@ LogManager::~LogManager()
 {
     for (auto log : logs_)
     {
-        int i = 0;
         while (log->Update())
         {
             (void)log;
@@ -655,6 +654,6 @@ void  LogManager::LogThread::Run()
     while (IsAlive())
     {
         if (!LogManager::Instance().Update())
-            std::this_thread::sleep_for(std::chrono::microseconds(500));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 }

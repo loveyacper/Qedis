@@ -546,5 +546,98 @@ QError  sscan(const std::vector<QString>& params, UnboundedBuffer* reply)
     
     return   QError_ok;
 }
+    
+QError sort(const std::vector<QString>& params, UnboundedBuffer* reply)
+{
+    // sort key desc/asc alpha
+    QObject* value;
+    QError err = QSTORE.GetValue(params[1], value);
+    if (err != QError_ok)
+    {
+        ReplyError(err, reply);
+        return err;
+    }
+    
+    if (value->type != QType_list &&
+        value->type != QType_set &&
+        value->type != QType_sortedSet)
+    {
+        ReplyError(QError_type, reply);
+        return QError_type;
+    }
+    
+    bool asc = true;
+    bool alpha = false;
+    for (const auto& arg : params)
+    {
+        if (strncasecmp(arg.data(), "desc", 4) == 0)
+            asc = false;
+        else if (strncasecmp(arg.data(), "alpha", 5) == 0)
+            alpha = true;
+    }
+    
+    std::vector<const QString* > values;
+
+    switch (value->type)
+    {
+        case QType_list:
+        {
+            PLIST l = value->CastList();
+            std::for_each(l->begin(), l->end(), [&](const QString& v) {
+                values.push_back(&v);
+            });
+        }
+            break;
+            
+        case QType_set:
+        {
+            PSET s = value->CastSet();
+            std::for_each(s->begin(), s->end(), [&](const QString& v) {
+                values.push_back(&v);
+            });
+        }
+            break;
+            
+        case QType_sortedSet:
+        {
+            // TODO
+        }
+            break;
+            
+        default:
+            break;
+    }
+
+    std::sort(values.begin(), values.end(), [=](const QString* a, const QString* b)->bool {
+        if (!alpha)
+        {
+            long avalue = 0, bvalue = 0;
+            TryStr2Long(a->data(), a->size(), avalue);
+            TryStr2Long(b->data(), b->size(), bvalue);
+            
+            if (asc)
+                return avalue < bvalue;
+            else
+                return bvalue < avalue;
+        }
+        else
+        {
+            if (asc)
+                return std::lexicographical_compare(a->begin(), a->end(),
+                                                    b->begin(), b->end());
+            else
+                return std::lexicographical_compare(b->begin(), b->end(),
+                                                    a->begin(), a->end());
+        }
+    });
+    
+    PreFormatMultiBulk(values.size(), reply);
+    for (const auto v : values)
+    {
+        FormatBulk(*v, reply);
+    }
+    
+    return QError_ok;
+}
 
 }

@@ -54,18 +54,22 @@ QParseResult QProtoParser::_ParseMulti(const char*& ptr, const char* end, int& r
 
 QParseResult QProtoParser::_ParseStrlist(const char*& ptr, const char* end, std::vector<QString>& results)
 {
-    if (multi_ == static_cast<int>(results.size()))
-        return QParseResult::ok;
-
-    QString res;
-    auto parseRet = _ParseStr(ptr, end, res);
-    if (parseRet == QParseResult::ok)
+    while (static_cast<int>(results.size()) < multi_)
     {
-        results.emplace_back(std::move(res));
-        return _ParseStrlist(ptr, end, results);
+        QString res;
+        auto parseRet = _ParseStr(ptr, end, res);
+
+        if (parseRet == QParseResult::ok)
+        {
+            results.emplace_back(std::move(res));
+        }
+        else
+        {
+            return parseRet;
+        }
     }
 
-    return parseRet;
+    return QParseResult::ok;
 }
 
 QParseResult QProtoParser::_ParseStr(const char*& ptr, const char* end, QString& result)

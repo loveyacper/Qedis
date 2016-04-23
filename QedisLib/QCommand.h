@@ -36,6 +36,7 @@ QCommandHandler  randomkey;
 QCommandHandler  rename;
 QCommandHandler  renamenx;
 QCommandHandler  scan;
+QCommandHandler  sort;
 
 // server commands
 QCommandHandler  select;
