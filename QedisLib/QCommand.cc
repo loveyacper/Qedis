@@ -83,6 +83,7 @@ const QCommandInfo QCommandTable::s_info[] =
     {"lrange",      QAttr_read,                4,  &lrange},
     {"linsert",     QAttr_write,               5,  &linsert},
     {"lrem",        QAttr_write,               4,  &lrem},
+    {"ldel",        QAttr_write,               3,  &ldel},
     {"rpoplpush",   QAttr_write,               3,  &rpoplpush},
     {"blpop",       QAttr_write,              -3,  &blpop},
     {"brpop",       QAttr_write,              -3,  &brpop},

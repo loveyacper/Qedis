@@ -138,11 +138,28 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
 
     const auto& params = parser_.GetParams();
     const QString& cmd = params[0];
-    if (!auth_ && strncasecmp(cmd.data(), "auth", 4) != 0)
+    if (!auth_)
     {
-        ReplyError(QError_needAuth, &reply_);
-        SendPacket(reply_);
-        return static_cast<BODY_LENGTH_T>(ptr - start);
+        if (strncasecmp(cmd.data(), "auth", 4) == 0)
+        {
+            auto now = ::time(nullptr);
+            if (now <= lastauth_ + 1)
+            {
+                // avoid guess password.
+                OnError();
+                return 0;
+            }
+            else
+            {
+                lastauth_ = now;
+            }
+        }
+        else
+        {
+            ReplyError(QError_needAuth, &reply_);
+            SendPacket(reply_);
+            return static_cast<BODY_LENGTH_T>(ptr - start);
+        }
     }
     
     DBG << "client " << GetID() << ", cmd " << cmd;

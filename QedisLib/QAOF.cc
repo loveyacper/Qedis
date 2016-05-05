@@ -166,7 +166,7 @@ void  QAOFThreadController::AOFThread::Run()
     
     while (IsAlive())
     {
-        // sync immediately, the redis sync policy is redundant
+        // sync immediately, the redis sync policy is useless
         if (Flush())
             file_.Sync();
         else
@@ -229,11 +229,14 @@ static void RewriteProcess()
     }
 }
 
-QError bgrewriteaof(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError bgrewriteaof(const std::vector<QString>& , UnboundedBuffer* reply)
 {
     if (g_rewritePid != -1)
     {
-        ReplyError(QError_exist, reply);
+        FormatBulk("-ERR aof already in progress",
+                   sizeof "-ERR aof already in progress" - 1,
+                   reply);
+        return QError_ok;
     }
     else
     {
@@ -246,7 +249,10 @@ QError bgrewriteaof(const std::vector<QString>& params, UnboundedBuffer* reply)
                 
             case -1:
                 ERR << "fork aof process failed, errno = " << errno;
-                break;
+                FormatBulk("-ERR aof rewrite failed",
+                           sizeof "-ERR aof rewrite failed" - 1,
+                           reply);
+                return QError_ok;
                 
             default:
                 break;

@@ -42,6 +42,11 @@ public:
     
     // send thread
     bool  Send();
+    
+    const SocketAddr& GetPeerAddr() const { return peerAddr_; }
+
+protected:
+    SocketAddr  peerAddr_;
 
 private:
     bool   retry_;
@@ -49,10 +54,6 @@ private:
     int    _Send(const BufferSequence& bf);
     virtual BODY_LENGTH_T _HandlePacket(AttachedBuffer& buf) = 0;
 
-protected:
-    SocketAddr  peerAddr_;
-    
-private:
     // For human readability
     enum
     {

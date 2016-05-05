@@ -35,6 +35,9 @@ public:
 
 	friend class LogManager;
 
+    Logger(const Logger& ) = delete;
+    void operator= (const Logger& ) = delete;
+
     bool Init(unsigned int level = logDEBUG,
               unsigned int dest = logConsole,
               const char* pDir  = 0);

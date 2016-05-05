@@ -15,6 +15,9 @@ class QMulti
 public:
     static QMulti& Instance();
 
+    QMulti(const QMulti& ) = delete;
+    void operator= (const QMulti& ) = delete;
+
     void  Watch(QClient* client, int dbno, const QString& key);
     void  Multi(QClient* client);
     bool  Exec(QClient* client);

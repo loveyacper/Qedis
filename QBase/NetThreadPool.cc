@@ -236,11 +236,17 @@ bool NetThreadPool::AddSocket(PSOCKET sock, uint32_t  events)
 {
     if (events & EventTypeRead)
     {
+        if (!recvThread_)
+            return false;
+
         recvThread_->AddSocket(sock, EventTypeRead);
     }
 
     if (events & EventTypeWrite)
     {
+        if (!sendThread_)
+            return false;
+    
         sendThread_->AddSocket(sock, EventTypeWrite);
     }
 
@@ -261,22 +267,26 @@ bool NetThreadPool::StartAllThreads()
 
 void NetThreadPool::EnableRead(const std::shared_ptr<Socket>& sock)
 {
-    recvThread_->ModSocket(sock, EventTypeRead);
+    if (recvThread_)
+        recvThread_->ModSocket(sock, EventTypeRead);
 }
 
 void NetThreadPool::EnableWrite(const std::shared_ptr<Socket>& sock)
 {
-    sendThread_->ModSocket(sock, EventTypeWrite);
+    if (sendThread_)
+        sendThread_->ModSocket(sock, EventTypeWrite);
 }
    
 void NetThreadPool::DisableRead(const std::shared_ptr<Socket>& sock)
 {
-    recvThread_->ModSocket(sock, 0);
+    if (recvThread_)
+        recvThread_->ModSocket(sock, 0);
 }
 
 void NetThreadPool::DisableWrite(const std::shared_ptr<Socket>& sock)
 {
-    sendThread_->ModSocket(sock, 0);
+    if (sendThread_)
+        sendThread_->ModSocket(sock, 0);
 }
 
 }

@@ -15,6 +15,9 @@ class QPubsub
 {
 public:
     static QPubsub& Instance();
+    
+    QPubsub(const QPubsub& ) = delete;
+    void operator= (const QPubsub& ) = delete;
 
     std::size_t Subscribe(QClient* client, const QString& channel);
     std::size_t UnSubscribe(QClient* client, const QString& channel);

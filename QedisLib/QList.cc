@@ -650,52 +650,56 @@ QError  lrem(const vector<QString>& params, UnboundedBuffer* reply)
     FormatInt(resultCount, reply);
     return   QError_ok;
 }
-#if 0
-static QError  _GenericRpoplpush(const vector<QString>& params, UnboundedBuffer* reply, bool block = false)
+    
+// ldel list_key elem_index
+// the special qedis command
+QError ldel(const vector<QString>& params, UnboundedBuffer* reply)
 {
-    QObject* src;
-    
-    QError err = QSTORE.GetValueByType(params[1], src, QType_list);
+    QObject* value;
+
+    QError err = QSTORE.GetValueByType(params[1], value, QType_list);
     if (err != QError_ok)
     {
-        if (!block)
-        {
-            FormatNull(reply);
-            return err;
-        }
-        else
-        {
-            ;
-        }
+        Format0(reply);
+        return err;
     }
-    
-    QObject* dst;
-    
-    err = QSTORE.GetValueByType(params[2], dst, QType_list);
-    if (err != QError_ok)
+        
+    long idx;
+    if (!Strtol(params[2].c_str(), params[2].size(), &idx))
     {
-        if (err != QError_notExist)
-        {
-            ReplyError(err, reply);
-            return err;
-        }
-        QObject  dstObj(QType_list);
-        dstObj.value = std::make_shared<QList>();
-        dst = QSTORE.SetValue(params[2], dstObj);
+        ReplyError(QError_nan, reply);
+        return QError_nan;
+    }
+        
+    const PLIST& list = value->CastList();
+    const int size = static_cast<int>(list->size());
+    if (idx < 0)
+        idx += size;
+    
+    if (idx < 0 || idx >= size)
+    {
+        Format0(reply);
+        return QError_nop;
     }
     
-    const PLIST& srclist = src->CastList();
-    const PLIST& dstlist = dst->CastList();
+    if (2 * idx < size)
+    {
+        auto it = list->begin();
+        std::advance(it, idx);
+        list->erase(it);
+    }
+    else
+    {
+        auto it = list->rbegin();
+        idx = size - 1 - idx;
+        std::advance(it, idx);
+        list->erase((++it).base());
+    }
     
-    dstlist->splice(dstlist->begin(), *srclist, (++ srclist->rbegin()).base());
-    
-    FormatBulk(dstlist->begin()->c_str(),
-               dstlist->begin()->size(),
-               reply);
-    
-    return   QError_ok;
+    Format1(reply);
+    return QError_ok;
 }
-#endif
+
 QError  rpoplpush(const vector<QString>& params, UnboundedBuffer* reply)
 {
     QObject* src;

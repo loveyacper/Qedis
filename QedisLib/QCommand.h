@@ -95,6 +95,7 @@ QCommandHandler  ltrim;
 QCommandHandler  lrange;
 QCommandHandler  linsert;
 QCommandHandler  lrem;
+QCommandHandler  ldel;
 QCommandHandler  rpoplpush;
 QCommandHandler  blpop;
 QCommandHandler  brpop;

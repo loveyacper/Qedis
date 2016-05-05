@@ -29,6 +29,9 @@ class  QSlowLog
 {
 public:
     static QSlowLog& Instance();
+    
+    QSlowLog(const QSlowLog& ) = delete;
+    void operator= (const QSlowLog& ) = delete;
 
     void Begin();
     void EndAndStat(const std::vector<QString>& cmds);

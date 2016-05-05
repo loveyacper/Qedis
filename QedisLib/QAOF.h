@@ -18,12 +18,14 @@ class  QAOFThreadController
 public:
     static QAOFThreadController&  Instance();
     
+    QAOFThreadController(const QAOFThreadController& ) = delete;
+    void  operator= (const QAOFThreadController& ) = delete;
+
     void  Start();
-    void  SaveCommand(const std::vector<QString>& params, int db);
     void  Stop();
-    
     void  Join();
     
+    void  SaveCommand(const std::vector<QString>& params, int db);
     bool  ProcessTmpBuffer(BufferSequence& bf);
     void  SkipTmpBuffer(size_t  n);
     

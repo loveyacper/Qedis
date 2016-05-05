@@ -75,6 +75,11 @@ struct SocketAddr
     {
         return ::inet_ntoa(addr_.sin_addr);
     }
+    
+    const char* GetIP(char* buf, socklen_t size) const
+    {
+        return ::inet_ntop(AF_INET, (const char*)&addr_.sin_addr, buf, size);
+    }
 
     unsigned short  GetPort() const
     {
@@ -113,6 +118,9 @@ class Socket : public std::enable_shared_from_this<Socket>
 
 public:
     virtual ~Socket();
+    
+    Socket(const Socket& ) = delete;
+    void operator= (const Socket& ) = delete;
 
     enum SocketType
     {

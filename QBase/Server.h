@@ -15,6 +15,9 @@ protected:
     virtual bool _Init() = 0;
     
     Server();
+
+    Server(const Server& ) = delete;
+    void operator= (const Server& ) = delete;
     
 public:
     virtual ~Server();

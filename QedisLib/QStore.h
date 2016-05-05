@@ -83,7 +83,10 @@ class QStore
 public:
     static QStore& Instance();
     
-    void  Init(int dbNum = 16);
+    QStore(const QStore& ) = delete;
+    void operator= (const QStore& ) = delete;
+    
+    void Init(int dbNum = 16);
 
     int SelectDB(int dbno);
     int GetDB() const;

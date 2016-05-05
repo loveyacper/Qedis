@@ -122,6 +122,7 @@ private:
     
     // auth
     bool  auth_;
+    time_t lastauth_ = 0;
     
     static  QClient*  s_pCurrentClient;
     static  std::set<std::weak_ptr<QClient>, std::owner_less<std::weak_ptr<QClient> > > s_monitors;

@@ -15,6 +15,9 @@ class ThreadPool final
 public:
     ~ThreadPool();
     
+    ThreadPool(const ThreadPool& ) = delete;
+    void operator=(const ThreadPool& ) = delete;
+    
     static ThreadPool& Instance();
     
     template <typename F, typename... Args>

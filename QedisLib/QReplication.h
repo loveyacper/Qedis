@@ -66,6 +66,9 @@ class QReplication
 public:
     static QReplication& Instance();
     
+    QReplication(const QReplication& ) = delete;
+    void operator= (const QReplication& ) = delete;
+    
     void Cron();
     
     // master side
@@ -77,6 +80,8 @@ public:
     void OnStartBgsave();
     void OnRdbSaveDone();
     void SendToSlaves(const std::vector<QString>& params);
+    
+    const std::list<std::weak_ptr<QClient> >& GetSlaves() const { return slaves_; }
     
     // slave side
     void SaveTmpRdb(const char* data, std::size_t len);

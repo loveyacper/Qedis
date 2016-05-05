@@ -71,6 +71,11 @@ class NetThreadPool
     std::shared_ptr<SendThread> sendThread_;
 
 public:
+    NetThreadPool() = default;
+
+    NetThreadPool(const NetThreadPool& ) = delete;
+    void operator= (const NetThreadPool& ) = delete;
+
     bool AddSocket(PSOCKET , uint32_t event);
     bool StartAllThreads();
     void StopAllThreads();

@@ -76,6 +76,11 @@ class TimerManager
 public:
     ~TimerManager();
 
+    TimerManager(const TimerManager& ) = delete;
+    void operator= (const TimerManager& ) = delete;
+
+    static  TimerManager&   Instance();
+
     bool    UpdateTimers(const Time& now);
     void    ScheduleAt(Timer* pTimer, const Time& triggerTime);
     void    AddTimer(Timer* timer);
@@ -83,8 +88,6 @@ public:
     void    KillTimer(Timer* pTimer);
 
     Timer*  CreateTimer();
-
-    static  TimerManager&   Instance();
 
 private:
     TimerManager();
