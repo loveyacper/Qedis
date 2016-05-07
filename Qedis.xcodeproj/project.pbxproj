@@ -13,6 +13,7 @@
 		BA1250821A7338CD00A0532D /* AsyncBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = BA1250801A7338CD00A0532D /* AsyncBuffer.h */; };
 		BA29C44E19FB2CEE00796E3A /* QMulti.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA29C44C19FB2CEE00796E3A /* QMulti.cc */; };
 		BA29C44F19FB2CEE00796E3A /* QMulti.h in Headers */ = {isa = PBXBuildFile; fileRef = BA29C44D19FB2CEE00796E3A /* QMulti.h */; };
+		BA2C0C7B1CDC1DC800BDF050 /* Delegate.h in Headers */ = {isa = PBXBuildFile; fileRef = BA2C0C7A1CDC1DC800BDF050 /* Delegate.h */; };
 		BA3B0AD61ACBA9E1000D9399 /* QAOF.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA3B0AD41ACBA9E1000D9399 /* QAOF.cc */; };
 		BA3B0AD71ACBA9E1000D9399 /* QAOF.h in Headers */ = {isa = PBXBuildFile; fileRef = BA3B0AD51ACBA9E1000D9399 /* QAOF.h */; };
 		BA4053931BA1AE3B00B93053 /* QReplication.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA4053911BA1AE3B00B93053 /* QReplication.cc */; };
@@ -166,6 +167,7 @@
 		BA1250801A7338CD00A0532D /* AsyncBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AsyncBuffer.h; path = QBase/AsyncBuffer.h; sourceTree = "<group>"; };
 		BA29C44C19FB2CEE00796E3A /* QMulti.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QMulti.cc; path = QedisLib/QMulti.cc; sourceTree = SOURCE_ROOT; };
 		BA29C44D19FB2CEE00796E3A /* QMulti.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QMulti.h; path = QedisLib/QMulti.h; sourceTree = SOURCE_ROOT; };
+		BA2C0C7A1CDC1DC800BDF050 /* Delegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Delegate.h; path = QBase/Delegate.h; sourceTree = "<group>"; };
 		BA3B0AD41ACBA9E1000D9399 /* QAOF.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QAOF.cc; path = QedisLib/QAOF.cc; sourceTree = SOURCE_ROOT; };
 		BA3B0AD51ACBA9E1000D9399 /* QAOF.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QAOF.h; path = QedisLib/QAOF.h; sourceTree = SOURCE_ROOT; };
 		BA4053911BA1AE3B00B93053 /* QReplication.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QReplication.cc; path = QedisLib/QReplication.cc; sourceTree = SOURCE_ROOT; };
@@ -299,6 +301,7 @@
 		BAA158B219C44A0F007713F9 /* QBase */ = {
 			isa = PBXGroup;
 			children = (
+				BA2C0C7A1CDC1DC800BDF050 /* Delegate.h */,
 				BAFFCB551A92449F00C47F92 /* lzf */,
 				BA12507F1A7338CD00A0532D /* AsyncBuffer.cc */,
 				BA1250801A7338CD00A0532D /* AsyncBuffer.h */,
@@ -504,6 +507,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BAFC84BC19C44AFD00C18B22 /* TaskManager.h in Headers */,
+				BA2C0C7B1CDC1DC800BDF050 /* Delegate.h in Headers */,
 				BAFC84C519C44AFD00C18B22 /* Timer.h in Headers */,
 				BAFC84C719C44AFD00C18B22 /* UnboundedBuffer.h in Headers */,
 				BAFFCB5C1A9244B200C47F92 /* lzf.h in Headers */,

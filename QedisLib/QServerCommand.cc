@@ -11,6 +11,7 @@
 #include "QReplication.h"
 #include "QConfig.h"
 #include "QSlowLog.h"
+#include "Delegate.h"
 
 
 namespace qedis
@@ -284,90 +285,55 @@ QError  slaveof(const std::vector<QString>& params, UnboundedBuffer* reply)
     return QError_ok;
 }
 
-
-QError  info(const std::vector<QString>& params, UnboundedBuffer* reply)
+void OnServerInfoCollect(UnboundedBuffer& res)
 {
     char buf[1024];
-    int  offset = 0;
-    int  n = 0;
     
     // server
     struct utsname  name;
     uname(&name);
-    n = snprintf(buf + offset, sizeof buf - 1 - offset,
-                                "# Server\n"
-                                "qedis_mode:standalone\n" // not cluster node yet
-                                "os:%s %s %s\n"
-                                "tcp_port:%hu\n"
-                                , name.sysname, name.release, name.machine
-                                , g_config.port);
-    offset += n;
-
-    // clients
-    n = snprintf(buf + offset, sizeof buf - 1 - offset,
-                                          "# Clients\n"
-                                          "connected_clients:%lu\n"
-                                          "blocked_clients:%lu\n"
-                                          , Server::Instance()->TCPSize()
-                                          , QSTORE.BlockedSize());
-    offset += n;
+    int n = snprintf(buf, sizeof buf - 1,
+                 "# Server\n"
+                 "qedis_mode:standalone\n" // not cluster node yet
+                 "os:%s %s %s\n"
+                 "tcp_port:%hu\n"
+                 , name.sysname, name.release, name.machine
+                 , g_config.port);
     
-    {
-        bool isMaster = QREPL.GetMasterAddr().Empty();
-        auto slaves = QREPL.GetSlaves();
+    if (!res.IsEmpty())
+        res.PushData("\n", 1);
 
-        const char* slaveState[] = { "none",
-            "wait_bgsave",
-            "wait_bgsave",
-            //"send_bulk", // qedis does not have send bulk state
-            "online",
-            
-        };
-        
-        char slaveList[512] = {};
-        int index = 0;
-        int tmpOff = 0;
-        for (const auto& c : slaves)
-        {
-            auto cli = c.lock();
-            if (cli)
-            {
-                if (tmpOff + 1 >= sizeof slaveList)
-                    break;
-                auto n = snprintf(slaveList + tmpOff, sizeof slaveList - 1 - tmpOff,
-                                  "slave%d:", index++);
-                tmpOff += n;
+    res.PushData(buf, n);
+}
+    
+    
+void OnClientInfoCollect(UnboundedBuffer& res)
+{
+    char buf[1024];
 
-                if (tmpOff + 1 >= sizeof slaveList)
-                    break;
-                cli->GetPeerAddr().GetIP(slaveList + tmpOff,
-                                         (socklen_t)(sizeof slaveList - 1 - tmpOff));
-                while (slaveList[tmpOff] != '\0')
-                    tmpOff ++;
-                
-                if (tmpOff + 1 >= sizeof slaveList)
-                    break;
-                auto state = cli->GetSlaveInfo() ? cli->GetSlaveInfo()->state : 0;
-                n = snprintf(slaveList + tmpOff, sizeof slaveList - 1 - tmpOff,
-                             ",%hu,%s\n",
-                             cli->GetPeerAddr().GetPort(),
-                             slaveState[state]);
-                tmpOff += n;
-            }
-        }
-        
-        n = snprintf(buf + offset, sizeof buf - 1 - offset,
-                     "# Replication\n"
-                     "role:%s\n"
-                     "connected_slaves:%d\n%.*s"
-                     , isMaster ? "master" : "slave"
-                     , index
-                     , tmpOff, slaveList);
-        offset += n;
-    }
+    int n = snprintf(buf, sizeof buf - 1,
+                 "# Clients\n"
+                 "connected_clients:%lu\n"
+                 "blocked_clients:%lu\n"
+                 , Server::Instance()->TCPSize()
+                 , QSTORE.BlockedSize());
+    
+    
+    if (!res.IsEmpty())
+        res.PushData("\n", 1);
 
-    FormatSingle(buf, offset, reply);
-    return   QError_ok;
+    res.PushData(buf, n);
+}
+
+QError info(const std::vector<QString>& params, UnboundedBuffer* reply)
+{
+    UnboundedBuffer res;
+
+    extern Delegate<void (UnboundedBuffer& )> g_infoCollector;
+    g_infoCollector(res);
+    
+    FormatSingle(res.ReadAddr(), res.ReadableSize(), reply);
+    return QError_ok;
 }
 
 

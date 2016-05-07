@@ -4,8 +4,9 @@ __thread bool ThreadPool::working_ = true;
 
 ThreadPool::ThreadPool() : waiters_(0), shutdown_(false)
 {
-    maxIdleThread_ = std::max(1U, std::thread::hardware_concurrency());
     monitor_ = std::thread([this]() { this->_MonitorRoutine(); } );
+    maxIdleThread_ = std::max(1U, std::thread::hardware_concurrency());
+    pendingStopSignal_ = 0;
 }
 
 ThreadPool::~ThreadPool()
@@ -81,6 +82,9 @@ void   ThreadPool::_WorkerRoutine()
         
         task();
     }
+    
+    // if reach here, this thread is recycled by monitor thread
+    -- pendingStopSignal_;
 }
 
 void   ThreadPool::_MonitorRoutine()
@@ -94,10 +98,15 @@ void   ThreadPool::_MonitorRoutine()
             return;
         
         auto nw = waiters_;
+
+        // if there is any pending stop signal to consume waiters
+        nw -= pendingStopSignal_;
+
         while (nw -- > maxIdleThread_)
         {
             tasks_.push_back([this]() { working_ = false; });
             cond_.notify_one();
+            ++ pendingStopSignal_;
         }
     }
 }

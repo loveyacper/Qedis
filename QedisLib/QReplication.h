@@ -23,8 +23,9 @@ enum QSlaveState
 struct QSlaveInfo
 {
     QSlaveState  state;
+    unsigned short listenPort; // slave listening port
     
-    QSlaveInfo() : state(QSlaveState_none)
+    QSlaveInfo() : state(QSlaveState_none), listenPort(0)
     {
     }
 };
@@ -81,8 +82,6 @@ public:
     void OnRdbSaveDone();
     void SendToSlaves(const std::vector<QString>& params);
     
-    const std::list<std::weak_ptr<QClient> >& GetSlaves() const { return slaves_; }
-    
     // slave side
     void SaveTmpRdb(const char* data, std::size_t len);
     void SetMaster(const std::shared_ptr<QClient>&  cli);
@@ -93,6 +92,9 @@ public:
     SocketAddr GetMasterAddr() const;
     std::size_t GetRdbSize() const;
     
+    // info command
+    void OnInfoCommand(UnboundedBuffer& res);
+
 private:
     QReplication();
     void _OnStartBgsave(bool succ);

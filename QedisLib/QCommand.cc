@@ -1,4 +1,5 @@
 #include "QCommand.h"
+#include "QReplication.h"
 
 using std::size_t;
 
@@ -158,8 +159,10 @@ const QCommandInfo QCommandTable::s_info[] =
     {"sync",        QAttr_read,                1,  &sync},
     {"psync",       QAttr_read,                1,  &sync},
     {"slaveof",     QAttr_read,                3,  &slaveof},
+    {"replconf",    QAttr_read,               -3,  &replconf},
 };
-
+    
+Delegate<void (UnboundedBuffer& )> g_infoCollector;
 
 std::map<QString, const QCommandInfo*, NocaseComp>  QCommandTable::s_handlers;
 
@@ -174,6 +177,10 @@ void QCommandTable::Init()
     {
         s_handlers[info.cmd] = &info;
     }
+    
+    g_infoCollector += OnServerInfoCollect;
+    g_infoCollector += OnClientInfoCollect;
+    g_infoCollector += std::bind(&QReplication::OnInfoCommand, &QREPL, std::placeholders::_1);
 }
 
 const QCommandInfo* QCommandTable::GetCommandInfo(const QString& cmd)

@@ -35,6 +35,7 @@ private:
     
     std::thread      monitor_;
     std::atomic<unsigned> maxIdleThread_;
+    std::atomic<unsigned> pendingStopSignal_;
     
     static __thread   bool      working_;
     std::deque<std::thread>     workers_;

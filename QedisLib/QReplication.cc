@@ -315,4 +315,109 @@ std::size_t QReplication::GetRdbSize() const
     return masterInfo_.rdbSize;
 }
 
+    
+QError replconf(const std::vector<QString>& params, UnboundedBuffer* reply)
+{
+    if (params.size() % 2 == 0)
+    {
+        ReplyError(QError_syntax, reply);
+        return QError_syntax;
+    }
+    
+    for (size_t i = 1; i < params.size(); i += 2)
+    {
+        if (strncasecmp(params[i].c_str(), "listening-port", 14) == 0)
+        {
+            long port;
+            if (!TryStr2Long(params[i + 1].c_str(), params[i + 1].size(), port))
+            {
+                ReplyError(QError_param, reply);
+                return QError_param;
+            }
+        
+            auto info = QClient::Current()->GetSlaveInfo();
+            if (!info)
+            {
+                QClient::Current()->SetSlaveInfo();
+                info = QClient::Current()->GetSlaveInfo();
+                QREPL.AddSlave(QClient::Current());
+            }
+            info->listenPort = static_cast<unsigned short>(port);
+        }
+        else
+        {
+            if (reply)
+            {
+                reply->PushData("-ERR:Unrecognized REPLCONF option:",
+                                sizeof "-ERR:Unrecognized REPLCONF option:" - 1);
+                reply->PushData(params[i].data(), params[i].size());
+            }
+            
+            return QError_syntax;
+        }
+    }
+    
+    FormatOK(reply);
+    return QError_ok;
+}
+    
+    
+void QReplication::OnInfoCommand(UnboundedBuffer& res)
+{
+    const char* slaveState[] = { "none",
+        "wait_bgsave",
+        "wait_bgsave",
+        //"send_bulk", // qedis does not have send bulk state
+        "online",
+        
+    };
+    
+    char slaveList[512] = {};
+    int index = 0;
+    int tmpOff = 0;
+    for (const auto& c : slaves_)
+    {
+        auto cli = c.lock();
+        if (cli)
+        {
+            if (tmpOff + 1 >= sizeof slaveList)
+                break;
+            auto n = snprintf(slaveList + tmpOff, sizeof slaveList - 1 - tmpOff,
+                              "slave%d:", index++);
+            tmpOff += n;
+            
+            if (tmpOff + 1 >= sizeof slaveList)
+                break;
+            cli->GetPeerAddr().GetIP(slaveList + tmpOff,
+                                     (socklen_t)(sizeof slaveList - 1 - tmpOff));
+            while (slaveList[tmpOff] != '\0')
+                tmpOff ++;
+            
+            if (tmpOff + 1 >= sizeof slaveList)
+                break;
+            auto state = cli->GetSlaveInfo() ? cli->GetSlaveInfo()->state : 0;
+            n = snprintf(slaveList + tmpOff, sizeof slaveList - 1 - tmpOff,
+                         ",%hu,%s\n",
+                         cli->GetPeerAddr().GetPort(),
+                         slaveState[state]);
+            tmpOff += n;
+        }
+    }
+    
+    char buf[2048] = {};
+    bool isMaster = GetMasterAddr().Empty();
+    int n = snprintf(buf, sizeof buf - 1,
+                 "# Replication\n"
+                 "role:%s\n"
+                 "connected_slaves:%d\n%.*s"
+                 , isMaster ? "master" : "slave"
+                 , index
+                 , tmpOff, slaveList);
+    
+    if (!res.IsEmpty())
+        res.PushData("\n", 1);
+
+    res.PushData(buf, n);
+}
+
 }

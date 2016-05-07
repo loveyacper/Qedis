@@ -5,6 +5,7 @@
 #include <map>
 #include "QCommon.h"
 #include "QString.h"
+#include "Delegate.h"
 
 namespace qedis
 {
@@ -169,6 +170,11 @@ QCommandHandler  discard;
 // replication
 QCommandHandler  sync;
 QCommandHandler  slaveof;
+QCommandHandler  replconf;
+
+extern Delegate<void (UnboundedBuffer& )> g_infoCollector;
+extern void OnServerInfoCollect(UnboundedBuffer& );
+extern void OnClientInfoCollect(UnboundedBuffer& );
 
 struct QCommandInfo
 {
