@@ -50,6 +50,9 @@ struct QConfig
     unsigned short masterPort;  // replication
     
     QString   includefile;      // the template config
+
+    // TODO fix config parser to accept repeat keys
+    QString   modules; // modules, seperated by space
     
     QConfig();
 

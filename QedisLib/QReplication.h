@@ -44,6 +44,7 @@ struct QMasterInfo
 {
     SocketAddr  addr;
     QReplState  state;
+    time_t downSince;
     
     // For recv rdb
     std::size_t rdbSize;
@@ -52,6 +53,7 @@ struct QMasterInfo
     QMasterInfo()
     {
         state   = QReplState_none;
+        downSince = 0;
         rdbSize = std::size_t(-1);
         rdbRecved = 0;
     }

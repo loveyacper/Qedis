@@ -24,6 +24,11 @@
 			<key>orderHint</key>
 			<integer>4</integer>
 		</dict>
+		<key>qedismodule.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>1</integer>
+		</dict>
 		<key>qunittest.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
@@ -32,6 +37,11 @@
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
+		<key>BA4CD2181CEB54F000F68F67</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
 		<key>BA90D86E19E79E6700B8E1F0</key>
 		<dict>
 			<key>primary</key>

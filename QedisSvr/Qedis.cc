@@ -22,6 +22,7 @@
 #include "QAOF.h"
 #include "QConfig.h"
 #include "QSlowLog.h"
+#include "QModule.h"
 
 #include "Qedis.h"
 
@@ -280,6 +281,36 @@ bool Qedis::_Init()
                             g_config.masterPort);
     }
     
+    // load so modules
+    if (!g_config.modules.empty())
+    {
+        std::vector<QString>  modules(SplitString(g_config.modules, ' '));
+        for (const auto& mod: modules)
+        {
+            try
+            {
+                MODULES.Load(mod.c_str());
+                std::cerr << "Load " << mod << " successful\n";
+            }
+            catch (const ModuleNoLoad& e)
+            {
+                std::cerr << "Load " << mod << " failed\n";
+            }
+            catch (const ModuleExist& e)
+            {
+                std::cerr << "Load " << mod << " failed because exist\n";
+            }
+            catch (const std::runtime_error& e)
+            {
+                std::cerr << "Load " << mod << " failed because runtime error\n";
+            }
+            catch (...)
+            {
+                std::cerr << "Load " << mod << " failed, unknown exception\n";
+            }
+        }
+    }
+
     return  true;
 }
 

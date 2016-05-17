@@ -650,55 +650,6 @@ QError  lrem(const vector<QString>& params, UnboundedBuffer* reply)
     FormatInt(resultCount, reply);
     return   QError_ok;
 }
-    
-// ldel list_key elem_index
-// the special qedis command
-QError ldel(const vector<QString>& params, UnboundedBuffer* reply)
-{
-    QObject* value;
-
-    QError err = QSTORE.GetValueByType(params[1], value, QType_list);
-    if (err != QError_ok)
-    {
-        Format0(reply);
-        return err;
-    }
-        
-    long idx;
-    if (!Strtol(params[2].c_str(), params[2].size(), &idx))
-    {
-        ReplyError(QError_nan, reply);
-        return QError_nan;
-    }
-        
-    const PLIST& list = value->CastList();
-    const int size = static_cast<int>(list->size());
-    if (idx < 0)
-        idx += size;
-    
-    if (idx < 0 || idx >= size)
-    {
-        Format0(reply);
-        return QError_nop;
-    }
-    
-    if (2 * idx < size)
-    {
-        auto it = list->begin();
-        std::advance(it, idx);
-        list->erase(it);
-    }
-    else
-    {
-        auto it = list->rbegin();
-        idx = size - 1 - idx;
-        std::advance(it, idx);
-        list->erase((++it).base());
-    }
-    
-    Format1(reply);
-    return QError_ok;
-}
 
 QError  rpoplpush(const vector<QString>& params, UnboundedBuffer* reply)
 {
@@ -732,9 +683,7 @@ QError  rpoplpush(const vector<QString>& params, UnboundedBuffer* reply)
     const PLIST& dstlist = dst->CastList();
     dstlist->splice(dstlist->begin(), *srclist, (++ srclist->rbegin()).base());
     
-    FormatBulk(dstlist->begin()->c_str(),
-               dstlist->begin()->size(),
-               reply);
+    FormatBulk(*(dstlist->begin()), reply);
     
     return   QError_ok;
 }

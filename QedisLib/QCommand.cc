@@ -84,7 +84,6 @@ const QCommandInfo QCommandTable::s_info[] =
     {"lrange",      QAttr_read,                4,  &lrange},
     {"linsert",     QAttr_write,               5,  &linsert},
     {"lrem",        QAttr_write,               4,  &lrem},
-    {"ldel",        QAttr_write,               3,  &ldel},
     {"rpoplpush",   QAttr_write,               3,  &rpoplpush},
     {"blpop",       QAttr_write,              -3,  &blpop},
     {"brpop",       QAttr_write,              -3,  &brpop},
@@ -160,6 +159,9 @@ const QCommandInfo QCommandTable::s_info[] =
     {"psync",       QAttr_read,                1,  &sync},
     {"slaveof",     QAttr_read,                3,  &slaveof},
     {"replconf",    QAttr_read,               -3,  &replconf},
+
+    // modules
+    {"module",      QAttr_read,               -2,  &module},
 };
     
 Delegate<void (UnboundedBuffer& )> g_infoCollector;

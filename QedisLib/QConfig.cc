@@ -149,6 +149,9 @@ bool  LoadQedisConfig(const char* cfgFile, QConfig& cfg)
         cfg.masterIp   = std::move(master[0]);
         cfg.masterPort = static_cast<unsigned short>(std::stoi(master[1]));
     }
+
+    // load modules' names
+    cfg.modules = parser.GetData<QString>("loadmodule");
     
     cfg.includefile = parser.GetData<QString>("include"); //TODO multi files include
     

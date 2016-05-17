@@ -20,6 +20,16 @@
 		BA4053941BA1AE3B00B93053 /* QReplication.h in Headers */ = {isa = PBXBuildFile; fileRef = BA4053921BA1AE3B00B93053 /* QReplication.h */; };
 		BA47763D1AB0773F00EDBB5D /* redisIntset.c in Sources */ = {isa = PBXBuildFile; fileRef = BA47763B1AB0773F00EDBB5D /* redisIntset.c */; };
 		BA47763E1AB0773F00EDBB5D /* redisIntset.h in Headers */ = {isa = PBXBuildFile; fileRef = BA47763C1AB0773F00EDBB5D /* redisIntset.h */; };
+		BA4CD2261CEB54FF00F68F67 /* QHashModule.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA4CD21E1CEB54FF00F68F67 /* QHashModule.cc */; };
+		BA4CD2271CEB54FF00F68F67 /* QHashModule.h in Headers */ = {isa = PBXBuildFile; fileRef = BA4CD21F1CEB54FF00F68F67 /* QHashModule.h */; };
+		BA4CD2281CEB54FF00F68F67 /* QListModule.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA4CD2201CEB54FF00F68F67 /* QListModule.cc */; };
+		BA4CD2291CEB54FF00F68F67 /* QListModule.h in Headers */ = {isa = PBXBuildFile; fileRef = BA4CD2211CEB54FF00F68F67 /* QListModule.h */; };
+		BA4CD22A1CEB54FF00F68F67 /* QModuleInit.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA4CD2221CEB54FF00F68F67 /* QModuleInit.cc */; };
+		BA4CD22B1CEB54FF00F68F67 /* QModuleInit.h in Headers */ = {isa = PBXBuildFile; fileRef = BA4CD2231CEB54FF00F68F67 /* QModuleInit.h */; };
+		BA4CD22C1CEB54FF00F68F67 /* QSetModule.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA4CD2241CEB54FF00F68F67 /* QSetModule.cc */; };
+		BA4CD22D1CEB54FF00F68F67 /* QSetModule.h in Headers */ = {isa = PBXBuildFile; fileRef = BA4CD2251CEB54FF00F68F67 /* QSetModule.h */; };
+		BA4CD2321CEB61E100F68F67 /* QModule.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA4CD2301CEB61E100F68F67 /* QModule.cc */; };
+		BA4CD2331CEB61E100F68F67 /* QModule.h in Headers */ = {isa = PBXBuildFile; fileRef = BA4CD2311CEB61E100F68F67 /* QModule.h */; };
 		BA6C336C19EA77B200AC1800 /* QGlobRegex.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA6C336A19EA77B200AC1800 /* QGlobRegex.cc */; };
 		BA6C336D19EA77B200AC1800 /* QGlobRegex.h in Headers */ = {isa = PBXBuildFile; fileRef = BA6C336B19EA77B200AC1800 /* QGlobRegex.h */; };
 		BA6C336F19EA77C100AC1800 /* QGlobRegex_unittest.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA6C336E19EA77C100AC1800 /* QGlobRegex_unittest.cc */; };
@@ -101,6 +111,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		BA4CD22E1CEB55B400F68F67 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BABEBECD19C4474900010636 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BAD0C5D819E79FF7005B3784;
+			remoteInfo = qedislib;
+		};
 		BAD0C5DD19E7A002005B3784 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = BABEBECD19C4474900010636 /* Project object */;
@@ -174,6 +191,18 @@
 		BA4053921BA1AE3B00B93053 /* QReplication.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QReplication.h; path = QedisLib/QReplication.h; sourceTree = SOURCE_ROOT; };
 		BA47763B1AB0773F00EDBB5D /* redisIntset.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = redisIntset.c; path = QedisLib/redisIntset.c; sourceTree = SOURCE_ROOT; };
 		BA47763C1AB0773F00EDBB5D /* redisIntset.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = redisIntset.h; path = QedisLib/redisIntset.h; sourceTree = SOURCE_ROOT; };
+		BA4CD2191CEB54F000F68F67 /* libqedismodule.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libqedismodule.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		BA4CD21D1CEB54FF00F68F67 /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = CMakeLists.txt; path = Modules/CMakeLists.txt; sourceTree = "<group>"; };
+		BA4CD21E1CEB54FF00F68F67 /* QHashModule.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QHashModule.cc; path = Modules/QHashModule.cc; sourceTree = "<group>"; };
+		BA4CD21F1CEB54FF00F68F67 /* QHashModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QHashModule.h; path = Modules/QHashModule.h; sourceTree = "<group>"; };
+		BA4CD2201CEB54FF00F68F67 /* QListModule.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QListModule.cc; path = Modules/QListModule.cc; sourceTree = "<group>"; };
+		BA4CD2211CEB54FF00F68F67 /* QListModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QListModule.h; path = Modules/QListModule.h; sourceTree = "<group>"; };
+		BA4CD2221CEB54FF00F68F67 /* QModuleInit.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QModuleInit.cc; path = Modules/QModuleInit.cc; sourceTree = "<group>"; };
+		BA4CD2231CEB54FF00F68F67 /* QModuleInit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QModuleInit.h; path = Modules/QModuleInit.h; sourceTree = "<group>"; };
+		BA4CD2241CEB54FF00F68F67 /* QSetModule.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QSetModule.cc; path = Modules/QSetModule.cc; sourceTree = "<group>"; };
+		BA4CD2251CEB54FF00F68F67 /* QSetModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QSetModule.h; path = Modules/QSetModule.h; sourceTree = "<group>"; };
+		BA4CD2301CEB61E100F68F67 /* QModule.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QModule.cc; path = QedisLib/QModule.cc; sourceTree = SOURCE_ROOT; };
+		BA4CD2311CEB61E100F68F67 /* QModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QModule.h; path = QedisLib/QModule.h; sourceTree = SOURCE_ROOT; };
 		BA6C336A19EA77B200AC1800 /* QGlobRegex.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QGlobRegex.cc; path = QedisLib/QGlobRegex.cc; sourceTree = SOURCE_ROOT; };
 		BA6C336B19EA77B200AC1800 /* QGlobRegex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QGlobRegex.h; path = QedisLib/QGlobRegex.h; sourceTree = SOURCE_ROOT; };
 		BA6C336E19EA77C100AC1800 /* QGlobRegex_unittest.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QGlobRegex_unittest.cc; sourceTree = "<group>"; };
@@ -264,6 +293,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		BA4CD2161CEB54F000F68F67 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		BABEBED219C4474900010636 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -298,6 +334,22 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		BA4CD2141CEB54BC00F68F67 /* Modules */ = {
+			isa = PBXGroup;
+			children = (
+				BA4CD21D1CEB54FF00F68F67 /* CMakeLists.txt */,
+				BA4CD21E1CEB54FF00F68F67 /* QHashModule.cc */,
+				BA4CD21F1CEB54FF00F68F67 /* QHashModule.h */,
+				BA4CD2201CEB54FF00F68F67 /* QListModule.cc */,
+				BA4CD2211CEB54FF00F68F67 /* QListModule.h */,
+				BA4CD2221CEB54FF00F68F67 /* QModuleInit.cc */,
+				BA4CD2231CEB54FF00F68F67 /* QModuleInit.h */,
+				BA4CD2241CEB54FF00F68F67 /* QSetModule.cc */,
+				BA4CD2251CEB54FF00F68F67 /* QSetModule.h */,
+			);
+			name = Modules;
+			sourceTree = "<group>";
+		};
 		BAA158B219C44A0F007713F9 /* QBase */ = {
 			isa = PBXGroup;
 			children = (
@@ -346,6 +398,7 @@
 				BAD0C61819E7A059005B3784 /* QedisSvr */,
 				BAA158B219C44A0F007713F9 /* QBase */,
 				BABEBED719C4474900010636 /* QedisLib */,
+				BA4CD2141CEB54BC00F68F67 /* Modules */,
 				BADC7D7219D6BC700036858E /* UnitTest */,
 				BABEBED619C4474900010636 /* Products */,
 			);
@@ -358,6 +411,7 @@
 				BAFC83FE19C44AE800C18B22 /* libqbaselib.a */,
 				BADC7D7119D6BC700036858E /* UnitTest */,
 				BAD0C5D919E79FF7005B3784 /* libqedislib.a */,
+				BA4CD2191CEB54F000F68F67 /* libqedismodule.dylib */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -365,6 +419,8 @@
 		BABEBED719C4474900010636 /* QedisLib */ = {
 			isa = PBXGroup;
 			children = (
+				BA4CD2301CEB61E100F68F67 /* QModule.cc */,
+				BA4CD2311CEB61E100F68F67 /* QModule.h */,
 				BADD49B31CCA68BA0093257E /* QProtoParser.cc */,
 				BADD49B41CCA68BA0093257E /* QProtoParser.h */,
 				BA4053911BA1AE3B00B93053 /* QReplication.cc */,
@@ -474,6 +530,17 @@
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
+		BA4CD2171CEB54F000F68F67 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BA4CD2291CEB54FF00F68F67 /* QListModule.h in Headers */,
+				BA4CD22D1CEB54FF00F68F67 /* QSetModule.h in Headers */,
+				BA4CD2271CEB54FF00F68F67 /* QHashModule.h in Headers */,
+				BA4CD22B1CEB54FF00F68F67 /* QModuleInit.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		BAD0C5D719E79FF7005B3784 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
@@ -496,6 +563,7 @@
 				BA98F8421B1B539600ABCBD9 /* QSlowLog.h in Headers */,
 				BA4053941BA1AE3B00B93053 /* QReplication.h in Headers */,
 				BA29C44F19FB2CEE00796E3A /* QMulti.h in Headers */,
+				BA4CD2331CEB61E100F68F67 /* QModule.h in Headers */,
 				BA98F83E1B01B16600ABCBD9 /* QConfig.h in Headers */,
 				BAD0C60019E7A02C005B3784 /* QClient.h in Headers */,
 				BA6C337119EC0D9900AC1800 /* QPubsub.h in Headers */,
@@ -533,6 +601,24 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		BA4CD2181CEB54F000F68F67 /* qedismodule */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BA4CD21A1CEB54F000F68F67 /* Build configuration list for PBXNativeTarget "qedismodule" */;
+			buildPhases = (
+				BA4CD2151CEB54F000F68F67 /* Sources */,
+				BA4CD2161CEB54F000F68F67 /* Frameworks */,
+				BA4CD2171CEB54F000F68F67 /* Headers */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				BA4CD22F1CEB55B400F68F67 /* PBXTargetDependency */,
+			);
+			name = qedismodule;
+			productName = qedismodule;
+			productReference = BA4CD2191CEB54F000F68F67 /* libqedismodule.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
 		BABEBED419C4474900010636 /* Qedis */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = BABEBEDE19C4474900010636 /* Build configuration list for PBXNativeTarget "Qedis" */;
@@ -614,6 +700,11 @@
 			attributes = {
 				LastUpgradeCheck = 0610;
 				ORGANIZATIONNAME = "Bert Young";
+				TargetAttributes = {
+					BA4CD2181CEB54F000F68F67 = {
+						CreatedOnToolsVersion = 6.1.1;
+					};
+				};
 			};
 			buildConfigurationList = BABEBED019C4474900010636 /* Build configuration list for PBXProject "Qedis" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -631,11 +722,23 @@
 				BAFC83FD19C44AE800C18B22 /* qbaselib */,
 				BADC7D7019D6BC700036858E /* UnitTest */,
 				BAD0C5D819E79FF7005B3784 /* qedislib */,
+				BA4CD2181CEB54F000F68F67 /* qedismodule */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
+		BA4CD2151CEB54F000F68F67 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BA4CD22C1CEB54FF00F68F67 /* QSetModule.cc in Sources */,
+				BA4CD22A1CEB54FF00F68F67 /* QModuleInit.cc in Sources */,
+				BA4CD2261CEB54FF00F68F67 /* QHashModule.cc in Sources */,
+				BA4CD2281CEB54FF00F68F67 /* QListModule.cc in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		BABEBED119C4474900010636 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -648,6 +751,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BA4CD2321CEB61E100F68F67 /* QModule.cc in Sources */,
 				BA47763D1AB0773F00EDBB5D /* redisIntset.c in Sources */,
 				BA98F8411B1B539600ABCBD9 /* QSlowLog.cc in Sources */,
 				BA4053931BA1AE3B00B93053 /* QReplication.cc in Sources */,
@@ -712,6 +816,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		BA4CD22F1CEB55B400F68F67 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BAD0C5D819E79FF7005B3784 /* qedislib */;
+			targetProxy = BA4CD22E1CEB55B400F68F67 /* PBXContainerItemProxy */;
+		};
 		BAD0C5DE19E7A002005B3784 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = BAFC83FD19C44AE800C18B22 /* qbaselib */;
@@ -740,6 +849,42 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		BA4CD21B1CEB54F000F68F67 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				EXECUTABLE_PREFIX = lib;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		BA4CD21C1CEB54F000F68F67 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				EXECUTABLE_PREFIX = lib;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		BABEBEDC19C4474900010636 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -919,6 +1064,14 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		BA4CD21A1CEB54F000F68F67 /* Build configuration list for PBXNativeTarget "qedismodule" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BA4CD21B1CEB54F000F68F67 /* Debug */,
+				BA4CD21C1CEB54F000F68F67 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
 		BABEBED019C4474900010636 /* Build configuration list for PBXProject "Qedis" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

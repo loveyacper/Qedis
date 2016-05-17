@@ -1,6 +1,7 @@
 
 #include <unistd.h>
 #include <iostream> // the child process use stdout for log
+#include <sstream>
 
 #include "QClient.h"
 #include "QConfig.h"
@@ -81,7 +82,7 @@ void QReplication::OnRdbSaveDone()
             
             cli->SendPacket(tmp, n);
             cli->SendPacket(data, size);
-            cli->SendPacket(buffer_.ReadAddr(), buffer_.ReadableSize());
+            cli->SendPacket(buffer_);
             
             INF << "Send to slave rdb " << size << ", buffer " << buffer_.ReadableSize();
         }
@@ -215,6 +216,7 @@ void QReplication::Cron()
                 if (!master)
                 {
                     masterInfo_.state = QReplState_none;
+                    masterInfo_.downSince = ::time(nullptr);
                     INF << "Master is down from connected to none";
                 }
                 else
@@ -372,52 +374,70 @@ void QReplication::OnInfoCommand(UnboundedBuffer& res)
         
     };
     
-    char slaveList[512] = {};
+    std::ostringstream oss;
     int index = 0;
-    int tmpOff = 0;
     for (const auto& c : slaves_)
     {
         auto cli = c.lock();
         if (cli)
         {
-            if (tmpOff + 1 >= sizeof slaveList)
-                break;
-            auto n = snprintf(slaveList + tmpOff, sizeof slaveList - 1 - tmpOff,
-                              "slave%d:", index++);
-            tmpOff += n;
+            oss << "slave" << index << ":";
+            index ++;
             
-            if (tmpOff + 1 >= sizeof slaveList)
-                break;
-            cli->GetPeerAddr().GetIP(slaveList + tmpOff,
-                                     (socklen_t)(sizeof slaveList - 1 - tmpOff));
-            while (slaveList[tmpOff] != '\0')
-                tmpOff ++;
+            char tmpIp[32] = {};
+            cli->GetPeerAddr().GetIP(tmpIp,
+                                     (socklen_t)(sizeof tmpIp));
+            oss << tmpIp;
             
-            if (tmpOff + 1 >= sizeof slaveList)
-                break;
             auto state = cli->GetSlaveInfo() ? cli->GetSlaveInfo()->state : 0;
-            n = snprintf(slaveList + tmpOff, sizeof slaveList - 1 - tmpOff,
-                         ",%hu,%s\n",
-                         cli->GetPeerAddr().GetPort(),
-                         slaveState[state]);
-            tmpOff += n;
+            oss << ","
+                << cli->GetPeerAddr().GetPort()
+                << ","
+                << slaveState[state]
+                << "\n";
         }
     }
     
+    std::string slaveInfo(oss.str());
+
     char buf[2048] = {};
     bool isMaster = GetMasterAddr().Empty();
     int n = snprintf(buf, sizeof buf - 1,
                  "# Replication\n"
                  "role:%s\n"
-                 "connected_slaves:%d\n%.*s"
+                 "connected_slaves:%d\n%s"
                  , isMaster ? "master" : "slave"
                  , index
-                 , tmpOff, slaveList);
+                 , slaveInfo.c_str());
+
+    std::ostringstream masterInfo;
+    if (!isMaster)
+    {
+        char tmpIp[32] = {};
+        masterInfo_.addr.GetIP(tmpIp, (socklen_t)(sizeof tmpIp));
+
+        masterInfo << "master_host:"
+                   << tmpIp 
+                   << "\nmaster_port:" 
+                   << masterInfo_.addr.GetPort()
+                   << "\nmaster_link_status:";
+
+        auto master = master_.lock();
+        masterInfo << (master ? "up\n" : "down\n");
+        if (!master)
+            masterInfo << "master_link_down_since_seconds:"
+                       << (::time(nullptr) - masterInfo_.downSince) << "\n";
+    }
     
     if (!res.IsEmpty())
         res.PushData("\n", 1);
 
     res.PushData(buf, n);
+
+    {
+        std::string info(masterInfo.str());
+        res.PushData(info.c_str(), info.size());
+    }
 }
 
 }

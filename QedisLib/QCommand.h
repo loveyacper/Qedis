@@ -96,7 +96,6 @@ QCommandHandler  ltrim;
 QCommandHandler  lrange;
 QCommandHandler  linsert;
 QCommandHandler  lrem;
-QCommandHandler  ldel;
 QCommandHandler  rpoplpush;
 QCommandHandler  blpop;
 QCommandHandler  brpop;
@@ -114,7 +113,7 @@ QCommandHandler  hexists;
 QCommandHandler  hkeys;
 QCommandHandler  hvals;
 QCommandHandler  hdel;
-QCommandHandler  hincrby; // if hash is not exist, create!
+QCommandHandler  hincrby;
 QCommandHandler  hincrbyfloat;
 QCommandHandler  hscan;
 QCommandHandler  hstrlen;
@@ -172,6 +171,9 @@ QCommandHandler  sync;
 QCommandHandler  slaveof;
 QCommandHandler  replconf;
 
+// modules
+QCommandHandler  module;
+
 extern Delegate<void (UnboundedBuffer& )> g_infoCollector;
 extern void OnServerInfoCollect(UnboundedBuffer& );
 extern void OnClientInfoCollect(UnboundedBuffer& );
@@ -199,9 +201,10 @@ public:
     static bool  AliasCommand(const std::map<QString, QString>& aliases);
     static bool  AliasCommand(const QString& oldKey, const QString& newKey);
 
-private:
-    static const QCommandInfo* DelCommand(const QString& cmd);
     static bool  AddCommand(const QString& cmd, const QCommandInfo* info);
+    static const QCommandInfo* DelCommand(const QString& cmd);
+
+private:
 
     static const QCommandInfo s_info[];
 

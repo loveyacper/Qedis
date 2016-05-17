@@ -26,6 +26,9 @@ struct QErrorInfo  g_errorInfo[] = {
     {sizeof "-READONLY You can't write against a read only slave.\r\n"-1, "-READONLY You can't write against a read only slave.\r\n"},
     {sizeof "-ERR operation not permitted\r\n"-1, "-ERR operation not permitted\r\n"},
     {sizeof "-ERR invalid password\r\n"-1, "-ERR invalid password\r\n"},
+    {sizeof "-ERR no such module\r\n"-1, "-ERR no such module\r\n"},
+    {sizeof "-ERR init module failed\r\n"-1, "-ERR init module failed\r\n"},
+    {sizeof "-ERR module already loaded\r\n"-1, "-ERR module already loaded\r\n"},
 };
 
 

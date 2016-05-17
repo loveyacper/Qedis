@@ -92,6 +92,9 @@ enum QError
     QError_readonlySlave = 12,
     QError_needAuth  = 13,
     QError_errAuth   = 14,
+    QError_nomodule   = 15,
+    QError_moduleinit = 16,
+    QError_modulerepeat = 17,
     QError_max,
 };
 
