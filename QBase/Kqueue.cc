@@ -44,8 +44,6 @@ bool Kqueue::AddSocket(int sock, int events, void* userPtr)
     
 bool Kqueue::DelSocket(int sock, int events)
 {
-    INF << "Delete socket " << sock << " with events " << events;
-
     struct kevent change[2];
     int cnt = 0;
 

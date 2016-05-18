@@ -35,8 +35,12 @@ static const int8_t kTypeZipList=10;
 static const int8_t kTypeIntSet =11;
 static const int8_t kTypeZSetZipList = 12;
 static const int8_t kTypeHashZipList = 13;
+static const int8_t kTypeQuickList = 14;
 
 static const int8_t kQDBVersion = 6;
+
+static const int8_t kAux        = 0xFA;
+static const int8_t kResizeDb   = 0xFB;
 static const int8_t kExpireMs   = 0xFC;
 static const int8_t kExpire     = 0xFD;
 static const int8_t kSelectDB   = 0xFE;
@@ -424,6 +428,16 @@ int  QDBLoader::Load(const char *filename)
                 DBG << "encounter EOF";
                 eof = true;
                 break;
+
+            case kAux:
+                DBG << "encounter AUX";
+                _LoadAux();
+                break;
+
+            case kResizeDb:
+                DBG << "encounter kResizeDb";
+                _LoadResizeDB();
+                break;
                 
             case kSelectDB:
             {
@@ -465,6 +479,7 @@ int  QDBLoader::Load(const char *filename)
             case kTypeZipMap:
             case kTypeZSet:
             case kTypeZSetZipList:
+            case kTypeQuickList:
             {
                 QString key = LoadKey();
                 QObject obj = LoadObject(indicator);
@@ -495,6 +510,8 @@ int  QDBLoader::Load(const char *filename)
             }
                 
             default:
+                printf("%d is unknown\n", indicator);
+                assert (false);
                 break;
         }
     }
@@ -677,7 +694,7 @@ QObject  QDBLoader::LoadObject(int8_t type)
         }
         case kTypeZipMap:
         {
-            ERR << "!!!zipmap should be replaced with ziplist";
+            assert(!!!"zipmap should be replaced with ziplist");
             break;
         }
         case kTypeZSet:
@@ -687,6 +704,10 @@ QObject  QDBLoader::LoadObject(int8_t type)
         case kTypeZSetZipList:
         {
             return _LoadZipList(kTypeZSetZipList);
+        }
+        case kTypeQuickList:
+        {
+            return _LoadQuickList();
         }
             
         default:
@@ -706,7 +727,8 @@ QString QDBLoader::_LoadGenericString()
     if (special)
     {
         QObject obj = LoadSpecialStringObject(len);
-        return  std::move(*(obj.CastString()));
+        QString str = *GetDecodedString(&obj);
+        return  std::move(str);
     }
     else
     {
@@ -928,9 +950,13 @@ struct ZipListElement
 
 QObject QDBLoader::_LoadZipList(int8_t type)
 {
-    QString str = _LoadGenericString();
-    
-    unsigned char* zlist = (unsigned char* )&str[0];
+    QString zl = _LoadGenericString();
+    return _LoadZipList(zl, type);
+}
+
+QObject QDBLoader::_LoadZipList(const QString& zl, int8_t type)
+{
+    unsigned char* zlist = (unsigned char* )&zl[0];
     unsigned       nElem = ziplistLen(zlist);
     
     std::vector<ZipListElement>  elements;
@@ -969,8 +995,11 @@ QObject QDBLoader::_LoadZipList(int8_t type)
             
             for (auto it(elements.begin()); it != elements.end(); ++ it)
             {
-                hash->insert(QHash::value_type(it->ToString(),
-                                               (++ it)->ToString()));
+                auto key = it;
+                auto value = ++ it;
+
+                hash->insert(QHash::value_type(key->ToString(),
+                                               value->ToString()));
             }
             
             return obj;
@@ -1041,5 +1070,68 @@ QObject     QDBLoader::_LoadIntset()
 
     return obj;
 }
-    
+
+QObject QDBLoader::_LoadQuickList()
+{
+    bool special = true;
+    auto nElem = LoadLength(special);
+
+    QObject  obj(CreateListObject());
+    PLIST  list(obj.CastList());
+    while (nElem -- > 0)
+    {
+        QString zl = _LoadGenericString();
+        if (zl.empty())
+            continue;
+
+        QObject l = _LoadZipList(zl, kTypeZipList);
+        PLIST tmplist(l.CastList());
+        if (!tmplist->empty())
+            list->splice(list->end(), *tmplist);
+    }
+
+    return obj;
 }
+
+void QDBLoader::_LoadAux()
+{
+    /* AUX: generic string-string fields. Use to add state to RDB
+     * which is backward compatible. Implementations of RDB loading
+     * are required to skip AUX fields they don't understand.
+     * 
+     * An AUX field is composed of two strings: key and value. */
+    QString auxkey = _LoadGenericString();
+    QString auxvalue = _LoadGenericString();
+
+    if (!auxkey.empty() && auxkey[0] == '%')
+    {
+        /* All the fields with a name staring with '%' are considered
+        * information fields and are logged at startup with a log
+        * level of NOTICE. */
+        USR << "RDB '" << auxkey << "': " << auxvalue;
+    }
+    else
+    {
+        /* We ignore fields we don't understand, as by AUX field 
+         * contract. */
+        ERR << "Unrecognized RDB AUX field: '" << auxkey << "': " << auxvalue;
+    }
+}
+
+void QDBLoader::_LoadResizeDB()
+{
+    bool special = true;
+    auto dbsize = LoadLength(special);
+    assert(!special);
+
+    auto expiresize = LoadLength(special);
+    assert(!special);
+
+    // Qedis just ignore this
+    (void)special;
+    (void)dbsize;
+    (void)expiresize;
+}
+
+}
+

@@ -12,12 +12,15 @@ using std::size_t;
 
 StreamSocket::StreamSocket()
 {
-    retry_ = false;
 }
 
 StreamSocket::~StreamSocket()
 {
-    INF << __FUNCTION__ << ": Try close tcp connection " << (localSock_ != INVALID_SOCKET ? localSock_ : -1);
+    INF << __FUNCTION__ << " peer ("
+        << peerAddr_.GetIP()
+        << ":"
+        << peerAddr_.GetPort()
+        << ")";
 }
 
 bool StreamSocket::Init(int fd)
@@ -28,9 +31,12 @@ bool StreamSocket::Init(int fd)
     Socket::GetPeerAddr(fd, peerAddr_);
     localSock_ = fd;
     SetNonBlock(localSock_);
-    USR << "Init new fd = " << localSock_
-        << ", peer addr = " << peerAddr_.GetIP()
-        << ", peer port = " << peerAddr_.GetPort();
+
+    INF << __FUNCTION__ << " peer address ("
+        << peerAddr_.GetIP()
+        << ":"
+        << peerAddr_.GetPort()
+        << "), local socket is " << fd;
     
 #if defined(__APPLE__)
     int set = 1;
@@ -45,7 +51,6 @@ int StreamSocket::Recv()
     if (recvBuf_.Capacity() == 0)
     {
         recvBuf_.InitCapacity(64 * 1024); // First recv data, allocate buffer
-        INF << "First expand recv buffer, capacity " << recvBuf_.Capacity();
     }
     
     BufferSequence  buffers;
@@ -61,9 +66,7 @@ int StreamSocket::Recv()
         return 0;
 
     if (ret > 0)
-    {
         recvBuf_.AdjustWritePtr(ret);
-    }
 
     return (0 == ret) ? EOFSOCKET : ret;
 }
@@ -123,7 +126,13 @@ bool  StreamSocket::OnReadable()
     int nBytes = StreamSocket::Recv();
     if (nBytes < 0)
     {
-        ERR << "socket " << localSock_ <<", OnReadable error, nBytes = " << nBytes << ", errno " << errno;
+        INF << __FUNCTION__ << " failed, peer address ("
+            << peerAddr_.GetIP()
+            << ":"
+            << peerAddr_.GetPort()
+            << "), local socket is "
+            << localSock_;
+        
         Internal::NetThreadPool::Instance().DisableRead(shared_from_this());
         return false;
     }
@@ -152,7 +161,13 @@ bool StreamSocket::Send()
     if (epollOut_)
     {
         Internal::NetThreadPool::Instance().EnableWrite(shared_from_this());
-        INF << __FUNCTION__ << ": epoll out = true, socket = " << localSock_;
+        INF << __FUNCTION__ << " peer address ("
+            << peerAddr_.GetIP()
+            << ":"
+            << peerAddr_.GetPort()
+            << "), local socket is "
+            << localSock_
+            << ", register write event";
     }
     
     return  nSent >= 0;
@@ -178,8 +193,14 @@ bool StreamSocket::OnWritable()
     }
 
     if (!epollOut_)
-    {  
-        INF << __FUNCTION__ << ": epoll out = false, socket = " << localSock_;
+    {
+        INF << __FUNCTION__ << " peer address ("
+            << peerAddr_.GetIP()
+            << ":"
+            << peerAddr_.GetPort()
+            << "), local socket is "
+            << localSock_
+            << ", unregister write event";
         Internal::NetThreadPool::Instance().DisableWrite(shared_from_this());
     }
 
@@ -190,10 +211,15 @@ bool StreamSocket::OnError()
 {
     if (Socket::OnError())
     {
-        ERR << "OnError stream socket " << localSock_;
+        ERR << __FUNCTION__ << " peer address ("
+            << peerAddr_.GetIP()
+            << ":"
+            << peerAddr_.GetPort()
+            << "), local socket is "
+            << localSock_;
 
-        if (retry_)
-            Server::Instance()->TCPReconnect(peerAddr_);
+        if (onDisconnect_)
+            onDisconnect_();
 
         return true;
     }

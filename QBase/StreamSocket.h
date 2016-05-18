@@ -38,7 +38,7 @@ public:
 
     bool  DoMsgParse(); // false if no msg
 
-    void  SetReconn(bool retry) { retry_ = retry; }
+    void  SetOnDisconnect(const std::function<void ()>& cb = std::function<void ()>()) { onDisconnect_ = cb; }
     
     // send thread
     bool  Send();
@@ -49,7 +49,7 @@ protected:
     SocketAddr  peerAddr_;
 
 private:
-    bool   retry_;
+    std::function<void ()> onDisconnect_;
 
     int    _Send(const BufferSequence& bf);
     virtual BODY_LENGTH_T _HandlePacket(AttachedBuffer& buf) = 0;
@@ -62,8 +62,8 @@ private:
         EOFSOCKET     = -2,
     };
 
-    Buffer   recvBuf_;
-    AsyncBuffer   sendBuf_;
+    Buffer recvBuf_;
+    AsyncBuffer sendBuf_;
 };
 
 template <int N>

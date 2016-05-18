@@ -56,7 +56,12 @@ private:
     QObject _LoadSSet();
     double  _LoadDoubleValue();
     QObject _LoadZipList(int8_t type);
+    QObject _LoadZipList(const QString& zl, int8_t type);
     QObject _LoadIntset();
+    QObject _LoadQuickList();
+
+    void    _LoadAux();
+    void    _LoadResizeDB();
     
     InputMemoryFile qdb_;
 };

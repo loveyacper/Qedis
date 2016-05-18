@@ -16,8 +16,6 @@ namespace Epoll
         if (socket < 0)
             return false;
 
-        USR << "add socket: fd " << socket << " with events " << events;
-
         epoll_event  ev;
         ev.data.ptr= ptr;
 
@@ -35,8 +33,6 @@ namespace Epoll
         if (socket < 0)
             return false;
 
-        USR << "del events socket " << socket;
-
         epoll_event dummy;
 
         return 0 == epoll_ctl(epfd, EPOLL_CTL_DEL, socket, &dummy) ;
@@ -46,8 +42,6 @@ namespace Epoll
     {
         if (socket < 0)
             return false;
-
-        USR << "mod socket: fd " << socket << ", new events " << events;
 
         epoll_event  ev;
         ev.data.ptr= ptr;

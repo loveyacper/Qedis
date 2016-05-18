@@ -24,6 +24,7 @@
 #include "QSlowLog.h"
 #include "QModule.h"
 
+#include "QedisLogo.h"
 #include "Qedis.h"
 
 const unsigned Qedis::kRunidSize = 40;
@@ -236,7 +237,6 @@ bool Qedis::_Init()
         ERR << "can not bind socket on port " << addr.GetPort();
         return false;
     }
-    std::cerr << "Now listen port " << addr.GetPort() << ", ready to accept.\n";
 
     QCommandTable::Init();
     QCommandTable::AliasCommand(g_config.aliases);
@@ -310,6 +310,11 @@ bool Qedis::_Init()
             }
         }
     }
+
+    // output logo to console
+    char logo[1024] = "";
+    snprintf(logo, sizeof logo - 1, qedisLogo, QEDIS_VERSION, static_cast<int>(sizeof(void*)) * 8, static_cast<int>(g_config.port)); 
+    std::cerr << logo;
 
     return  true;
 }
@@ -389,10 +394,6 @@ int main(int ac, char* av[])
             std::cerr << "Load config file [" << svr.GetConfigName() << "] failed!\n";
             return false;
         }
-    }
-    else
-    {
-        std::cerr << "No config file specified, using the default config.\n";
     }
     
     svr.MainLoop(qedis::g_config.daemonize);

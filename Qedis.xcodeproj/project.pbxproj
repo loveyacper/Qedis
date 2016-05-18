@@ -252,6 +252,7 @@
 		BADC7D7A19D6BC960036858E /* UnitTest.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; path = UnitTest.cc; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		BADD49B31CCA68BA0093257E /* QProtoParser.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QProtoParser.cc; path = QedisLib/QProtoParser.cc; sourceTree = SOURCE_ROOT; };
 		BADD49B41CCA68BA0093257E /* QProtoParser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QProtoParser.h; path = QedisLib/QProtoParser.h; sourceTree = SOURCE_ROOT; };
+		BAFBDDB51CECAB2400E12FBA /* QedisLogo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QedisLogo.h; path = QedisSvr/QedisLogo.h; sourceTree = "<group>"; };
 		BAFC83FE19C44AE800C18B22 /* libqbaselib.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libqbaselib.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		BAFC840219C44AFD00C18B22 /* Buffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = Buffer.h; path = QBase/Buffer.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		BAFC840419C44AFD00C18B22 /* ClientSocket.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ClientSocket.cc; path = QBase/ClientSocket.cc; sourceTree = "<group>"; };
@@ -480,6 +481,7 @@
 		BAD0C61819E7A059005B3784 /* QedisSvr */ = {
 			isa = PBXGroup;
 			children = (
+				BAFBDDB51CECAB2400E12FBA /* QedisLogo.h */,
 				BA99CC521C52852C00BB88F7 /* Qedis.h */,
 				BAD0C61C19E7A09F005B3784 /* CMakeLists.txt */,
 				BAD0C61919E7A075005B3784 /* Qedis.cc */,
@@ -1077,6 +1079,7 @@
 				BA4CD21C1CEB54F000F68F67 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		BABEBED019C4474900010636 /* Build configuration list for PBXProject "Qedis" */ = {
 			isa = XCConfigurationList;

@@ -22,7 +22,7 @@ ListenSocket::ListenSocket()
 ListenSocket::~ListenSocket()
 {
     Server::Instance()->DelListenSock(localSock_);
-    USR << "close LISTEN socket " << localSock_;
+    USR << "Close ListenSocket " << localSock_;
 }
 
 bool ListenSocket::Bind(const SocketAddr& addr)
@@ -62,7 +62,12 @@ bool ListenSocket::Bind(const SocketAddr& addr)
     if (!NetThreadPool::Instance().AddSocket(shared_from_this(), EventTypeRead))
         return false;
 
-    INF << "CREATE LISTEN socket " << localSock_ << " on port " <<  localPort_;
+    INF << "Success: listen on ("
+        << addr.GetIP()
+        << ":"
+        << addr.GetPort()
+        << ")";
+    
     return true;
 }
 
@@ -79,7 +84,7 @@ bool ListenSocket::OnReadable()
         int connfd = _Accept();
         if (connfd >= 0)
         {
-            Server::Instance()->NewConnection(connfd, false);
+            Server::Instance()->NewConnection(connfd);
         }
         else
         {

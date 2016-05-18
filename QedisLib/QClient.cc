@@ -98,6 +98,7 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
 
     const char* ptr  = start;
     
+    if (GetPeerAddr() == QREPL.GetMasterAddr())
     {
         // check slave state
         auto recved = TryRecvRdb(start, end);
@@ -137,6 +138,9 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
     };
 
     const auto& params = parser_.GetParams();
+    if (params.empty())
+        return static_cast<BODY_LENGTH_T>(ptr - start);
+
     const QString& cmd = params[0];
     if (!auth_)
     {

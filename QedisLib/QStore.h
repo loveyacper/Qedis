@@ -201,7 +201,6 @@ private:
 };
 
 #define QSTORE  QStore::Instance()
-#define QEDIS_VERSION "0.7.0"
 
 // ugly, but I don't want to write signalModifiedKey() every where
 extern std::vector<QString> g_dirtyKeys;

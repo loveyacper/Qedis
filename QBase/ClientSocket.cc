@@ -11,17 +11,12 @@
 #include "NetThreadPool.h"
 
 
-ClientSocket::ClientSocket(bool retry) :
-    retry_(retry)
+ClientSocket::ClientSocket()
 {
 }
 
 ClientSocket::~ClientSocket()
 {
-    if (localSock_ == INVALID_SOCKET)
-        ERR << "close invalid client socket key " << this;
-    else
-        INF << __FUNCTION__ << " close Client socket " <<  localSock_;
 }
 
 bool ClientSocket::Connect(const SocketAddr& dst)
@@ -44,9 +39,13 @@ bool ClientSocket::Connect(const SocketAddr& dst)
 
     if (0 == result)
     {
-        INF << "CLIENT socket " << localSock_ << ", immediately connected to port " << peerAddr_.GetPort();
+        INF << "ClientSocket immediately connected to ["
+            << peerAddr_.GetIP()
+            << ":"
+            << peerAddr_.GetPort()
+            << "]";
        
-        Server::Instance()->NewConnection(localSock_, retry_);
+        Server::Instance()->NewConnection(localSock_);
         localSock_ = INVALID_SOCKET;
         return  true;
     }
@@ -54,16 +53,27 @@ bool ClientSocket::Connect(const SocketAddr& dst)
     {
         if (EINPROGRESS == errno)
         {
-            INF << "EINPROGRESS : client socket " << localSock_ <<", connected to " << dst.GetIP() << ":" << peerAddr_.GetPort();
+            
+            INF << "EINPROGRESS: ClientSocket connected to ("
+                << peerAddr_.GetIP()
+                << ":"
+                << peerAddr_.GetPort()
+                << ")";
             
             Internal::NetThreadPool::Instance().AddSocket(shared_from_this(), EventTypeWrite);
             epollOut_ = true;
             return true;
         }
 
-        ERR << "Error client socket " << localSock_ << ", connected to " << peerAddr_.GetIP();
-        if (retry_)
-            Server::Instance()->TCPReconnect(peerAddr_);
+        ERR << "Failed: ClientSocket connected to ("
+            << peerAddr_.GetIP()
+            << ":"
+            << peerAddr_.GetPort()
+            << ")";
+
+        if (onConnectFail_)
+            onConnectFail_();
+
         return false;
     }
     
@@ -81,16 +91,21 @@ bool ClientSocket::OnWritable()
     if (!bSucc)    
     {
         errno = error;
-        ERR << "FAILED client socket " << localSock_ 
-            << ", connect to " << peerAddr_.GetPort()
-            << ", error " << error;
+        ERR << "Failed: ClientSocket connected to ("
+            << peerAddr_.GetIP()
+            << ":"
+            << peerAddr_.GetPort()
+            << "), error:" << error;
 
         return false;
     }
 
-    INF << "Success client socket " << localSock_ << ", connect to " << peerAddr_.GetPort();
+    INF << "Success: ClientSocket connected to ("
+        << peerAddr_.GetIP()
+        << ":"
+        << peerAddr_.GetPort() << ")";
 
-    Server::Instance()->NewConnection(localSock_, retry_);
+    Server::Instance()->NewConnection(localSock_, onConnectFail_);
     localSock_ = INVALID_SOCKET; 
 
     return true;
@@ -100,10 +115,13 @@ bool ClientSocket::OnError()
 {
     if (Socket::OnError())
     {
-        ERR << "OnError clientsocket " << localSock_ << ", and this " << this;
+        ERR << __FUNCTION__ << " connected to ("
+            << peerAddr_.GetIP()
+            << ":"
+            << peerAddr_.GetPort() << ")";
         
-        if (retry_)
-            Server::Instance()->TCPReconnect(peerAddr_);
+        if (onConnectFail_)
+            onConnectFail_();
 
         return  true;
     }

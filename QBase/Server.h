@@ -3,6 +3,7 @@
 #define BERT_SERVER_H
 
 #include <set>
+#include <functional>
 #include "TaskManager.h"
 
 struct SocketAddr;
@@ -24,7 +25,7 @@ public:
 
     bool  TCPBind(const SocketAddr&  listenAddr);
     void  TCPReconnect(const SocketAddr& peer);
-    void  TCPConnect(const SocketAddr& peer, bool retry = true);
+    void  TCPConnect(const SocketAddr& peer, const std::function<void()>* cb = nullptr);
 
     static Server*  Instance() {   return   sinstance_;  }
 
@@ -32,7 +33,10 @@ public:
     void Terminate()  { bTerminate_ = true; }
 
     void MainLoop(bool daemon = false);
-    void NewConnection(int sock, bool retry = false);
+    void NewConnection(int sock, const std::function<void ()>& cb = std::function<void ()>());
+
+    void TCPConnect(const SocketAddr& peer);
+    void TCPConnect(const SocketAddr& peer, const std::function<void ()>& cb);
 
     size_t  TCPSize() const  {  return  tasks_.TCPSize(); }
 
@@ -49,6 +53,7 @@ public:
 
 private:
     virtual std::shared_ptr<StreamSocket>   _OnNewConnection(int tcpsock);
+    void _TCPConnect(const SocketAddr& peer, const std::function<void()>* cb = nullptr);
 
     std::atomic<bool> bTerminate_;
     Internal::TaskManager   tasks_;

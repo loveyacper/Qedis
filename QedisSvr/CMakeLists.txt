@@ -9,5 +9,5 @@ INCLUDE_DIRECTORIES(../QBase; ../QedisLib)
 
 ADD_EXECUTABLE(qedis_server ${QEDISSERVER_SRC})
 SET(EXECUTABLE_OUTPUT_PATH  ../)
-TARGET_LINK_LIBRARIES(qedis_server qedislib; qbaselib; pthread)
+TARGET_LINK_LIBRARIES(qedis_server qedislib; qbaselib)
 ADD_DEPENDENCIES(qedis_server qbaselib; qedislib)

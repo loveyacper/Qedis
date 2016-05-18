@@ -71,19 +71,30 @@ void Server::TCPReconnect(const SocketAddr& peer)
     Timer* pTimer = TimerManager::Instance().CreateTimer();
     pTimer->Init(2 * 1000, 1);
     pTimer->SetCallback([&, peer]() {
-            USR << " : OnTimer reconnect to " << peer.GetIP() << ":" << peer.GetPort();
-            Server::Instance()->TCPConnect(peer, true);
+            USR << "OnTimer reconnect to " << peer.GetIP() << ":" << peer.GetPort();
+            Server::Instance()->TCPConnect(peer, [=]() { Server::Instance()->TCPReconnect(peer); });
             });
 
 
     TimerManager::Instance().AsyncAddTimer(pTimer);
 }
 
-void Server::TCPConnect(const SocketAddr& peer, bool retry)
+void Server::TCPConnect(const SocketAddr& peer)
 {
-    INF << __FUNCTION__ << peer.GetIP();
-    
-    std::shared_ptr<ClientSocket>  pClient(new ClientSocket(retry));
+    _TCPConnect(peer, nullptr);
+}
+
+void Server::TCPConnect(const SocketAddr& peer, const std::function<void ()>& cb)
+{
+    _TCPConnect(peer, &cb);
+}
+
+void Server::_TCPConnect(const SocketAddr& peer, const std::function<void ()>* cb)
+{
+    std::shared_ptr<ClientSocket>  pClient(new ClientSocket());
+    if (cb)
+        pClient->SetFailCallback(*cb);
+
     pClient->Connect(peer);
 }
 
@@ -144,7 +155,7 @@ std::shared_ptr<StreamSocket>   Server::_OnNewConnection(int tcpsock)
     return std::shared_ptr<StreamSocket>((StreamSocket* )0);
 }
 
-void  Server::NewConnection(int  sock, bool needReconn)
+void  Server::NewConnection(int  sock, const std::function<void ()>& cb)
 {
     if (sock == INVALID_SOCKET)
         return;
@@ -158,7 +169,7 @@ void  Server::NewConnection(int  sock, bool needReconn)
     }
 
     pNewTask->OnConnect();
-    pNewTask->SetReconn(needReconn);
+    pNewTask->SetOnDisconnect(cb);
 
     if (NetThreadPool::Instance().AddSocket(pNewTask, EventTypeRead | EventTypeWrite))
         tasks_.AddTask(pNewTask);
@@ -180,7 +191,7 @@ void   Server::DelListenSock(int sock)
     auto n = slistenSocks_.erase(sock);
 
     if (n != 1)
-        ERR << "DelListenSock failed  " << sock;
+        ERR << "Failed DelListenSock " << sock;
     else
-        INF << "DelListenSock succ " << sock;
+        INF << "Success DelListenSock " << sock;
 }

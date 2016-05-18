@@ -177,7 +177,7 @@ void QReplication::SendToSlaves(const std::vector<QString>& params)
 
 void QReplication::Cron()
 {
-    static unsigned  pingCron = 0;
+    static unsigned pingCron = 0;
     
     if (pingCron ++ % 50 == 0)
     {
@@ -205,7 +205,10 @@ void QReplication::Cron()
             case QReplState_none:
             {
                 INF << "Try connect to master " << masterInfo_.addr.GetIP();
-                Server::Instance()->TCPConnect(masterInfo_.addr, true);
+                Server::Instance()->TCPConnect(masterInfo_.addr, [&]() {
+                    QREPL.SetMasterState(QReplState_none);
+                });
+
                 masterInfo_.state = QReplState_connecting;
             }
                 break;
@@ -252,7 +255,7 @@ void QReplication::Cron()
                 Socket::GetPeerAddr(master->GetSocket(), peer);
                 INF << master->GetName() << " disconnect with Master " << peer.GetIP();
                 
-                master->SetReconn(false);
+                master->SetOnDisconnect();
                 master->OnError();
             }
             
