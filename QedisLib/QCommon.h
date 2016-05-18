@@ -94,7 +94,8 @@ enum QError
     QError_errAuth   = 14,
     QError_nomodule   = 15,
     QError_moduleinit = 16,
-    QError_modulerepeat = 17,
+    QError_moduleuninit = 17,
+    QError_modulerepeat = 18,
     QError_max,
 };
 

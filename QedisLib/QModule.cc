@@ -100,9 +100,25 @@ void QModuleManager::UnLoad(const char* so)
     auto it = modules_.find(so);
     if (it == modules_.end())
         throw ModuleNotExist(so);
-
-    it->second->UnLoad();
-    modules_.erase(it);
+    
+    QEDIS_DEFER
+    {
+        it->second->UnLoad();
+        modules_.erase(it);
+    };
+    
+    // try call uninit function
+    using UnInitFunc = void (*)();
+    
+    UnInitFunc uninit = (UnInitFunc)(it->second->Symbol("QedisModule_OnUnLoad"));
+    if (uninit)
+    {
+        uninit();
+    }
+    else
+    {
+        throw ModuleNoUnLoad(so);
+    }
 }
 
 QModule* QModuleManager::GetModule(const char* so)
@@ -130,12 +146,6 @@ std::vector<QString> QModuleManager::NameList() const
 // MODULE UNLOAD mymodule
 QError module(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-#if defined(__APPLE__)
-    // still can not work with clang
-    ReplyError(QError_unknowCmd, reply);
-    return QError_unknowCmd;
-#endif
-
     // MODULE LOAD /path/to/mymodule.{so,dylib}
     if (strncasecmp(params[1].c_str(), "load", 4) == 0)
     {
@@ -194,6 +204,11 @@ QError module(const std::vector<QString>& params, UnboundedBuffer* reply)
         {
             ReplyError(QError_nomodule, reply);
             return QError_nomodule;
+        }
+        catch (const ModuleNoUnLoad& )
+        {
+            ReplyError(QError_moduleuninit, reply);
+            return QError_moduleuninit;
         }
     }
     else

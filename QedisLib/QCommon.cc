@@ -28,6 +28,7 @@ struct QErrorInfo  g_errorInfo[] = {
     {sizeof "-ERR invalid password\r\n"-1, "-ERR invalid password\r\n"},
     {sizeof "-ERR no such module\r\n"-1, "-ERR no such module\r\n"},
     {sizeof "-ERR init module failed\r\n"-1, "-ERR init module failed\r\n"},
+    {sizeof "-ERR uninit module failed\r\n"-1, "-ERR uninit module failed\r\n"},
     {sizeof "-ERR module already loaded\r\n"-1, "-ERR module already loaded\r\n"},
 };
 

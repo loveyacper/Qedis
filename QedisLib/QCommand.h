@@ -173,6 +173,9 @@ QCommandHandler  replconf;
 
 // modules
 QCommandHandler  module;
+    
+// help
+QCommandHandler  cmdlist;
 
 extern Delegate<void (UnboundedBuffer& )> g_infoCollector;
 extern void OnServerInfoCollect(UnboundedBuffer& );
@@ -204,6 +207,7 @@ public:
     static bool  AddCommand(const QString& cmd, const QCommandInfo* info);
     static const QCommandInfo* DelCommand(const QString& cmd);
 
+    friend QCommandHandler cmdlist;
 private:
 
     static const QCommandInfo s_info[];

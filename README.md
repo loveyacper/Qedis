@@ -6,6 +6,10 @@ A C++11 implementation of Redis Server(not including sentinel, cluster yet)
 * C++11
 * Linux or OS X (Port to Windows is under way)
 
+## Support module for write your own extensions
+ Qedis supports module now, still in progress, much work to do.
+ I added three commands(ldel skeys hgets) to give a demonstration.
+ 
 ## Full compatible with redis
  You can test Qedis with redis-cli, redis-benchmark, or use redis as master with Qedis as slave or conversely.
 
@@ -20,6 +24,12 @@ Run this command, compare with redis use pipeline commands, try it.
 ```
  
 ## Command List
+#### show all supported commands list
+- cmdlist
+
+#### module commands
+- module
+
 #### key commands
 - type exists del expire pexpire expireat pexpireat ttl pttl persist move keys randomkey rename renamenx scan
 

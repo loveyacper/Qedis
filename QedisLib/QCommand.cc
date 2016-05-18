@@ -162,6 +162,9 @@ const QCommandInfo QCommandTable::s_info[] =
 
     // modules
     {"module",      QAttr_read,               -2,  &module},
+   
+    // help
+    {"cmdlist",     QAttr_read,                1,  &cmdlist},
 };
     
 Delegate<void (UnboundedBuffer& )> g_infoCollector;
@@ -292,6 +295,17 @@ bool QCommandInfo::CheckParamsCount(int nParams) const
         return params == nParams;
     else
         return nParams + params >= 0;
+}
+
+QError  cmdlist(const std::vector<QString>& params, UnboundedBuffer* reply)
+{
+    PreFormatMultiBulk(QCommandTable::s_handlers.size(), reply);
+    for (const auto& kv : QCommandTable::s_handlers)
+    {
+        FormatBulk(kv.first, reply);
+    }
+
+    return QError_ok;
 }
 
 }

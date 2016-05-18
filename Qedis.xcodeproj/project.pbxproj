@@ -30,6 +30,7 @@
 		BA4CD22D1CEB54FF00F68F67 /* QSetModule.h in Headers */ = {isa = PBXBuildFile; fileRef = BA4CD2251CEB54FF00F68F67 /* QSetModule.h */; };
 		BA4CD2321CEB61E100F68F67 /* QModule.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA4CD2301CEB61E100F68F67 /* QModule.cc */; };
 		BA4CD2331CEB61E100F68F67 /* QModule.h in Headers */ = {isa = PBXBuildFile; fileRef = BA4CD2311CEB61E100F68F67 /* QModule.h */; };
+		BA4CD2381CEBF6E300F68F67 /* README.md in Sources */ = {isa = PBXBuildFile; fileRef = BA4CD2371CEBF6E300F68F67 /* README.md */; };
 		BA6C336C19EA77B200AC1800 /* QGlobRegex.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA6C336A19EA77B200AC1800 /* QGlobRegex.cc */; };
 		BA6C336D19EA77B200AC1800 /* QGlobRegex.h in Headers */ = {isa = PBXBuildFile; fileRef = BA6C336B19EA77B200AC1800 /* QGlobRegex.h */; };
 		BA6C336F19EA77C100AC1800 /* QGlobRegex_unittest.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA6C336E19EA77C100AC1800 /* QGlobRegex_unittest.cc */; };
@@ -203,6 +204,8 @@
 		BA4CD2251CEB54FF00F68F67 /* QSetModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QSetModule.h; path = Modules/QSetModule.h; sourceTree = "<group>"; };
 		BA4CD2301CEB61E100F68F67 /* QModule.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QModule.cc; path = QedisLib/QModule.cc; sourceTree = SOURCE_ROOT; };
 		BA4CD2311CEB61E100F68F67 /* QModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QModule.h; path = QedisLib/QModule.h; sourceTree = SOURCE_ROOT; };
+		BA4CD2361CEBF10600F68F67 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; name = CMakeLists.txt; path = QedisLib/CMakeLists.txt; sourceTree = SOURCE_ROOT; };
+		BA4CD2371CEBF6E300F68F67 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		BA6C336A19EA77B200AC1800 /* QGlobRegex.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QGlobRegex.cc; path = QedisLib/QGlobRegex.cc; sourceTree = SOURCE_ROOT; };
 		BA6C336B19EA77B200AC1800 /* QGlobRegex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QGlobRegex.h; path = QedisLib/QGlobRegex.h; sourceTree = SOURCE_ROOT; };
 		BA6C336E19EA77C100AC1800 /* QGlobRegex_unittest.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QGlobRegex_unittest.cc; sourceTree = "<group>"; };
@@ -393,6 +396,7 @@
 		BABEBECC19C4474900010636 = {
 			isa = PBXGroup;
 			children = (
+				BA4CD2371CEBF6E300F68F67 /* README.md */,
 				BAC9098D1B9D30DB002003C2 /* CMakeCommon */,
 				BAC9098E1B9D30DB002003C2 /* CMakeLists.txt */,
 				BAD0C61819E7A059005B3784 /* QedisSvr */,
@@ -419,6 +423,7 @@
 		BABEBED719C4474900010636 /* QedisLib */ = {
 			isa = PBXGroup;
 			children = (
+				BA4CD2361CEBF10600F68F67 /* CMakeLists.txt */,
 				BA4CD2301CEB61E100F68F67 /* QModule.cc */,
 				BA4CD2311CEB61E100F68F67 /* QModule.h */,
 				BADD49B31CCA68BA0093257E /* QProtoParser.cc */,
@@ -755,6 +760,7 @@
 				BA47763D1AB0773F00EDBB5D /* redisIntset.c in Sources */,
 				BA98F8411B1B539600ABCBD9 /* QSlowLog.cc in Sources */,
 				BA4053931BA1AE3B00B93053 /* QReplication.cc in Sources */,
+				BA4CD2381CEBF6E300F68F67 /* README.md in Sources */,
 				BAD0C61619E7A02C005B3784 /* QHelper.cc in Sources */,
 				BA6C336C19EA77B200AC1800 /* QGlobRegex.cc in Sources */,
 				BA3B0AD61ACBA9E1000D9399 /* QAOF.cc in Sources */,
