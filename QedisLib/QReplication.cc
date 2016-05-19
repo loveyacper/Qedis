@@ -3,6 +3,7 @@
 #include <iostream> // the child process use stdout for log
 #include <sstream>
 
+#include "Log/Logger.h"
 #include "QClient.h"
 #include "QConfig.h"
 #include "QCommon.h"

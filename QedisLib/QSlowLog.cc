@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 
+#include "Log/Logger.h"
 #include "QSlowLog.h"
 
 namespace qedis

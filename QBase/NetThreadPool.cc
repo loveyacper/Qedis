@@ -30,8 +30,6 @@ NetThread::NetThread() : running_(true), newCnt_(0)
 
 NetThread::~NetThread()
 {
-//    DBG << "close epollfd " << epfd_;
-//    TEMP_FAILURE_RETRY(::close(epfd_));
 }
 
 void NetThread::AddSocket(PSOCKET task, uint32_t events)
@@ -118,7 +116,6 @@ void RecvThread::Run()
 
             if (firedEvents_[i].events & EventTypeError)
             {
-                ERR << "recv thread, on error, socket " << pSock->GetSocket();
                 pSock->OnError();
             }
         }
@@ -131,7 +128,7 @@ void RecvThread::Run()
 
         loopCount = 0;
 
-        for (std::deque<PSOCKET >::iterator  it(tasks_.begin());
+        for (auto it(tasks_.begin());
              it != tasks_.end();
              )
         {
@@ -207,14 +204,12 @@ void SendThread::Run( )
             {
                 if (!pSock->OnWritable())
                 {
-                    ERR << "on write error, socket " << pSock->GetSocket();
                     pSock->OnError();
                 }
             }
             
             if (firedEvents_[i].events & EventTypeError)
             {
-                ERR << "send thread, on error, socket " << pSock->GetSocket();
                 pSock->OnError();
             }
         }

@@ -233,9 +233,8 @@ QError bgrewriteaof(const std::vector<QString>& , UnboundedBuffer* reply)
 {
     if (g_rewritePid != -1)
     {
-        FormatBulk("-ERR aof already in progress",
-                   sizeof "-ERR aof already in progress" - 1,
-                   reply);
+        reply->PushData("-ERR aof already in progress",
+                 sizeof "-ERR aof already in progress" - 1);
         return QError_ok;
     }
     else
@@ -249,9 +248,8 @@ QError bgrewriteaof(const std::vector<QString>& , UnboundedBuffer* reply)
                 
             case -1:
                 ERR << "fork aof process failed, errno = " << errno;
-                FormatBulk("-ERR aof rewrite failed",
-                           sizeof "-ERR aof rewrite failed" - 1,
-                           reply);
+                reply->PushData("-ERR aof rewrite failed",
+                         sizeof "-ERR aof rewrite failed" - 1);
                 return QError_ok;
                 
             default:

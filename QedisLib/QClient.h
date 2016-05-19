@@ -3,11 +3,10 @@
 
 #include "StreamSocket.h"
 #include "QCommon.h"
-#include "QString.h"
 
-#include "QSlowLog.h"
 #include "QReplication.h"
 #include "QProtoParser.h"
+#include <set>
 #include <unordered_set>
 #include <unordered_map>
 

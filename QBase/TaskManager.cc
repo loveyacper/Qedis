@@ -25,7 +25,7 @@ TaskManager::PTCPSOCKET  TaskManager::FindTCP(unsigned int id) const
 {
     if (id > 0)
     {
-        std::map<int, PTCPSOCKET>::const_iterator it = tcpSockets_.find(id);
+        auto it = tcpSockets_.find(id);
         if (it != tcpSockets_.end())
             return  it->second;
     }
@@ -55,16 +55,21 @@ bool TaskManager::DoMsgParse()
         newCnt_ = 0;
         lock_.unlock();
 
-        for (NEWTASKS_T::iterator it(tmpNewTask.begin());
-            it != tmpNewTask.end();
-            ++ it)
+        for (const auto& task : tmpNewTask)
         {
-            if (!_AddTask(*it))
+            if (!_AddTask(task))
             {
                 ERR << "Why can not insert tcp socket "
-                    << (*it)->GetSocket()
+                    << task->GetSocket()
                     << ", id = "
-                    << (*it)->GetID();
+                    << task->GetID();
+            }
+            else
+            {
+                INF << "New connection from "
+                    << task->GetPeerAddr().GetIP()
+                    << ", id = "
+                    << task->GetID();
             }
         }
     }
@@ -77,7 +82,13 @@ bool TaskManager::DoMsgParse()
     {
         if (!it->second || it->second->Invalid())
         {
-            USR << "Remove tcp task from do msg parse " << (it->second ? it->second->GetSocket() : -1);
+            if (it->second)
+            {
+                INF << "Close connection from "
+                    << it->second->GetPeerAddr().GetIP()
+                    << ", id = "
+                    << it->second->GetID();
+            }
             _RemoveTask(it);
         }
         else

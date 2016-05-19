@@ -133,7 +133,8 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
     // handle packet
     s_pCurrentClient = this;
     
-    QEDIS_DEFER {
+    QEDIS_DEFER
+    {
         _Reset();
     };
 
@@ -275,7 +276,7 @@ void QClient::_Reset()
 
 bool QClient::Watch(int dbno, const QString& key)
 {
-    INF << "Watch " << key.c_str() << ", db no = " << dbno;
+    DBG << "Client " << name_ << " watch " << key.c_str() << ", db " << dbno;
     return watchKeys_[dbno].insert(key).second;
 }
 
@@ -289,7 +290,7 @@ bool QClient::NotifyDirty(int dbno, const QString& key)
     
     if (watchKeys_[dbno].count(key))
     {
-        INF << GetID() << " client become dirty because key " << key << ", dbno " << dbno;
+        INF << GetID() << " client become dirty because key " << key << " in db " << dbno;
         SetFlag(ClientFlag_dirty);
         return true;
     }
@@ -303,7 +304,8 @@ bool QClient::NotifyDirty(int dbno, const QString& key)
 
 bool QClient::Exec()
 {
-    QEDIS_DEFER  {
+    QEDIS_DEFER
+    {
         this->ClearMulti();
         this->ClearWatch();
     };
@@ -322,7 +324,7 @@ bool QClient::Exec()
     PreFormatMultiBulk(queueCmds_.size(), &reply_);
     for (const auto& cmd : queueCmds_)
     {
-        INF << "EXEC " << cmd[0] << ", for " << GetID();
+        DBG << "EXEC " << cmd[0] << ", for client " << GetID();
         const QCommandInfo* info = QCommandTable::GetCommandInfo(cmd[0]);
         QError err = QCommandTable::ExecuteCmd(cmd, info, &reply_);
         SendPacket(reply_);

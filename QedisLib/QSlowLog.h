@@ -4,8 +4,9 @@
 #include <vector>
 #include <deque>
 
-#include "Log/Logger.h"
 #include "QString.h"
+
+class Logger;
 
 namespace qedis
 {
@@ -23,7 +24,6 @@ struct SlowLogItem
     {
     }
 };
-
 
 class  QSlowLog
 {

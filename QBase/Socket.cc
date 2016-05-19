@@ -45,7 +45,6 @@ bool Socket::OnError()
     bool expect = false;
     if (invalid_.compare_exchange_strong(expect, true))
     {
-        //CloseSocket(localSock_);
         return true;
     }
 
@@ -63,7 +62,7 @@ void Socket::CloseSocket(int& sock)
     {
         ::shutdown(sock, SHUT_RDWR);
         ::close(sock);
-        USR << "CloseSocket " << sock;
+        DBG << "CloseSocket " << sock;
         sock = INVALID_SOCKET;
     }
 }
@@ -102,7 +101,7 @@ void Socket::SetReuseAddr(int sock)
     ::setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char*)&reuse, sizeof(reuse));
 }
 
-bool Socket::GetLocalAddr(int  sock, SocketAddr& addr)///std::string&  ip, unsigned short& port)
+bool Socket::GetLocalAddr(int  sock, SocketAddr& addr)
 {
     sockaddr_in localAddr;
     socklen_t   len = sizeof(localAddr);
