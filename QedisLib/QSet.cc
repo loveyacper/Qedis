@@ -1,6 +1,5 @@
 #include "QSet.h"
 #include "QStore.h"
-#include "Log/Logger.h"
 #include <cassert>
 
 namespace qedis
@@ -59,7 +58,7 @@ QError  spop(const std::vector<QString>& params, UnboundedBuffer* reply)
     QString res;
     if (RandomMember(*set, res))
     {
-        FormatSingle(res.c_str(), res.size(), reply);
+        FormatSingle(res, reply);
         set->erase(res);
     }
     else
@@ -80,7 +79,7 @@ QError  srandmember(const std::vector<QString>& params, UnboundedBuffer* reply)
     QString res;
     if (RandomMember(*set, res))
     {
-        FormatSingle(res.c_str(), res.size(), reply);
+        FormatSingle(res, reply);
     }
     else
     {

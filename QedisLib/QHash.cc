@@ -1,6 +1,5 @@
 #include "QHash.h"
 #include "QStore.h"
-#include "Log/Logger.h"
 #include <cassert>
 
 namespace qedis
@@ -86,10 +85,10 @@ QError  hget(const std::vector<QString>& params, UnboundedBuffer* reply)
     GET_HASH(params[1]);
     
     const PHASH& hash= value->CastHash();
-    QHash::const_iterator it = hash->find(params[2]);
+    auto it = hash->find(params[2]);
 
     if  (it != hash->end())
-        FormatSingle(it->second.c_str(), static_cast<int>(it->second.size()), reply);
+        FormatSingle(it->second, reply);
     else
         FormatNull(reply);
 
@@ -106,9 +105,9 @@ QError  hmget(const std::vector<QString>& params, UnboundedBuffer* reply)
     const PHASH& hash= value->CastHash();
     for (size_t i = 2; i < params.size(); ++ i)
     {
-        QHash::const_iterator it = hash->find(params[i]);
+        auto it = hash->find(params[i]);
         if (it != hash->end())
-            FormatSingle(it->second.c_str(), it->second.size(), reply);
+            FormatSingle(it->second, reply);
         else
             FormatNull(reply);
     }
@@ -287,7 +286,7 @@ QError  hincrbyfloat(const std::vector<QString>& params, UnboundedBuffer* reply)
     *str = tmp;
     (void)len;
 
-    FormatSingle(str->c_str(), static_cast<int>(str->size()), reply);
+    FormatSingle(*str, reply);
 
     return QError_ok;
 }

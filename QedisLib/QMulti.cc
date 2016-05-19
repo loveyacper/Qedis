@@ -42,7 +42,6 @@ void QMulti::Discard(QClient* client)
 
 void  QMulti::NotifyDirty(int dbno, const QString& key)
 {
-    INF << "Try NotifyDirty " << key.c_str() << ", dbno " << dbno;
     auto tmpDbIter = clients_.find(dbno);
     if (tmpDbIter == clients_.end())
         return;
