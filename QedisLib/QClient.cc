@@ -142,10 +142,12 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
     if (params.empty())
         return static_cast<BODY_LENGTH_T>(ptr - start);
 
-    const QString& cmd = params[0];
+    QString cmd(params[0]);
+    std::transform(params[0].begin(), params[0].end(), cmd.begin(), ::tolower);
+
     if (!auth_)
     {
-        if (strncasecmp(cmd.data(), "auth", 4) == 0)
+        if (cmd == "auth")
         {
             auto now = ::time(nullptr);
             if (now <= lastauth_ + 1)
