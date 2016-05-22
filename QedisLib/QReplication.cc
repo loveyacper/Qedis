@@ -212,7 +212,9 @@ void QReplication::Cron()
                     assert(!!!"wrong config for master addr");
                 }
                 
-                INF << "Try connect to master " << masterInfo_.addr.GetIP();
+                INF << "Try connect to master "
+                    << masterInfo_.addr.GetIP()
+                    << ":" << masterInfo_.addr.GetPort();
                 Server::Instance()->TCPConnect(masterInfo_.addr, [&]() {
                     QREPL.SetMasterState(QReplState_none);
                 });
@@ -250,13 +252,34 @@ void QReplication::Cron()
                 }
                 else if (master->GetAuth())
                 {
-                    // send replconf, fire and forget
+                    // send replconf
                     char req[128];
                     auto len = snprintf(req, sizeof req - 1,
                              "replconf listening-port %hu\r\n", g_config.port);
                     master->SendPacket(req, len);
-                    INF << "Send replconf listening-port " << g_config.port;
+                    masterInfo_.state = QReplState_wait_replconf;
 
+                    INF << "Send replconf listening-port " << g_config.port;
+                }
+                else
+                {
+                    WRN << "Haven't auth to master yet, or check masterauth password";
+                }
+
+            }
+                break;
+
+            case QReplState_wait_replconf:
+            {
+                auto master = master_.lock();
+                if (!master)
+                {
+                    masterInfo_.state = QReplState_none;
+                    masterInfo_.downSince = ::time(nullptr);
+                    INF << "Master is down from connected to none";
+                }
+                else
+                {
                     // request sync rdb file
                     master->SendPacket("SYNC\r\n", 6);
                     INF << "Request SYNC";
@@ -266,17 +289,11 @@ void QReplication::Cron()
                     masterInfo_.rdbSize   = std::size_t(-1);
                     masterInfo_.state = QReplState_wait_rdb;;
                 }
-                else
-                {
-                    WRN << "Haven't auth to master yet, or check masterauth password";
-                }
-
             }
                 break;
+
                 
             case QReplState_wait_rdb:
-            {
-            }
                 break;
                 
             default:

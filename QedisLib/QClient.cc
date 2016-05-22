@@ -52,61 +52,92 @@ BODY_LENGTH_T QClient::_ProcessInlineCmd(const char* buf,
     return 0;
 }
 
-static int TryRecvRdb(const char* start, const char* end)
+static int ProcessMaster(const char* start, const char* end)
 {
     auto state = QREPL.GetMasterState();
 
-    // discard all requests before sync;
-    // or continue serve with old data? TODO
-    if (state == QReplState_connected)
-        return static_cast<int>(end - start);
-    
-    // process master response
-    if (state == QReplState_wait_auth)
+    switch (state)
     {
-        if (end - start >= 5)
-        {
-            if (strncasecmp(start, "+OK\r\n", 5) == 0)
+        case QReplState_connected:
+            // discard all requests before sync;
+            // or continue serve with old data? TODO
+            return static_cast<int>(end - start);
+
+        case QReplState_wait_auth:
+            if (end - start >= 5)
             {
-                QClient::Current()->SetAuth();
-                return 5;
+                if (strncasecmp(start, "+OK\r\n", 5) == 0)
+                {
+                    QClient::Current()->SetAuth();
+                    return 5;
+                }
+                else
+                {
+                    assert (!!!"check masterauth config, master password maybe wrong");
+                }
             }
             else
             {
-                assert (!!!"check error in your masterauth password config");
+                return 0;
             }
+            break;
+
+        case QReplState_wait_replconf:
+            if (end - start >= 5)
+            {
+                if (strncasecmp(start, "+OK\r\n", 5) == 0)
+                {
+                    return 5;
+                }
+                else
+                {
+                    assert (!!!"check error: send replconf command");
+                }
+            }
+            else
+            {
+                return 0;
+            }
+            break;
+
+        case QReplState_wait_rdb:
+        {
+            const char* ptr = start;
+            //recv RDB file
+            if (QREPL.GetRdbSize() == std::size_t(-1))
+            {
+                ++ ptr; // skip $
+                int s;
+                if (QParseResult::ok == GetIntUntilCRLF(ptr, end - ptr, s))
+                {
+                    assert (s > 0); // check error for your masterauth or master config
+
+                    QREPL.SetRdbSize(s);
+                    USR << "recv rdb size " << s;
+                }
+            }
+            else
+            {
+                std::size_t rdb = static_cast<std::size_t>(end - ptr);
+                if (rdb > QREPL.GetRdbSize())
+                    rdb = QREPL.GetRdbSize();
+                
+                QREPL.SaveTmpRdb(ptr, rdb);
+                ptr += rdb;
+            }
+
+            return static_cast<int>(ptr - start);
         }
+            break;
+            
+        case QReplState_online:
+            break;
+    
+        default:
+            assert(!!!"wrong master state");
+            break;
     }
     
-    const char* ptr = start;
-    if (state == QReplState_wait_rdb)
-    {
-        //recv RDB file
-        if (QREPL.GetRdbSize() == std::size_t(-1))
-        {
-            ++ ptr; // skip $
-            int s;
-            if (QParseResult::ok == GetIntUntilCRLF(ptr, end - ptr, s))
-            {
-                assert (s > 0); // check error for your masterauth or master config
-
-                QREPL.SetRdbSize(s);
-                USR << "recv rdb size " << s;
-            }
-        }
-        else
-        {
-            std::size_t rdb = static_cast<std::size_t>(end - ptr);
-            if (rdb > QREPL.GetRdbSize())
-                rdb = QREPL.GetRdbSize();
-            
-            QREPL.SaveTmpRdb(ptr, rdb);
-            ptr += rdb;
-        }
-
-        return static_cast<int>(ptr - start);
-    }
-
     return -1; // do nothing
 }
 
@@ -123,7 +154,7 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
     if (GetPeerAddr() == QREPL.GetMasterAddr())
     {
         // check slave state
-        auto recved = TryRecvRdb(start, end);
+        auto recved = ProcessMaster(start, end);
         if (recved != -1)
             return static_cast<BODY_LENGTH_T>(recved);
     }
@@ -274,8 +305,15 @@ QClient::QClient() : db_(0), flag_(0), name_("clientxxx")
 void QClient::OnConnect()
 {
     const bool peerIsMaster = (GetPeerAddr() == QREPL.GetMasterAddr());
+
     if (peerIsMaster)
     {
+        QREPL.SetMasterState(QReplState_connected);
+        QREPL.SetMaster(std::static_pointer_cast<QClient>(shared_from_this()));
+            
+        SetName("MasterConnection"); 
+        SetFlag(ClientFlag_master);
+
         if (g_config.masterauth.empty())
             SetAuth();
     }

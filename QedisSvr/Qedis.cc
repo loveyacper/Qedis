@@ -123,22 +123,8 @@ std::shared_ptr<StreamSocket>   Qedis::_OnNewConnection(int connfd)
     Socket::GetPeerAddr(connfd,  peer);
 
     std::shared_ptr<QClient>    pNewTask(new QClient());
-    if (pNewTask->Init(connfd))
-    {
-        const bool peerIsMaster = (peer == QREPL.GetMasterAddr());
-        if (peerIsMaster)
-        {
-            QREPL.SetMasterState(QReplState_connected);
-            QREPL.SetMaster(pNewTask);
-            
-            pNewTask->SetName("MasterConnection");
-            pNewTask->SetFlag(ClientFlag_master);
-        }
-    }
-    else
-    {
+    if (!pNewTask->Init(connfd))
         pNewTask.reset();
-    }
     
     return  pNewTask;
 }
@@ -267,7 +253,7 @@ bool Qedis::_Init()
 
     {
         auto repTimer = TimerManager::Instance().CreateTimer();
-        repTimer->Init(1000);
+        repTimer->Init(5 * 100);
         repTimer->SetCallback([&]() {
             QREPL.Cron();
         });
@@ -309,7 +295,7 @@ bool Qedis::_Init()
     }
 
     // output logo to console
-    char logo[1024] = "";
+    char logo[512] = "";
     snprintf(logo, sizeof logo - 1, qedisLogo, QEDIS_VERSION, static_cast<int>(sizeof(void*)) * 8, static_cast<int>(g_config.port)); 
     std::cerr << logo;
 

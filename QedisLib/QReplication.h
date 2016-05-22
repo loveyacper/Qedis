@@ -36,8 +36,9 @@ enum QReplState
     QReplState_none,
     QReplState_connecting,
     QReplState_connected,
-    QReplState_wait_auth,
-    QReplState_wait_rdb,
+    QReplState_wait_auth, // wait auth to be confirmed
+    QReplState_wait_replconf, // wait replconf to be confirmed
+    QReplState_wait_rdb, // wait to recv rdb file
     QReplState_online,
 };
 
