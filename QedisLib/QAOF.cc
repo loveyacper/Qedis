@@ -412,7 +412,10 @@ bool  QAOFLoader::Load(const char* name)
     {
         parser.Reset();
         if (QParseResult::ok != parser.ParseRequest(content, end))
+        {
+            ERR << "Load aof failed";
             return false;
+        }
 
         cmds_.push_back(parser.GetParams());
     }

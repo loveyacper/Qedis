@@ -48,11 +48,11 @@ struct QConfig
     
     QString   masterIp;
     unsigned short masterPort;  // replication
+    QString   masterauth;
     
     QString   includefile;      // the template config
 
-    // TODO fix config parser to accept repeat keys
-    QString   modules; // modules, seperated by space
+    std::vector<QString>  modules; // modules
     
     QConfig();
 

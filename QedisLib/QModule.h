@@ -51,7 +51,7 @@ public:
 
     const QString& Name() const;
 
-    void Load(const char* so, bool lazy = false);
+    void Load(const char* so, bool lazy = false) throw(std::runtime_error);
     void UnLoad();
     void* Symbol(const char* symbol);
 

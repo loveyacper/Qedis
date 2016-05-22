@@ -3,6 +3,7 @@
 #include <algorithm>
 #include "QStore.h"
 #include "QCommand.h"
+#include "QConfig.h"
 #include "QSlowLog.h"
 #include "QClient.h"
 
@@ -59,7 +60,24 @@ static int TryRecvRdb(const char* start, const char* end)
     // or continue serve with old data? TODO
     if (state == QReplState_connected)
         return static_cast<int>(end - start);
-        
+    
+    // process master response
+    if (state == QReplState_wait_auth)
+    {
+        if (end - start >= 5)
+        {
+            if (strncasecmp(start, "+OK\r\n", 5) == 0)
+            {
+                QClient::Current()->SetAuth();
+                return 5;
+            }
+            else
+            {
+                assert (!!!"check error in your masterauth password config");
+            }
+        }
+    }
+    
     const char* ptr = start;
     if (state == QReplState_wait_rdb)
     {
@@ -70,6 +88,8 @@ static int TryRecvRdb(const char* start, const char* end)
             int s;
             if (QParseResult::ok == GetIntUntilCRLF(ptr, end - ptr, s))
             {
+                assert (s > 0); // check error for your masterauth or master config
+
                 QREPL.SetRdbSize(s);
                 USR << "recv rdb size " << s;
             }
@@ -92,6 +112,8 @@ static int TryRecvRdb(const char* start, const char* end)
 
 BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
 {
+    s_pCurrentClient = this;
+
     const size_t   bytes = buf.ReadableSize();
     const char* const start = buf.ReadAddr();
     const char* const end   = start + bytes;
@@ -129,15 +151,13 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
     {
         return static_cast<BODY_LENGTH_T>(ptr - start);
     }
-
-    // handle packet
-    s_pCurrentClient = this;
     
     QEDIS_DEFER
     {
         _Reset();
     };
-
+    
+    // handle packet
     const auto& params = parser_.GetParams();
     if (params.empty())
         return static_cast<BODY_LENGTH_T>(ptr - start);
@@ -253,8 +273,17 @@ QClient::QClient() : db_(0), flag_(0), name_("clientxxx")
 
 void QClient::OnConnect()
 {
-    if (QSTORE.password_.empty())
-        SetAuth();
+    const bool peerIsMaster = (GetPeerAddr() == QREPL.GetMasterAddr());
+    if (peerIsMaster)
+    {
+        if (g_config.masterauth.empty())
+            SetAuth();
+    }
+    else
+    {
+        if (QSTORE.password_.empty())
+            SetAuth();
+    }
 }
 
 bool QClient::SelectDB(int db)

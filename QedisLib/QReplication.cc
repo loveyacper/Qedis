@@ -205,6 +205,13 @@ void QReplication::Cron()
         {
             case QReplState_none:
             {
+                SocketAddr localSvr(g_config.ip.c_str() , g_config.port);
+                if (masterInfo_.addr.GetAddr() == localSvr)
+                {
+                    ERR << "Fix config, master addr is self addr!";
+                    assert(!!!"wrong config for master addr");
+                }
+                
                 INF << "Try connect to master " << masterInfo_.addr.GetIP();
                 Server::Instance()->TCPConnect(masterInfo_.addr, [&]() {
                     QREPL.SetMasterState(QReplState_none);
@@ -213,8 +220,26 @@ void QReplication::Cron()
                 masterInfo_.state = QReplState_connecting;
             }
                 break;
-                
+
             case QReplState_connected:
+                if (!g_config.masterauth.empty())
+                {
+                    if (auto master = master_.lock())
+                    {
+                        UnboundedBuffer req;
+                        req.PushData("auth ", 5);
+                        req.PushData(g_config.masterauth.data(), g_config.masterauth.size());
+                        req.PushData("\r\n", 2);
+                        master->SendPacket(req);
+                        INF << "send auth with password " << g_config.masterauth;
+                        
+                        masterInfo_.state = QReplState_wait_auth;
+                        break;
+                    }
+                }
+                // fall through to next case.
+                
+            case QReplState_wait_auth:
             {
                 auto master = master_.lock();
                 if (!master)
@@ -223,16 +248,29 @@ void QReplication::Cron()
                     masterInfo_.downSince = ::time(nullptr);
                     INF << "Master is down from connected to none";
                 }
-                else
+                else if (master->GetAuth())
                 {
+                    // send replconf, fire and forget
+                    char req[128];
+                    auto len = snprintf(req, sizeof req - 1,
+                             "replconf listening-port %hu\r\n", g_config.port);
+                    master->SendPacket(req, len);
+                    INF << "Send replconf listening-port " << g_config.port;
+
+                    // request sync rdb file
                     master->SendPacket("SYNC\r\n", 6);
                     INF << "Request SYNC";
                     
                     rdb_.Open(slaveRdbFile, false);
                     masterInfo_.rdbRecved = 0;
                     masterInfo_.rdbSize   = std::size_t(-1);
-                    masterInfo_.state = QReplState_wait_rdb;
+                    masterInfo_.state = QReplState_wait_rdb;;
                 }
+                else
+                {
+                    WRN << "Haven't auth to master yet, or check masterauth password";
+                }
+
             }
                 break;
                 
@@ -443,5 +481,48 @@ void QReplication::OnInfoCommand(UnboundedBuffer& res)
         res.PushData(info.c_str(), info.size());
     }
 }
+    
+QError  slaveof(const std::vector<QString>& params, UnboundedBuffer* reply)
+{
+    if (params[1] == "no" && params[2] == "one")
+    {
+        QREPL.SetMasterAddr(nullptr, 0);
+    }
+    else
+    {
+        QREPL.SetMasterAddr(params[1].c_str(), std::stoi(params[2]));
+        QREPL.SetMasterState(QReplState_none);
+    }
+        
+    FormatOK(reply);
+    return QError_ok;
+}
+    
+QError  sync(const std::vector<QString>& params, UnboundedBuffer* reply)
+{
+    QClient* cli = QClient::Current();
+    auto slave = cli->GetSlaveInfo();
+    if (!slave)
+    {
+        cli->SetSlaveInfo();
+        slave = cli->GetSlaveInfo();
+        QREPL.AddSlave(cli);
+    }
+    
+    if (slave->state == QSlaveState_wait_bgsave_end ||
+        slave->state == QSlaveState_online)
+    {
+        WRN << cli->GetName() << " state is "
+            << slave->state << ", ignore this sync request";
+        
+        return QError_ok;
+    }
+        
+    slave->state = QSlaveState_wait_bgsave_start;
+    QREPL.TryBgsave();
+        
+    return QError_ok;
+}
+    
 
 }

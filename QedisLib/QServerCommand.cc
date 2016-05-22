@@ -8,7 +8,6 @@
 #include "Server.h"
 #include "QDB.h"
 #include "QAOF.h"
-#include "QReplication.h"
 #include "QConfig.h"
 #include "QSlowLog.h"
 #include "Delegate.h"
@@ -230,33 +229,6 @@ QError  shutdown(const std::vector<QString>& params, UnboundedBuffer* reply)
 }
 
 
-
-QError  sync(const std::vector<QString>& params, UnboundedBuffer* reply)
-{
-    QClient* cli = QClient::Current();
-    auto slave = cli->GetSlaveInfo();
-    if (!slave)
-    {
-        cli->SetSlaveInfo();
-        slave = cli->GetSlaveInfo();
-        QREPL.AddSlave(cli);
-    }
-    
-    if (slave->state == QSlaveState_wait_bgsave_end ||
-        slave->state == QSlaveState_online)
-    {
-        WRN << cli->GetName() << " state is "
-            << slave->state << ", ignore this sync request";
-        return QError_ok;
-    }
-    
-    slave->state = QSlaveState_wait_bgsave_start;
-    QREPL.TryBgsave();
-
-    return QError_ok;
-}
-
-
 QError  ping(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     FormatSingle("PONG", 4, reply);
@@ -267,22 +239,6 @@ QError  echo(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     FormatBulk(params[1], reply);
     return   QError_ok;
-}
-
-QError  slaveof(const std::vector<QString>& params, UnboundedBuffer* reply)
-{
-    if (params[1] == "no" && params[2] == "one")
-    {
-        QREPL.SetMasterAddr(nullptr, 0);
-    }
-    else
-    {
-        QREPL.SetMasterAddr(params[1].c_str(), std::stoi(params[2]));
-        QREPL.SetMasterState(QReplState_none);
-    }
-    
-    FormatOK(reply);
-    return QError_ok;
 }
 
 void OnServerInfoCollect(UnboundedBuffer& res)

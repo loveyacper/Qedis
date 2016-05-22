@@ -59,15 +59,7 @@ bool ConfigParser::Load(const char* FileName)
 
                 if (!key.empty())
                 {
-                    if (data_.count(key) > 0)
-                    {
-                        // duplicate key
-                        data_[key] += " " + value;
-                    }
-                    else
-                    {
-                        data_[key] = value;
-                    }
+                    data_[key].push_back(value);
                     
                     key.clear();
                     value.clear();
@@ -107,6 +99,18 @@ bool ConfigParser::Load(const char* FileName)
     
     file.Close();
     return true;
+}
+
+const std::vector<std::string>& ConfigParser::GetDataVector(const char* key) const
+{
+    auto it = data_.find(key);
+    if (it == data_.end())
+    {
+        static const std::vector<std::string> kEmpty;
+        return kEmpty;
+    }
+    
+    return it->second;
 }
 
 #ifdef CONFIG_DEBUG

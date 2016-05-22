@@ -22,7 +22,7 @@ const QString& QModule::Name() const
     return soname_;
 }
 
-void QModule::Load(const char* so, bool lazy)
+void QModule::Load(const char* so, bool lazy) throw(std::runtime_error)
 {
     assert (!handler_);
 

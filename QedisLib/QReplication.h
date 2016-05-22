@@ -36,6 +36,7 @@ enum QReplState
     QReplState_none,
     QReplState_connecting,
     QReplState_connected,
+    QReplState_wait_auth,
     QReplState_wait_rdb,
     QReplState_online,
 };

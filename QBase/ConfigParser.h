@@ -13,23 +13,12 @@ class ConfigParser
 {
 public:
     bool Load(const char* FileName);
-#if 0
-    bool Save(const char* FileName);
-    bool Save(const char* FileName, const std::string& key, const std::string& value);
-#endif
 
     template <typename T>
     T   GetData(const char* key, const T& default_ = T()) const;
 
-    typedef std::map<std::string, std::string>::iterator iterator;
-    iterator  begin() { return data_.begin();  }
-    iterator  end()   { return data_.end();    }
-
-    void    clear() { data_.clear(); }
-    bool    insert(const std::string& key, const std::string& val)
-    {
-        return  data_.insert(std::pair<std::string, std::string>(key, val)).second;
-    }
+    const std::vector<std::string>& GetDataVector(const char* key) const;
+    
 
 #ifdef CONFIG_DEBUG
     void Print()
@@ -45,7 +34,9 @@ public:
 #endif
 
 private:
-    std::map<std::string, std::string> data_;
+    typedef std::map<std::string, std::vector<std::string> > Data;
+    
+    Data data_;
 
     template <typename T>
     T  _ToType(const std::string& data) const;
@@ -77,11 +68,11 @@ inline  std::string  ConfigParser::_ToType<std::string >(const std::string& data
 template <typename T>
 inline  T  ConfigParser::GetData(const char* key, const T& default_) const
 {
-    std::map<std::string, std::string>::const_iterator it = data_.find(key);
+    auto it = data_.find(key);
     if (it == data_.end())
         return default_;
 
-    return  _ToType<T>(it->second);
+    return  _ToType<T>(it->second[0]); // only return first value
 }
 
 #endif

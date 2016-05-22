@@ -15,7 +15,6 @@ int QStore::dirty_ = 0;
 void QStore::ExpiresDB::SetExpire(const QString& key, uint64_t when)
 {
     expireKeys_[key] = when;
-    INF << "Set timeout key " << key.c_str() << ", timeout is " << when;
 }
 
 int64_t QStore::ExpiresDB::TTL(const QString& key, uint64_t now)
@@ -52,7 +51,7 @@ QStore::ExpireResult  QStore::ExpiresDB::ExpireIfNeed(const QString& key, uint64
         if (it->second > now)
             return ExpireResult::notExpire;
         
-        WRN << "Delete timeout key " << it->first.c_str() << ", timeout is " << it->second;
+        WRN << "Delete timeout key " << it->first;
         expireKeys_.erase(it);
         return ExpireResult::expired;
     }
@@ -75,7 +74,12 @@ int QStore::ExpiresDB::LoopCheck(uint64_t now)
         if (it->second <= now)
         {
             // time to delete
-            WRN << "LoopCheck try delete key " << it->first.c_str() << ", " << ::Now();
+            INF << "LoopCheck try delete key:" << it->first;
+            
+            std::vector<QString>  params(2);
+            params[0] = "del";
+            params[1] = it->first;
+            Propogate(params);
             
             QSTORE.DeleteKey(it->first);
             expireKeys_.erase(it ++);

@@ -91,6 +91,7 @@ public:
     static void  FeedMonitors(const std::vector<QString>& params);
     
     void SetAuth() { auth_ = true; }
+    bool GetAuth() const { return auth_; }
     void RewriteCmd(std::vector<QString>& params) { parser_.SetParams(params); }
 
 private:

@@ -214,6 +214,7 @@
 		BA98F83C1B01B16600ABCBD9 /* QConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QConfig.h; path = QedisLib/QConfig.h; sourceTree = SOURCE_ROOT; };
 		BA98F83F1B1B539600ABCBD9 /* QSlowLog.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QSlowLog.cc; path = QedisLib/QSlowLog.cc; sourceTree = SOURCE_ROOT; };
 		BA98F8401B1B539600ABCBD9 /* QSlowLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QSlowLog.h; path = QedisLib/QSlowLog.h; sourceTree = SOURCE_ROOT; };
+		BA99A7591CF19ED20051C43C /* qedis.conf */ = {isa = PBXFileReference; lastKnownFileType = text; path = qedis.conf; sourceTree = "<group>"; };
 		BA99CC521C52852C00BB88F7 /* Qedis.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Qedis.h; path = QedisSvr/Qedis.h; sourceTree = "<group>"; };
 		BABEBED519C4474900010636 /* Qedis */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Qedis; sourceTree = BUILT_PRODUCTS_DIR; };
 		BAC9098D1B9D30DB002003C2 /* CMakeCommon */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeCommon; sourceTree = "<group>"; };
@@ -225,7 +226,6 @@
 		BAD0C5E619E7A02C005B3784 /* QCommand.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = QCommand.h; path = QedisLib/QCommand.h; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		BAD0C5E719E7A02C005B3784 /* QCommon.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QCommon.cc; path = QedisLib/QCommon.cc; sourceTree = SOURCE_ROOT; };
 		BAD0C5E819E7A02C005B3784 /* QCommon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = QCommon.h; path = QedisLib/QCommon.h; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
-		BAD0C5E919E7A02C005B3784 /* Qedis.1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.man; lineEnding = 2; name = Qedis.1; path = QedisLib/Qedis.1; sourceTree = SOURCE_ROOT; };
 		BAD0C5EA19E7A02C005B3784 /* QHash.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QHash.cc; path = QedisLib/QHash.cc; sourceTree = SOURCE_ROOT; };
 		BAD0C5EB19E7A02C005B3784 /* QHash.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QHash.h; path = QedisLib/QHash.h; sourceTree = SOURCE_ROOT; };
 		BAD0C5EC19E7A02C005B3784 /* QKeyCommand.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = QKeyCommand.cc; path = QedisLib/QKeyCommand.cc; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
@@ -397,6 +397,7 @@
 		BABEBECC19C4474900010636 = {
 			isa = PBXGroup;
 			children = (
+				BA99A7591CF19ED20051C43C /* qedis.conf */,
 				BA4CD2371CEBF6E300F68F67 /* README.md */,
 				BAC9098D1B9D30DB002003C2 /* CMakeCommon */,
 				BAC9098E1B9D30DB002003C2 /* CMakeLists.txt */,
@@ -454,7 +455,6 @@
 				BAD0C5E619E7A02C005B3784 /* QCommand.h */,
 				BAD0C5E719E7A02C005B3784 /* QCommon.cc */,
 				BAD0C5E819E7A02C005B3784 /* QCommon.h */,
-				BAD0C5E919E7A02C005B3784 /* Qedis.1 */,
 				BAD0C5EA19E7A02C005B3784 /* QHash.cc */,
 				BAD0C5EB19E7A02C005B3784 /* QHash.h */,
 				BAD0C5EC19E7A02C005B3784 /* QKeyCommand.cc */,

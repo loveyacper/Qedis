@@ -62,7 +62,7 @@ bool ListenSocket::Bind(const SocketAddr& addr)
     if (!NetThreadPool::Instance().AddSocket(shared_from_this(), EventTypeRead))
         return false;
 
-    INF << "Success: listen on ("
+    USR << "Success: listen on ("
         << addr.GetIP()
         << ":"
         << addr.GetPort()

@@ -1,20 +1,20 @@
 # Qedis
 [![Build Status](https://travis-ci.org/loveyacper/Qedis.svg?branch=master)](https://travis-ci.org/loveyacper/Qedis)
-A C++11 implementation of Redis Server(not including sentinel, cluster yet)
+A C++11 implementation of Redis Server(not including cluster yet)
 
 ## Requirements
 * C++11
-* Linux or OS X (Port to Windows is under way)
+* Linux or OS X
 
 ## Support module for write your own extensions
  Qedis supports module now, still in progress, much work to do.
- I added three commands(ldel skeys hgets) to give a demonstration.
+ I added three commands(ldel, skeys, hgets) for demonstration.
  
 ## Full compatible with redis
  You can test Qedis with redis-cli, redis-benchmark, or use redis as master with Qedis as slave or conversely.
 
 ## High Performance
-- Qedis is approximately 20-25% faster than redis if run benchmark with pipeline requests(set -P = 50).
+- Qedis is approximately 20-25% faster than redis if run benchmark with pipeline requests(set -P = 50 or higher).
 - Average 80K requests per seconds for write, and 90K requests per seconds for read.
 - Before run test, please ensure that std::list::size() is O(1), obey the C++11 standards.
 
@@ -31,7 +31,7 @@ Run this command, compare with redis use pipeline commands, try it.
 - module
 
 #### key commands
-- type exists del expire pexpire expireat pexpireat ttl pttl persist move keys randomkey rename renamenx scan
+- type exists del expire pexpire expireat pexpireat ttl pttl persist move keys randomkey rename renamenx scan sort
 
 #### server commands
 - select dbsize bgsave save lastsave flushdb flushall client debug shutdown bgrewriteaof ping echo info monitor auth
@@ -63,5 +63,5 @@ Run this command, compare with redis use pipeline commands, try it.
 
 ## TODO
 * Support lua
-* Sentinel & Cluster
+* Sentinel & Cluster (I am writing sentinel in a new repo)
 * etc

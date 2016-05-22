@@ -149,15 +149,16 @@ bool  LoadQedisConfig(const char* cfgFile, QConfig& cfg)
         cfg.masterIp   = std::move(master[0]);
         cfg.masterPort = static_cast<unsigned short>(std::stoi(master[1]));
     }
+    cfg.masterauth = parser.GetData<QString>("masterauth");
 
     // load modules' names
-    cfg.modules = parser.GetData<QString>("loadmodule");
+    cfg.modules = parser.GetDataVector("loadmodule");
     
     cfg.includefile = parser.GetData<QString>("include"); //TODO multi files include
     
     return  cfg.CheckArgs();
 }
-
+    
 bool  QConfig::CheckArgs() const
 {
 #define RETURN_IF_FAIL(cond)\

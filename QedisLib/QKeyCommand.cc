@@ -140,7 +140,7 @@ static int64_t _ttl(const QString& key)
     }
     else
     {
-        ERR << "ttl key not exist " << key.c_str();
+        ERR << "ttl not exist key:" << key.c_str();
     }
 
     return  ret;
@@ -188,7 +188,6 @@ QError  move(const std::vector<QString>& params, UnboundedBuffer* reply)
     QObject* val;
     if (QSTORE.GetValue(key, val) == QError_ok)
     {
-        DBG << "move " << key.c_str() << " to db " << toDb;
         int fromDb = QSTORE.SelectDB(toDb);
         if (fromDb >= 0 && fromDb != toDb && !QSTORE.ExistsKey(key))
         {
@@ -199,15 +198,17 @@ QError  move(const std::vector<QString>& params, UnboundedBuffer* reply)
             QSTORE.SelectDB(toDb);
             QSTORE.SetValue(key, *val); // set to new db
             ret = 1;
+            
+            INF << "move " << key << " to db " << toDb << ", from db " << fromDb;
         }
         else
         {
-            ERR << "move " << key.c_str() << " failed to db " << toDb << ", from db " << fromDb;
+            ERR << "move " << key << " failed to db " << toDb << ", from db " << fromDb;
         }
     }
     else
     {
-        ERR << "move " << key.c_str() << " failed to db " << toDb;
+        ERR << "move " << key << " failed to db " << toDb;
     }
 
     FormatInt(ret, reply);
@@ -601,6 +602,8 @@ QError sort(const std::vector<QString>& params, UnboundedBuffer* reply)
         case QType_sortedSet:
         {
             // TODO
+            FormatOK(reply);
+            return QError_ok;
         }
             break;
             

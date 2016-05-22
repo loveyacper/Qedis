@@ -267,7 +267,7 @@ bool Qedis::_Init()
 
     {
         auto repTimer = TimerManager::Instance().CreateTimer();
-        repTimer->Init(100 * 5);
+        repTimer->Init(1000);
         repTimer->SetCallback([&]() {
             QREPL.Cron();
         });
@@ -282,32 +282,29 @@ bool Qedis::_Init()
     }
     
     // load so modules
-    if (!g_config.modules.empty())
+    const auto& modules = g_config.modules;
+    for (const auto& mod: modules)
     {
-        std::vector<QString>  modules(SplitString(g_config.modules, ' '));
-        for (const auto& mod: modules)
+        try
         {
-            try
-            {
-                MODULES.Load(mod.c_str());
-                std::cerr << "Load " << mod << " successful\n";
-            }
-            catch (const ModuleNoLoad& e)
-            {
-                std::cerr << "Load " << mod << " failed\n";
-            }
-            catch (const ModuleExist& e)
-            {
-                std::cerr << "Load " << mod << " failed because exist\n";
-            }
-            catch (const std::runtime_error& e)
-            {
-                std::cerr << "Load " << mod << " failed because runtime error\n";
-            }
-            catch (...)
-            {
-                std::cerr << "Load " << mod << " failed, unknown exception\n";
-            }
+            MODULES.Load(mod.c_str());
+            std::cerr << "Load " << mod << " successful\n";
+        }
+        catch (const ModuleNoLoad& e)
+        {
+            std::cerr << "Load " << mod << " failed\n";
+        }
+        catch (const ModuleExist& e)
+        {
+            std::cerr << "Load " << mod << " failed because exist\n";
+        }
+        catch (const std::runtime_error& e)
+        {
+            std::cerr << "Load " << mod << " failed because runtime error\n";
+        }
+        catch (...)
+        {
+            std::cerr << "Load " << mod << " failed, unknown exception\n";
         }
     }
 
@@ -346,7 +343,7 @@ static void CheckChild()
         }
         else if (pid == g_rewritePid)
         {
-            INF << pid << " rewrite process success done.";
+            INF << pid << " pid rewrite process success done.";
             QAOFThreadController::RewriteDoneHandler(exitcode, bysignal);
         }
         else
