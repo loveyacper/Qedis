@@ -25,7 +25,7 @@ public:
 
     bool  TCPBind(const SocketAddr&  listenAddr);
     void  TCPReconnect(const SocketAddr& peer);
-    void  TCPConnect(const SocketAddr& peer, const std::function<void()>* cb = nullptr);
+    void  TCPConnect(const SocketAddr& peer, const std::function<void()>* cb);
 
     static Server*  Instance() {   return   sinstance_;  }
 

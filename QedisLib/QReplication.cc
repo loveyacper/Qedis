@@ -211,12 +211,23 @@ void QReplication::Cron()
                     ERR << "Fix config, master addr is self addr!";
                     assert(!!!"wrong config for master addr");
                 }
+                    
+                if (auto master = master_.lock())
+                {
+                    WRN << "Disconnect from previous master " << master->GetPeerAddr().GetIP();
+                    master->OnError();
+                }
                 
                 INF << "Try connect to master "
                     << masterInfo_.addr.GetIP()
                     << ":" << masterInfo_.addr.GetPort();
+
                 Server::Instance()->TCPConnect(masterInfo_.addr, [&]() {
+                    WRN << "OnCallback: Connect master failed";
+
                     QREPL.SetMasterState(QReplState_none);
+                    if (!masterInfo_.downSince)
+                        masterInfo_.downSince = ::time(nullptr);
                 });
 
                 masterInfo_.state = QReplState_connecting;
@@ -248,7 +259,7 @@ void QReplication::Cron()
                 {
                     masterInfo_.state = QReplState_none;
                     masterInfo_.downSince = ::time(nullptr);
-                    INF << "Master is down from connected to none";
+                    WRN << "Master is down from wait_auth to none";
                 }
                 else if (master->GetAuth())
                 {
@@ -265,7 +276,6 @@ void QReplication::Cron()
                 {
                     WRN << "Haven't auth to master yet, or check masterauth password";
                 }
-
             }
                 break;
 
@@ -276,7 +286,7 @@ void QReplication::Cron()
                 {
                     masterInfo_.state = QReplState_none;
                     masterInfo_.downSince = ::time(nullptr);
-                    INF << "Master is down from connected to none";
+                    WRN << "Master is down from wait_replconf to none";
                 }
                 else
                 {
@@ -292,8 +302,19 @@ void QReplication::Cron()
             }
                 break;
 
-                
             case QReplState_wait_rdb:
+                break;
+
+            case QReplState_online:
+                if (auto master = master_.lock())
+                {
+                }
+                else
+                {
+                    masterInfo_.state = QReplState_none;
+                    masterInfo_.downSince = ::time(nullptr);
+                    WRN << "Master is down";
+                }
                 break;
                 
             default:
@@ -316,6 +337,8 @@ void QReplication::Cron()
             }
             
             masterInfo_.state = QReplState_none;
+            masterInfo_.downSince = ::time(nullptr);
+            WRN << "Master is down from connected to none";
         }
     }
 }
@@ -335,6 +358,7 @@ void QReplication::SaveTmpRdb(const char* data, std::size_t len)
         QDBLoader  loader;
         loader.Load(slaveRdbFile);
         masterInfo_.state = QReplState_online;
+        masterInfo_.downSince = 0;
     }
 }
     
@@ -453,7 +477,7 @@ void QReplication::OnInfoCommand(UnboundedBuffer& res)
                 << cli->GetPeerAddr().GetPort()
                 << ","
                 << slaveState[state]
-                << "\n";
+                << "\r\n";
         }
     }
     
@@ -462,9 +486,9 @@ void QReplication::OnInfoCommand(UnboundedBuffer& res)
     char buf[2048] = {};
     bool isMaster = GetMasterAddr().Empty();
     int n = snprintf(buf, sizeof buf - 1,
-                 "# Replication\n"
-                 "role:%s\n"
-                 "connected_slaves:%d\n%s"
+                 "# Replication\r\n"
+                 "role:%s\r\n"
+                 "connected_slaves:%d\r\n%s"
                  , isMaster ? "master" : "slave"
                  , index
                  , slaveInfo.c_str());
@@ -477,19 +501,24 @@ void QReplication::OnInfoCommand(UnboundedBuffer& res)
 
         masterInfo << "master_host:"
                    << tmpIp 
-                   << "\nmaster_port:" 
+                   << "\r\nmaster_port:" 
                    << masterInfo_.addr.GetPort()
-                   << "\nmaster_link_status:";
+                   << "\r\nmaster_link_status:";
 
         auto master = master_.lock();
-        masterInfo << (master ? "up\n" : "down\n");
+        masterInfo << (master ? "up\r\n" : "down\r\n");
         if (!master)
+        {
+            if (!masterInfo_.downSince)
+                assert (0);
+
             masterInfo << "master_link_down_since_seconds:"
-                       << (::time(nullptr) - masterInfo_.downSince) << "\n";
+                       << (::time(nullptr) - masterInfo_.downSince) << "\r\n";
+        }
     }
     
     if (!res.IsEmpty())
-        res.PushData("\n", 1);
+        res.PushData("\r\n", 2);
 
     res.PushData(buf, n);
 
@@ -501,14 +530,24 @@ void QReplication::OnInfoCommand(UnboundedBuffer& res)
     
 QError  slaveof(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    if (params[1] == "no" && params[2] == "one")
+    if (strncasecmp(params[1].data(), "no", 2) == 0 &&
+        strncasecmp(params[2].data(), "one", 3) == 0)
     {
         QREPL.SetMasterAddr(nullptr, 0);
     }
     else
     {
-        QREPL.SetMasterAddr(params[1].c_str(), std::stoi(params[2]));
-        QREPL.SetMasterState(QReplState_none);
+        long tmpPort = 0;
+        Strtol(params[2].c_str(), params[2].size(), &tmpPort);
+        unsigned short port = static_cast<unsigned short>(tmpPort);
+
+        SocketAddr reqMaster(params[1].c_str(), port);
+
+        if (port > 0 && QREPL.GetMasterAddr() != reqMaster)
+        {
+            QREPL.SetMasterAddr(params[1].c_str(), port);
+            QREPL.SetMasterState(QReplState_none);
+        }
     }
         
     FormatOK(reply);
@@ -543,3 +582,4 @@ QError  sync(const std::vector<QString>& params, UnboundedBuffer* reply)
     
 
 }
+

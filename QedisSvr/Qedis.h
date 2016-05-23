@@ -17,7 +17,6 @@ public:
     ~Qedis();
     
     bool  ParseArgs(int ac, char* av[]);
-    const char* GetRunId() const { return runid_.get(); }
     const qedis::QString& GetConfigName() const { return cfgFile_; }
 
 private:
@@ -34,5 +33,4 @@ private:
     unsigned short masterPort_;
     
     static const unsigned kRunidSize;
-    std::unique_ptr<char []> runid_;
 };

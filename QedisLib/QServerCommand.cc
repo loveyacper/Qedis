@@ -162,7 +162,7 @@ QError  client(const std::vector<QString>& params, UnboundedBuffer* reply)
     else if (params[1].size() == 4 && strncasecmp(params[1].c_str(), "kill", 4) == 0)
     {
         // only kill current client
-        QClient::Current()->OnError();
+        //QClient::Current()->OnError();
         FormatOK(reply);
     }
     else if (params[1].size() == 4 && strncasecmp(params[1].c_str(), "list", 4) == 0)
@@ -249,15 +249,19 @@ void OnServerInfoCollect(UnboundedBuffer& res)
     struct utsname  name;
     uname(&name);
     int n = snprintf(buf, sizeof buf - 1,
-                 "# Server\n"
-                 "qedis_mode:standalone\n" // not cluster node yet
-                 "os:%s %s %s\n"
-                 "tcp_port:%hu\n"
+                 "# Server\r\n"
+                 "redis_mode:standalone\r\n" // not cluster node yet
+                 "os:%s %s %s\r\n"
+                 "run_id:%s\r\n"
+                 "hz:%d\r\n"
+                 "tcp_port:%hu\r\n"
                  , name.sysname, name.release, name.machine
+                 , g_config.runid.data()
+                 , g_config.hz
                  , g_config.port);
     
     if (!res.IsEmpty())
-        res.PushData("\n", 1);
+        res.PushData("\r\n", 2);
 
     res.PushData(buf, n);
 }
@@ -268,15 +272,15 @@ void OnClientInfoCollect(UnboundedBuffer& res)
     char buf[1024];
 
     int n = snprintf(buf, sizeof buf - 1,
-                 "# Clients\n"
-                 "connected_clients:%lu\n"
-                 "blocked_clients:%lu\n"
+                 "# Clients\r\n"
+                 "connected_clients:%lu\r\n"
+                 "blocked_clients:%lu\r\n"
                  , Server::Instance()->TCPSize()
                  , QSTORE.BlockedSize());
     
     
     if (!res.IsEmpty())
-        res.PushData("\n", 1);
+        res.PushData("\r\n", 2);
 
     res.PushData(buf, n);
 }
@@ -288,7 +292,7 @@ QError info(const std::vector<QString>& params, UnboundedBuffer* reply)
     extern Delegate<void (UnboundedBuffer& )> g_infoCollector;
     g_infoCollector(res);
     
-    FormatSingle(res.ReadAddr(), res.ReadableSize(), reply);
+    FormatBulk(res.ReadAddr(), res.ReadableSize(), reply);
     return QError_ok;
 }
 

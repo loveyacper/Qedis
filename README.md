@@ -11,7 +11,7 @@ A C++11 implementation of Redis Server(not including cluster yet)
  I added three commands(ldel, skeys, hgets) for demonstration.
  
 ## Full compatible with redis
- You can test Qedis with redis-cli, redis-benchmark, or use redis as master with Qedis as slave or conversely.
+ You can test Qedis with redis-cli, redis-benchmark, or use redis as master with Qedis as slave or conversely, it also can work with redis sentinel.
 
 ## High Performance
 - Qedis is approximately 20-25% faster than redis if run benchmark with pipeline requests(set -P = 50 or higher).

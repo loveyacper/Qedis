@@ -147,9 +147,9 @@ std::size_t QPubsub::PublishMsg(const QString& channel, const QString& msg)
 
                 UnboundedBuffer   reply;
                 PreFormatMultiBulk(3, &reply);
-                FormatSingle("message", 7, &reply);
-                FormatSingle(channel, &reply);
-                FormatSingle(msg, &reply);
+                FormatBulk("message", 7, &reply);
+                FormatBulk(channel, &reply);
+                FormatBulk(msg, &reply);
                 cli->SendPacket(reply);
 
                 ++ itCli;
@@ -182,10 +182,10 @@ std::size_t QPubsub::PublishMsg(const QString& channel, const QString& msg)
 
                     UnboundedBuffer   reply;
                     PreFormatMultiBulk(4, &reply);
-                    FormatSingle("pmessage", 8, &reply);
-                    FormatSingle(pattern.first, &reply);
-                    FormatSingle(channel, &reply);
-                    FormatSingle(msg, &reply);
+                    FormatBulk("pmessage", 8, &reply);
+                    FormatBulk(pattern.first, &reply);
+                    FormatBulk(channel, &reply);
+                    FormatBulk(msg, &reply);
                     cli->SendPacket(reply);
 
                     ++ itCli;
@@ -300,14 +300,15 @@ size_t QPubsub::PubsubNumpat() const
 QError  subscribe(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     QClient* client = QClient::Current();
-    for (const auto& pa : params)
+    for (size_t i = 1; i < params.size(); ++ i)
     {
+        const auto& pa = params[i];
         size_t n = QPubsub::Instance().Subscribe(client, pa);
         if (n == 1)
         {
             PreFormatMultiBulk(3, reply);
-            FormatSingle("subscribe", 9, reply);
-            FormatSingle(pa, reply);
+            FormatBulk("subscribe", 9, reply);
+            FormatBulk(pa, reply);
             FormatInt(client->ChannelCount(), reply);
 
             SocketAddr peer;
@@ -322,14 +323,15 @@ QError  subscribe(const std::vector<QString>& params, UnboundedBuffer* reply)
 QError  psubscribe(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     QClient* client = QClient::Current();
-    for (const auto& pa : params)
+    for (size_t i = 1; i < params.size(); ++ i)
     {
+        const auto& pa = params[i];
         size_t n = QPubsub::Instance().PSubscribe(client, pa);
         if (n == 1)
         {
             PreFormatMultiBulk(3, reply);
-            FormatSingle("psubscribe", 9, reply);
-            FormatSingle(pa, reply);
+            FormatBulk("psubscribe", 9, reply);
+            FormatBulk(pa, reply);
             FormatInt(client->PatternChannelCount(), reply);
 
             SocketAddr peer;
@@ -351,7 +353,7 @@ QError  unsubscribe(const std::vector<QString>& params, UnboundedBuffer* reply)
         const auto& channels = client->GetChannels();
         for (const auto& channel : channels)
         {
-            FormatSingle(channel, reply);
+            FormatBulk(channel, reply);
         }
         
         QPubsub::Instance().UnSubscribeAll(client);
@@ -376,7 +378,7 @@ QError  unsubscribe(const std::vector<QString>& params, UnboundedBuffer* reply)
         PreFormatMultiBulk(channels.size(), reply);
         for (const auto& channel : channels)
         {
-            FormatSingle(channel, reply);
+            FormatBulk(channel, reply);
         }
     }
 
@@ -392,7 +394,7 @@ QError  punsubscribe(const std::vector<QString>& params, UnboundedBuffer* reply)
         const auto& channels = client->GetPatternChannels();
         for (const auto& channel : channels)
         {
-            FormatSingle(channel, reply);
+            FormatBulk(channel, reply);
         }
         
         QPubsub::Instance().PUnSubscribeAll(client);
@@ -417,7 +419,7 @@ QError  punsubscribe(const std::vector<QString>& params, UnboundedBuffer* reply)
         PreFormatMultiBulk(channels.size(), reply);
         for (const auto& channel : channels)
         {
-            FormatSingle(channel, reply);
+            FormatBulk(channel, reply);
         }
     }
 
@@ -448,7 +450,7 @@ QError  pubsub(const std::vector<QString>& params, UnboundedBuffer* reply)
         PreFormatMultiBulk(res.size(), reply);
         for (const auto& channel : res)
         {
-            FormatSingle(channel, reply);
+            FormatBulk(channel, reply);
         }
     }
     else if (params[1] == "numsub")
@@ -457,7 +459,7 @@ QError  pubsub(const std::vector<QString>& params, UnboundedBuffer* reply)
         for (size_t i = 2; i < params.size(); ++ i)
         {
             size_t n = QPubsub::Instance().PubsubNumsub(params[i]);
-            FormatSingle(params[i], reply);
+            FormatBulk(params[i], reply);
             FormatInt(n, reply);
         }
     }

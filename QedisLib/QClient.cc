@@ -397,7 +397,7 @@ bool QClient::Exec()
         const QCommandInfo* info = QCommandTable::GetCommandInfo(cmd[0]);
         QError err = QCommandTable::ExecuteCmd(cmd, info, &reply_);
         SendPacket(reply_);
-        _Reset();
+        reply_.Clear();
         
         // may dirty clients;
         if (err == QError_ok && (info->attr & QAttr_write))

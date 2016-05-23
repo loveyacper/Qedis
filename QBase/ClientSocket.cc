@@ -17,6 +17,8 @@ ClientSocket::ClientSocket()
 
 ClientSocket::~ClientSocket()
 {
+    if (localSock_ != INVALID_SOCKET)
+        WRN << "Destruct ClientSocket " << localSock_;
 }
 
 bool ClientSocket::Connect(const SocketAddr& dst)

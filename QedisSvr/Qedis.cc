@@ -29,7 +29,7 @@
 
 const unsigned Qedis::kRunidSize = 40;
 
-Qedis::Qedis() : port_(0), masterPort_(0), runid_(new char[kRunidSize + 1]())
+Qedis::Qedis() : port_(0), masterPort_(0)
 {
 }
 
@@ -190,7 +190,9 @@ bool Qedis::_Init()
 {
     using namespace qedis;
     
-    getRandomHexChars(runid_.get(), kRunidSize);
+    char runid[kRunidSize + 1] = "";
+    getRandomHexChars(runid, kRunidSize);
+    g_config.runid.assign(runid, kRunidSize);
     
     if (port_ != 0)
         g_config.port = port_;
@@ -253,7 +255,7 @@ bool Qedis::_Init()
 
     {
         auto repTimer = TimerManager::Instance().CreateTimer();
-        repTimer->Init(5 * 100);
+        repTimer->Init(10 * 100);
         repTimer->SetCallback([&]() {
             QREPL.Cron();
         });

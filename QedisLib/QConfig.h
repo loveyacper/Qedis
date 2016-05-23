@@ -50,6 +50,8 @@ struct QConfig
     unsigned short masterPort;  // replication
     QString   masterauth;
     
+    QString   runid;
+
     QString   includefile;      // the template config
 
     std::vector<QString>  modules; // modules
