@@ -472,9 +472,10 @@ void QReplication::OnInfoCommand(UnboundedBuffer& res)
                                      (socklen_t)(sizeof tmpIp));
             oss << tmpIp;
             
-            auto state = cli->GetSlaveInfo() ? cli->GetSlaveInfo()->state : 0;
+            auto slaveInfo = cli->GetSlaveInfo();
+            auto state = slaveInfo ? slaveInfo->state : 0;
             oss << ","
-                << cli->GetPeerAddr().GetPort()
+                << (slaveInfo ? slaveInfo->listenPort : 0)
                 << ","
                 << slaveState[state]
                 << "\r\n";
@@ -483,7 +484,7 @@ void QReplication::OnInfoCommand(UnboundedBuffer& res)
     
     std::string slaveInfo(oss.str());
 
-    char buf[2048] = {};
+    char buf[1024] = {};
     bool isMaster = GetMasterAddr().Empty();
     int n = snprintf(buf, sizeof buf - 1,
                  "# Replication\r\n"
