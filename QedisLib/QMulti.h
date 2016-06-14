@@ -19,7 +19,7 @@ public:
     void operator= (const QMulti& ) = delete;
 
     void  Watch(QClient* client, int dbno, const QString& key);
-    void  Multi(QClient* client);
+    bool  Multi(QClient* client);
     bool  Exec(QClient* client);
     void  Discard(QClient* client);
 

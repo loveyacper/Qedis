@@ -22,10 +22,14 @@ void  QMulti::Watch(QClient* client, int dbno, const QString& key)
 }
 
 
-void QMulti::Multi(QClient* client)
+bool QMulti::Multi(QClient* client)
 {
+    if (client->IsFlagOn(ClientFlag_multi))
+        return false;
+
     client->ClearMulti();
     client->SetFlag(ClientFlag_multi);
+    return true;
 }
 
 bool QMulti::Exec(QClient* client)
@@ -146,8 +150,12 @@ QError  unwatch(const std::vector<QString>& params, UnboundedBuffer* reply)
 QError  multi(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     QClient* client = QClient::Current();
-    QMulti::Instance().Multi(client);
-    FormatOK(reply);
+    if (QMulti::Instance().Multi(client))
+        FormatOK(reply);
+    else
+        reply->PushData("-ERR MULTI calls can not be nested\r\n",
+                 sizeof "-ERR MULTI calls can not be nested\r\n" - 1);
+
     return QError_ok;
 }
 
@@ -170,8 +178,17 @@ QError  exec(const std::vector<QString>& params, UnboundedBuffer* reply)
 QError  discard(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     QClient* client = QClient::Current();
-    QMulti::Instance().Discard(client);
-    FormatOK(reply);
+    if (!client->IsFlagOn(ClientFlag_multi))
+    {
+        reply->PushData("-ERR DISCARD without MULTI\r\n",
+                 sizeof "-ERR DISCARD without MULTI\r\n" - 1);
+    }
+    else
+    {
+        QMulti::Instance().Discard(client);
+        FormatOK(reply);
+    }
+
     return QError_ok;
 }
 

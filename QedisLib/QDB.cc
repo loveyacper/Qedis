@@ -334,7 +334,10 @@ void QDBSaver::SaveString(int64_t intVal)
     }
     else
     {
-        assert (false);
+        char buf[64];
+        auto len = snprintf(buf, sizeof buf, "%lld", intVal);
+        SaveLength(static_cast<uint64_t>(len));
+        qdb_.Write(buf, len);
     }
 }
     
@@ -539,7 +542,7 @@ size_t  QDBLoader::LoadLength(bool& special)
             lenResult = byte & kLow6Bits; // high 6 bits;
             lenResult <<= 8;
             
-            const int8_t bytelow = qdb_.Read<int8_t>();
+            const uint8_t bytelow = qdb_.Read<uint8_t>();
             
             lenResult |= bytelow;
             break;
