@@ -318,7 +318,7 @@ QError  lindex(const vector<QString>& params, UnboundedBuffer* reply)
         result = &*it;
     }
     
-    FormatSingle(result->c_str(), result->size(), reply);
+    FormatBulk(*result, reply);
     return   QError_ok;
 }
 

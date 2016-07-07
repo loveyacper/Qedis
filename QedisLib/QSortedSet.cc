@@ -390,13 +390,13 @@ static QError GenericRange(const std::vector<QString>& params, UnboundedBuffer* 
     {
         for (const auto& s : res)
         {
-            FormatSingle(s.first, reply);
+            FormatBulk(s.first, reply);
             if (withScore)
             {
                 char score[64];
                 int  len = Double2Str(score, sizeof score, s.second);
             
-                FormatSingle(score, len, reply);
+                FormatBulk(score, len, reply);
             }
         }
     }
@@ -404,13 +404,13 @@ static QError GenericRange(const std::vector<QString>& params, UnboundedBuffer* 
     {
         for (const auto& s : res)
         {
-            FormatSingle(s.first, reply);
+            FormatBulk(s.first, reply);
             if (withScore)
             {
                 char score[64];
                 int  len = Double2Str(score, sizeof score, s.second);
                 
-                FormatSingle(score, len, reply);
+                FormatBulk(score, len, reply);
             }
         }
     }
@@ -470,13 +470,13 @@ static QError GenericScoreRange(const std::vector<QString>& params, UnboundedBuf
     {
         for (const auto& s : res)
         {
-            FormatSingle(s.first, reply);
+            FormatBulk(s.first, reply);
             if (withScore)
             {
                 char score[64];
                 int  len = Double2Str(score, sizeof score, s.second);
                 
-                FormatSingle(score, len, reply);
+                FormatBulk(score, len, reply);
             }
         }
     }
@@ -484,13 +484,13 @@ static QError GenericScoreRange(const std::vector<QString>& params, UnboundedBuf
     {
         for (const auto& s : res)
         {
-            FormatSingle(s.first, reply);
+            FormatBulk(s.first, reply);
             if (withScore)
             {
                 char score[64];
                 int  len = Double2Str(score, sizeof score, s.second);
                 
-                FormatSingle(score, len, reply);
+                FormatBulk(score, len, reply);
             }
         }
     }

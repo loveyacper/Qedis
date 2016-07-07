@@ -166,7 +166,7 @@ void  QAOFThreadController::AOFThread::Run()
     
     while (IsAlive())
     {
-        // sync immediately, the redis sync policy is useless
+        //sync incrementally, always, the redis sync policy is useless
         if (Flush())
             file_.Sync();
         else
@@ -404,6 +404,9 @@ bool  QAOFLoader::Load(const char* name)
 
     size_t  maxLen = std::numeric_limits<size_t>::max();
     const char* content = file.Read(maxLen);
+    
+    if (maxLen == 0)
+        return false;
 
     QProtoParser  parser;
     // extract commands from file content

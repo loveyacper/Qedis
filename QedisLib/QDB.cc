@@ -335,7 +335,7 @@ void QDBSaver::SaveString(int64_t intVal)
     else
     {
         char buf[64];
-        auto len = snprintf(buf, sizeof buf, "%lld", intVal);
+        auto len = Number2Str(buf, sizeof buf, intVal);
         SaveLength(static_cast<uint64_t>(len));
         qdb_.Write(buf, len);
     }
@@ -1117,7 +1117,7 @@ void QDBLoader::_LoadAux()
     {
         /* We ignore fields we don't understand, as by AUX field 
          * contract. */
-        ERR << "Unrecognized RDB AUX field: '" << auxkey << "': " << auxvalue;
+        DBG << "Unrecognized RDB AUX field: '" << auxkey << "': " << auxvalue;
     }
 }
 

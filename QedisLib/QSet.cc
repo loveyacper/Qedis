@@ -58,7 +58,7 @@ QError  spop(const std::vector<QString>& params, UnboundedBuffer* reply)
     QString res;
     if (RandomMember(*set, res))
     {
-        FormatSingle(res, reply);
+        FormatBulk(res, reply);
         set->erase(res);
     }
     else
@@ -79,7 +79,7 @@ QError  srandmember(const std::vector<QString>& params, UnboundedBuffer* reply)
     QString res;
     if (RandomMember(*set, res))
     {
-        FormatSingle(res, reply);
+        FormatBulk(res, reply);
     }
     else
     {

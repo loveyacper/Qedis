@@ -36,7 +36,7 @@ QError  type(const std::vector<QString>& params, UnboundedBuffer* reply)
             break;
     }
 
-    FormatSingle(info, strlen(info), reply);
+    FormatSingle(info, reply);
     return   QError_ok;
 }
 
@@ -246,7 +246,7 @@ QError  randomkey(const std::vector<QString>& params, UnboundedBuffer* reply)
     }
     else
     {
-        FormatSingle(res.c_str(), res.size(), reply);
+        FormatBulk(res, reply);
     }
     
     return   QError_ok;

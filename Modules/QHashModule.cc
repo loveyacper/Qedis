@@ -29,7 +29,7 @@ QError hgets(const std::vector<QString>& params, UnboundedBuffer* reply)
     PreFormatMultiBulk(res.size(), reply);
     for (auto v : res)
     {
-        FormatSingle(*v, reply);
+        FormatBulk(*v, reply);
     }
 
     return   QError_ok;

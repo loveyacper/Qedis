@@ -88,7 +88,7 @@ QError  hget(const std::vector<QString>& params, UnboundedBuffer* reply)
     auto it = hash->find(params[2]);
 
     if  (it != hash->end())
-        FormatSingle(it->second, reply);
+        FormatBulk(it->second, reply);
     else
         FormatNull(reply);
 
@@ -107,7 +107,7 @@ QError  hmget(const std::vector<QString>& params, UnboundedBuffer* reply)
     {
         auto it = hash->find(params[i]);
         if (it != hash->end())
-            FormatSingle(it->second, reply);
+            FormatBulk(it->second, reply);
         else
             FormatNull(reply);
     }
@@ -286,7 +286,7 @@ QError  hincrbyfloat(const std::vector<QString>& params, UnboundedBuffer* reply)
     *str = tmp;
     (void)len;
 
-    FormatSingle(*str, reply);
+    FormatBulk(*str, reply);
 
     return QError_ok;
 }

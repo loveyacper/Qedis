@@ -262,7 +262,7 @@ QError  getrange(const std::vector<QString>& params, UnboundedBuffer* reply)
     if (err != QError_ok)
     {
         if (err == QError_notExist)
-            FormatSingle("", 0, reply);
+            FormatBulk("", 0, reply);
         else
             ReplyError(err, reply); 
         return err;  
@@ -309,7 +309,7 @@ QError  getset(const std::vector<QString>& params, UnboundedBuffer* reply)
         if (str->empty())
             FormatNull(reply);
         else    
-            FormatSingle(str->c_str(), str->size(), reply); 
+            FormatBulk(*str, reply);
 
         *str = params[2];
         }
@@ -516,7 +516,7 @@ static QError  ChangeFloatValue(const QString& key, float delta, UnboundedBuffer
     value->encoding = QEncode_raw;
     value->value = std::make_shared<QString>(newVal, len);
 
-    FormatSingle(newVal, len, reply);
+    FormatBulk(newVal, len, reply);
     return QError_ok;
 }
 
