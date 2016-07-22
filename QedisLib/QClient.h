@@ -27,7 +27,7 @@ struct QSlaveInfo;
 class QClient: public StreamSocket
 {
 private:
-    BODY_LENGTH_T _HandlePacket(AttachedBuffer& buf) override;
+    PacketLength _HandlePacket(AttachedBuffer& buf) override;
 
 public:
     QClient();
@@ -95,7 +95,7 @@ public:
     void RewriteCmd(std::vector<QString>& params) { parser_.SetParams(params); }
 
 private:
-    BODY_LENGTH_T _ProcessInlineCmd(const char* , size_t, std::vector<QString>& );
+    PacketLength _ProcessInlineCmd(const char* , size_t, std::vector<QString>& );
     void _Reset();
 
     QProtoParser parser_;

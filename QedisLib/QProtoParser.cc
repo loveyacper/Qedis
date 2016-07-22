@@ -116,7 +116,11 @@ QParseResult QProtoParser::_ParseStrlen(const char*& ptr, const char* end, int& 
 
     ++ ptr;
 
-    return GetIntUntilCRLF(ptr,  end - ptr, result);
+    const auto ret = GetIntUntilCRLF(ptr,  end - ptr, result);
+    if (ret != QParseResult::ok)
+        -- ptr;
+
+    return ret;
 }
 
 }

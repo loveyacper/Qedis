@@ -15,7 +15,7 @@ QClient*  QClient::s_pCurrentClient = 0;
 std::set<std::weak_ptr<QClient>, std::owner_less<std::weak_ptr<QClient> > >
           QClient::s_monitors;
 
-BODY_LENGTH_T QClient::_ProcessInlineCmd(const char* buf,
+PacketLength QClient::_ProcessInlineCmd(const char* buf,
                                          size_t bytes,
                                          std::vector<QString>& params)
 {
@@ -31,7 +31,7 @@ BODY_LENGTH_T QClient::_ProcessInlineCmd(const char* buf,
             if (!res.empty())
                 params.emplace_back(std::move(res));
 
-            return static_cast<BODY_LENGTH_T>(i + 2);
+            return static_cast<PacketLength>(i + 2);
         }
 
         if (isblank(buf[i]))
@@ -141,7 +141,7 @@ static int ProcessMaster(const char* start, const char* end)
     return -1; // do nothing
 }
 
-BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
+PacketLength QClient::_HandlePacket(AttachedBuffer& buf)
 {
     s_pCurrentClient = this;
 
@@ -156,7 +156,7 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
         // check slave state
         auto recved = ProcessMaster(start, end);
         if (recved != -1)
-            return static_cast<BODY_LENGTH_T>(recved);
+            return static_cast<PacketLength>(recved);
     }
 
     auto parseRet = parser_.ParseRequest(ptr, end);
@@ -180,7 +180,7 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
     }
     else if (parseRet != QParseResult::ok)
     {
-        return static_cast<BODY_LENGTH_T>(ptr - start);
+        return static_cast<PacketLength>(ptr - start);
     }
     
     QEDIS_DEFER
@@ -191,7 +191,7 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
     // handle packet
     const auto& params = parser_.GetParams();
     if (params.empty())
-        return static_cast<BODY_LENGTH_T>(ptr - start);
+        return static_cast<PacketLength>(ptr - start);
 
     QString cmd(params[0]);
     std::transform(params[0].begin(), params[0].end(), cmd.begin(), ::tolower);
@@ -216,7 +216,7 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
         {
             ReplyError(QError_needAuth, &reply_);
             SendPacket(reply_);
-            return static_cast<BODY_LENGTH_T>(ptr - start);
+            return static_cast<PacketLength>(ptr - start);
         }
     }
     
@@ -231,7 +231,7 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
     {
         ReplyError(QError_unknowCmd, &reply_);
         SendPacket(reply_);
-        return static_cast<BODY_LENGTH_T>(ptr - start);
+        return static_cast<PacketLength>(ptr - start);
     }
 
     // check transaction
@@ -259,7 +259,7 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
                 INF << "queue cmd " << cmd.c_str();
             }
             
-            return static_cast<BODY_LENGTH_T>(ptr - start);
+            return static_cast<PacketLength>(ptr - start);
         }
     }
     
@@ -287,7 +287,7 @@ BODY_LENGTH_T QClient::_HandlePacket(AttachedBuffer& buf)
         Propogate(params);
     }
     
-    return static_cast<BODY_LENGTH_T>(ptr - start);
+    return static_cast<PacketLength>(ptr - start);
 }
 
 QClient*  QClient::Current()

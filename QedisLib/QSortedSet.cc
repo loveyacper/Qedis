@@ -25,7 +25,7 @@ double    QSortedSet::UpdateMember(const Member2Score::iterator& itMem, double d
     auto newScore = oldScore + delta;
     itMem->second = newScore;
 
-    Score2Members::iterator  itScore(scores_.find(oldScore));
+    auto itScore(scores_.find(oldScore));
     assert (itScore != scores_.end());
 
     size_t ret = itScore->second.erase(itMem->first);
@@ -40,7 +40,7 @@ double    QSortedSet::UpdateMember(const Member2Score::iterator& itMem, double d
 int     QSortedSet::Rank(const QString& member) const
 {
     double    score;
-    Member2Score::const_iterator  itMem(members_.find(member));
+    auto itMem(members_.find(member));
     if (itMem != members_.end())
     {
         score = itMem->second;
@@ -115,7 +115,6 @@ QSortedSet::GetMemberByRank(size_t  rank) const
     QString member;
 
     size_t  iterRank = 0;
-   // Score2Members::const_iterator   it(scores_.begin());
 
     for ( auto it(scores_.begin());
           it != scores_.end();
@@ -171,7 +170,7 @@ QSortedSet::RangeByScore(double minScore, double maxScore)
     if (minScore > maxScore)
         return std::vector<Member2Score::value_type >();
     
-    Score2Members::const_iterator  itMin = scores_.lower_bound(minScore);
+    auto itMin = scores_.lower_bound(minScore);
     if (itMin == scores_.end())
         return std::vector<Member2Score::value_type >();
     
@@ -402,8 +401,9 @@ static QError GenericRange(const std::vector<QString>& params, UnboundedBuffer* 
     }
     else
     {
-        for (const auto& s : res)
+        for (auto it(res.rbegin()); it != res.rend(); ++ it)
         {
+            const auto& s = *it;
             FormatBulk(s.first, reply);
             if (withScore)
             {
@@ -482,8 +482,9 @@ static QError GenericScoreRange(const std::vector<QString>& params, UnboundedBuf
     }
     else
     {
-        for (const auto& s : res)
+        for (auto it(res.rbegin()); it != res.rend(); ++ it)
         {
+            const auto& s = *it;
             FormatBulk(s.first, reply);
             if (withScore)
             {

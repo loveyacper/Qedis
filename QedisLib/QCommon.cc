@@ -341,13 +341,13 @@ QParseResult  GetIntUntilCRLF(const char*& ptr, std::size_t nBytes, int& val)
         ++ i;
     }
     
-    val = 0;
+    int value = 0;
     for (; i < nBytes; ++ i)
     {
         if (isdigit(ptr[i]))
         {
-            val *= 10;
-            val += ptr[i] - '0';
+            value *= 10;
+            value += ptr[i] - '0';
         }
         else
         {
@@ -362,10 +362,11 @@ QParseResult  GetIntUntilCRLF(const char*& ptr, std::size_t nBytes, int& val)
     }
     
     if (negtive)
-        val *= -1;
+        value *= -1;
     
     ptr += i;
     ptr += 2;
+    val = value;
     return QParseResult::ok;
 }
 

@@ -7,7 +7,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-typedef int32_t  BODY_LENGTH_T;
+using PacketLength = int32_t;
 
 // Abstraction for a TCP connection
 class StreamSocket : public Socket
@@ -52,7 +52,7 @@ private:
     std::function<void ()> onDisconnect_;
 
     int    _Send(const BufferSequence& bf);
-    virtual BODY_LENGTH_T _HandlePacket(AttachedBuffer& buf) = 0;
+    virtual PacketLength _HandlePacket(AttachedBuffer& buf) = 0;
 
     // For human readability
     enum
