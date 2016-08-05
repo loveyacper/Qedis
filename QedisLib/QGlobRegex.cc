@@ -5,6 +5,23 @@
 namespace qedis
 {
 
+bool NotGlobRegex(const char* pattern, std::size_t plen)
+{
+    for (std::size_t i(0); i < plen; ++ i)
+    {
+        if (pattern[i] == '?' ||
+            pattern[i] == '\\' ||
+            pattern[i] == '[' ||
+            pattern[i] == ']' ||
+            pattern[i] == '*' ||
+            pattern[i] == '^' ||
+            pattern[i] == '-')
+            return false; //  may be regex, may not, who cares?
+    }
+
+    return true; // must not be regex
+}
+
 QGlobRegex::QGlobRegex(const char* pattern, std::size_t plen,
                        const char* text, std::size_t tlen)
 {

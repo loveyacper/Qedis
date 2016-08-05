@@ -73,10 +73,10 @@ void UnboundedBuffer::_AssureSpace(std::size_t nSize)
 
     while (nSize > WritableSize() + readPos_)
     {
-        if (maxSize == 0)
-            maxSize = 1;
+        if (maxSize < 64)
+            maxSize = 64;
         else if (maxSize <= UnboundedBuffer::MAX_BUFFER_SIZE)
-            maxSize <<= 1;
+            maxSize += (maxSize / 2);
         else 
             break;
 

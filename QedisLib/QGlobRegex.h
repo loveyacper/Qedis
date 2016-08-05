@@ -7,6 +7,8 @@
 namespace qedis
 {
 
+bool NotGlobRegex(const char* pattern, std::size_t plen);
+
 class QGlobRegex
 {
 public:
@@ -16,6 +18,7 @@ public:
     void SetPattern(const char* pattern, std::size_t plen);
     void SetText(const char* text, std::size_t tlen);
     bool TryMatch();
+
 
 private:
     bool _ProcessStar();

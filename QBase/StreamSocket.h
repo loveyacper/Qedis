@@ -52,7 +52,7 @@ private:
     std::function<void ()> onDisconnect_;
 
     int    _Send(const BufferSequence& bf);
-    virtual PacketLength _HandlePacket(AttachedBuffer& buf) = 0;
+    virtual PacketLength _HandlePacket(const char* msg, std::size_t len) = 0;
 
     // For human readability
     enum

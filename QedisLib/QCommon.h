@@ -108,8 +108,15 @@ extern struct QErrorInfo
 template <typename T>
 inline std::size_t Number2Str(char* ptr, std::size_t nBytes, T val)
 {
-    if (!ptr || !nBytes)
+    if (!ptr || nBytes < 2)
         return 0;
+
+    if (val == 0)
+    {
+        ptr[0] = '0';
+        ptr[1] = 0;
+        return 1;
+    }
 
     bool negative = false;
     if (val < 0)
@@ -137,6 +144,7 @@ inline std::size_t Number2Str(char* ptr, std::size_t nBytes, T val)
     }
 
     std::reverse(ptr, ptr + off);
+    ptr[off] = 0;
 
     return off;
 }

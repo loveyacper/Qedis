@@ -10,6 +10,8 @@
 namespace qedis
 {
 
+uint32_t QObject::lruclock = ::time(nullptr);
+
 int QStore::dirty_ = 0;
 
 void QStore::ExpiresDB::SetExpire(const QString& key, uint64_t when)
@@ -379,24 +381,25 @@ QType  QStore::KeyType(const QString& key) const
     return  QType(it->second.type);
 }
 
-static bool RandomMember(const QDB& hash, QString& res)
+static bool RandomMember(const QDB& hash, QString& res, QObject** val)
 {
     QDB::const_local_iterator it = RandomHashMember(hash);
     
     if (it != QDB::const_local_iterator())
     {
         res = it->first;
+        if (val) *val = const_cast<QObject*>(&it->second);
         return true;
     }
     
     return false;
 }
 
-QString QStore::RandomKey() const
+QString QStore::RandomKey(QObject** val) const
 {
     QString  res;
     if (!store_.empty() && !store_[dbno_].empty())
-        RandomMember(store_[dbno_], res);
+        RandomMember(store_[dbno_], res, val);
 
     return  res;
 }
@@ -416,12 +419,25 @@ size_t QStore::ScanKey(size_t cursor, size_t count, std::vector<QString>& res) c
     return newCursor;
 }
 
-QError  QStore::GetValue(const QString& key, QObject*& value)
+QError  QStore::GetValue(const QString& key, QObject*& value, bool touch)
 {
-    return GetValueByType(key, value);
+    if (touch)
+        return GetValueByType(key, value);
+    else
+        return GetValueByTypeNoTouch(key, value);
 }
 
 QError  QStore::GetValueByType(const QString& key, QObject*& value, QType type)
+{
+    return _GetValueByType(key, value, type, true);
+}
+
+QError  QStore::GetValueByTypeNoTouch(const QString& key, QObject*& value, QType type)
+{
+    return _GetValueByType(key, value, type, false);
+}
+
+QError  QStore::_GetValueByType(const QString& key, QObject*& value, QType type, bool touch)
 {
     if (_ExpireIfNeed(key, ::Now()) == ExpireResult::expired)
     {
@@ -440,6 +456,12 @@ QError  QStore::GetValueByType(const QString& key, QObject*& value, QType type)
         else
         {
             value = &it->second;
+
+            // Do not update if child process exists
+            extern pid_t g_qdbPid;
+            if (touch && g_rewritePid == -1 && g_qdbPid == -1)
+                value->lru = QObject::lruclock;
+
             return QError_ok;
         }
     }
@@ -456,6 +478,7 @@ QObject* QStore::SetValue(const QString& key, const QObject& value)
 {
     auto db = &store_[dbno_];
     QObject& obj = ((*db)[key] = value);
+    obj.lru = QObject::lruclock;
     return &obj;
 }
 
@@ -552,6 +575,82 @@ void    QStore::InitBlockedTimer()
 
         TimerManager::Instance().AddTimer(timer);
     }
+}
+
+
+static void EvictItems()
+{
+    QObject::lruclock = static_cast<uint32_t>(::time(nullptr));
+    QObject::lruclock &= kMaxLRUValue;
+
+    int currentDb = QSTORE.GetDB();
+    
+    QEDIS_DEFER {
+        QSTORE.SelectDB(currentDb);
+    };
+
+    int tryCnt = 0;
+    size_t usedMem = 0;
+    while (tryCnt ++ < 32 && (usedMem = getMemoryInfo(VmRSS)) > g_config.maxmemory)
+    {
+        if (g_config.noeviction)
+        {
+            WRN << "noeviction policy, but memory usage exceeds: " << usedMem;
+            return;
+        }
+
+        for (int dbno = 0; true; ++ dbno)
+        {
+            if (QSTORE.SelectDB(dbno) == -1)
+                break;
+
+            if (QSTORE.DBSize() == 0)
+                continue;
+        
+            QString evictKey;
+            uint32_t choosedIdle = 0;
+            for (int i = 0; i < g_config.maxmemorySamples; ++ i)
+            {
+                QObject* val = nullptr;
+
+                auto key = QSTORE.RandomKey(&val);
+                if (!val) continue;
+                
+                auto idle = EstimateIdleTime(val->lru);
+                if (evictKey.empty() || choosedIdle < idle)
+                {
+                    evictKey = std::move(key);
+                    choosedIdle = idle;
+                }
+            }
+
+            if (!evictKey.empty())
+            {
+                QSTORE.DeleteKey(evictKey);
+                WRN << "Evict '" << evictKey << "' in db " << dbno << ", idle time: " << choosedIdle << ", used mem: " << usedMem;
+            }
+        }
+    }
+}
+
+uint32_t EstimateIdleTime(uint32_t lru)
+{
+    if (lru <= QObject::lruclock)
+        return QObject::lruclock - lru;
+    else
+        return (kMaxLRUValue - lru) + QObject::lruclock;
+}
+
+
+void QStore::InitEvictionTimer()
+{
+    auto timer = TimerManager::Instance().CreateTimer();
+    timer->Init(1000); // emit eviction every second.
+    timer->SetCallback([] () {
+        EvictItems();
+    });
+
+    TimerManager::Instance().AddTimer(timer);
 }
 
 

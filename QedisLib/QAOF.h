@@ -29,13 +29,10 @@ public:
     bool  ProcessTmpBuffer(BufferSequence& bf);
     void  SkipTmpBuffer(size_t  n);
     
-    const QString&  GetAofFile() const { return aofFile_; }
-    void  SetAofFile(const QString& name);
-
     static void  RewriteDoneHandler(int exitcode, int bysignal);
     
 private:
-    QAOFThreadController() : lastDb_(-1), aofFile_("appendonly.aof") {}
+    QAOFThreadController() : lastDb_(-1) {}
 
     class AOFThread
     {
@@ -48,8 +45,7 @@ private:
         bool  IsAlive() const {  return alive_; }
         void  Stop()          {  alive_ = false; }
         
-        bool  Open(const char* file) { return file_.Open(file); }
-        void  Close()  {    file_.Close(); }
+        //void  Close();
         void  SaveCommand(const std::vector<QString>& params);
         
         bool  Flush();
@@ -69,8 +65,6 @@ private:
     std::shared_ptr<AOFThread>  aofThread_;
     AsyncBuffer                 aofBuffer_;
     int                         lastDb_;
-    
-    QString                     aofFile_;
 };
 
 

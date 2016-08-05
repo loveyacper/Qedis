@@ -170,7 +170,7 @@ static void LoadDbFromDisk()
     
     //  USE AOF RECOVERY FIRST, IF FAIL, THEN RDB
     QAOFLoader aofLoader;
-    if (aofLoader.Load(QAOFThreadController::Instance().GetAofFile().c_str()))
+    if (aofLoader.Load(g_config.appendfilename.c_str()))
     {
         const auto& cmds = aofLoader.GetCmds();
         for (const auto& cmd : cmds)
@@ -229,13 +229,10 @@ bool Qedis::_Init()
     QCommandTable::Init();
     QCommandTable::AliasCommand(g_config.aliases);
     QSTORE.Init(g_config.databases);
-    QSTORE.password_ = g_config.password;
     QSTORE.InitExpireTimer();
     QSTORE.InitBlockedTimer();
+    QSTORE.InitEvictionTimer();
     QPubsub::Instance().InitPubsubTimer();
-    
-    if (g_config.appendonly)
-        QAOFThreadController::Instance().SetAofFile(g_config.appendfilename);
     
     LoadDbFromDisk();
 

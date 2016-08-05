@@ -27,7 +27,7 @@ struct QSlaveInfo;
 class QClient: public StreamSocket
 {
 private:
-    PacketLength _HandlePacket(AttachedBuffer& buf) override;
+    PacketLength _HandlePacket(const char* msg, std::size_t len) override;
 
 public:
     QClient();

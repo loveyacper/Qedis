@@ -37,7 +37,7 @@ const QCommandInfo QCommandTable::s_info[] =
     {"flushall",    QAttr_write,               1,  &flushall},
     {"client",      QAttr_read,               -2,  &client },
     {"debug",       QAttr_read,               -2,  &debug},
-    {"shutdown",    QAttr_read,                1,  &shutdown},
+    {"shutdown",    QAttr_read,               -1,  &shutdown},
     {"bgrewriteaof",QAttr_read,                1,  &bgrewriteaof},
     {"ping",        QAttr_read,                1,  &ping},
     {"echo",        QAttr_read,                2,  &echo},
@@ -45,6 +45,7 @@ const QCommandInfo QCommandTable::s_info[] =
     {"monitor",     QAttr_read,                1,  &monitor},
     {"auth",        QAttr_read,                2,  &auth},
     {"slowlog",     QAttr_read,               -2,  &slowlog},
+    {"config",      QAttr_read,               -3,  &config},
     
     // string
     {"strlen",      QAttr_read,                2,  &strlen},
@@ -183,6 +184,7 @@ void QCommandTable::Init()
         s_handlers[info.cmd] = &info;
     }
     
+    g_infoCollector += OnMemoryInfoCollect;
     g_infoCollector += OnServerInfoCollect;
     g_infoCollector += OnClientInfoCollect;
     g_infoCollector += std::bind(&QReplication::OnInfoCommand, &QREPL, std::placeholders::_1);

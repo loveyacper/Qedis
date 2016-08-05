@@ -55,10 +55,16 @@ struct QConfig
     QString   includefile;      // the template config
 
     std::vector<QString>  modules; // modules
+
+    // use redis as cache, level db as backup
+    uint64_t maxmemory; // default 2GB
+    int maxmemorySamples; // default 5
+    bool noeviction; // default true
     
     QConfig();
 
-    bool      CheckArgs() const;
+    bool CheckArgs() const;
+    bool CheckPassword(const QString& pwd) const;
 };
 
 extern  QConfig  g_config;

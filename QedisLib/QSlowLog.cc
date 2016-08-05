@@ -47,7 +47,7 @@ void QSlowLog::Begin()
 
 void QSlowLog::EndAndStat(const std::vector<QString>& cmds)
 {
-    if (!threshold_)
+    if (!threshold_ || beginUs_ == 0)
         return;
     
     timeval  end;

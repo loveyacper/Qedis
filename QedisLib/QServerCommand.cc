@@ -10,6 +10,7 @@
 #include "QAOF.h"
 #include "QConfig.h"
 #include "QSlowLog.h"
+#include "QGlobRegex.h"
 #include "Delegate.h"
 
 
@@ -197,7 +198,7 @@ QError  debug(const std::vector<QString>& params, UnboundedBuffer* reply)
     else if (strncasecmp(params[1].c_str(), "object", 6) == 0 && params.size() == 3)
     {
         QObject* obj = nullptr;
-        err = QSTORE.GetValue(params[2], obj);
+        err = QSTORE.GetValue(params[2], obj, false);
         
         if (err != QError_ok)
         {
@@ -205,11 +206,12 @@ QError  debug(const std::vector<QString>& params, UnboundedBuffer* reply)
         }
         else
         {
-            // ref count,  encoding
+            // ref count,  encoding, idle time
             char buf[512];
-            int  len = snprintf(buf, sizeof buf, "ref count:%ld, encoding:%s",
+            int  len = snprintf(buf, sizeof buf, "ref count:%ld, encoding:%s, idletime:%u",
                                 obj->value.use_count(),
-                                EncodingStringInfo(obj->encoding));
+                                EncodingStringInfo(obj->encoding),
+                                EstimateIdleTime(obj->lru));
             FormatBulk(buf, len, reply);
         }
     }
@@ -224,6 +226,12 @@ QError  debug(const std::vector<QString>& params, UnboundedBuffer* reply)
 
 QError  shutdown(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
+    if (params.size() == 2 && strncasecmp(params[1].c_str(), "save", 4) == 0)
+    {
+        QDBSaver  qdb;
+        qdb.Save(g_config.rdbfullname.c_str());
+    }
+
     Server::Instance()->Terminate();
     return   QError_ok;
 }
@@ -239,6 +247,38 @@ QError  echo(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     FormatBulk(params[1], reply);
     return   QError_ok;
+}
+
+void OnMemoryInfoCollect(UnboundedBuffer& res)
+{
+    // memory info
+    auto minfo = getMemoryInfo();
+
+    char buf[1024];
+    int n = snprintf(buf, sizeof buf - 1,
+                 "# Memory\r\n"
+                 "used_memory_peak:%lu\r\n"
+                 "used_memory:%lu\r\n"
+                 "used_memory_human:%sMB\r\n"
+                 "used_memory_rss_peak:%lu\r\n"
+                 "used_memory_rss:%lu\r\n"
+                 "used_memory_rss_human:%sMB\r\n"
+                 "used_memory_lock:%lu\r\n"
+                 "used_memory_swap:%lu\r\n"
+                 , minfo[VmPeak]
+                 , minfo[VmSize]
+                 , std::to_string(minfo[VmSize] / 1024.0f / 1024.0f).data()
+                 , minfo[VmHWM]
+                 , minfo[VmRSS]
+                 , std::to_string(minfo[VmRSS] / 1024.0f / 1024.0f).data()
+                 , minfo[VmLck]
+                 , minfo[VmSwap]
+            );
+    
+    if (!res.IsEmpty())
+        res.PushData("\r\n", 2);
+
+    res.PushData(buf, n);
 }
 
 void OnServerInfoCollect(UnboundedBuffer& res)
@@ -307,7 +347,7 @@ QError  monitor(const std::vector<QString>& params, UnboundedBuffer* reply)
 
 QError  auth(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    if (QSTORE.CheckPassword(params[1]))
+    if (g_config.CheckPassword(params[1]))
     {
         QClient::Current()->SetAuth();
         FormatOK(reply);
@@ -371,5 +411,211 @@ QError  slowlog(const std::vector<QString>& params, UnboundedBuffer* reply)
     
     return   QError_ok;
 }
+
+
+// Config options get/set
+//
+enum ConfigType {
+    Config_string,
+    Config_bool,
+    Config_int,
+    Config_int64,
+};
+
+struct ConfigInfo
+{
+    ConfigType type;
+    bool canModify;
+    void* value;
+};
+
+                    
+// TODO sanity check: use function setter
+std::map<QString, ConfigInfo> configOptions = {
+    {"appendonly", {Config_bool, true, &g_config.appendonly }},
+    {"bind", {Config_string, false, &g_config.ip}},
+    {"dbfilename", {Config_string, true, &g_config.rdbfullname}},
+    {"databases", {Config_int, false, &g_config.databases}},
+    {"daemonize", {Config_bool, false, &g_config.daemonize}},
+    {"hz", {Config_int, false, &g_config.hz}},
+    {"logfile", {Config_string, false, &g_config.logdir}},
+    {"loglevel",  {Config_string, true, &g_config.loglevel}},
+    {"masterauth", {Config_string, true, &g_config.masterauth}},
+    {"maxclients", {Config_int, true, &g_config.maxclients}},
+    {"port", {Config_int, false, &g_config.port}},
+    {"requirepass", {Config_string, true, &g_config.password}},
+    {"rdbchecksum", {Config_bool, false, &g_config.rdbchecksum}},
+    {"rdbcompression", {Config_bool, false, &g_config.rdbcompression}},
+    {"slowlog-log-slower-than", {Config_int, true, &g_config.slowlogtime}},
+    {"slowlog-max-len", {Config_int, true, &g_config.slowlogmaxlen}},
+    {"slaveof", {Config_string, false, &g_config.masterIp}},
+    {"maxmemory", {Config_int64, true, &g_config.maxmemory}},
+    {"maxmemorySamples", {Config_int, true, &g_config.maxmemorySamples}},
+    {"maxmemory-noevict", {Config_bool, true, &g_config.noeviction}},
+};
+
+static std::vector<QString> GetConfig(const QString& option)
+{
+    std::vector<QString>  res;
+    std::vector<std::map<QString, ConfigInfo>::const_iterator> iters;
+
+    if (NotGlobRegex(option.data(), option.size()))
+    {
+        auto it = configOptions.find(option);
+        if (it == configOptions.end())
+            return  res;
+
+        iters.push_back(it);
+    }
+    else
+    {
+        // try glob match
+        for (auto it(configOptions.begin()); it != configOptions.end(); ++ it) 
+        {
+            if (glob_match(option, it->first))
+                iters.push_back(it);
+        }
+    }
+
+    for (const auto& it : iters)
+    {
+        res.push_back(it->first); // push option
+
+        // push value
+        switch (it->second.type)
+        {
+            case Config_bool:
+                if (*(bool*)(it->second.value))
+                    res.push_back("true");
+                else
+                    res.push_back("false");
+                break;
+
+            case Config_string:
+                res.push_back(*(const QString*)it->second.value);
+                break;
+
+            case Config_int:
+            case Config_int64:
+                {
+                    int64_t val = 0;
+                    if (it->second.type == Config_int)
+                        val = *(int*)it->second.value;
+                    else
+                        val = *(int64_t*)it->second.value;
+
+                    char buf[16] = "";
+                    Number2Str(buf, sizeof buf, val);
+                    res.push_back(buf);
+                }
+
+                break;
+
+            default:
+                assert(!!!"invalid type");
+        }
+    }
+
+    return res;
+}
+
+static QError SetConfig(const QString& option, const QString& value)
+{
+    auto it = configOptions.find(option);
+    if (it == configOptions.end())
+        return QError_syntax;
+
+    if (!it->second.canModify)
+        return QError_syntax;
+        
+    // set option value
+    switch (it->second.type)
+    {
+        case Config_bool:
+            *(bool*)(it->second.value) = (value == "true");
+            break;
+
+        case Config_string:
+            *(QString*)it->second.value = value;
+            break;
+
+        case Config_int:
+        case Config_int64:
+            {
+                long val = 0;
+                if (Strtol(value.data(), value.size(), &val))
+                {
+                    if (it->second.type == Config_int)
+                        *(int*)it->second.value = static_cast<int>(val);
+                    else
+                        *(int64_t*)it->second.value = static_cast<int64_t>(val);
+
+                    // ugly... process slow log option
+                    if (option.find("slowlog") == 0)
+                    {
+                        QSlowLog::Instance().SetThreshold(g_config.slowlogtime);
+                        QSlowLog::Instance().SetLogLimit(static_cast<std::size_t>(g_config.slowlogmaxlen));
+                    }
+                }
+                else
+                {
+                    return QError_syntax;
+                }
+            }
+                
+            break;
+
+        default:
+            assert(!!!"invalid type");
+    }
+
+    return QError_ok;
+}
+
+QError config(const std::vector<QString>& params, UnboundedBuffer* reply)
+{
+    // at least 3 params
+    if (strncasecmp(params[1].c_str(), "get", 3) == 0)
+    {
+        auto res = GetConfig(params[2]);
+        PreFormatMultiBulk(res.size(), reply);
+        for (const auto& e : res)
+        {
+            FormatBulk(e, reply);
+        }
+    }
+    else if (strncasecmp(params[1].c_str(), "set", 3) == 0)
+    {
+        if (params.size() != 4)
+        {
+            ReplyError(QError_param, reply);
+            return QError_param;
+        }
+
+        auto err = SetConfig(params[2], params[3]);
+        if (err == QError_ok)
+        {
+            FormatOK(reply);
+        }
+        else
+        {
+            const char* format = "-ERR Invalid argument '%s' for CONFIG SET '%s'\r\n";
+            char info[128];
+            auto len = snprintf(info, sizeof info, format, params[3].data(), params[2].data());
+
+            reply->PushData(info, len);
+        }
+
+        return err;
+    }
+    else
+    {
+        ReplyError(QError_syntax, reply);
+        return QError_syntax;
+    }
+
+    return   QError_ok;
+}
     
 }
+

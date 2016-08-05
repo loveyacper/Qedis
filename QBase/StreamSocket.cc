@@ -236,7 +236,7 @@ bool StreamSocket::DoMsgParse()
         recvBuf_.GetDatum(datum, recvBuf_.ReadableSize());
 
         AttachedBuffer af(datum);
-        auto  bodyLen = _HandlePacket(af);
+        auto  bodyLen = _HandlePacket(af.ReadAddr(), af.ReadableSize());
         if (bodyLen > 0)
         {
             busy = true;

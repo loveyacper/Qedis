@@ -141,12 +141,10 @@ static int ProcessMaster(const char* start, const char* end)
     return -1; // do nothing
 }
 
-PacketLength QClient::_HandlePacket(AttachedBuffer& buf)
+PacketLength QClient::_HandlePacket(const char* start, std::size_t bytes)
 {
     s_pCurrentClient = this;
 
-    const size_t   bytes = buf.ReadableSize();
-    const char* const start = buf.ReadAddr();
     const char* const end   = start + bytes;
 
     const char* ptr  = start;
@@ -319,7 +317,7 @@ void QClient::OnConnect()
     }
     else
     {
-        if (QSTORE.password_.empty())
+        if (g_config.password.empty())
             SetAuth();
     }
 }

@@ -21,12 +21,19 @@ using PSET = std::shared_ptr<QSet>;
 using PSSET = std::shared_ptr<QSortedSet>;
 using PHASH = std::shared_ptr<QHash>;
 
+    
+static const int kLRUBits = 24;
+static const uint32_t kMaxLRUValue = (1 << kLRUBits) - 1;
+
+uint32_t EstimateIdleTime(uint32_t lru);
+
 struct  QObject
 {
+    static uint32_t lruclock;
+
     unsigned int type : 4;
-    unsigned int nouse: 2;
-    unsigned int encoding: 4;
-    unsigned int lru  : 22;
+    unsigned int encoding : 4;
+    unsigned int lru : kLRUBits;
 
     std::shared_ptr<void>  value;
     
@@ -55,7 +62,6 @@ struct  QObject
                 break;
         }
         
-        nouse = 0;
         lru   = 0;
     }
     
@@ -95,7 +101,7 @@ public:
     bool DeleteKey(const QString& key);
     bool ExistsKey(const QString& key) const;
     QType  KeyType(const QString& key) const;
-    QString RandomKey() const;
+    QString RandomKey(QObject** val = nullptr) const;
     size_t DBSize() const { return store_[dbno_].size(); }
     size_t ScanKey(size_t cursor, size_t count, std::vector<QString>& res) const;
 
@@ -105,8 +111,11 @@ public:
     QDB::iterator       begin()         { return store_[dbno_].begin(); }
     QDB::iterator       end()           { return store_[dbno_].end(); }
     
-    QError  GetValue(const QString& key, QObject*& value);
-    QError  GetValueByType(const QString& key, QObject*& value, QType  type = QType_invalid);
+    QError  GetValue(const QString& key, QObject*& value, bool touch = true);
+    QError  GetValueByType(const QString& key, QObject*& value, QType type = QType_invalid);
+    // do not update lru time
+    QError  GetValueByTypeNoTouch(const QString& key, QObject*& value, QType type = QType_invalid);
+
     QObject*SetValue(const QString& key, const QObject& value);
     bool    SetValueIfNotExist(const QString& key, const QObject& value);
 
@@ -143,16 +152,17 @@ public:
     size_t  BlockedSize() const;
     
     static  int dirty_;
-    
-    // password for auth
-    QString password_;
-    bool    CheckPassword(const QString& pwd) const { return password_.empty() || password_ == pwd; }
+
+    // eviction timer for lru
+    void    InitEvictionTimer();
     
 private:
     QStore() : dbno_(0)
     {
     }
     
+    QError  _GetValueByType(const QString& key, QObject*& value, QType type = QType_invalid, bool touch = true);
+
     ExpireResult    _ExpireIfNeed(const QString& key, uint64_t now);
     
     class ExpiresDB

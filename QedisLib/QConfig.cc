@@ -46,6 +46,10 @@ QConfig::QConfig()
     hz = 10;
     
     includefile = "";
+
+    maxmemory = 2 * 1024 * 1024 * 1024UL;
+    maxmemorySamples = 5;
+    noeviction = true;
 }
 
 bool  LoadQedisConfig(const char* cfgFile, QConfig& cfg)
@@ -155,6 +159,11 @@ bool  LoadQedisConfig(const char* cfgFile, QConfig& cfg)
     cfg.modules = parser.GetDataVector("loadmodule");
     
     cfg.includefile = parser.GetData<QString>("include"); //TODO multi files include
+
+    // lru cache
+    cfg.maxmemory = parser.GetData<uint64_t>("maxmemory", 2 * 1024 * 1024 * 1024UL);
+    cfg.maxmemorySamples = parser.GetData<int>("maxmemory-samples", 5);
+    cfg.noeviction = (parser.GetData<QString>("maxmemory-policy", "noeviction") == "noeviction");
     
     return  cfg.CheckArgs();
 }
@@ -171,10 +180,18 @@ bool  QConfig::CheckArgs() const
     RETURN_IF_FAIL(databases > 0);
     RETURN_IF_FAIL(maxclients > 0);
     RETURN_IF_FAIL(hz > 0 && hz < 500);
+    RETURN_IF_FAIL(maxmemory >= 512 * 1024 * 1024UL);
+    RETURN_IF_FAIL(maxmemorySamples > 0 && maxmemorySamples < 10);
+
 
 #undef RETURN_IF_FAIL
     
     return  true;
+}
+
+bool QConfig::CheckPassword(const QString& pwd) const 
+{
+    return password.empty() || password == pwd;
 }
     
 }

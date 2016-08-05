@@ -111,8 +111,21 @@ inline size_t ScanHashMember(const HASH& container,
     return 0;   // never here
 }
     
-
 extern void getRandomHexChars(char *p, unsigned int len);
+
+enum MemoryInfoType {
+    VmPeak = 0,
+    VmSize = 1,
+    VmLck = 2,
+    VmHWM = 3,
+    VmRSS = 4,
+    VmSwap = 5,
+
+    VmMax = VmSwap + 1,
+};
+
+extern std::vector<size_t> getMemoryInfo();
+extern size_t getMemoryInfo(MemoryInfoType type);
     
 }
 

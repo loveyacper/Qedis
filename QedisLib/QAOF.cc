@@ -3,6 +3,7 @@
 #include "Log/Logger.h"
 #include "Threads/ThreadPool.h"
 #include "QStore.h"
+#include "QConfig.h"
 #include "QProtoParser.h"
 #include <unistd.h>
 #include <sstream>
@@ -28,7 +29,7 @@ void   QAOFThreadController::RewriteDoneHandler(int exitcode, int bysignal)
         g_rewritePid = -1;
         
         QAOFThreadController::Instance().Join();
-        ::rename(g_aofTmp, QAOFThreadController::Instance().aofFile_.c_str());
+        ::rename(g_aofTmp, g_config.appendfilename.c_str());
         QAOFThreadController::Instance().Start();
     }
     else
@@ -47,11 +48,6 @@ QAOFThreadController& QAOFThreadController::Instance()
 {
     static  QAOFThreadController  threadCtrl;
     return  threadCtrl;
-}
-
-void  QAOFThreadController::SetAofFile(const QString& name)
-{
-    aofFile_ = name;
 }
 
 bool  QAOFThreadController::ProcessTmpBuffer(BufferSequence& bf)
@@ -74,7 +70,6 @@ void  QAOFThreadController::Start()
     assert(!aofThread_ || !aofThread_->IsAlive());
     
     aofThread_ = std::make_shared<AOFThread>();
-    aofThread_->Open(aofFile_.c_str());
     aofThread_->SetAlive();
     
     ThreadPool::Instance().ExecuteTask(std::bind(&AOFThread::Run, aofThread_));
@@ -151,7 +146,10 @@ void   QAOFThreadController::AOFThread::SaveCommand(const std::vector<QString>& 
 void  QAOFThreadController::AOFThread::Run()
 {
     assert (IsAlive());
-    
+
+    if (!file_.IsOpen())
+        file_.Open(g_config.appendfilename.c_str());
+
     // CHECK aof temp buffer first!
     BufferSequence  data;
     while (QAOFThreadController::Instance().ProcessTmpBuffer(data))
@@ -173,7 +171,7 @@ void  QAOFThreadController::AOFThread::Run()
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
     
-    Close();
+    file_.Close();
     pro_.set_value();
 }
 
@@ -330,8 +328,8 @@ static void  SaveZSetObject(const QString& key, const QObject& obj, OutputMemory
         char scoreStr[32];
         int  len = Double2Str(scoreStr, sizeof scoreStr, score);
 
-        WriteBulkString(member, file);
         WriteBulkString(scoreStr, len, file);
+        WriteBulkString(member, file);
     }
 }
 

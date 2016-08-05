@@ -1,8 +1,21 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <string.h>
+#include <fstream>
 
 #include "QHelper.h"
+
+#if defined(__gnu_linux__)
+#include <fcntl.h>
+
+#elif defined(__APPLE__)
+#include <mach/task.h>
+#include <mach/mach_init.h>
+
+#else
+#error "unknow platform"
+
+#endif
 
 namespace qedis
 {
@@ -131,5 +144,221 @@ void getRandomHexChars(char *p, unsigned int len)
     fclose(fp);
 }
 
+#if defined(__gnu_linux__)
+/*
+/proc/<PID>/status Field Description Option Explanation
+
+VmPeak   
+peak virtual memory size
+
+VmSize
+This is the process's virtual set size, which is the amount of virtual memory that the application is using.
+It's the same as the vsz parameter provided by ps.
+
+VmLck
+This is the amount of memory that has been locked by this process. Locked memory cannot be swapped to disk.
+
+VmHWM : peak resident set size ("high water mark")
+VmRSS
+This is the resident set size or amount of physical memory the application is currently using. This is the same as the rss statistic provided by ps.
+
+VmData
+This is the data size or the virtual size of the program's data usage. Unlike ps dsiz statistic, this does not include stack information.
+
+VmStk
+This is the size of the process's stack.
+
+VmExe
+This is the virtual size of the executable memory that the program has. It does not include libraries that the process is using.
+
+VmLib
+Size of shared library code. This is the size of the libraries that the process is using.
+
+VmSwap 
+amount of swap used by anonymous private data(shmem swap usage is not included)
+*/
+         
+std::vector<size_t> getMemoryInfo()
+{
+    /*
+    VmPeak = 0,
+    VmSize = 1,
+    VmLck = 2,
+    VmHWM = 3,
+    VmRSS = 4,
+    VmSwap = 5, */
+    std::vector<size_t>  res(VmMax);
+    //int page = sysconf(_SC_PAGESIZE);
+
+    char filename[64];
+    snprintf(filename, sizeof filename, "/proc/%d/status", getpid());
+    std::ifstream ifs(filename);
+    std::string line;
+    int count = 0;
+    while (count < VmMax && std::getline(ifs, line))
+    {
+        auto it(res.begin());
+        if (line.find("VmPeak") == 0)
+        {
+            ++ count;
+            std::advance(it, VmPeak);
+        }
+        else if (line.find("VmSize") == 0)
+        {
+            ++ count;
+            std::advance(it, VmSize);
+        }
+        else if (line.find("VmLck") == 0)
+        {
+            ++ count;
+            std::advance(it, VmLck);
+        }
+        else if (line.find("VmHWM") == 0)
+        {
+            ++ count;
+            std::advance(it, VmHWM);
+        }
+        else if (line.find("VmRSS") == 0)
+        {
+            ++ count;
+            std::advance(it, VmRSS);
+        }
+        else if (line.find("VmSwap") == 0)
+        {
+            ++ count;
+            std::advance(it, VmSwap);
+        }
+        else
+        {
+            continue;
+        }
+
+        // skip until number;
+        std::size_t offset = 0;
+        while (offset < line.size() && !isdigit(line[offset]))
+            ++ offset;
+
+        if (offset < line.size())
+        {
+            char* end = nullptr;
+            long val = strtol(&line[offset], &end, 0);
+            val *= 1024; // since suffix is KB
+            *it = static_cast<size_t>(val);
+        }
+    }
+
+    return res;
+}
+
+size_t getMemoryInfo(MemoryInfoType type)
+{
+    char filename[64];
+    snprintf(filename, sizeof filename, "/proc/%d/status", getpid());
+    std::ifstream ifs(filename);
+    std::string line;
+    bool found = false;
+    while (!found && std::getline(ifs, line))
+    {
+        switch (type)
+        {
+            case VmPeak:
+                if (line.find("VmPeak") == 0)
+                    found = true;
+                break;
+
+            case VmSize:
+                if (line.find("VmSize") == 0)
+                    found = true;
+                break;
+
+            case VmLck:
+                if (line.find("VmLck") == 0)
+                    found = true;
+                break;
+
+            case VmHWM:
+                if (line.find("VmHWM") == 0)
+                    found = true;
+                break;
+
+            case VmRSS:
+                if (line.find("VmRSS") == 0)
+                    found = true;
+                break;
+
+            case VmSwap:
+                if (line.find("VmSwap") == 0)
+                    found = true;
+                break;
+
+            default:
+                return 0;
+        }
+    }
+
+    // skip until number;
+    std::size_t offset = 0;
+    while (offset < line.size() && !isdigit(line[offset]))
+        ++ offset;
+
+    size_t  res = 0;
+    if (offset < line.size())
+    {
+        char* end = nullptr;
+        long val = strtol(&line[offset], &end, 0);
+        val *= 1024; // since suffix is KB
+        res = static_cast<size_t>(val);
+    }
+
+    return res;
+}
+
+#elif defined(__APPLE__)
+std::vector<size_t> getMemoryInfo()
+{
+    /* only support
+     mach_vm_size_t  virtual_size;   virtual memory size (bytes)
+     mach_vm_size_t  resident_size;      resident memory size (bytes)
+     mach_vm_size_t  resident_size_max;  maximum resident memory size (bytes) */
+    std::vector<size_t> res(VmMax);
+    task_t task = MACH_PORT_NULL;
+    struct task_basic_info t_info;
+    mach_msg_type_number_t t_info_count = TASK_BASIC_INFO_COUNT;
+
+    if (task_for_pid(current_task(), getpid(), &task) != KERN_SUCCESS)
+        return res;
+
+    task_info(task, TASK_BASIC_INFO, (task_info_t)&t_info, &t_info_count);
+
+    res[VmSize] = t_info.virtual_size;
+    res[VmRSS] = t_info.resident_size;
+
+    return res;
+}
+
+size_t getMemoryInfo(MemoryInfoType type)
+{
+    if (type != VmSize && type != VmRSS)
+        return 0;
+
+    task_t task = MACH_PORT_NULL;
+    struct task_basic_info t_info;
+    mach_msg_type_number_t t_info_count = TASK_BASIC_INFO_COUNT;
+
+    if (task_for_pid(current_task(), getpid(), &task) != KERN_SUCCESS)
+        return 0;
+
+    task_info(task, TASK_BASIC_INFO, (task_info_t)&t_info, &t_info_count);
+
+    if (type == VmSize)
+        return t_info.virtual_size;
+    else if (type == VmRSS)
+        return t_info.resident_size;
+
+    return 0;
+}
+
+#endif
 
 }
+

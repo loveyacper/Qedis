@@ -57,6 +57,7 @@ QCommandHandler  info;
 QCommandHandler  monitor;
 QCommandHandler  auth;
 QCommandHandler  slowlog;
+QCommandHandler  config;
 
 // string commands
 QCommandHandler  set;
@@ -178,6 +179,7 @@ QCommandHandler  module;
 QCommandHandler  cmdlist;
 
 extern Delegate<void (UnboundedBuffer& )> g_infoCollector;
+extern void OnMemoryInfoCollect(UnboundedBuffer& );
 extern void OnServerInfoCollect(UnboundedBuffer& );
 extern void OnClientInfoCollect(UnboundedBuffer& );
 
