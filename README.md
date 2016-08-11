@@ -1,6 +1,6 @@
 # Qedis
 [![Build Status](https://travis-ci.org/loveyacper/Qedis.svg?branch=master)](https://travis-ci.org/loveyacper/Qedis)
-A C++11 implementation of Redis Server(not including cluster yet)
+A C++11 implementation of Redis Server, use Leveldb for persist storage.(not including cluster yet)
 
 ## Requirements
 * C++11
@@ -9,7 +9,10 @@ A C++11 implementation of Redis Server(not including cluster yet)
 ## Support module for write your own extensions
  Qedis supports module now, still in progress, much work to do.
  I added three commands(ldel, skeys, hgets) for demonstration.
- 
+
+## Leveldb as backend
+ Leveldb can be configured as backend for Qedis cache.
+
 ## Full compatible with redis
  You can test Qedis with redis-cli, redis-benchmark, or use redis as master with Qedis as slave or conversely, it also can work with redis sentinel.
 

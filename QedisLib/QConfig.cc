@@ -7,6 +7,18 @@
 namespace qedis
 {
 
+static void EraseQuotes(QString& str)
+{
+    // convert "hello" to  hello
+    if (str.size() < 2)
+        return;
+    if (str[0] == '"' && str[str.size() - 1] == '"')
+    {
+        str.erase(str.begin());
+        str.pop_back();
+    }
+}
+
 extern std::vector<QString>  SplitString(const QString& str, char seperator);
 
 QConfig  g_config;
@@ -50,6 +62,10 @@ QConfig::QConfig()
     maxmemory = 2 * 1024 * 1024 * 1024UL;
     maxmemorySamples = 5;
     noeviction = true;
+
+    backend = BackEndNone;
+    backendPath = "dump";
+    backendHz = 10;
 }
 
 bool  LoadQedisConfig(const char* cfgFile, QConfig& cfg)
@@ -71,11 +87,13 @@ bool  LoadQedisConfig(const char* cfgFile, QConfig& cfg)
     
     cfg.loglevel = parser.GetData<QString>("loglevel", cfg.loglevel);
     cfg.logdir   = parser.GetData<QString>("logfile", cfg.logdir);
-    if (cfg.logdir == "\"\"")
+    EraseQuotes(cfg.logdir);
+    if (cfg.logdir.empty())
         cfg.logdir = "stdout";
     
     cfg.databases = parser.GetData<int>("databases", cfg.databases);
     cfg.password  = parser.GetData<QString>("requirepass");
+    EraseQuotes(cfg.password);
 
     // alias command
     {
@@ -95,7 +113,8 @@ bool  LoadQedisConfig(const char* cfgFile, QConfig& cfg)
     std::vector<QString>  saveInfo = std::move(SplitString(parser.GetData<QString>("save"), ' '));
     if (!saveInfo.empty() && saveInfo.size() != 2)
     {
-        if (!(saveInfo.size() == 1 && saveInfo[0] == "\"\""))
+        EraseQuotes(saveInfo[0]);
+        if (!(saveInfo.size() == 1 && saveInfo[0].empty()))
         {
             std::cerr << "bad format save rdb interval, bad string "
                       << parser.GetData<QString>("save")
@@ -164,6 +183,11 @@ bool  LoadQedisConfig(const char* cfgFile, QConfig& cfg)
     cfg.maxmemory = parser.GetData<uint64_t>("maxmemory", 2 * 1024 * 1024 * 1024UL);
     cfg.maxmemorySamples = parser.GetData<int>("maxmemory-samples", 5);
     cfg.noeviction = (parser.GetData<QString>("maxmemory-policy", "noeviction") == "noeviction");
+
+    cfg.backend = parser.GetData<int>("backend", BackEndNone);
+    cfg.backendPath = parser.GetData<QString>("backendpath", cfg.backendPath);
+    EraseQuotes(cfg.backendPath);
+    cfg.backendHz = parser.GetData<int>("backendhz", 10);
     
     return  cfg.CheckArgs();
 }
@@ -182,6 +206,8 @@ bool  QConfig::CheckArgs() const
     RETURN_IF_FAIL(hz > 0 && hz < 500);
     RETURN_IF_FAIL(maxmemory >= 512 * 1024 * 1024UL);
     RETURN_IF_FAIL(maxmemorySamples > 0 && maxmemorySamples < 10);
+    RETURN_IF_FAIL(backend >= BackEndNone && backend < BackEndMax);
+    RETURN_IF_FAIL(backendHz >= 1 && backendHz <= 50);
 
 
 #undef RETURN_IF_FAIL

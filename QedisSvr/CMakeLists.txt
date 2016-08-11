@@ -4,10 +4,11 @@ INCLUDE(../CMakeCommon)
 
 AUX_SOURCE_DIRECTORY(. QEDISSERVER_SRC)
 
-LINK_DIRECTORIES(../QBase; ../QedisLib)
+LINK_DIRECTORIES(../../leveldb)
 INCLUDE_DIRECTORIES(../QBase; ../QedisLib)
 
 ADD_EXECUTABLE(qedis_server ${QEDISSERVER_SRC})
 SET(EXECUTABLE_OUTPUT_PATH  ../../bin)
-TARGET_LINK_LIBRARIES(qedis_server qedislib; qbaselib)
-ADD_DEPENDENCIES(qedis_server qbaselib; qedislib)
+
+TARGET_LINK_LIBRARIES(qedis_server qedislib; qbaselib; leveldb)
+ADD_DEPENDENCIES(qedis_server qbaselib; qedislib; leveldb)

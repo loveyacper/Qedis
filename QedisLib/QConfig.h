@@ -7,6 +7,13 @@
 namespace qedis
 {
 
+enum BackEndType
+{
+    BackEndNone = 0,
+    BackEndLeveldb = 1,
+    BackEndMax = 2,
+};
+
 struct QConfig
 {
     bool      daemonize;
@@ -60,6 +67,10 @@ struct QConfig
     uint64_t maxmemory; // default 2GB
     int maxmemorySamples; // default 5
     bool noeviction; // default true
+
+    int backend; // enum BackEndType
+    QString backendPath; 
+    int backendHz; // the frequency of dump to backend
     
     QConfig();
 

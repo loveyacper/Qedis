@@ -232,9 +232,12 @@ bool Qedis::_Init()
     QSTORE.InitExpireTimer();
     QSTORE.InitBlockedTimer();
     QSTORE.InitEvictionTimer();
+    QSTORE.InitDumpBackends();
     QPubsub::Instance().InitPubsubTimer();
     
-    LoadDbFromDisk();
+    // Only if there is no backend, load aof or rdb
+    if (g_config.backend == qedis::BackEndNone)
+        LoadDbFromDisk();
 
     QAOFThreadController::Instance().Start();
 

@@ -167,7 +167,7 @@ lzf_compress (const void *const in_data, unsigned int in_len,
         {
           /* match found at *ref++ */
           unsigned int len = 2;
-          unsigned int maxlen = in_end - ip - len;
+          unsigned int maxlen = (unsigned int)(in_end - ip - len);
           maxlen = maxlen > MAX_REF ? MAX_REF : maxlen;
 
           op [- lit - 1] = lit - 1; /* stop run */
@@ -290,6 +290,6 @@ lzf_compress (const void *const in_data, unsigned int in_len,
   op [- lit - 1] = lit - 1; /* end run */
   op -= !lit; /* undo run if length is zero */
 
-  return op - (u8 *)out_data;
+  return (unsigned int)(op - (u8 *)out_data);
 }
 

@@ -452,6 +452,8 @@ std::map<QString, ConfigInfo> configOptions = {
     {"maxmemory", {Config_int64, true, &g_config.maxmemory}},
     {"maxmemorySamples", {Config_int, true, &g_config.maxmemorySamples}},
     {"maxmemory-noevict", {Config_bool, true, &g_config.noeviction}},
+    {"backend", {Config_int, false, &g_config.backend}},
+    {"backendhz", {Config_int, false, &g_config.backendHz}},
 };
 
 static std::vector<QString> GetConfig(const QString& option)

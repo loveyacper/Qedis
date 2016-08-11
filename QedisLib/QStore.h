@@ -7,6 +7,7 @@
 #include "QHash.h"
 #include "QList.h"
 #include "Timer.h"
+#include "QDumpInterface.h"
 
 #include <vector>
 #include <map>
@@ -111,6 +112,7 @@ public:
     QDB::iterator       begin()         { return store_[dbno_].begin(); }
     QDB::iterator       end()           { return store_[dbno_].end(); }
     
+    const QObject* GetObject(const QString& key) const;
     QError  GetValue(const QString& key, QObject*& value, bool touch = true);
     QError  GetValueByType(const QString& key, QObject*& value, QType type = QType_invalid);
     // do not update lru time
@@ -127,7 +129,7 @@ public:
         expired  = -2,
         notExist = -2,
     };
-    void    SetExpire(const QString& key, uint64_t when);
+    void    SetExpire(const QString& key, uint64_t when) const;
     int64_t TTL(const QString& key, uint64_t now);
     bool    ClearExpire(const QString& key);
     int     LoopCheckExpire(uint64_t now);
@@ -155,6 +157,9 @@ public:
 
     // eviction timer for lru
     void    InitEvictionTimer();
+    // for backends
+    void    InitDumpBackends();
+    void    DumpToBackends(int dbno);
     
 private:
     QStore() : dbno_(0)
@@ -204,9 +209,16 @@ private:
 
     QError  _SetValue(const QString& key, QObject& value, bool exclusive = false);
 
-    std::vector<QDB>  store_;
-    std::vector<ExpiresDB> expiresDb_;
+    // Because GetObject() must be const, so mutable them
+    mutable std::vector<QDB>  store_;
+    mutable std::vector<ExpiresDB> expiresDb_;
     std::vector<BlockedClients> blockedClients_;
+    std::vector<std::unique_ptr<QDumpInterface> > backends_;
+        
+    using ToSyncDb = std::unordered_map<QString, QObject* ,
+                                        my_hash,
+                                        std::equal_to<QString> >;
+    std::vector<ToSyncDb> waitSyncKeys_;
     int dbno_;
 };
 

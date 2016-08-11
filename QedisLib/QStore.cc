@@ -4,13 +4,15 @@
 #include "QAOF.h"
 #include "QMulti.h"
 #include "Log/Logger.h"
+#include "QLeveldb.h"
 #include <limits>
 #include <cassert>
+
 
 namespace qedis
 {
 
-uint32_t QObject::lruclock = ::time(nullptr);
+uint32_t QObject::lruclock = static_cast<uint32_t>(::time(nullptr));
 
 int QStore::dirty_ = 0;
 
@@ -54,6 +56,7 @@ QStore::ExpireResult  QStore::ExpiresDB::ExpireIfNeed(const QString& key, uint64
             return ExpireResult::notExpire;
         
         WRN << "Delete timeout key " << it->first;
+        QSTORE.DeleteKey(it->first);
         expireKeys_.erase(it);
         return ExpireResult::expired;
     }
@@ -359,26 +362,61 @@ int  QStore::GetDB() const
     return  dbno_;
 }
 
+const QObject* QStore::GetObject(const QString& key) const
+{
+    auto db = &store_[dbno_];
+    QDB::const_iterator it(db->find(key));
+    if (it != db->end())
+        return &it->second;
+
+    // load from leveldb, if has, insert to qedis cache
+    if (!backends_.empty()) //if (g_config.backend != 0)
+    {
+        QObject obj = backends_[dbno_]->Get(key);
+        if (obj.type != QType_invalid)
+        {
+            DBG << "GetKey from leveldb:" << key;
+
+            QObject& realobj = ((*db)[key] = obj);
+            realobj.lru = QObject::lruclock;
+
+            // trick: use lru field to store the remain seconds to be expired.
+            unsigned int remainTtlSeconds = obj.lru;
+            if (remainTtlSeconds > 0)
+                SetExpire(key, ::Now() + remainTtlSeconds * 1000);
+
+            return &realobj;
+        }
+    }
+
+    return nullptr;
+}
+
 bool QStore::DeleteKey(const QString& key)
 {
     auto db = &store_[dbno_];
+    // 加入到脏队列
+    if (!waitSyncKeys_.empty())
+    {
+        waitSyncKeys_[dbno_][key] = nullptr; // null implies delete data
+    }
+
     return db->erase(key) != 0;
 }
 
 bool QStore::ExistsKey(const QString& key) const
 {
-    auto db = &store_[dbno_];
-    return  db->count(key) != 0;
+    const QObject* obj = GetObject(key);
+    return obj != nullptr;
 }
 
 QType  QStore::KeyType(const QString& key) const
 {
-    auto db = &store_[dbno_];
-    QDB::const_iterator it(db->find(key));
-    if (it == db->end())
-        return  QType_invalid;
+    const QObject* obj = GetObject(key);
+    if (!obj)
+        return QType_invalid;
     
-    return  QType(it->second.type);
+    return  QType(obj->type);
 }
 
 static bool RandomMember(const QDB& hash, QString& res, QObject** val)
@@ -444,18 +482,16 @@ QError  QStore::_GetValueByType(const QString& key, QObject*& value, QType type,
         return QError_notExist;
     }
     
-    auto db = &store_[dbno_];
-    QDB::iterator    it(db->find(key));
-
-    if (it != db->end())
+    auto cobj = GetObject(key);
+    if (cobj)
     {
-        if (type != QType_invalid && type != QType(it->second.type))
+        if (type != QType_invalid && type != QType(cobj->type))
         {
             return QError_type;
         }
         else
         {
-            value = &it->second;
+            value = const_cast<QObject*>(cobj);
 
             // Do not update if child process exists
             extern pid_t g_qdbPid;
@@ -479,6 +515,11 @@ QObject* QStore::SetValue(const QString& key, const QObject& value)
     auto db = &store_[dbno_];
     QObject& obj = ((*db)[key] = value);
     obj.lru = QObject::lruclock;
+
+    // put this key to sync list
+    if (!waitSyncKeys_.empty())
+        waitSyncKeys_[dbno_][key] = &obj;
+
     return &obj;
 }
 
@@ -494,7 +535,7 @@ bool QStore::SetValueIfNotExist(const QString& key, const QObject& value)
 }
 
 
-void    QStore::SetExpire(const QString& key, uint64_t when)
+void    QStore::SetExpire(const QString& key, uint64_t when) const
 {
     expiresDb_[dbno_].SetExpire(key, when);
 }
@@ -651,6 +692,83 @@ void QStore::InitEvictionTimer()
     });
 
     TimerManager::Instance().AddTimer(timer);
+}
+
+void QStore::InitDumpBackends()
+{
+    assert (waitSyncKeys_.empty());
+
+    if (g_config.backend == BackEndNone)
+        return;
+
+    if (g_config.backend == BackEndLeveldb)
+    {
+        waitSyncKeys_.resize(store_.size());
+        for (size_t i = 0; i < store_.size(); ++ i)
+        {
+            std::unique_ptr<QLeveldb> db(new QLeveldb);
+            QString dbpath = g_config.backendPath + std::to_string(i);
+            if (!db->Open(dbpath.data()))
+                assert(false);
+            else
+                USR << "Open leveldb " << dbpath;
+
+            backends_.push_back(std::move(db));
+        }
+    }
+    else 
+    {
+        // ERROR: unsupport backend
+        return;
+    }
+        
+    for (int i = 0; i < static_cast<int>(backends_.size()); ++ i)
+    {
+        auto timer = TimerManager::Instance().CreateTimer();
+        timer->Init(1000 / g_config.backendHz);
+        timer->SetCallback([&, i] () {
+                int oldDb = QSTORE.SelectDB(i);
+                QSTORE.DumpToBackends(i);
+                QSTORE.SelectDB(oldDb);
+        });
+
+        TimerManager::Instance().AddTimer(timer);
+    }
+}
+
+void  QStore::DumpToBackends(int dbno)
+{
+    if (static_cast<int>(waitSyncKeys_.size()) <= dbno)
+        return;
+
+    const int kMaxSync = 100;
+    int processed = 0;
+    auto& dirtyKeys = waitSyncKeys_[dbno];
+            
+    uint64_t now = ::Now();
+    for (auto it = dirtyKeys.begin(); processed++ < kMaxSync && it != dirtyKeys.end(); )
+    {
+        // check ttl
+        int64_t when = QSTORE.TTL(it->first, now);
+
+        if (it->second && when != QStore::ExpireResult::expired)
+        {
+            assert (when != QStore::ExpireResult::notExpire);
+
+            if (when > 0)
+                when += now;
+
+            backends_[dbno]->Put(it->first, *it->second, when);
+            DBG << "UPDATE leveldb key " << it->first << ", when = " << when;
+        }
+        else
+        {
+            backends_[dbno]->Delete(it->first);
+            DBG << "DELETE leveldb key " << it->first;
+        }
+            
+        it = dirtyKeys.erase(it);
+    }
 }
 
 

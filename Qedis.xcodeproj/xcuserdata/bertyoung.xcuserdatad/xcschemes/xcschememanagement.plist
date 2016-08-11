@@ -14,6 +14,11 @@
 			<key>orderHint</key>
 			<integer>2</integer>
 		</dict>
+		<key>leveldb.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>1</integer>
+		</dict>
 		<key>qbaselib.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
@@ -37,6 +42,11 @@
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
+		<key>BA34F6021D5C151700F1DE01</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
 		<key>BA4CD2181CEB54F000F68F67</key>
 		<dict>
 			<key>primary</key>
