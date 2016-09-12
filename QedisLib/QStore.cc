@@ -369,9 +369,13 @@ const QObject* QStore::GetObject(const QString& key) const
     if (it != db->end())
         return &it->second;
 
-    // load from leveldb, if has, insert to qedis cache
-    if (!backends_.empty()) //if (g_config.backend != 0)
+    if (!backends_.empty())
     {
+        // if it's in dirty list, it must be deleted, wait sync to backend
+        if (waitSyncKeys_[dbno_].count(key))
+            return nullptr;
+
+        // load from leveldb, if has, insert to qedis cache
         QObject obj = backends_[dbno_]->Get(key);
         if (obj.type != QType_invalid)
         {
@@ -526,12 +530,11 @@ QObject* QStore::SetValue(const QString& key, const QObject& value)
 bool QStore::SetValueIfNotExist(const QString& key, const QObject& value)
 {
     auto db = &store_[dbno_];
-    QDB::iterator    it(db->find(key));
-
-    if (it == db->end())
-        (*db)[key] = value;
-
-    return it == db->end();
+    if (db->find(key) != db->end())
+        return false;
+    
+    this->SetValue(key, value);
+    return true;
 }
 
 
@@ -770,7 +773,24 @@ void  QStore::DumpToBackends(int dbno)
         it = dirtyKeys.erase(it);
     }
 }
-
+   
+void QStore::AddDirtyKey(const QString& key)
+{
+    // put this key to sync list
+    if (!waitSyncKeys_.empty())
+    {
+        QObject* obj = nullptr;
+        GetValue(key, obj);
+        waitSyncKeys_[dbno_][key] = obj;
+    }
+}
+    
+void QStore::AddDirtyKey(const QString& key, const QObject* value)
+{
+    // put this key to sync list
+    if (!waitSyncKeys_.empty())
+        waitSyncKeys_[dbno_][key] = value;
+}
 
 std::vector<QString>  g_dirtyKeys;
 
@@ -784,6 +804,8 @@ void Propogate(const std::vector<QString>& params)
         {
             ++ QStore::dirty_;
             QMulti::Instance().NotifyDirty(QSTORE.GetDB(), k);
+            
+            QSTORE.AddDirtyKey(k); // TODO optimize
         }
         g_dirtyKeys.clear();
     }
@@ -791,6 +813,7 @@ void Propogate(const std::vector<QString>& params)
     {
         ++ QStore::dirty_;
         QMulti::Instance().NotifyDirty(QSTORE.GetDB(), params[1]);
+        QSTORE.AddDirtyKey(params[1]); // TODO optimize
     }
 
     if (g_config.appendonly)

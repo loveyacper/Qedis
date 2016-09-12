@@ -160,6 +160,8 @@ public:
     // for backends
     void    InitDumpBackends();
     void    DumpToBackends(int dbno);
+    void    AddDirtyKey(const QString& key);
+    void    AddDirtyKey(const QString& key, const QObject* value);
     
 private:
     QStore() : dbno_(0)
@@ -215,7 +217,7 @@ private:
     std::vector<BlockedClients> blockedClients_;
     std::vector<std::unique_ptr<QDumpInterface> > backends_;
         
-    using ToSyncDb = std::unordered_map<QString, QObject* ,
+    using ToSyncDb = std::unordered_map<QString, const QObject* ,
                                         my_hash,
                                         std::equal_to<QString> >;
     std::vector<ToSyncDb> waitSyncKeys_;
