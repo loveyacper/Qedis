@@ -48,7 +48,7 @@ void NetThread::ModSocket(PSOCKET task, uint32_t events)
 
 void NetThread::RemoveSocket(std::deque<PSOCKET >::iterator& iter)
 {
-    poller_->DelSocket((*iter)->GetSocket(), 0);
+    poller_->DelSocket((*iter)->GetSocket(), EventTypeRead | EventTypeWrite);
     iter = tasks_.erase(iter);
 }
 
@@ -61,8 +61,8 @@ void NetThread::_TryAddNewTasks()
         newCnt_ = 0; 
         mutex_.unlock();
 
-        NewTasks::const_iterator iter(tmp.begin()),
-                                 end (tmp.end());
+        auto iter(tmp.begin()),
+             end (tmp.end());
 
         for (; iter != end; ++ iter) 
             _AddSocket(iter->first, iter->second); 
@@ -86,9 +86,9 @@ void RecvThread::Run()
         g_log = LogManager::Instance().CreateLog(g_logLevel, g_logDest, "recvthread_log");
     }
 
-    std::deque<PSOCKET >::iterator    it;
+    std::deque<PSOCKET >::iterator it;
 
-    int    loopCount = 0;
+    int loopCount = 0;
     while (IsAlive())
     {
         _TryAddNewTasks();
@@ -104,19 +104,19 @@ void RecvThread::Run()
         {
             assert (!(firedEvents_[i].events & EventTypeWrite));
 
-            Socket* pSock = (Socket* )firedEvents_[i].userdata;
+            Socket* sock = (Socket* )firedEvents_[i].userdata;
 
             if (firedEvents_[i].events & EventTypeRead)
             {
-                if (!pSock->OnReadable())
+                if (!sock->OnReadable())
                 {
-                    pSock->OnError();
+                    sock->OnError();
                 }
             }
 
             if (firedEvents_[i].events & EventTypeError)
             {
-                pSock->OnError();
+                sock->OnError();
             }
         }
         
@@ -165,23 +165,23 @@ void SendThread::Run( )
         for (it = tasks_.begin(); it != tasks_.end(); )
         {
             Socket::SocketType  type  = (*it)->GetSocketType();
-            Socket*  pSock = (*it).get();
+            Socket*  sock = (*it).get();
             
             if (type == Socket::SocketType_Stream)
             {
-                StreamSocket*  pTcpSock = static_cast<StreamSocket* >(pSock);
-                if (!pTcpSock->Send())
-                    pTcpSock->OnError();
+                StreamSocket*  tcpSock = static_cast<StreamSocket* >(sock);
+                if (!tcpSock->Send())
+                    tcpSock->OnError();
             }
             
-            if (pSock->Invalid())
+            if (sock->Invalid())
             {
                 NetThreadPool::Instance().DisableWrite(*it);
                 RemoveSocket(it);
             }
             else
             {
-                if (pSock->epollOut_)
+                if (sock->epollOut_)
                     ++ nOut;
 
                 ++ it;
@@ -197,20 +197,20 @@ void SendThread::Run( )
         const int nReady = poller_->Poll(firedEvents_, static_cast<int>(tasks_.size()), 1);
         for (int i = 0; i < nReady; ++ i)
         {
-            Socket* pSock = (Socket* )firedEvents_[i].userdata;
+            Socket* sock = (Socket* )firedEvents_[i].userdata;
             
             assert (!(firedEvents_[i].events & EventTypeRead));
             if (firedEvents_[i].events & EventTypeWrite)
             {
-                if (!pSock->OnWritable())
+                if (!sock->OnWritable())
                 {
-                    pSock->OnError();
+                    sock->OnError();
                 }
             }
             
             if (firedEvents_[i].events & EventTypeError)
             {
-                pSock->OnError();
+                sock->OnError();
             }
         }
     }

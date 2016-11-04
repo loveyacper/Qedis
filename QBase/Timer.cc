@@ -283,7 +283,6 @@ Timer* TimerManager::CreateTimer()
     if (freepool_.empty())
     {
         timer = new Timer();
-        freepool_.insert(timer);
     }
     else
     {
@@ -324,14 +323,14 @@ bool TimerManager::UpdateTimers(const Time& now)
 
         m_lastCheckTime.AddDelay(1);
 
-        Timer* pTimer;
-        while ((pTimer = m_list1[index]->next_))
+        Timer* timer;
+        while ((timer = m_list1[index]->next_))
         {
-            KillTimer(pTimer);
-            if (pTimer->OnTimer())
-                AddTimer(pTimer);
+            KillTimer(timer);
+            if (timer->OnTimer())
+                AddTimer(timer);
             else
-                freepool_.insert(pTimer);
+                freepool_.insert(timer);
         }
     }        
 
@@ -390,32 +389,32 @@ void TimerManager::AsyncAddTimer(Timer* timer)
     assert (count_ == timers_.size());
 }
 
-void TimerManager::ScheduleAt(Timer* pTimer, const Time& triggerTime)
+void TimerManager::ScheduleAt(Timer* timer, const Time& triggerTime)
 {
-    if (!pTimer)
+    if (!timer)
         return;
 
-    pTimer->triggerTime_ = triggerTime;
-    AddTimer(pTimer);
+    timer->triggerTime_ = triggerTime;
+    AddTimer(timer);
 }
 
 
-void TimerManager::KillTimer(Timer* pTimer)
+void TimerManager::KillTimer(Timer* timer)
 {
-    if (!pTimer)
+    if (!timer)
         return;
 
-    if (pTimer->prev_)
+    if (timer->prev_)
     {
-        pTimer->prev_->next_ = pTimer->next_;
+        timer->prev_->next_ = timer->next_;
 
-        if (pTimer->next_)
+        if (timer->next_)
         {
-            pTimer->next_->prev_ = pTimer->prev_;
-            pTimer->next_ = nullptr;
+            timer->next_->prev_ = timer->prev_;
+            timer->next_ = nullptr;
         }
 
-        pTimer->prev_ = nullptr;
+        timer->prev_ = nullptr;
     }
 }
 
