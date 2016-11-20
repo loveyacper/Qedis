@@ -46,10 +46,9 @@ void NetThread::ModSocket(PSOCKET task, uint32_t events)
     poller_->ModSocket(task->GetSocket(), events, task.get());
 }
 
-void NetThread::RemoveSocket(std::deque<PSOCKET >::iterator& iter)
+void NetThread::RemoveSocket(PSOCKET task, uint32_t events)
 {
-    poller_->DelSocket((*iter)->GetSocket(), EventTypeRead | EventTypeWrite);
-    iter = tasks_.erase(iter);
+    poller_->DelSocket(task->GetSocket(), events);
 }
 
 void NetThread::_TryAddNewTasks()
@@ -135,7 +134,8 @@ void RecvThread::Run()
             if ((*it)->Invalid())
             {
                 NetThreadPool::Instance().DisableRead(*it);
-                RemoveSocket(it);
+                RemoveSocket(*it, EventTypeRead);
+                it = tasks_.erase(it);
             }
             else
             {
@@ -177,7 +177,8 @@ void SendThread::Run( )
             if (sock->Invalid())
             {
                 NetThreadPool::Instance().DisableWrite(*it);
-                RemoveSocket(it);
+                RemoveSocket(*it, EventTypeWrite);
+                it = tasks_.erase(it);
             }
             else
             {

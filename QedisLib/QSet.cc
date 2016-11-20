@@ -1,5 +1,6 @@
 #include "QSet.h"
 #include "QStore.h"
+#include "QClient.h"
 #include <cassert>
 
 namespace qedis
@@ -60,10 +61,20 @@ QError  spop(const std::vector<QString>& params, UnboundedBuffer* reply)
     {
         FormatBulk(res, reply);
         set->erase(res);
+        if (set->empty())
+            QSTORE.DeleteKey(params[1]);
+
+        std::vector<QString> translated;
+        translated.push_back("srem");
+        translated.push_back(params[1]);
+        translated.push_back(res);
+        
+        QClient::Current()->RewriteCmd(translated);
     }
     else
     {
         FormatNull(reply);
+        return QError_notExist;
     }
     
     return   QError_ok;

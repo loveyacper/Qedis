@@ -87,7 +87,7 @@ public:
     void SendToSlaves(const std::vector<QString>& params);
     
     // slave side
-    void SaveTmpRdb(const char* data, std::size_t len);
+    void SaveTmpRdb(const char* data, std::size_t& len);
     void SetMaster(const std::shared_ptr<QClient>&  cli);
     void SetMasterState(QReplState s);
     void SetMasterAddr(const char* ip, unsigned short port);

@@ -10,7 +10,7 @@
 namespace qedis
 {
 
-QClient*  QClient::s_pCurrentClient = 0;
+QClient*  QClient::s_current = 0;
 
 std::set<std::weak_ptr<QClient>, std::owner_less<std::weak_ptr<QClient> > >
           QClient::s_monitors;
@@ -119,9 +119,6 @@ static int ProcessMaster(const char* start, const char* end)
             else
             {
                 std::size_t rdb = static_cast<std::size_t>(end - ptr);
-                if (rdb > QREPL.GetRdbSize())
-                    rdb = QREPL.GetRdbSize();
-                
                 QREPL.SaveTmpRdb(ptr, rdb);
                 ptr += rdb;
             }
@@ -143,7 +140,7 @@ static int ProcessMaster(const char* start, const char* end)
 
 PacketLength QClient::_HandlePacket(const char* start, std::size_t bytes)
 {
-    s_pCurrentClient = this;
+    s_current = this;
 
     const char* const end   = start + bytes;
 
@@ -290,7 +287,7 @@ PacketLength QClient::_HandlePacket(const char* start, std::size_t bytes)
 
 QClient*  QClient::Current()
 {
-    return s_pCurrentClient;
+    return s_current;
 }
 
 QClient::QClient() : db_(0), flag_(0), name_("clientxxx")
@@ -335,7 +332,7 @@ bool QClient::SelectDB(int db)
 
 void QClient::_Reset()
 {
-    s_pCurrentClient = 0;
+    s_current = 0;
 
     parser_.Reset();
     reply_.Clear();
@@ -448,7 +445,7 @@ void   QClient::SetSlaveInfo()
 
 void  QClient::AddCurrentToMonitor()
 {
-    s_monitors.insert(std::static_pointer_cast<QClient>(s_pCurrentClient->shared_from_this()));
+    s_monitors.insert(std::static_pointer_cast<QClient>(s_current->shared_from_this()));
 }
 
 void  QClient::FeedMonitors(const std::vector<QString>& params)
@@ -461,8 +458,8 @@ void  QClient::FeedMonitors(const std::vector<QString>& params)
     char buf[512];
     int n = snprintf(buf, sizeof buf, "+[db%d %s:%hu]: \"",
              QSTORE.GetDB(),
-             s_pCurrentClient->peerAddr_.GetIP(),
-             s_pCurrentClient->peerAddr_.GetPort());
+             s_current->peerAddr_.GetIP(),
+             s_current->peerAddr_.GetPort());
 
     assert(n > 0);
     if (n > static_cast<int>(sizeof buf))

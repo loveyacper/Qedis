@@ -137,6 +137,7 @@ public:
     bool    Update();
 
     Logger* NullLog()  {  return  &nullLog_;  }
+    bool    IsShutdown() const { return shutdown_; }
 
 private:
     LogManager();
@@ -162,6 +163,7 @@ private:
     };
     
     std::shared_ptr<LogThread>  logThread_;
+    std::atomic<bool> shutdown_;
 };
 
 extern __thread Logger*  g_log;

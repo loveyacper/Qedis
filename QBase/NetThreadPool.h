@@ -33,7 +33,7 @@ public:
 
     void AddSocket(PSOCKET , uint32_t event);
     void ModSocket(PSOCKET , uint32_t event);
-    void RemoveSocket(std::deque<PSOCKET>::iterator & iter);
+    void RemoveSocket(PSOCKET, uint32_t event);
 
 protected:
     std::unique_ptr<Poller>        poller_;

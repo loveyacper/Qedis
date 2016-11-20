@@ -211,21 +211,29 @@ void Logger::Flush(enum LogLevel level)
 
     tmpBuffer_[pos_ ++] = '\n';
     tmpBuffer_[pos_] = '\0';
+    
+    if (LogManager::Instance().IsShutdown())
+    {
+        std::cerr << "Log is shutdown, your message is print on screen\n";
+        std::cerr << tmpBuffer_;
+    }
+    else
+    {
+        // Format: level info, length info, log msg
+        int logLevel = level;
 
-    // Format: level info, length info, log msg
-    int logLevel = level;
+        BufferSequence  contents;
+        contents.count = 3;
 
-    BufferSequence  contents;
-    contents.count = 3;
+        contents.buffers[0].iov_base = &logLevel;
+        contents.buffers[0].iov_len  = sizeof logLevel;
+        contents.buffers[1].iov_base = &pos_;
+        contents.buffers[1].iov_len  = sizeof pos_;
+        contents.buffers[2].iov_base = tmpBuffer_;
+        contents.buffers[2].iov_len  = pos_;
 
-    contents.buffers[0].iov_base = &logLevel;
-    contents.buffers[0].iov_len  = sizeof logLevel;
-    contents.buffers[1].iov_base = &pos_;
-    contents.buffers[1].iov_len  = sizeof pos_;
-    contents.buffers[2].iov_base = tmpBuffer_;
-    contents.buffers[2].iov_len  = pos_;
-
-    buffer_.Write(contents);
+        buffer_.Write(contents);
+    }
 
     _Reset();
 }
@@ -587,10 +595,6 @@ LogManager::~LogManager()
 {
     for (auto log : logs_)
     {
-        while (log->Update())
-        {
-            (void)log;
-        }
         delete log;
     }
 }
@@ -620,6 +624,7 @@ bool LogManager::StartLog()
 
     assert (!logThread_->IsAlive());
     logThread_->SetAlive();
+    shutdown_ = false;
 
     ThreadPool::Instance().ExecuteTask(std::bind(&LogThread::Run, logThread_));
     return true;
@@ -628,6 +633,7 @@ bool LogManager::StartLog()
 void LogManager::StopLog()
 {
     std::cout << "stop log thread\n";
+    shutdown_ = true;
     logThread_->Stop();
 }
 

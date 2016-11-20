@@ -140,16 +140,16 @@ bool  OutputMemoryFile::Open(const char* file, bool bAppend)
     {
         struct stat st;
         fstat(file_, &st);
-        size_ = st.st_size;
-        offset_ = size_;
+        size_ = std::max<decltype(size_)>(st.st_size, kDefaultSize);
+        offset_ = st.st_size;
     }
     else
     {
         size_ = kDefaultSize;
         offset_ = 0;
-        ::ftruncate(file_, size_);
     }
 
+    ::ftruncate(file_, size_);
     return _MapWriteOnly();
 }
 

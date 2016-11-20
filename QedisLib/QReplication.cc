@@ -344,8 +344,11 @@ void QReplication::Cron()
 }
 
 
-void QReplication::SaveTmpRdb(const char* data, std::size_t len)
+void QReplication::SaveTmpRdb(const char* data, std::size_t& len)
 {
+    if (masterInfo_.rdbRecved + len > masterInfo_.rdbSize)
+        len = masterInfo_.rdbSize - masterInfo_.rdbRecved;
+
     rdb_.Write(data, len);
     masterInfo_.rdbRecved += len;
     
