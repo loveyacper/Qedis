@@ -6,16 +6,16 @@
 namespace qedis
 {
 
-QObject  CreateStringObject(const QString&  value)
+QObject QObject::CreateString(const QString& value)
 {
-    QObject   obj(QType_string);
+    QObject obj(QType_string);
 
-    long  val;
+    long val;
     if (Strtol(value.c_str(), value.size(), &val))
     {
         obj.encoding = QEncode_int;
         obj.value.reset((void*)val, [](void* ) {});
-        LOG_DBG(g_log) << "set long value " << val;
+        DBG << "set long value " << val;
     }
     else
     {
@@ -26,9 +26,9 @@ QObject  CreateStringObject(const QString&  value)
     return obj;
 }
 
-QObject  CreateStringObject(long val)
+QObject QObject::CreateString(long val)
 {
-    QObject   obj(QType_string);
+    QObject obj(QType_string);
     
     obj.encoding = QEncode_int;
     obj.value.reset((void*)val, [](void* ) {});
@@ -69,10 +69,8 @@ static bool SetValue(const QString& key, const QString& value, bool exclusive = 
         }
     }
 
-    const QObject& obj = CreateStringObject(value);
-
     QSTORE.ClearExpire(key); // clear key's old ttl
-    QSTORE.SetValue(key, obj);
+    QSTORE.SetValue(key, QObject::CreateString(value));
 
     return  true;
 }
@@ -151,7 +149,7 @@ QError  setex(const std::vector<QString>& params, UnboundedBuffer* reply)
     }
     
     const auto& key = params[1];
-    QSTORE.SetValue(key, CreateStringObject(params[3]));
+    QSTORE.SetValue(key, QObject::CreateString(params[3]));
     QSTORE.SetExpire(key, ::Now() + seconds * 1000);
 
     FormatOK(reply);
@@ -168,7 +166,7 @@ QError  psetex(const std::vector<QString>& params, UnboundedBuffer* reply)
     }
     
     const auto& key = params[1];
-    QSTORE.SetValue(key, CreateStringObject(params[3]));
+    QSTORE.SetValue(key, QObject::CreateString(params[3]));
     QSTORE.SetExpire(key, ::Now() + milliseconds);
     
     FormatOK(reply);
@@ -190,7 +188,7 @@ QError  setrange(const std::vector<QString>& params, UnboundedBuffer* reply)
     {
         if (err == QError_notExist)
         {
-            value = QSTORE.SetValue(params[1], CreateStringObject(""));
+            value = QSTORE.SetValue(params[1], QObject::CreateString(""));
         }
         else
         {
@@ -300,7 +298,7 @@ QError  getset(const std::vector<QString>& params, UnboundedBuffer* reply)
     switch (err)
     {
     case QError_notExist:
-        value = QSTORE.SetValue(params[1], CreateStringObject(""));
+        value = QSTORE.SetValue(params[1], QObject::CreateString(""));
         // fall through
 
     case QError_ok:
@@ -335,7 +333,7 @@ QError  append(const std::vector<QString>& params, UnboundedBuffer* reply)
         break;
 
     case QError_notExist:
-        value = QSTORE.SetValue(params[1], CreateStringObject(params[2]));
+        value = QSTORE.SetValue(params[1], QObject::CreateString(params[2]));
         break;
 
     default:
@@ -439,7 +437,7 @@ QError  setbit(const std::vector<QString>& params, UnboundedBuffer* reply)
     QError err = QSTORE.GetValueByType(params[1], value, QType_string);
     if (err == QError_notExist)
     {
-        value = QSTORE.SetValue(params[1], CreateStringObject("0"));
+        value = QSTORE.SetValue(params[1], QObject::CreateString("0"));
         err = QError_ok;
     }
 
@@ -493,7 +491,7 @@ static QError  ChangeFloatValue(const QString& key, float delta, UnboundedBuffer
     QError err = QSTORE.GetValueByType(key, value, QType_string);
     if (err == QError_notExist)
     {
-        value = QSTORE.SetValue(key, CreateStringObject("0"));
+        value = QSTORE.SetValue(key, QObject::CreateString(0));
         err = QError_ok;
     }
 
@@ -538,7 +536,7 @@ static QError  ChangeIntValue(const QString& key, long delta, UnboundedBuffer* r
     QError err = QSTORE.GetValueByType(key, value, QType_string);
     if (err == QError_notExist)
     {
-        value = QSTORE.SetValue(key, CreateStringObject("0"));
+        value = QSTORE.SetValue(key, QObject::CreateString(0));
         err = QError_ok;
     }
 
@@ -733,7 +731,7 @@ QError  bitop(const std::vector<QString>& params, UnboundedBuffer* reply)
     }
     else
     {
-        QSTORE.SetValue(dst, CreateStringObject(res));
+        QSTORE.SetValue(dst, QObject::CreateString(res));
         FormatInt(static_cast<long>(res.size()), reply);
     }
 

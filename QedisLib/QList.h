@@ -14,9 +14,6 @@ enum class ListPosition
 };
 
 using QList = std::list<QString>;
-
-QObject  CreateListObject();
-
 }
 
 #endif

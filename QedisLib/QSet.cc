@@ -6,12 +6,12 @@
 namespace qedis
 {
 
-QObject  CreateSetObject()
+QObject QObject::CreateSet()
 {
-    QObject  set(QType_set);
+    QObject set(QType_set);
     set.value = std::make_shared<QSet>();
 
-    return std::move(set);
+    return set;
 }
 
 #define GET_SET(setname)  \
@@ -33,8 +33,7 @@ QObject  CreateSetObject()
         return err;  \
     }   \
     if (err == QError_notExist) { \
-        QObject val(CreateSetObject());  \
-        value = QSTORE.SetValue(setname, val);  \
+        value = QSTORE.SetValue(setname, QObject::CreateSet());  \
     }
 
 static bool RandomMember(const QSet& set, QString& res)
@@ -186,8 +185,7 @@ QError  smove(const std::vector<QString>& params, UnboundedBuffer* reply)
         if (err == QError_notExist)
         {
             err = QError_ok;
-            QObject val(CreateSetObject());
-            val.value = std::make_shared<QSet>();
+            QObject val(QObject::CreateSet());
             dst = QSTORE.SetValue(params[2], val);
         }
         
@@ -298,8 +296,7 @@ static void  _set_operation(const std::vector<QString>& params,
 
 QError  sdiffstore(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    QObject   obj = CreateSetObject();
-    obj.value = std::make_shared<QSet>();
+    QObject obj(QObject::CreateSet());
     QSTORE.SetValue(params[1], obj);
 
     const PSET& res = obj.CastSet();
@@ -336,8 +333,7 @@ QError  sinter(const std::vector<QString>& params, UnboundedBuffer* reply)
 
 QError  sinterstore(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    QObject   obj = CreateSetObject();
-    obj.value = std::make_shared<QSet>();
+    QObject obj(QObject::CreateSet());
     QSTORE.SetValue(params[1], obj);
 
     const PSET& res = obj.CastSet();
@@ -362,8 +358,7 @@ QError  sunion(const std::vector<QString>& params, UnboundedBuffer* reply)
 
 QError  sunionstore(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    QObject   obj = CreateSetObject();
-    obj.value = std::make_shared<QSet>();
+    QObject obj(QObject::CreateSet());
     QSTORE.SetValue(params[1], obj);
 
     const PSET& res = obj.CastSet();

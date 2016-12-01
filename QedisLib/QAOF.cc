@@ -126,6 +126,11 @@ bool   QAOFThreadController::AOFThread::Flush()
 {
     BufferSequence  data;
     buf_.ProcessBuffer(data);
+    if (data.count == 0)
+        return false;
+    
+    if (!file_.IsOpen())
+        file_.Open(g_config.appendfilename.c_str());
     
     for (size_t i = 0; i < data.count; ++ i)
     {
@@ -147,13 +152,13 @@ void  QAOFThreadController::AOFThread::Run()
 {
     assert (IsAlive());
 
-    if (!file_.IsOpen())
-        file_.Open(g_config.appendfilename.c_str());
-
     // CHECK aof temp buffer first!
     BufferSequence  data;
     while (QAOFThreadController::Instance().ProcessTmpBuffer(data))
     {
+        if (!file_.IsOpen())
+            file_.Open(g_config.appendfilename.c_str());
+        
         for (size_t i = 0; i < data.count; ++ i)
         {
             file_.Write(data.buffers[i].iov_base, data.buffers[i].iov_len);
@@ -388,6 +393,9 @@ QAOFLoader::QAOFLoader()
 
 bool  QAOFLoader::Load(const char* name)
 {
+    if (::access(name, F_OK) != 0)
+        return false;
+
     {
         // truncate tail trash zeroes
         OutputMemoryFile file;

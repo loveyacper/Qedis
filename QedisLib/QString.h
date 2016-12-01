@@ -11,9 +11,7 @@ using QString = std::string;
 
 //typedef std::basic_string<char, std::char_traits<char>, Bert::Allocator<char> >  QString;
 
-struct   QObject;
-QObject  CreateStringObject(const QString&  value);
-QObject  CreateStringObject(long value);
+struct QObject;
 std::shared_ptr<QString>  GetDecodedString(const QObject* value);
 
 }

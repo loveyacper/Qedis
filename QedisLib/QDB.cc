@@ -609,9 +609,9 @@ QObject  QDBLoader::LoadSpecialStringObject(size_t  specialVal)
     }
     
     if (isInt)
-        return CreateStringObject(val);
+        return QObject::CreateString(val);
     else
-        return CreateStringObject(LoadLZFString());
+        return QObject::CreateString(LoadLZFString());
 }
 
 QString  QDBLoader::LoadString(size_t strLen)
@@ -668,7 +668,7 @@ QObject  QDBLoader::LoadObject(int8_t type)
             }
             else
             {
-                return CreateStringObject(LoadString(len));
+                return QObject::CreateString(LoadString(len));
             }
         }
         case kTypeList:
@@ -718,7 +718,7 @@ QObject  QDBLoader::LoadObject(int8_t type)
     }
     
     assert(false);
-    return QObject();
+    return QObject(QType_invalid);
 }
 
 
@@ -746,7 +746,7 @@ QObject QDBLoader::_LoadList()
     assert(!special);
     DBG << "list length = " << len;
     
-    QObject obj(CreateListObject());
+    QObject obj(QObject::CreateList());
     PLIST  list(obj.CastList());
     for (size_t i = 0; i < len; ++ i)
     {
@@ -776,7 +776,7 @@ QObject QDBLoader::_LoadSet()
     assert(!special);
     DBG << "set length = " << len;
     
-    QObject obj(CreateSetObject());
+    QObject obj(QObject::CreateSet());
     PSET  set(obj.CastSet());
     for (size_t i = 0; i < len; ++ i)
     {
@@ -806,7 +806,7 @@ QObject QDBLoader::_LoadHash()
     assert(!special);
     DBG << "hash length = " << len;
     
-    QObject obj(CreateHashObject());
+    QObject obj(QObject::CreateHash());
     PHASH  hash(obj.CastHash());
     for (size_t i = 0; i < len; ++ i)
     {
@@ -849,7 +849,7 @@ QObject    QDBLoader::_LoadSSet()
     assert(!special);
     DBG << "sset length = " << len;
     
-    QObject obj(CreateSSetObject());
+    QObject obj(QObject::CreateSSet());
     PSSET  sset(obj.CastSortedSet());
     for (size_t i = 0; i < len; ++ i)
     {
@@ -978,7 +978,7 @@ QObject QDBLoader::_LoadZipList(const QString& zl, int8_t type)
     {
         case kTypeZipList:
         {
-            QObject  obj(CreateListObject());
+            QObject  obj(QObject::CreateList());
             PLIST    list(obj.CastList());
             
             for (const auto& elem : elements)
@@ -991,7 +991,7 @@ QObject QDBLoader::_LoadZipList(const QString& zl, int8_t type)
             
         case kTypeHashZipList:
         {
-            QObject  obj(CreateHashObject());
+            QObject  obj(QObject::CreateHash());
             PHASH    hash(obj.CastHash());
             
             assert(elements.size() % 2 == 0);
@@ -1010,7 +1010,7 @@ QObject QDBLoader::_LoadZipList(const QString& zl, int8_t type)
             
         case kTypeZSetZipList:
         {
-            QObject  obj(CreateSSetObject());
+            QObject  obj(QObject::CreateSSet());
             PSSET    sset(obj.CastSortedSet());
 
             assert(elements.size() % 2 == 0);
@@ -1042,7 +1042,7 @@ QObject QDBLoader::_LoadZipList(const QString& zl, int8_t type)
             break;
     }
     
-    return QObject();
+    return QObject(QType_invalid);
 }
 
 
@@ -1061,7 +1061,7 @@ QObject     QDBLoader::_LoadIntset()
         intsetGet(iset, i, &elements[i]);
     }
     
-    QObject  obj(CreateSetObject());
+    QObject  obj(QObject::CreateSet());
     PSET     set(obj.CastSet());
     
     for (auto v : elements)
@@ -1079,7 +1079,7 @@ QObject QDBLoader::_LoadQuickList()
     bool special = true;
     auto nElem = LoadLength(special);
 
-    QObject  obj(CreateListObject());
+    QObject  obj(QObject::CreateList());
     PLIST  list(obj.CastList());
     while (nElem -- > 0)
     {

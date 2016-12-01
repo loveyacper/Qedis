@@ -5,11 +5,11 @@
 namespace qedis
 {
 
-QObject  CreateHashObject()
+QObject QObject::CreateHash()
 {
     QObject obj(QType_hash);
     obj.value = std::make_shared<QHash>();
-    return  obj;
+    return obj;
 }
 
 #define GET_HASH(hashname)  \
@@ -28,8 +28,7 @@ QObject  CreateHashObject()
         return err;  \
     }   \
     if (err == QError_notExist) { \
-        QObject val(CreateHashObject());  \
-        value = QSTORE.SetValue(hashname, val);  \
+        value = QSTORE.SetValue(hashname, QObject::CreateHash());  \
     }
 
 

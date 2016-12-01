@@ -7,5 +7,3 @@ SUBDIRS(QedisLib)
 SUBDIRS(QedisSvr)
 SUBDIRS(Modules)
 SUBDIRS(UnitTest)
-SUBDIRS(paxos)
-

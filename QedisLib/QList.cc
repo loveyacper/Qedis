@@ -10,12 +10,12 @@ using std::vector;
 namespace qedis
 {
 
-QObject  CreateListObject()
+QObject QObject::CreateList()
 {
     QObject  list(QType_list);
     list.value = std::make_shared<QList>();
 
-    return std::move(list);
+    return list;
 }
 
 static QError  push(const vector<QString>& params, UnboundedBuffer* reply, ListPosition pos, bool createIfNotExist = true)
@@ -32,10 +32,7 @@ static QError  push(const vector<QString>& params, UnboundedBuffer* reply, ListP
         }
         else if (createIfNotExist)
         {
-            QObject  list(QType_list);
-            list.value = std::make_shared<QList>();
-
-            value = QSTORE.SetValue(params[1], list);
+            value = QSTORE.SetValue(params[1], QObject::CreateList());
         }
         else
         {
@@ -675,9 +672,8 @@ QError  rpoplpush(const vector<QString>& params, UnboundedBuffer* reply)
             ReplyError(err, reply);
             return err;
         }
-        QObject  dstObj(QType_list);
-        dstObj.value = std::make_shared<QList>();
-        dst = QSTORE.SetValue(params[2], dstObj);
+
+        dst = QSTORE.SetValue(params[2], QObject::CreateList());
     }
     
     const PLIST& dstlist = dst->CastList();

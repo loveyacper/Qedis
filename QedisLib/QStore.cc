@@ -193,9 +193,7 @@ size_t  QStore::BlockedClients::ServeClient(const QString& key, const PLIST& lis
                     }
                     else
                     {
-                        QObject  dstObj(QType_list);
-                        dstObj.value = std::make_shared<QList>();
-                        dst = QSTORE.SetValue(target, dstObj);
+                        dst = QSTORE.SetValue(target, QObject::CreateList());
                     }
                 }
             }

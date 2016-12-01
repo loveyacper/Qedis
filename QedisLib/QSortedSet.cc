@@ -186,11 +186,11 @@ QSortedSet::RangeByScore(double minScore, double maxScore)
     return  res;
 }
 
-QObject  CreateSSetObject()
+QObject QObject::CreateSSet()
 {
     QObject obj(QType_sortedSet);
     obj.value = std::make_shared<QSortedSet>();
-    return std::move(obj);
+    return obj;
 }
 
 // commands
@@ -210,8 +210,7 @@ QObject  CreateSSetObject()
         return err;  \
     }   \
     if (err == QError_notExist) { \
-        QObject val(CreateSSetObject());  \
-        value = QSTORE.SetValue(name, val);  \
+        value = QSTORE.SetValue(name, QObject::CreateSSet());  \
     }
 
 QError  zadd(const std::vector<QString>& params, UnboundedBuffer* reply)
@@ -378,7 +377,7 @@ static QError GenericRange(const std::vector<QString>& params, UnboundedBuffer* 
     auto res(sset->RangeByRank(start, end));
     if (res.empty())
     {
-        FormatNull(reply);
+        FormatNullArray(reply);
         return QError_ok;
     }
     

@@ -11,8 +11,6 @@
 namespace qedis
 {
 
-QObject  CreateSSetObject();
-
 class QSortedSet
 {
 public:

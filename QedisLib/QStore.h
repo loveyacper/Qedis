@@ -36,9 +36,10 @@ struct  QObject
     unsigned int encoding : 4;
     unsigned int lru : kLRUBits;
 
-    std::shared_ptr<void>  value;
+    std::shared_ptr<void> value;
     
-    explicit QObject(QType  t = QType_invalid) : type(t)
+    explicit
+    QObject(QType t = QType_invalid) : type(t)
     {
         switch (type)
         {
@@ -46,28 +47,36 @@ struct  QObject
                 encoding = QEncode_list;
                 break;
                 
-            case QType_hash:
-                encoding = QEncode_hash;
-                break;
-                
             case QType_set:
                 encoding = QEncode_set;
                 break;
-
+                
             case QType_sortedSet:
                 encoding = QEncode_sset;
+                break;
+                
+            case QType_hash:
+                encoding = QEncode_hash;
                 break;
                 
             default:
                 encoding = QEncode_invalid;
                 break;
         }
-        
-        lru   = 0;
+    
+        lru = 0;
     }
     
     QObject(const QObject& obj) = default;
-    QObject& operator= (const QObject& obj) =  default;
+    QObject(QObject&& obj) = default;
+    QObject& operator= (const QObject& obj) = default;
+    
+    static QObject CreateString(const QString& value);
+    static QObject CreateString(long value);
+    static QObject CreateList();
+    static QObject CreateSet();
+    static QObject CreateSSet();
+    static QObject CreateHash();
     
     PSTRING  CastString()       const { return std::static_pointer_cast<QString>(value); }
     PLIST    CastList()         const { return std::static_pointer_cast<QList>(value);   }

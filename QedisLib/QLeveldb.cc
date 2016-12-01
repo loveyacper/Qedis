@@ -40,7 +40,7 @@ QObject QLeveldb::Get(const QString& key)
     std::string value;
     auto status = db_->Get(leveldb::ReadOptions(), leveldb::Slice(key.data(), key.size()), &value);
     if (!status.ok())
-        return QObject();
+        return QObject(QType_invalid);
 
     int64_t remainTtlSeconds = 0;
     QObject obj = _DecodeObject(value.data(), value.size(), remainTtlSeconds);
@@ -219,7 +219,7 @@ QObject QLeveldb::_DecodeObject(const char* data, size_t len, int64_t& remainTtl
         if (absttl <= now)
         {
             DBG << "Load from leveldb is timeout " << absttl;
-            return QObject();
+            return QObject(QType_invalid);
         }
         else
         {
@@ -236,7 +236,7 @@ QObject QLeveldb::_DecodeObject(const char* data, size_t len, int64_t& remainTtl
     {
         case QType_string:
         {
-            return CreateStringObject(_DecodeString(data + offset, len - offset));
+            return QObject::CreateString(_DecodeString(data + offset, len - offset));
         }
         case QType_list:
         {
@@ -260,7 +260,7 @@ QObject QLeveldb::_DecodeObject(const char* data, size_t len, int64_t& remainTtl
     }
     
     assert(false);
-    return QObject();
+    return QObject(QType_invalid);
 }
 
 QString QLeveldb::_DecodeString(const char* data, size_t len)
@@ -279,7 +279,7 @@ QObject QLeveldb::_DecodeHash(const char* data, size_t len)
     assert(len >= 4);
     uint32_t hlen = *(uint32_t*)(data);
 
-    QObject obj(CreateHashObject());
+    QObject obj(QObject::CreateHash());
     PHASH hash(obj.CastHash());
 
     size_t offset = 4;
@@ -303,7 +303,7 @@ QObject QLeveldb::_DecodeList(const char* data, size_t len)
     assert(len >= 4);
     uint32_t llen = *(uint32_t*)(data);
 
-    QObject obj(CreateListObject());
+    QObject obj(QObject::CreateList());
     PLIST list(obj.CastList());
 
     size_t offset = 4;
@@ -324,7 +324,7 @@ QObject QLeveldb::_DecodeSet(const char* data, size_t len)
     assert(len >= 4);
     uint32_t slen = *(uint32_t*)(data);
 
-    QObject obj(CreateSetObject());
+    QObject obj(QObject::CreateSet());
     PSET set(obj.CastSet());
 
     size_t offset = 4;
@@ -345,7 +345,7 @@ QObject QLeveldb::_DecodeSSet(const char* data, size_t len)
     assert(len >= 4);
     uint32_t sslen = *(uint32_t*)(data);
 
-    QObject obj(CreateSSetObject());
+    QObject obj(QObject::CreateSSet());
     PSSET sset(obj.CastSortedSet());
 
     size_t offset = 4;
