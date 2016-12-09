@@ -388,7 +388,7 @@ std::vector<QString>  SplitString(const QString& str, char seperator)
     if (start != str.size())
         results.emplace_back(str.substr(start));
     
-    return std::move(results);
+    return results;
 }
     
 }

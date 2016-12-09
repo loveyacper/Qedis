@@ -97,7 +97,7 @@ bool  LoadQedisConfig(const char* cfgFile, QConfig& cfg)
 
     // alias command
     {
-        std::vector<QString>  alias = std::move(SplitString(parser.GetData<QString>("rename-command"), ' '));
+        std::vector<QString>  alias(SplitString(parser.GetData<QString>("rename-command"), ' '));
         if (alias.size() % 2 == 0)
         {
             for (auto it(alias.begin()); it != alias.end(); )
@@ -110,7 +110,7 @@ bool  LoadQedisConfig(const char* cfgFile, QConfig& cfg)
     }
     
     // load rdb config
-    std::vector<QString>  saveInfo = std::move(SplitString(parser.GetData<QString>("save"), ' '));
+    std::vector<QString>  saveInfo(SplitString(parser.GetData<QString>("save"), ' '));
     if (!saveInfo.empty() && saveInfo.size() != 2)
     {
         EraseQuotes(saveInfo[0]);

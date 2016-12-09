@@ -730,8 +730,7 @@ QString QDBLoader::_LoadGenericString()
     if (special)
     {
         QObject obj = LoadSpecialStringObject(len);
-        QString str = *GetDecodedString(&obj);
-        return  std::move(str);
+        return *GetDecodedString(&obj);
     }
     else
     {

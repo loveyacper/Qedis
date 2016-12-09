@@ -676,7 +676,7 @@ static QString StringBitOp(const std::vector<const QString* >& keys, BitOp op)
             break;
     }
     
-    return std::move(res);
+    return res;
 }
 
 

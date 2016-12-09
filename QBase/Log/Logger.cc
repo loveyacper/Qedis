@@ -214,8 +214,7 @@ void Logger::Flush(enum LogLevel level)
     
     if (LogManager::Instance().IsShutdown())
     {
-        std::cerr << "Log is shutdown, your message is print on screen\n";
-        std::cerr << tmpBuffer_;
+        std::cout << tmpBuffer_;
     }
     else
     {
