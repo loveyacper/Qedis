@@ -20,7 +20,11 @@ void QProtoParser::Reset()
 {
     multi_ = -1;
     paramLen_ = -1;
-    params_.clear();
+    numOfParam_ = 0;
+
+    // Optimize: Most redis command has 3 args
+    while (params_.size() > 3)
+        params_.pop_back();
 }
 
 QParseResult QProtoParser::ParseRequest(const char*& ptr, const char* end)
@@ -54,14 +58,16 @@ QParseResult QProtoParser::_ParseMulti(const char*& ptr, const char* end, int& r
 
 QParseResult QProtoParser::_ParseStrlist(const char*& ptr, const char* end, std::vector<QString>& results)
 {
-    while (static_cast<int>(results.size()) < multi_)
+    while (static_cast<int>(numOfParam_) < multi_)
     {
-        QString res;
-        auto parseRet = _ParseStr(ptr, end, res);
+        if (results.size() < numOfParam_ + 1)
+            results.resize(numOfParam_ + 1);
+
+        auto parseRet = _ParseStr(ptr, end, results[numOfParam_]);
 
         if (parseRet == QParseResult::ok)
         {
-            results.emplace_back(std::move(res));
+            ++ numOfParam_;
         }
         else
         {
@@ -69,6 +75,7 @@ QParseResult QProtoParser::_ParseStrlist(const char*& ptr, const char* end, std:
         }
     }
 
+    results.resize(numOfParam_);
     return QParseResult::ok;
 }
 

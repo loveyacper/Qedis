@@ -27,6 +27,8 @@ private:
 
     int multi_ = -1;
     int paramLen_ = -1;
+
+    size_t numOfParam_ = 0; // for optimize
     std::vector<QString> params_;
 };
 
