@@ -10,10 +10,10 @@ A C++11 implementation of Redis Server, use Leveldb for persist storage.(not inc
  Qedis supports module now, still in progress, much work to do.
  I added three commands(ldel, skeys, hgets) for demonstration.
 
-## Leveldb as backend
- Leveldb can be configured as backend for Qedis cache.
+## Persistence: Not limited to memory
+ Leveldb can be configured as backend for Qedis.
 
-## Full compatible with redis
+## Fully compatible with redis
  You can test Qedis with redis-cli, redis-benchmark, or use redis as master with Qedis as slave or conversely, it also can work with redis sentinel.
 
 ## High Performance
@@ -25,6 +25,9 @@ Run this command, compare with redis use pipeline commands, try it.
 ```bash
 ./redis-benchmark -q -n 1000000 -P 50 -c 50
 ```
+
+![image](https://github.com/loveyacper/Qedis/blob/master/performance.png)
+
  
 ## Command List
 #### show all supported commands list
