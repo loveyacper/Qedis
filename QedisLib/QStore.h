@@ -16,11 +16,11 @@
 namespace qedis
 {
 
-using PSTRING = std::shared_ptr<QString>;
-using PLIST = std::shared_ptr<QList>;
-using PSET = std::shared_ptr<QSet>;
-using PSSET = std::shared_ptr<QSortedSet>;
-using PHASH = std::shared_ptr<QHash>;
+using PSTRING = QString*;
+using PLIST = QList*;
+using PSET = QSet*;
+using PSSET = QSortedSet*;
+using PHASH = QHash*;
 
     
 static const int kLRUBits = 24;
@@ -28,48 +28,29 @@ static const uint32_t kMaxLRUValue = (1 << kLRUBits) - 1;
 
 uint32_t EstimateIdleTime(uint32_t lru);
 
-struct  QObject
+struct QObject
 {
+public:
     static uint32_t lruclock;
 
     unsigned int type : 4;
     unsigned int encoding : 4;
     unsigned int lru : kLRUBits;
 
-    std::shared_ptr<void> value;
+    void* value;
     
     explicit
-    QObject(QType t = QType_invalid) : type(t)
-    {
-        switch (type)
-        {
-            case QType_list:
-                encoding = QEncode_list;
-                break;
-                
-            case QType_set:
-                encoding = QEncode_set;
-                break;
-                
-            case QType_sortedSet:
-                encoding = QEncode_sset;
-                break;
-                
-            case QType_hash:
-                encoding = QEncode_hash;
-                break;
-                
-            default:
-                encoding = QEncode_invalid;
-                break;
-        }
+    QObject(QType = QType_invalid);
+    ~QObject();
+
+    QObject(const QObject& obj) = delete;
+    QObject& operator= (const QObject& obj) = delete;
     
-        lru = 0;
-    }
+    QObject(QObject&& obj);
+    QObject& operator= (QObject&& obj);
     
-    QObject(const QObject& obj) = default;
-    QObject(QObject&& obj) = default;
-    QObject& operator= (const QObject& obj) = default;
+    void Clear();
+    void Reset(void* newvalue = nullptr);
     
     static QObject CreateString(const QString& value);
     static QObject CreateString(long value);
@@ -78,18 +59,22 @@ struct  QObject
     static QObject CreateSSet();
     static QObject CreateHash();
     
-    PSTRING  CastString()       const { return std::static_pointer_cast<QString>(value); }
-    PLIST    CastList()         const { return std::static_pointer_cast<QList>(value);   }
-    PSET     CastSet()          const { return std::static_pointer_cast<QSet>(value);    }
-    PSSET    CastSortedSet()    const { return std::static_pointer_cast<QSortedSet>(value); }
-    PHASH    CastHash()         const { return std::static_pointer_cast<QHash>(value);   }
+    PSTRING  CastString()       const { return reinterpret_cast<PSTRING>(value); }
+    PLIST    CastList()         const { return reinterpret_cast<PLIST>(value);   }
+    PSET     CastSet()          const { return reinterpret_cast<PSET>(value);    }
+    PSSET    CastSortedSet()    const { return reinterpret_cast<PSSET>(value); }
+    PHASH    CastHash()         const { return reinterpret_cast<PHASH>(value);   }
+   
+private:
+    void _MoveFrom(QObject&& obj);
+    void _FreeValue();
 };
 
 class QClient;
 
 using QDB = std::unordered_map<QString, QObject,
-        my_hash,
-        std::equal_to<QString> >;
+                               my_hash,
+                               std::equal_to<QString> >;
 
 
 const int kMaxDbNum = 65536;
@@ -122,13 +107,12 @@ public:
     QDB::iterator       end()           { return store_[dbno_].end(); }
     
     const QObject* GetObject(const QString& key) const;
-    QError  GetValue(const QString& key, QObject*& value, bool touch = true);
-    QError  GetValueByType(const QString& key, QObject*& value, QType type = QType_invalid);
+    QError GetValue(const QString& key, QObject*& value, bool touch = true);
+    QError GetValueByType(const QString& key, QObject*& value, QType type = QType_invalid);
     // do not update lru time
     QError  GetValueByTypeNoTouch(const QString& key, QObject*& value, QType type = QType_invalid);
 
-    QObject*SetValue(const QString& key, const QObject& value);
-    bool    SetValueIfNotExist(const QString& key, const QObject& value);
+    QObject* SetValue(const QString& key, QObject&& value);
 
     // for expire key
     enum ExpireResult : std::int8_t
@@ -184,44 +168,44 @@ private:
     class ExpiresDB
     {
     public:
-        void    SetExpire(const QString& key, uint64_t when);
+        void SetExpire(const QString& key, uint64_t when);
         int64_t TTL(const QString& key, uint64_t now);
-        bool    ClearExpire(const QString& key);
-        ExpireResult    ExpireIfNeed(const QString& key, uint64_t now);
+        bool ClearExpire(const QString& key);
+        ExpireResult ExpireIfNeed(const QString& key, uint64_t now);
 
-        int     LoopCheck(uint64_t now);
+        int LoopCheck(uint64_t now);
         
     private:
         using Q_EXPIRE_DB = std::unordered_map<QString, uint64_t,
                                     my_hash,
                                     std::equal_to<QString> >;
-        Q_EXPIRE_DB            expireKeys_;  // all the keys to be expired, unorder.
+        Q_EXPIRE_DB expireKeys_;  // all the keys to be expired, unorder.
     };
     
     class BlockedClients
     {
     public:
-        bool    BlockClient(const QString& key,
+        bool BlockClient(const QString& key,
                             QClient* client,
                             uint64_t timeout,
                             ListPosition  pos,
                             const QString* dstList = 0);
-        size_t  UnblockClient(QClient* client);
-        size_t  ServeClient(const QString& key, const PLIST& list);
+        size_t UnblockClient(QClient* client);
+        size_t ServeClient(const QString& key, const PLIST& list);
         
-        int    LoopCheck(uint64_t now);
+        int LoopCheck(uint64_t now);
         size_t Size() const { return blockedClients_.size(); }
     private:
         using Clients = std::list<std::tuple<std::weak_ptr<QClient>, uint64_t, ListPosition> >;
         using WaitingList = std::unordered_map<QString, Clients>;
         
-        WaitingList  blockedClients_;
+        WaitingList blockedClients_;
     };
 
-    QError  _SetValue(const QString& key, QObject& value, bool exclusive = false);
+    QError _SetValue(const QString& key, QObject& value, bool exclusive = false);
 
     // Because GetObject() must be const, so mutable them
-    mutable std::vector<QDB>  store_;
+    mutable std::vector<QDB> store_;
     mutable std::vector<ExpiresDB> expiresDb_;
     std::vector<BlockedClients> blockedClients_;
     std::vector<std::unique_ptr<QDumpInterface> > backends_;

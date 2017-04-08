@@ -21,7 +21,7 @@ pid_t             g_rewritePid = -1;
  * the coming aof data will be write to the tmp buffer, not to
  * aof file.
  ****************************************************/
-void   QAOFThreadController::RewriteDoneHandler(int exitcode, int bysignal)
+void QAOFThreadController::RewriteDoneHandler(int exitcode, int bysignal)
 {
     if (exitcode == 0 && bysignal == 0)
     {
@@ -46,24 +46,23 @@ void   QAOFThreadController::RewriteDoneHandler(int exitcode, int bysignal)
 
 QAOFThreadController& QAOFThreadController::Instance()
 {
-    static  QAOFThreadController  threadCtrl;
-    return  threadCtrl;
+    static QAOFThreadController threadCtrl;
+    return threadCtrl;
 }
 
-bool  QAOFThreadController::ProcessTmpBuffer(BufferSequence& bf)
+bool QAOFThreadController::ProcessTmpBuffer(BufferSequence& bf)
 {
     aofBuffer_.ProcessBuffer(bf);
-    
     return bf.count > 0;
 }
 
-void  QAOFThreadController::SkipTmpBuffer(size_t n)
+void QAOFThreadController::SkipTmpBuffer(size_t n)
 {
     aofBuffer_.Skip(n);
 }
 
 // main thread  call this
-void  QAOFThreadController::Start()
+void QAOFThreadController::Start()
 {
     DBG << "start aof thread";
     
@@ -76,7 +75,7 @@ void  QAOFThreadController::Start()
 }
 
 // when fork(), parent call stop;
-void   QAOFThreadController::Stop()
+void QAOFThreadController::Stop()
 {
     if (!aofThread_)
         return;
@@ -88,7 +87,7 @@ void   QAOFThreadController::Stop()
 }
 
 // main thread call this
-void   QAOFThreadController::_WriteSelectDB(int db, AsyncBuffer& dst)
+void QAOFThreadController::_WriteSelectDB(int db, AsyncBuffer& dst)
 {
     if (db == lastDb_)
         return;
@@ -100,18 +99,14 @@ void   QAOFThreadController::_WriteSelectDB(int db, AsyncBuffer& dst)
     WriteBulkLong(db, dst);
 }
 
-void   QAOFThreadController::SaveCommand(const std::vector<QString>& params, int db)
+void QAOFThreadController::SaveCommand(const std::vector<QString>& params, int db)
 {
     AsyncBuffer* dst;
     
     if (aofThread_ && aofThread_->IsAlive())
-    {
         dst = &aofThread_->buf_;
-    }
     else
-    {
         dst = &aofBuffer_;
-    }
     
     _WriteSelectDB(db, *dst);
     qedis::SaveCommand(params, *dst);
@@ -122,7 +117,7 @@ QAOFThreadController::AOFThread::~AOFThread()
     file_.Close();
 }
 
-bool   QAOFThreadController::AOFThread::Flush()
+bool QAOFThreadController::AOFThread::Flush()
 {
     BufferSequence  data;
     buf_.ProcessBuffer(data);
@@ -139,21 +134,21 @@ bool   QAOFThreadController::AOFThread::Flush()
     
     buf_.Skip(data.TotalBytes());
     
-    return  data.count != 0;
+    return data.count != 0;
 }
 
 
-void   QAOFThreadController::AOFThread::SaveCommand(const std::vector<QString>& params)
+void QAOFThreadController::AOFThread::SaveCommand(const std::vector<QString>& params)
 {
     qedis::SaveCommand(params, buf_);
 }
 
-void  QAOFThreadController::AOFThread::Run()
+void QAOFThreadController::AOFThread::Run()
 {
     assert (IsAlive());
 
     // CHECK aof temp buffer first!
-    BufferSequence  data;
+    BufferSequence data;
     while (QAOFThreadController::Instance().ProcessTmpBuffer(data))
     {
         if (!file_.IsOpen())
@@ -180,7 +175,7 @@ void  QAOFThreadController::AOFThread::Run()
     pro_.set_value();
 }
 
-void  QAOFThreadController::Join()
+void QAOFThreadController::Join()
 {
     if (aofThread_)
         aofThread_->pro_.get_future().wait();
@@ -265,27 +260,19 @@ QError bgrewriteaof(const std::vector<QString>& , UnboundedBuffer* reply)
     return QError_ok;
 }
 
-static void  SaveStringObject(const QString& key, const QObject& obj, OutputMemoryFile& file)
+static void SaveStringObject(const QString& key, const QObject& obj, OutputMemoryFile& file)
 {
     WriteMultiBulkLong(3, file);
     WriteBulkString("set", 3, file);
     WriteBulkString(key, file);
-    
-    const PSTRING& str = obj.CastString();
-    if (obj.encoding == QEncode_raw)
-    {
-        WriteBulkString(*str, file);
-    }
-    else
-    {
-        intptr_t val = (intptr_t)str.get();
-        WriteBulkLong(val, file);
-    }
+
+    auto str = GetDecodedString(&obj);
+    WriteBulkString(*str, file);
 }
 
-static void  SaveListObject(const QString& key, const QObject& obj, OutputMemoryFile& file)
+static void SaveListObject(const QString& key, const QObject& obj, OutputMemoryFile& file)
 {
-    const PLIST&  list = obj.CastList();
+    auto list = obj.CastList();
     if (list->empty())
         return;
 
@@ -299,9 +286,9 @@ static void  SaveListObject(const QString& key, const QObject& obj, OutputMemory
     }
 }
 
-static void  SaveSetObject(const QString& key, const QObject& obj, OutputMemoryFile& file)
+static void SaveSetObject(const QString& key, const QObject& obj, OutputMemoryFile& file)
 {
-    const PSET& set = obj.CastSet();
+    auto set = obj.CastSet();
     if (set->empty())
         return;
 
@@ -317,7 +304,7 @@ static void  SaveSetObject(const QString& key, const QObject& obj, OutputMemoryF
 
 static void  SaveZSetObject(const QString& key, const QObject& obj, OutputMemoryFile& file)
 {
-    const PSSET& zset = obj.CastSortedSet();
+    auto zset = obj.CastSortedSet();
     if (zset->Size() == 0)
         return;
 
@@ -338,9 +325,9 @@ static void  SaveZSetObject(const QString& key, const QObject& obj, OutputMemory
     }
 }
 
-static void  SaveHashObject(const QString& key, const QObject& obj, OutputMemoryFile& file)
+static void SaveHashObject(const QString& key, const QObject& obj, OutputMemoryFile& file)
 {
-    const PHASH& hash = obj.CastHash();
+    auto hash = obj.CastHash();
     if (hash->empty())
         return;
 
@@ -391,7 +378,7 @@ QAOFLoader::QAOFLoader()
 {
 }
 
-bool  QAOFLoader::Load(const char* name)
+bool QAOFLoader::Load(const char* name)
 {
     if (::access(name, F_OK) != 0)
         return false;
@@ -404,17 +391,17 @@ bool  QAOFLoader::Load(const char* name)
     }
     
     // load file to memory
-    InputMemoryFile  file;
+    InputMemoryFile file;
     if (!file.Open(name))
         return  false;
 
-    size_t  maxLen = std::numeric_limits<size_t>::max();
+    size_t maxLen = std::numeric_limits<size_t>::max();
     const char* content = file.Read(maxLen);
     
     if (maxLen == 0)
         return false;
 
-    QProtoParser  parser;
+    QProtoParser parser;
     // extract commands from file content
     const char* const end = content + maxLen;
     while (content < end)

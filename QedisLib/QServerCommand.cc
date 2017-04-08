@@ -17,7 +17,7 @@
 namespace qedis
 {
 
-QError  select(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError select(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     int newDb = atoi(params[1].c_str());
     
@@ -35,27 +35,27 @@ QError  select(const std::vector<QString>& params, UnboundedBuffer* reply)
         QSTORE.SelectDB(newDb);
     }
 
-    return   QError_ok;
+    return QError_ok;
 }
 
 
-QError  dbsize(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError dbsize(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     FormatInt(static_cast<long>(QSTORE.DBSize()), reply);
-    return   QError_ok;
+    return QError_ok;
 }
 
-QError  flushdb(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError flushdb(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     QSTORE.dirty_ += QSTORE.DBSize();
     QSTORE.ClearCurrentDB();
     Propogate(QSTORE.GetDB(), params);
     
     FormatOK(reply);
-    return   QError_ok;
+    return QError_ok;
 }
 
-QError  flushall(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError flushall(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     int currentDb = QSTORE.GetDB();
     
@@ -74,10 +74,10 @@ QError  flushall(const std::vector<QString>& params, UnboundedBuffer* reply)
     }
     
     FormatOK(reply);
-    return   QError_ok;
+    return QError_ok;
 }
 
-QError  bgsave(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError bgsave(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     if (g_qdbPid != -1 || g_rewritePid != -1)
     {
@@ -107,10 +107,10 @@ QError  bgsave(const std::vector<QString>& params, UnboundedBuffer* reply)
         FormatSingle("Background saving started", 25, reply);
     }
 
-    return   QError_ok;
+    return QError_ok;
 }
 
-QError  save(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError save(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     if (g_qdbPid != -1 || g_rewritePid != -1)
     {
@@ -121,24 +121,24 @@ QError  save(const std::vector<QString>& params, UnboundedBuffer* reply)
         return QError_ok;
     }
     
-    QDBSaver  qdb;
+    QDBSaver qdb;
     qdb.Save(g_config.rdbfullname.c_str());
     g_lastQDBSave = time(NULL);
 
     FormatOK(reply);
-    return   QError_ok;
+    return QError_ok;
 }
 
-QError  lastsave(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError lastsave(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     FormatInt(g_lastQDBSave, reply);
-    return   QError_ok;
+    return QError_ok;
 }
 
-QError  client(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError client(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     // getname   setname    kill  list
-    QError   err = QError_ok;
+    QError err = QError_ok;
     
     if (params[1].size() == 7 && strncasecmp(params[1].c_str(), "getname", 7) == 0)
     {
@@ -175,7 +175,7 @@ QError  client(const std::vector<QString>& params, UnboundedBuffer* reply)
         ReplyError(err = QError_param, reply);
     }
     
-    return   err;
+    return err;
 }
 
 static int Suicide()
@@ -186,7 +186,7 @@ static int Suicide()
     return *ptr;
 }
 
-QError  debug(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError debug(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     QError err = QError_ok;
     
@@ -209,7 +209,7 @@ QError  debug(const std::vector<QString>& params, UnboundedBuffer* reply)
             // ref count,  encoding, idle time
             char buf[512];
             int  len = snprintf(buf, sizeof buf, "ref count:%ld, encoding:%s, idletime:%u",
-                                obj->value.use_count(),
+                                1L, // TODO ?
                                 EncodingStringInfo(obj->encoding),
                                 EstimateIdleTime(obj->lru));
             FormatBulk(buf, len, reply);
@@ -220,11 +220,11 @@ QError  debug(const std::vector<QString>& params, UnboundedBuffer* reply)
         ReplyError(err = QError_param, reply);
     }
     
-    return   err;
+    return err;
 }
 
 
-QError  shutdown(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError shutdown(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     if (params.size() == 2 && strncasecmp(params[1].c_str(), "save", 4) == 0)
     {
@@ -233,20 +233,20 @@ QError  shutdown(const std::vector<QString>& params, UnboundedBuffer* reply)
     }
 
     Server::Instance()->Terminate();
-    return   QError_ok;
+    return QError_ok;
 }
 
 
-QError  ping(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError ping(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     FormatSingle("PONG", 4, reply);
-    return   QError_ok;
+    return QError_ok;
 }
 
-QError  echo(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError echo(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     FormatBulk(params[1], reply);
-    return   QError_ok;
+    return QError_ok;
 }
 
 void OnMemoryInfoCollect(UnboundedBuffer& res)
@@ -286,7 +286,7 @@ void OnServerInfoCollect(UnboundedBuffer& res)
     char buf[1024];
     
     // server
-    struct utsname  name;
+    struct utsname name;
     uname(&name);
     int n = snprintf(buf, sizeof buf - 1,
                  "# Server\r\n"
@@ -337,15 +337,15 @@ QError info(const std::vector<QString>& params, UnboundedBuffer* reply)
 }
 
 
-QError  monitor(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError monitor(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     QClient::AddCurrentToMonitor();
     
     FormatOK(reply);
-    return   QError_ok;
+    return QError_ok;
 }
 
-QError  auth(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError auth(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     if (g_config.CheckPassword(params[1]))
     {
@@ -357,10 +357,10 @@ QError  auth(const std::vector<QString>& params, UnboundedBuffer* reply)
         ReplyError(QError_errAuth, reply);
     }
     
-    return   QError_ok;
+    return QError_ok;
 }
 
-QError  slowlog(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError slowlog(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     if (params[1] == "len")
     {
@@ -409,7 +409,7 @@ QError  slowlog(const std::vector<QString>& params, UnboundedBuffer* reply)
         return QError_syntax;
     }
     
-    return   QError_ok;
+    return QError_ok;
 }
 
 

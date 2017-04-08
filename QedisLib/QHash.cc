@@ -8,7 +8,7 @@ namespace qedis
 QObject QObject::CreateHash()
 {
     QObject obj(QType_hash);
-    obj.value = std::make_shared<QHash>();
+    obj.Reset(new QHash);
     return obj;
 }
 
@@ -32,9 +32,9 @@ QObject QObject::CreateHash()
     }
 
 
-QHash::iterator  _set_hash_force(QHash& hash, const QString& key, const QString& val)
+QHash::iterator _set_hash_force(QHash& hash, const QString& key, const QString& val)
 {
-    QHash::iterator it(hash.find(key));
+    auto it(hash.find(key));
     if (it != hash.end())
         it->second = val;
     else
@@ -48,19 +48,18 @@ bool _set_hash_if_notexist(QHash& hash, const QString& key, const QString& val)
     return hash.insert(QHash::value_type(key, val)).second;
 }
 
-QError  hset(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError hset(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     GET_OR_SET_HASH(params[1]);
     
-    const PHASH& hash= value->CastHash();
+    auto hash= value->CastHash();
     _set_hash_force(*hash, params[2], params[3]);
     
     FormatInt(1, reply);
-
-    return   QError_ok;
+    return QError_ok;
 }
 
-QError  hmset(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError hmset(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     if (params.size() % 2 != 0)
     {
@@ -70,38 +69,37 @@ QError  hmset(const std::vector<QString>& params, UnboundedBuffer* reply)
     
     GET_OR_SET_HASH(params[1]);
 
-    const PHASH& hash= value->CastHash();
+    auto hash= value->CastHash();
     for (size_t i = 2; i < params.size(); i += 2)
         _set_hash_force(*hash, params[i], params[i + 1]);
     
     FormatOK(reply);
-    return   QError_ok;
+    return QError_ok;
 }
 
-
-QError  hget(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError hget(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     GET_HASH(params[1]);
     
-    const PHASH& hash= value->CastHash();
+    auto hash= value->CastHash();
     auto it = hash->find(params[2]);
 
-    if  (it != hash->end())
+    if (it != hash->end())
         FormatBulk(it->second, reply);
     else
         FormatNull(reply);
 
-    return   QError_ok;
+    return QError_ok;
 }
 
 
-QError  hmget(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError hmget(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     GET_HASH(params[1]);
 
     PreFormatMultiBulk(params.size() - 2, reply);
 
-    const PHASH& hash= value->CastHash();
+    auto hash= value->CastHash();
     for (size_t i = 2; i < params.size(); ++ i)
     {
         auto it = hash->find(params[i]);
@@ -111,14 +109,14 @@ QError  hmget(const std::vector<QString>& params, UnboundedBuffer* reply)
             FormatNull(reply);
     }
     
-    return   QError_ok;
+    return QError_ok;
 }
 
-QError  hgetall(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError hgetall(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     GET_HASH(params[1]);
 
-    const PHASH& hash= value->CastHash();
+    auto hash = value->CastHash();
     PreFormatMultiBulk(2 * hash->size(), reply);
     
     for (const auto& kv : *hash)
@@ -127,14 +125,14 @@ QError  hgetall(const std::vector<QString>& params, UnboundedBuffer* reply)
         FormatBulk(kv.second, reply);
     }
     
-    return   QError_ok;
+    return QError_ok;
 }
 
-QError  hkeys(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError hkeys(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     GET_HASH(params[1]);
 
-    const PHASH& hash= value->CastHash();
+    auto hash = value->CastHash();
     PreFormatMultiBulk(hash->size(), reply);
 
     for (const auto& kv : *hash)
@@ -142,14 +140,14 @@ QError  hkeys(const std::vector<QString>& params, UnboundedBuffer* reply)
         FormatBulk(kv.first, reply);
     }
     
-    return   QError_ok;
+    return QError_ok;
 }
 
-QError  hvals(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError hvals(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     GET_HASH(params[1]);
 
-    const PHASH& hash= value->CastHash();
+    auto hash = value->CastHash();
     PreFormatMultiBulk(hash->size(), reply);
     
     for (const auto& kv : *hash)
@@ -157,7 +155,7 @@ QError  hvals(const std::vector<QString>& params, UnboundedBuffer* reply)
         FormatBulk(kv.second, reply);
     }
     
-    return   QError_ok;
+    return QError_ok;
 }
 
 QError  hdel(const std::vector<QString>& params, UnboundedBuffer* reply)
@@ -170,8 +168,8 @@ QError  hdel(const std::vector<QString>& params, UnboundedBuffer* reply)
         return err;
     }
 
-    int    del  = 0;
-    const PHASH&  hash = value->CastHash();
+    int del = 0;
+    auto hash = value->CastHash();
     for (size_t i = 2; i < params.size(); ++ i)
     {
         auto it = hash->find(params[i]);
@@ -184,15 +182,14 @@ QError  hdel(const std::vector<QString>& params, UnboundedBuffer* reply)
     }
             
     FormatInt(del, reply);
-
     return QError_ok;
 }
 
-QError  hexists(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError hexists(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     GET_HASH(params[1]);
 
-    const PHASH& hash= value->CastHash();
+    auto hash= value->CastHash();
     auto it = hash->find(params[2]);
 
     if (it != hash->end())
@@ -203,23 +200,22 @@ QError  hexists(const std::vector<QString>& params, UnboundedBuffer* reply)
     return QError_ok;
 }
 
-QError  hlen(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError hlen(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     GET_HASH(params[1]);
 
-    const PHASH& hash= value->CastHash();
+    auto hash= value->CastHash();
     FormatInt(hash->size(), reply);
-
     return QError_ok;
 }
 
-QError  hincrby(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError hincrby(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     GET_OR_SET_HASH(params[1]);
     
-    const PHASH& hash = value->CastHash();
-    long    val  = 0;
-    QString* str = 0;
+    auto hash = value->CastHash();
+    long val = 0;
+    QString* str = nullptr;
     auto it(hash->find(params[2]));
     if (it != hash->end())
     {
@@ -236,28 +232,25 @@ QError  hincrby(const std::vector<QString>& params, UnboundedBuffer* reply)
     }
     else
     {
-        val  = atoi(params[3].c_str());
-        QHash::iterator it = _set_hash_force(*hash, params[2], "");
-        str  = &it->second;
+        val = atoi(params[3].c_str());
+        auto it = _set_hash_force(*hash, params[2], "");
+        str = &it->second;
     }
 
     char tmp[32];
-    int len = snprintf(tmp, sizeof tmp - 1, "%ld", val);
+    snprintf(tmp, sizeof tmp - 1, "%ld", val);
     *str = tmp;
 
-    (void)len;
-
     FormatInt(val, reply);
-
     return QError_ok;
 }
 
-QError  hincrbyfloat(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError hincrbyfloat(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     GET_OR_SET_HASH(params[1]);
     
-    const PHASH& hash = value->CastHash();
-    float  val  = 0;
+    auto hash = value->CastHash();
+    float val = 0;
     QString* str = 0;
     auto it(hash->find(params[2]));
     if (it != hash->end())
@@ -275,35 +268,33 @@ QError  hincrbyfloat(const std::vector<QString>& params, UnboundedBuffer* reply)
     }
     else
     {
-        val  = atof(params[3].c_str());
-        QHash::iterator it = _set_hash_force(*hash, params[2], "");
-        str  = &it->second;
+        val = atof(params[3].c_str());
+        auto it = _set_hash_force(*hash, params[2], "");
+        str = &it->second;
     }
 
     char tmp[32];
-    int len = snprintf(tmp, sizeof tmp - 1, "%f", val);
+    snprintf(tmp, sizeof tmp - 1, "%f", val);
     *str = tmp;
-    (void)len;
 
     FormatBulk(*str, reply);
-
     return QError_ok;
 }
 
-QError  hsetnx(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError hsetnx(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     GET_OR_SET_HASH(params[1]);
     
-    const PHASH& hash= value->CastHash();
+    auto hash= value->CastHash();
     if (_set_hash_if_notexist(*hash, params[2], params[3]))
         FormatInt(1, reply);
     else
         FormatInt(0, reply);
 
-    return   QError_ok;
+    return QError_ok;
 }
 
-QError  hstrlen(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError hstrlen(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     QObject* value;
     QError err = QSTORE.GetValueByType(params[1], value, QType_hash);
@@ -313,23 +304,23 @@ QError  hstrlen(const std::vector<QString>& params, UnboundedBuffer* reply)
         return err;
     }
     
-    const PHASH& hash= value->CastHash();
+    auto hash= value->CastHash();
     auto it = hash->find(params[2]);
     if (it == hash->end())
         Format0(reply);
     else
         FormatInt(static_cast<long>(it->second.size()), reply);
 
-    return   QError_ok;
+    return QError_ok;
 }
 
-size_t   HScanKey(const QHash& hash, size_t cursor, size_t count, std::vector<QString>& res)
+size_t HScanKey(const QHash& hash, size_t cursor, size_t count, std::vector<QString>& res)
 {
     if (hash.empty())
         return 0;
     
-    std::vector<QHash::const_local_iterator>  iters;
-    size_t  newCursor = ScanHashMember(hash, cursor, count, iters);
+    std::vector<QHash::const_local_iterator> iters;
+    size_t newCursor = ScanHashMember(hash, cursor, count, iters);
     
     res.reserve(iters.size());
     for (auto it : iters)

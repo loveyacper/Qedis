@@ -12,13 +12,13 @@ namespace qedis
 
 QObject QObject::CreateList()
 {
-    QObject  list(QType_list);
-    list.value = std::make_shared<QList>();
+    QObject list(QType_list);
+    list.Reset(new QList);
 
     return list;
 }
 
-static QError  push(const vector<QString>& params, UnboundedBuffer* reply, ListPosition pos, bool createIfNotExist = true)
+static QError push(const vector<QString>& params, UnboundedBuffer* reply, ListPosition pos, bool createIfNotExist = true)
 {
     QObject* value;
     
@@ -41,7 +41,7 @@ static QError  push(const vector<QString>& params, UnboundedBuffer* reply, ListP
         }
     }
 
-    const PLIST& list = value->CastList();
+    auto list = value->CastList();
     bool mayReady = list->empty();
     for (size_t i = 2; i < params.size(); ++ i)
     {
@@ -60,16 +60,16 @@ static QError  push(const vector<QString>& params, UnboundedBuffer* reply, ListP
             Propogate(params);                   // the push
             QSTORE.ServeClient(params[1], list); // the pop
         }
-        return  QError_nop;
+        return QError_nop;
     }
     else
     {
-        return  QError_ok;
+        return QError_ok;
     }
 }
 
 
-static QError  GenericPop(const QString& key, ListPosition pos, QString& result)
+static QError GenericPop(const QString& key, ListPosition pos, QString& result)
 {
     QObject* value;
     
@@ -79,7 +79,7 @@ static QError  GenericPop(const QString& key, ListPosition pos, QString& result)
         return  err;
     }
     
-    const PLIST&  list = value->CastList();
+    auto list = value->CastList();
     assert (!list->empty());
 
     if (pos == ListPosition::head)
@@ -98,38 +98,55 @@ static QError  GenericPop(const QString& key, ListPosition pos, QString& result)
         QSTORE.DeleteKey(key);
     }
     
-    return   QError_ok;
+    return QError_ok;
 }
 
-QError  lpush(const vector<QString>& params, UnboundedBuffer* reply)
+QError lpush(const vector<QString>& params, UnboundedBuffer* reply)
 {
     return push(params, reply, ListPosition::head);
 }
 
-QError  rpush(const vector<QString>& params, UnboundedBuffer* reply)
+QError rpush(const vector<QString>& params, UnboundedBuffer* reply)
 {
     return push(params, reply, ListPosition::tail);
 }
 
-QError  lpushx(const vector<QString>& params, UnboundedBuffer* reply)
+QError lpushx(const vector<QString>& params, UnboundedBuffer* reply)
 {
     return push(params, reply, ListPosition::head, false);
 }
 
-QError  rpushx(const vector<QString>& params, UnboundedBuffer* reply)
+QError rpushx(const vector<QString>& params, UnboundedBuffer* reply)
 {
     return push(params, reply, ListPosition::tail, false);
 }
 
-QError  lpop(const vector<QString>& params, UnboundedBuffer* reply)
+QError lpop(const vector<QString>& params, UnboundedBuffer* reply)
 {
-    QString  result;
-    
-    QError   err = GenericPop(params[1], ListPosition::head, result);
+    QString result;
+    QError err = GenericPop(params[1], ListPosition::head, result);
     switch (err)
     {
         case QError_ok:
-            FormatBulk(result.c_str(), result.size(), reply);
+            FormatBulk(result, reply);
+            break;
+            
+        default:
+            ReplyError(err, reply);
+            break;
+    }
+    
+    return err;
+}
+
+QError rpop(const vector<QString>& params, UnboundedBuffer* reply)
+{
+    QString result;
+    QError err = GenericPop(params[1], ListPosition::tail, result);
+    switch (err)
+    {
+        case QError_ok:
+            FormatBulk(result, reply);
             break;
             
         default:
@@ -140,26 +157,7 @@ QError  lpop(const vector<QString>& params, UnboundedBuffer* reply)
     return  err;
 }
 
-QError  rpop(const vector<QString>& params, UnboundedBuffer* reply)
-{
-    QString  result;
-    
-    QError   err = GenericPop(params[1], ListPosition::tail, result);
-    switch (err)
-    {
-        case QError_ok:
-            FormatBulk(result.c_str(), result.size(), reply);
-            break;
-            
-        default:
-            ReplyError(err, reply);
-            break;
-    }
-    
-    return  err;
-}
-
-static bool  _BlockClient( QClient* client, const QString& key, uint64_t timeout, ListPosition pos, const QString* dstList = 0)
+static bool _BlockClient( QClient* client, const QString& key, uint64_t timeout, ListPosition pos, const QString* dstList = 0)
 {
     auto now = ::Now();
     
@@ -168,7 +166,7 @@ static bool  _BlockClient( QClient* client, const QString& key, uint64_t timeout
     else
         timeout = std::numeric_limits<uint64_t>::max();
     
-    return  QSTORE.BlockClient(key, client, timeout, pos, dstList);
+    return QSTORE.BlockClient(key, client, timeout, pos, dstList);
 
 }
 
@@ -181,8 +179,8 @@ static QError  _GenericBlockedPop(vector<QString>::const_iterator keyBegin,
 {
     for (auto it(keyBegin); it != keyEnd; ++ it)
     {
-        QString  result;
-        QError   err = GenericPop(*it, pos, result);
+        QString result;
+        QError err = GenericPop(*it, pos, result);
         
         switch (err)
         {
@@ -190,9 +188,9 @@ static QError  _GenericBlockedPop(vector<QString>::const_iterator keyBegin,
                 if (withKey)
                 {
                     PreFormatMultiBulk(2, reply);
-                    FormatBulk(it->c_str(), it->size(), reply);
+                    FormatBulk(*it, reply);
                 }
-                FormatBulk(result.c_str(), result.size(), reply);
+                FormatBulk(result, reply);
                 
                 if (target)
                 {
@@ -206,11 +204,11 @@ static QError  _GenericBlockedPop(vector<QString>::const_iterator keyBegin,
 
                     QClient::Current()->RewriteCmd(params);
                 }
-                return  err;
+                return err;
                 
             case QError_type:
                 ReplyError(err, reply);
-                return  err;
+                return err;
                 
             case QError_notExist:
                 break;
@@ -233,12 +231,12 @@ static QError  _GenericBlockedPop(vector<QString>::const_iterator keyBegin,
         _BlockClient(QClient::Current(), *it, timeout, pos, target);
     }
     
-    return  QError_nop;
+    return QError_nop;
 }
 
-QError  blpop(const vector<QString>& params, UnboundedBuffer* reply)
+QError blpop(const vector<QString>& params, UnboundedBuffer* reply)
 {
-    long  timeout;
+    long timeout;
     if (!TryStr2Long(params.back().c_str(),
                      params.back().size(),
                      timeout))
@@ -255,7 +253,7 @@ QError  blpop(const vector<QString>& params, UnboundedBuffer* reply)
 
 QError  brpop(const vector<QString>& params, UnboundedBuffer* reply)
 {
-    long  timeout;
+    long timeout;
     if (!TryStr2Long(params.back().c_str(),
                      params.back().size(),
                      timeout))
@@ -273,7 +271,6 @@ QError  brpop(const vector<QString>& params, UnboundedBuffer* reply)
 QError  lindex(const vector<QString>& params, UnboundedBuffer* reply)
 {
     QObject* value;
-    
     QError err = QSTORE.GetValueByType(params[1], value, QType_list);
     if (err != QError_ok)
     {
@@ -281,14 +278,14 @@ QError  lindex(const vector<QString>& params, UnboundedBuffer* reply)
         return  err;
     }
     
-    const PLIST&    list   = value->CastList();
     long idx;
     if (!TryStr2Long(params[2].c_str(), params[2].size(), idx))
     {
         ReplyError(QError_nan, reply);
-        return  QError_nan;
+        return QError_nan;
     }
     
+    auto list = value->CastList();
     const int size = static_cast<int>(list->size());
     if (idx < 0)
         idx += size;
@@ -299,7 +296,7 @@ QError  lindex(const vector<QString>& params, UnboundedBuffer* reply)
         return  QError_ok;
     }
     
-    const QString* result = 0;
+    const QString* result = nullptr;
     
     if (2 * idx < size)
     {
@@ -316,22 +313,21 @@ QError  lindex(const vector<QString>& params, UnboundedBuffer* reply)
     }
     
     FormatBulk(*result, reply);
-    return   QError_ok;
+    return QError_ok;
 }
 
 
-QError  lset(const vector<QString>& params, UnboundedBuffer* reply)
+QError lset(const vector<QString>& params, UnboundedBuffer* reply)
 {
     QObject* value;
-    
     QError err = QSTORE.GetValueByType(params[1], value, QType_list);
     if (err != QError_ok)
     {
         ReplyError(QError_notExist, reply);
-        return  err;
+        return err;
     }
     
-    const PLIST&    list = value->CastList();
+    auto list = value->CastList();
     long idx;
     if (!TryStr2Long(params[2].c_str(), params[2].size(), idx))
     {
@@ -349,7 +345,7 @@ QError  lset(const vector<QString>& params, UnboundedBuffer* reply)
         return  QError_ok;
     }
     
-    QString* result = 0;
+    QString* result = nullptr;
     
     if (2 * idx < size)
     {
@@ -368,32 +364,27 @@ QError  lset(const vector<QString>& params, UnboundedBuffer* reply)
     *result = params[3];
     
     FormatOK(reply);
-    return   QError_ok;
+    return QError_ok;
 }
 
 
-QError  llen(const vector<QString>& params, UnboundedBuffer* reply)
+QError llen(const vector<QString>& params, UnboundedBuffer* reply)
 {
     QObject* value;
-    
     QError err = QSTORE.GetValueByType(params[1], value, QType_list);
     if (err != QError_ok)
     {
         if (err == QError_type)
-        {
             ReplyError(err, reply);
-        }
         else
-        {
             Format0(reply);
-        }
 
         return  err;
     }
     
-    const PLIST&    list   = value->CastList();
+    auto list = value->CastList();
     FormatInt(static_cast<long>(list->size()), reply);
-    return   QError_ok;
+    return QError_ok;
 }
 
 static void Index2Iterator(long start, long end,
@@ -439,7 +430,7 @@ static size_t GetRange(long start, long end,
                        QList::iterator* beginIt = nullptr,
                        QList::iterator* endIt = nullptr)
 {
-    size_t   rangeLen = 0;
+    size_t rangeLen = 0;
     if (start > end)  // empty
     {
         if (beginIt)    *beginIt = list.end();
@@ -452,7 +443,7 @@ static size_t GetRange(long start, long end,
     }
     else
     {
-        rangeLen= list.size();
+        rangeLen = list.size();
         if (beginIt) *beginIt = list.begin();
         if (endIt)   *endIt   = -- list.end();  // entire list
     }
@@ -464,7 +455,6 @@ static size_t GetRange(long start, long end,
 QError  ltrim(const vector<QString>& params, UnboundedBuffer* reply)
 {
     QObject* value;
-    
     QError err = QSTORE.GetValueByType(params[1], value, QType_list);
     if (err != QError_ok)
     {
@@ -480,7 +470,7 @@ QError  ltrim(const vector<QString>& params, UnboundedBuffer* reply)
         return err;
     }
     
-    const PLIST&    list   = value->CastList();
+    auto list = value->CastList();
     AdjustIndex(start, end, list->size());
     
     QList::iterator beginIt, endIt;
@@ -494,18 +484,17 @@ QError  ltrim(const vector<QString>& params, UnboundedBuffer* reply)
     }
     
     FormatOK(reply);
-    return   QError_ok;
+    return QError_ok;
 }
 
-QError  lrange(const vector<QString>& params, UnboundedBuffer* reply)
+QError lrange(const vector<QString>& params, UnboundedBuffer* reply)
 {
     QObject* value;
-    
     QError err = QSTORE.GetValueByType(params[1], value, QType_list);
     if (err != QError_ok)
     {
         ReplyError(err, reply);
-        return  err;
+        return err;
     }
     
     long start, end;
@@ -516,14 +505,13 @@ QError  lrange(const vector<QString>& params, UnboundedBuffer* reply)
         return err;
     }
     
-    const PLIST&    list   = value->CastList();
+    auto list = value->CastList();
     AdjustIndex(start, end, list->size());
     
     QList::iterator beginIt;
     size_t rangeLen = GetRange(start, end, *list, &beginIt);
     
     PreFormatMultiBulk(rangeLen, reply);
-    
     if (beginIt != list->end())
     {
         while (rangeLen != 0)
@@ -534,13 +522,12 @@ QError  lrange(const vector<QString>& params, UnboundedBuffer* reply)
         }
     }
     
-    return   QError_ok;
+    return QError_ok;
 }
 
-QError  linsert(const vector<QString>& params, UnboundedBuffer* reply)
+QError linsert(const vector<QString>& params, UnboundedBuffer* reply)
 {
     QObject* value;
-    
     QError err = QSTORE.GetValueByType(params[1], value, QType_list);
     if (err != QError_ok)
     {
@@ -559,7 +546,7 @@ QError  linsert(const vector<QString>& params, UnboundedBuffer* reply)
         return QError_param;
     }
     
-    const PLIST&    list = value->CastList();
+    auto list = value->CastList();
     QList::iterator it = std::find(list->begin(), list->end(), params[3]);
     if (it == list->end())
     {
@@ -573,15 +560,13 @@ QError  linsert(const vector<QString>& params, UnboundedBuffer* reply)
         list->insert(++ it, params[4]);
     
     FormatInt(static_cast<long>(list->size()), reply);
-    
-    return   QError_ok;
+    return QError_ok;
 }
 
 
 QError  lrem(const vector<QString>& params, UnboundedBuffer* reply)
 {
     QObject* value;
-    
     QError err = QSTORE.GetValueByType(params[1], value, QType_list);
     if (err != QError_ok)
     {
@@ -596,10 +581,8 @@ QError  lrem(const vector<QString>& params, UnboundedBuffer* reply)
         return err;
     }
     
-    const PLIST&    list = value->CastList();
-    
+    auto list = value->CastList();
     ListPosition  start = ListPosition::head;
-    
     if (count < 0)
     {
         count = -count;
@@ -613,7 +596,7 @@ QError  lrem(const vector<QString>& params, UnboundedBuffer* reply)
     long resultCount = 0;
     if (start == ListPosition::head)
     {
-        QList::iterator it = list->begin();
+        auto it = list->begin();
         while (it != list->end() && resultCount < count)
         {
             if (*it == params[3])
@@ -629,7 +612,7 @@ QError  lrem(const vector<QString>& params, UnboundedBuffer* reply)
     }
     else
     {
-        QList::reverse_iterator it = list->rbegin();
+        auto it = list->rbegin();
         while (it != list->rend() && resultCount < count)
         {
             if (*it == params[3])
@@ -645,13 +628,12 @@ QError  lrem(const vector<QString>& params, UnboundedBuffer* reply)
     }
 
     FormatInt(resultCount, reply);
-    return   QError_ok;
+    return QError_ok;
 }
 
-QError  rpoplpush(const vector<QString>& params, UnboundedBuffer* reply)
+QError rpoplpush(const vector<QString>& params, UnboundedBuffer* reply)
 {
     QObject* src;
-    
     QError err = QSTORE.GetValueByType(params[1], src, QType_list);
     if (err != QError_ok)
     {
@@ -659,11 +641,10 @@ QError  rpoplpush(const vector<QString>& params, UnboundedBuffer* reply)
         return err;
     }
     
-    const PLIST& srclist = src->CastList();
+    auto srclist = src->CastList();
     assert (!srclist->empty());
     
     QObject* dst;
-    
     err = QSTORE.GetValueByType(params[2], dst, QType_list);
     if (err != QError_ok)
     {
@@ -676,18 +657,17 @@ QError  rpoplpush(const vector<QString>& params, UnboundedBuffer* reply)
         dst = QSTORE.SetValue(params[2], QObject::CreateList());
     }
     
-    const PLIST& dstlist = dst->CastList();
+    auto dstlist = dst->CastList();
     dstlist->splice(dstlist->begin(), *srclist, (++ srclist->rbegin()).base());
     
     FormatBulk(*(dstlist->begin()), reply);
-    
-    return   QError_ok;
+    return QError_ok;
 }
 
-QError  brpoplpush(const vector<QString>& params, UnboundedBuffer* reply)
+QError brpoplpush(const vector<QString>& params, UnboundedBuffer* reply)
 {
     // check timeout format
-    long  timeout;
+    long timeout;
     if (!TryStr2Long(params.back().c_str(),
                      params.back().size(),
                      timeout))
@@ -700,8 +680,7 @@ QError  brpoplpush(const vector<QString>& params, UnboundedBuffer* reply)
     
     // check target list
     QObject* dst;
-    
-    QError  err = QSTORE.GetValueByType(params[2], dst, QType_list);
+    QError err = QSTORE.GetValueByType(params[2], dst, QType_list);
     if (err != QError_ok)
     {
         if (err != QError_notExist)

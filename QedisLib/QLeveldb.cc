@@ -109,7 +109,7 @@ void QLeveldb::_EncodeObject(const QObject& obj, int64_t absttl, UnboundedBuffer
         case QEncode_raw:
         case QEncode_int:
             {
-                const PSTRING& str = GetDecodedString(&obj);
+                auto str = GetDecodedString(&obj);
                 _EncodeString(*str, v);
             }
             break;

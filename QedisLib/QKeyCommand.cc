@@ -6,7 +6,7 @@
 namespace qedis
 {
 
-QError  type(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError type(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     const char* info = 0;
     QType type = QSTORE.KeyType(params[1]);
@@ -37,25 +37,25 @@ QError  type(const std::vector<QString>& params, UnboundedBuffer* reply)
     }
 
     FormatSingle(info, reply);
-    return   QError_ok;
+    return QError_ok;
 }
 
-QError  exists(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError exists(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     if (QSTORE.ExistsKey(params[1]))
         Format1(reply);
     else
         Format0(reply);
 
-    return   QError_ok;
+    return QError_ok;
 }
 
-QError  del(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError del(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     int nDel = 0;
     for (size_t i = 1; i < params.size(); ++ i)
     {
-        const QString&  key = params[i];
+        const QString& key = params[i];
     
         if (QSTORE.DeleteKey(key))
         {
@@ -65,7 +65,7 @@ QError  del(const std::vector<QString>& params, UnboundedBuffer* reply)
     }
     
     FormatInt(nDel, reply);
-    return   QError_ok;
+    return QError_ok;
 }
 
 static int _SetExpireByMs(const QString& key, uint64_t absTimeout)
@@ -82,48 +82,48 @@ static int _SetExpireByMs(const QString& key, uint64_t absTimeout)
     return ret;
 }
 
-QError  expire(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError expire(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    const QString& key     = params[1];
+    const QString& key = params[1];
     const uint64_t timeout = atoi(params[2].c_str()); // by seconds;
         
     int ret = _SetExpireByMs(key, ::Now() + timeout * 1000);
 
     FormatInt(ret, reply);
-    return   QError_ok;
+    return QError_ok;
 }
 
-QError  pexpire(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError pexpire(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    const QString& key     = params[1];
+    const QString& key = params[1];
     const uint64_t timeout = atoi(params[2].c_str()); // by milliseconds;
         
     int ret = _SetExpireByMs(key, ::Now() + timeout);
 
     FormatInt(ret, reply);
-    return   QError_ok;
+    return QError_ok;
 }
 
-QError  expireat(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError expireat(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    const QString& key     = params[1];
+    const QString& key = params[1];
     const uint64_t timeout = atoi(params[2].c_str()); // by seconds;
         
     int ret = _SetExpireByMs(key, timeout * 1000);
 
     FormatInt(ret, reply);
-    return   QError_ok;
+    return QError_ok;
 }
 
-QError  pexpireat(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError pexpireat(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    const QString& key     = params[1];
+    const QString& key = params[1];
     const uint64_t timeout = atoi(params[2].c_str()); // by milliseconds;
         
     int ret = _SetExpireByMs(key, timeout);
 
     FormatInt(ret, reply);
-    return   QError_ok;
+    return QError_ok;
 }
 
 
@@ -132,7 +132,7 @@ static int64_t _ttl(const QString& key)
     int64_t ret = QStore::ExpireResult::notExist;
     if (QSTORE.ExistsKey(key))
     {
-        int64_t  ttl = QSTORE.TTL(key, ::Now());
+        int64_t ttl = QSTORE.TTL(key, ::Now());
         if (ttl < 0)
             ret = QStore::ExpireResult::persist;
         else
@@ -146,7 +146,7 @@ static int64_t _ttl(const QString& key)
     return  ret;
 }
 
-QError  ttl(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError ttl(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     const QString& key = params[1];
 
@@ -154,36 +154,35 @@ QError  ttl(const std::vector<QString>& params, UnboundedBuffer* reply)
     if (ret > 0)  ret /= 1000; // by seconds
 
     FormatInt(ret, reply);
-
-    return   QError_ok;
+    return QError_ok;
 }
 
-QError  pttl(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError pttl(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     const QString& key = params[1];
 
     int64_t ret = _ttl(key); // by milliseconds
+    
     FormatInt(ret, reply);
-
-    return   QError_ok;
+    return QError_ok;
 }
 
-QError  persist(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError persist(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     const QString& key = params[1];
 
     int ret = QSTORE.ClearExpire(key) ? 1 : 0;
 
     FormatInt(ret, reply);
-    return   QError_ok;
+    return QError_ok;
 }
 
-QError  move(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError move(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     const QString& key = params[1];
-    int   toDb         = atoi(params[2].c_str());
+    int toDb = atoi(params[2].c_str());
 
-    int    ret = 0;
+    int ret = 0;
 
     QObject* val;
     if (QSTORE.GetValue(key, val) == QError_ok)
@@ -191,12 +190,13 @@ QError  move(const std::vector<QString>& params, UnboundedBuffer* reply)
         int fromDb = QSTORE.SelectDB(toDb);
         if (fromDb >= 0 && fromDb != toDb && !QSTORE.ExistsKey(key))
         {
+            QSTORE.SelectDB(toDb);
+            QSTORE.SetValue(key, std::move(*val)); // set to new db
+            
             QSTORE.SelectDB(fromDb);
             QSTORE.ClearExpire(key);
             QSTORE.DeleteKey(key); // delete from old db
-
-            QSTORE.SelectDB(toDb);
-            QSTORE.SetValue(key, *val); // set to new db
+            
             ret = 1;
             
             INF << "move " << key << " to db " << toDb << ", from db " << fromDb;
@@ -212,10 +212,10 @@ QError  move(const std::vector<QString>& params, UnboundedBuffer* reply)
     }
 
     FormatInt(ret, reply);
-    return   QError_ok;
+    return QError_ok;
 }
 
-QError  keys(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError keys(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     const QString& pattern = params[1];
     
@@ -235,30 +235,25 @@ QError  keys(const std::vector<QString>& params, UnboundedBuffer* reply)
     return   QError_ok;
 }
 
-
-QError  randomkey(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError randomkey(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     const QString& res = QSTORE.RandomKey();
   
     if (res.empty())
-    {
         FormatNull(reply);
-    }
     else
-    {
         FormatBulk(res, reply);
-    }
     
-    return   QError_ok;
+    return QError_ok;
 }
 
-static QError  RenameKey(const QString& oldKey, const QString& newKey, bool force)
+static QError RenameKey(const QString& oldKey, const QString& newKey, bool force)
 {
     QObject* val;
     
     QError err = QSTORE.GetValue(oldKey, val);
     if (err != QError_ok)
-        return  err;
+        return err;
     
     if (!force && QSTORE.ExistsKey(newKey))
         return QError_exist;
@@ -269,7 +264,7 @@ static QError  RenameKey(const QString& oldKey, const QString& newKey, bool forc
     if (ttl == QStore::expired)
         return QError_notExist;
     
-    QSTORE.SetValue(newKey, *val);
+    QSTORE.SetValue(newKey, std::move(*val));
     if (ttl > 0)
         QSTORE.SetExpire(newKey, ttl + now);
     else if (ttl == QStore::persist)
@@ -281,15 +276,15 @@ static QError  RenameKey(const QString& oldKey, const QString& newKey, bool forc
     return QError_ok;
 }
 
-QError  rename(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError rename(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     QError err = RenameKey(params[1], params[2], true);
     
     ReplyError(err, reply);
-    return  err;
+    return err;
 }
 
-QError  renamenx(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError renamenx(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     QError err = RenameKey(params[1], params[2], false);
     
@@ -298,14 +293,14 @@ QError  renamenx(const std::vector<QString>& params, UnboundedBuffer* reply)
     else
         ReplyError(err, reply);
     
-    return  err;
+    return err;
 }
 
 // helper func scan
-static QError  ParseScanOption(const std::vector<QString>& params, int start, long& count, const char*& pattern)
+static QError ParseScanOption(const std::vector<QString>& params, int start, long& count, const char*& pattern)
 {
     // scan cursor  MATCH pattern  COUNT 1
-    count  = -1;
+    count = -1;
     pattern = nullptr;
     for (std::size_t i = start; i < params.size(); i += 2)
     {
@@ -332,10 +327,10 @@ static QError  ParseScanOption(const std::vector<QString>& params, int start, lo
         return QError_param;
     }
 
-    return  QError_ok;
+    return QError_ok;
 }
 
-QError  scan(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError scan(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     if (params.size() % 2 != 0)
     {
@@ -343,7 +338,7 @@ QError  scan(const std::vector<QString>& params, UnboundedBuffer* reply)
         return QError_param;
     }
     
-    long   cursor = 0;
+    long cursor = 0;
 
     if (!Strtol(params[1].c_str(), params[1].size(), &cursor))
     {
@@ -352,17 +347,17 @@ QError  scan(const std::vector<QString>& params, UnboundedBuffer* reply)
     }
     
     // scan cursor  MATCH pattern  COUNT 1
-    long   count  = -1;
+    long count  = -1;
     const char* pattern = nullptr;
     
-    QError err  = ParseScanOption(params, 2, count, pattern);
+    QError err = ParseScanOption(params, 2, count, pattern);
     if (err != QError_ok)
     {
         ReplyError(err, reply);
         return err;
     }
     
-    if (count < 0)  count = 5;
+    if (count < 0) count = 5;
     
     std::vector<QString>  res;
     auto newCursor = QSTORE.ScanKey(cursor, count, res);
@@ -392,11 +387,11 @@ QError  scan(const std::vector<QString>& params, UnboundedBuffer* reply)
         FormatBulk(s, reply);
     }
     
-    return   QError_ok;
+    return QError_ok;
 }
 
 
-QError  hscan(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError hscan(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     // hscan key cursor COUNT 0 MATCH 0
     if (params.size() % 2 == 0)
@@ -405,8 +400,7 @@ QError  hscan(const std::vector<QString>& params, UnboundedBuffer* reply)
         return QError_param;
     }
     
-    long   cursor = 0;
-    
+    long cursor = 0;
     if (!Strtol(params[2].c_str(), params[2].size(), &cursor))
     {
         ReplyError(QError_param, reply);
@@ -423,10 +417,10 @@ QError  hscan(const std::vector<QString>& params, UnboundedBuffer* reply)
     }
     
     // parse option
-    long   count  = -1;
+    long count = -1;
     const char* pattern = nullptr;
     
-    err  = ParseScanOption(params, 3, count, pattern);
+    err = ParseScanOption(params, 3, count, pattern);
     if (err != QError_ok)
     {
         ReplyError(err, reply);
@@ -469,11 +463,11 @@ QError  hscan(const std::vector<QString>& params, UnboundedBuffer* reply)
         FormatBulk(s, reply);
     }
     
-    return   QError_ok;
+    return QError_ok;
 }
 
 
-QError  sscan(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError sscan(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     // sscan key cursor COUNT 0 MATCH 0
     if (params.size() % 2 == 0)
@@ -482,8 +476,7 @@ QError  sscan(const std::vector<QString>& params, UnboundedBuffer* reply)
         return QError_param;
     }
     
-    long   cursor = 0;
-    
+    long cursor = 0;
     if (!Strtol(params[2].c_str(), params[2].size(), &cursor))
     {
         ReplyError(QError_param, reply);
@@ -500,10 +493,10 @@ QError  sscan(const std::vector<QString>& params, UnboundedBuffer* reply)
     }
     
     // parse option
-    long   count  = -1;
+    long count  = -1;
     const char* pattern = nullptr;
     
-    err  = ParseScanOption(params, 3, count, pattern);
+    err = ParseScanOption(params, 3, count, pattern);
     if (err != QError_ok)
     {
         ReplyError(err, reply);
@@ -513,7 +506,7 @@ QError  sscan(const std::vector<QString>& params, UnboundedBuffer* reply)
     if (count < 0)  count = 5;
     
     // scan
-    std::vector<QString>  res;
+    std::vector<QString> res;
     auto newCursor = SScanKey(*value->CastSet(), cursor, count, res);
     
     // filter by pattern
@@ -578,7 +571,6 @@ QError sort(const std::vector<QString>& params, UnboundedBuffer* reply)
     }
     
     std::vector<const QString* > values;
-
     switch (value->type)
     {
         case QType_list:

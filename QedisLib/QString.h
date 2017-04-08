@@ -12,7 +12,9 @@ using QString = std::string;
 //typedef std::basic_string<char, std::char_traits<char>, Bert::Allocator<char> >  QString;
 
 struct QObject;
-std::shared_ptr<QString>  GetDecodedString(const QObject* value);
+
+std::unique_ptr<QString, void (*)(QString* )>
+GetDecodedString(const QObject* value);
 
 }
 

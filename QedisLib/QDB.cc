@@ -162,13 +162,10 @@ void QDBSaver::SaveObject(const QObject& obj)
     switch (obj.encoding)
     {
         case QEncode_raw:
-            SaveString(*obj.CastString());
-            break;
-    
         case QEncode_int:
-            SaveString((int64_t)obj.value.get());
+            SaveString(*GetDecodedString(&obj));
             break;
-            
+
         case QEncode_list:
             _SaveList(obj.CastList());
             break;
@@ -492,14 +489,14 @@ int  QDBLoader::Load(const char *filename)
                 
                 if (absTimeout == 0)
                 {
-                    QSTORE.SetValue(key, obj);
+                    QSTORE.SetValue(key, std::move(obj));
                 }
                 else if (absTimeout > 0)
                 {
                     if (absTimeout > static_cast<int64_t>(::Now()))
                     {
                         DBG << key << " load timeout " << absTimeout;
-                        QSTORE.SetValue(key, obj);
+                        QSTORE.SetValue(key, std::move(obj));
                         QSTORE.SetExpire(key, absTimeout);
                     }
                     else
@@ -915,8 +912,6 @@ double  QDBLoader::_LoadDoubleValue()
     
     return  dvalue;
 }
-
-//unsigned int ziplistGet(unsigned char *p, unsigned char **sval, unsigned int *slen, long long *lval);
 
 struct ZipListElement
 {

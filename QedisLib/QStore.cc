@@ -13,6 +13,112 @@ namespace qedis
 {
 
 uint32_t QObject::lruclock = static_cast<uint32_t>(::time(nullptr));
+    
+
+QObject::QObject(QType t) : type(t)
+{
+    switch (type)
+    {
+        case QType_list:
+            encoding = QEncode_list;
+            break;
+                    
+        case QType_set:
+            encoding = QEncode_set;
+            break;
+                    
+        case QType_sortedSet:
+            encoding = QEncode_sset;
+            break;
+                    
+        case QType_hash:
+            encoding = QEncode_hash;
+            break;
+                    
+        default:
+            encoding = QEncode_invalid;
+            break;
+    }
+
+    lru = 0;
+    value = nullptr;
+}
+        
+QObject::~QObject()
+{
+    Clear();
+}
+    
+void QObject::Clear()
+{
+    _FreeValue();
+            
+    type = QType_invalid;
+    encoding = QEncode_invalid;
+    lru = 0;
+    value = nullptr;
+}
+        
+void QObject::Reset(void* newvalue)
+{
+    _FreeValue();
+    value = newvalue;
+}
+        
+QObject::QObject(QObject&& obj)
+{
+    _MoveFrom(std::move(obj));
+}
+        
+QObject& QObject::operator= (QObject&& obj)
+{
+    _MoveFrom(std::move(obj));
+    return *this;
+}
+    
+void QObject::_MoveFrom(QObject&& obj)
+{
+    this->Reset();
+            
+    this->encoding = obj.encoding;
+    this->type = obj.type;
+    this->value = obj.value;
+    this->lru = obj.lru;
+            
+    obj.encoding = QEncode_invalid;
+    obj.type = QType_invalid;
+    obj.value = nullptr;
+    obj.lru = 0;
+}
+        
+void QObject::_FreeValue()
+{
+    switch (encoding)
+    {
+        case QEncode_raw:
+            delete CastString();
+            break;
+                    
+        case QEncode_list:
+            delete CastList();
+            break;
+                    
+        case QEncode_set:
+            delete CastSet();
+            break;
+                    
+        case QEncode_sset:
+            delete CastSortedSet();
+            break;
+                    
+        case QEncode_hash:
+            delete CastHash();
+            break;
+                    
+        default:
+            break;
+    }
+}
 
 int QStore::dirty_ = 0;
 
@@ -379,7 +485,7 @@ const QObject* QStore::GetObject(const QString& key) const
         {
             DBG << "GetKey from leveldb:" << key;
 
-            QObject& realobj = ((*db)[key] = obj);
+            QObject& realobj = ((*db)[key] = std::move(obj));
             realobj.lru = QObject::lruclock;
 
             // trick: use lru field to store the remain seconds to be expired.
@@ -397,7 +503,7 @@ const QObject* QStore::GetObject(const QString& key) const
 bool QStore::DeleteKey(const QString& key)
 {
     auto db = &store_[dbno_];
-    // 加入到脏队列
+    // add to dirty queue
     if (!waitSyncKeys_.empty())
     {
         waitSyncKeys_[dbno_][key] = nullptr; // null implies delete data
@@ -512,10 +618,10 @@ QError  QStore::_GetValueByType(const QString& key, QObject*& value, QType type,
 }
 
 
-QObject* QStore::SetValue(const QString& key, const QObject& value)
+QObject* QStore::SetValue(const QString& key, QObject&& value)
 {
     auto db = &store_[dbno_];
-    QObject& obj = ((*db)[key] = value);
+    QObject& obj = ((*db)[key] = std::move(value));
     obj.lru = QObject::lruclock;
 
     // put this key to sync list
@@ -525,18 +631,7 @@ QObject* QStore::SetValue(const QString& key, const QObject& value)
     return &obj;
 }
 
-bool QStore::SetValueIfNotExist(const QString& key, const QObject& value)
-{
-    auto db = &store_[dbno_];
-    if (db->find(key) != db->end())
-        return false;
-    
-    this->SetValue(key, value);
-    return true;
-}
-
-
-void    QStore::SetExpire(const QString& key, uint64_t when) const
+void QStore::SetExpire(const QString& key, uint64_t when) const
 {
     expiresDb_[dbno_].SetExpire(key, when);
 }
@@ -547,7 +642,7 @@ int64_t QStore::TTL(const QString& key, uint64_t now)
     return  expiresDb_[dbno_].TTL(key, now);
 }
 
-bool    QStore::ClearExpire(const QString& key)
+bool QStore::ClearExpire(const QString& key)
 {
     return expiresDb_[dbno_].ClearExpire(key);
 }
