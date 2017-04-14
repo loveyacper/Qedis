@@ -1,5 +1,6 @@
 # Qedis
 [![Build Status](https://travis-ci.org/loveyacper/Qedis.svg?branch=master)](https://travis-ci.org/loveyacper/Qedis)
+[看中文说明请点我](README.cn.md)
 A C++11 implementation of Redis Server, use Leveldb for persist storage.(not including cluster yet)
 
 ## Requirements

@@ -8,7 +8,7 @@
 #include "QString.h"
 #include "Server.h"
 
-#define QEDIS_VERSION "0.7.0"
+#define QEDIS_VERSION "1.0.0"
 
 class Qedis : public Server
 {
