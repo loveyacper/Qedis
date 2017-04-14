@@ -370,9 +370,9 @@ bool QDBSaver::SaveLZFString(const QString& str)
 }
 
 
-void QDBSaver::SaveDoneHandler(int exitcode, int bysignal)
+void QDBSaver::SaveDoneHandler(int exitRet, int whatSignal)
 {
-    if (exitcode == 0 && bysignal == 0)
+    if (exitRet == 0 && whatSignal == 0)
     {
         INF << "save rdb success";
         g_lastQDBSave = time(NULL);
@@ -381,7 +381,7 @@ void QDBSaver::SaveDoneHandler(int exitcode, int bysignal)
     }
     else
     {
-        ERR << "save rdb failed with exitcode " << exitcode << ", signal " << bysignal;
+        ERR << "save rdb failed with exit result " << exitRet << ", signal " << whatSignal;
     }
     
     g_qdbPid = -1;

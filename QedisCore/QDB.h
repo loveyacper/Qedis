@@ -19,7 +19,7 @@ public:
     void    SaveString(int64_t intVal);
     bool    SaveLZFString(const QString& str);
     
-    static  void SaveDoneHandler(int exitcode, int bysignal);
+    static  void SaveDoneHandler(int exit, int signal);
 
 private:
     void    _SaveDoubleValue(double val);

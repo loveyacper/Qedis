@@ -1,9 +1,7 @@
 //
-//  main.cpp
-//  qedis
+//  Qedis.cc
 //
-//  Created by Bert Young on 14-1-25.
-//  Copyright (c) 2014年 Bert Young. All rights reserved.
+//  Copyright (c) 2014-2017年 Bert Young. All rights reserved.
 //
 
 #include <iostream>
@@ -118,20 +116,17 @@ bool  Qedis::ParseArgs(int ac, char* av[])
 std::shared_ptr<StreamSocket>   Qedis::_OnNewConnection(int connfd)
 {
     using namespace qedis;
-    
-    SocketAddr  peer;
-    Socket::GetPeerAddr(connfd,  peer);
 
-    std::shared_ptr<QClient>    pNewTask(new QClient());
-    if (!pNewTask->Init(connfd))
-        pNewTask.reset();
+    std::shared_ptr<QClient> cli(new QClient());
+    if (!cli->Init(connfd))
+        cli.reset();
     
-    return  pNewTask;
+    return cli;
 }
 
 Time  g_now;
 
-static void  QdbCron()
+static void QdbCron()
 {
     using namespace qedis;
     
@@ -316,14 +311,14 @@ static void CheckChild()
 
     if (pid != 0 && pid != -1)
     {
-        int exitcode = WEXITSTATUS(statloc);
-        int bysignal = 0;
+        int exit = WEXITSTATUS(statloc);
+        int signal = 0;
 
-        if (WIFSIGNALED(statloc)) bysignal = WTERMSIG(statloc);
+        if (WIFSIGNALED(statloc)) signal = WTERMSIG(statloc);
         
         if (pid == g_qdbPid)
         {
-            QDBSaver::SaveDoneHandler(exitcode, bysignal);
+            QDBSaver::SaveDoneHandler(exit, signal);
             if (QREPL.IsBgsaving())
                 QREPL.OnRdbSaveDone();
             else
@@ -332,7 +327,7 @@ static void CheckChild()
         else if (pid == g_rewritePid)
         {
             INF << pid << " pid rewrite process success done.";
-            QAOFThreadController::RewriteDoneHandler(exitcode, bysignal);
+            QAOFThreadController::RewriteDoneHandler(exit, signal);
         }
         else
         {

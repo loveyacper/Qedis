@@ -29,7 +29,7 @@ public:
     bool  ProcessTmpBuffer(BufferSequence& bf);
     void  SkipTmpBuffer(size_t  n);
     
-    static void  RewriteDoneHandler(int exitcode, int bysignal);
+    static void  RewriteDoneHandler(int exit, int signal);
     
 private:
     QAOFThreadController() : lastDb_(-1) {}

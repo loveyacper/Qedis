@@ -21,9 +21,9 @@ pid_t             g_rewritePid = -1;
  * the coming aof data will be write to the tmp buffer, not to
  * aof file.
  ****************************************************/
-void QAOFThreadController::RewriteDoneHandler(int exitcode, int bysignal)
+void QAOFThreadController::RewriteDoneHandler(int exitRet, int whatSignal)
 {
-    if (exitcode == 0 && bysignal == 0)
+    if (exitRet == 0 && whatSignal == 0)
     {
         INF << "save aof success";
         g_rewritePid = -1;
@@ -34,7 +34,7 @@ void QAOFThreadController::RewriteDoneHandler(int exitcode, int bysignal)
     }
     else
     {
-        ERR << "save aof failed with exitcode " << exitcode << ", signal " << bysignal;
+        ERR << "save aof failed with exit result " << exitRet << ", signal " << whatSignal;
         g_rewritePid = -1;
         
         ::unlink(g_aofTmp);
