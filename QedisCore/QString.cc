@@ -57,9 +57,9 @@ std::unique_ptr<QString, void (*)(QString* )>
     {
         intptr_t val = (intptr_t)value->value;
         
-        char ret[32];
-        snprintf(ret, sizeof ret - 1, "%ld",  val);
-        return std::unique_ptr<QString, void (*)(QString* )>(new QString(ret), DeleteString);
+        char vbuf[32];
+        snprintf(vbuf, sizeof vbuf - 1, "%ld",  val);
+        return std::unique_ptr<QString, void (*)(QString* )>(new QString(vbuf), DeleteString);
     }
     else
     {
@@ -98,7 +98,7 @@ QError setnx(const std::vector<QString>& params, UnboundedBuffer* reply)
     else
         Format0(reply);
 
-    return  QError_ok;
+    return QError_ok;
 }
 
 QError mset(const std::vector<QString>& params, UnboundedBuffer* reply)
@@ -149,7 +149,7 @@ QError msetnx(const std::vector<QString>& params, UnboundedBuffer* reply)
 
 QError setex(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
-    long  seconds;
+    long seconds;
     if (!Strtol(params[2].c_str(), params[2].size(), &seconds))
     {
         ReplyError(QError_nan, reply);
@@ -205,7 +205,6 @@ QError setrange(const std::vector<QString>& params, UnboundedBuffer* reply)
         }
     }
 
-    // TODO : what if int encoding?
     auto str = GetDecodedString(value);
     const size_t newSize = offset + params[3].size();
 
@@ -232,7 +231,8 @@ QError get(const std::vector<QString>& params, UnboundedBuffer* reply)
         if (err == QError_notExist)
             FormatNull(reply); 
         else
-            ReplyError(err, reply); 
+            ReplyError(err, reply);
+
         return err;  
     }
 
@@ -265,7 +265,8 @@ QError getrange(const std::vector<QString>& params, UnboundedBuffer* reply)
         if (err == QError_notExist)
             FormatBulk("", 0, reply);
         else
-            ReplyError(err, reply); 
+            ReplyError(err, reply);
+
         return err;  
     }
 
@@ -281,14 +282,9 @@ QError getrange(const std::vector<QString>& params, UnboundedBuffer* reply)
     AdjustIndex(start, end, str->size());
 
     if (start <= end)
-    {
-        const QString& substr = str->substr(start, end - start + 1);
-        FormatBulk(substr.c_str(), substr.size(), reply);
-    }
+        FormatBulk(&(*str)[start], end - start + 1, reply);
     else
-    {
         FormatEmptyBulk(reply);
-    }
 
     return QError_ok;
 }
@@ -358,6 +354,7 @@ QError bitcount(const std::vector<QString>& params, UnboundedBuffer* reply)
             ReplyError(QError_type, reply);
         else
             Format0(reply);
+
         return QError_ok;
     }
 
@@ -462,7 +459,7 @@ QError setbit(const std::vector<QString>& params, UnboundedBuffer* reply)
     }
     
     auto str = GetDecodedString(value);
-    QString  newVal(*str);
+    QString newVal(*str);
 
     size_t  bytes = offset / 8;
     size_t  bits  = offset % 8;
@@ -526,7 +523,7 @@ QError incrbyfloat(const std::vector<QString>& params, UnboundedBuffer* reply)
     return ChangeFloatValue(params[1], delta, reply);
 }
 
-static QError  ChangeIntValue(const QString& key, long delta, UnboundedBuffer* reply)
+static QError ChangeIntValue(const QString& key, long delta, UnboundedBuffer* reply)
 {
     QObject* value;
     QError err = QSTORE.GetValueByType(key, value, QType_string);

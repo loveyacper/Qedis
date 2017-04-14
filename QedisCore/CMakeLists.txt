@@ -6,14 +6,14 @@ INCLUDE(../CMakeCommon)
 
 LINK_DIRECTORIES(../../leveldb)
 
-ADD_LIBRARY(qedislib SHARED ${QEDIS_SRC})
+ADD_LIBRARY(qediscore SHARED ${QEDIS_SRC})
 SET(LIBRARY_OUTPUT_PATH ../../bin)
 
 INCLUDE_DIRECTORIES(../QBase)
 INCLUDE_DIRECTORIES(../)
 INCLUDE_DIRECTORIES(../leveldb/include)
 
-ADD_DEPENDENCIES(qedislib qbaselib leveldb)
-TARGET_LINK_LIBRARIES(qedislib; qbaselib; dl; leveldb)
+ADD_DEPENDENCIES(qediscore qbaselib leveldb)
+TARGET_LINK_LIBRARIES(qediscore; qbaselib; dl; leveldb)
 
-SET_TARGET_PROPERTIES(qedislib PROPERTIES LINKER_LANGUAGE CXX)
+SET_TARGET_PROPERTIES(qediscore PROPERTIES LINKER_LANGUAGE CXX)

@@ -46,7 +46,7 @@ QObject::QObject(QType t) : type(t)
         
 QObject::~QObject()
 {
-    Clear();
+    _FreeValue();
 }
     
 void QObject::Clear()
@@ -280,19 +280,19 @@ size_t  QStore::BlockedClients::ServeClient(const QString& key, const PLIST& lis
             bool  errorTarget     = false;
             const QString& target = cli->GetTarget();
             
-            QObject*  dst = nullptr;
+            QObject* dst = nullptr;
 
             if (!target.empty())
             {
                 INF << list->front() << " is try lpush to target list " << target;
                 
                 // check target list
-                QError  err = QSTORE.GetValueByType(target, dst, QType_list);
+                QError err = QSTORE.GetValueByType(target, dst, QType_list);
                 if (err != QError_ok)
                 {
                     if (err != QError_notExist)
                     {
-                        UnboundedBuffer  reply;
+                        UnboundedBuffer reply;
                         ReplyError(err, &reply);
                         cli->SendPacket(reply);
                         errorTarget = true;
@@ -308,7 +308,7 @@ size_t  QStore::BlockedClients::ServeClient(const QString& key, const PLIST& lis
             {
                 if (dst)
                 {
-                    const PLIST& dstlist = dst->CastList();
+                    auto dstlist = dst->CastList();
                     dstlist->push_front(list->back());
                     INF << list->front() << " success lpush to target list " << target;
 
@@ -325,12 +325,12 @@ size_t  QStore::BlockedClients::ServeClient(const QString& key, const PLIST& lis
                 if (!dst)
                 {
                     PreFormatMultiBulk(2, &reply);
-                    FormatBulk(key.c_str(), key.size(), &reply);
+                    FormatBulk(key, &reply);
                 }
 
                 if (pos == ListPosition::head)
                 {
-                    FormatBulk(list->front().c_str(), list->front().size(), &reply);
+                    FormatBulk(list->front(), &reply);
                     list->pop_front();
 
                     std::vector<QString> params;
@@ -341,7 +341,7 @@ size_t  QStore::BlockedClients::ServeClient(const QString& key, const PLIST& lis
                 }
                 else
                 {
-                    FormatBulk(list->back().c_str(), list->back().size(), &reply);
+                    FormatBulk(list->back(), &reply);
                     list->pop_back();
 
                     std::vector<QString> params;
@@ -381,7 +381,7 @@ int QStore::BlockedClients::LoopCheck(uint64_t now)
             {
                 ++ n;
                 
-                const QString&  key = it->first;
+                const QString& key = it->first;
                 auto  scli(std::get<0>(*cli).lock());
                 if (scli && scli->WaitingKeys().count(key))
                 {
@@ -416,7 +416,7 @@ int QStore::BlockedClients::LoopCheck(uint64_t now)
 
 QStore& QStore::Instance()
 {
-    static QStore  store;
+    static QStore store;
     return store;
 }
 
@@ -446,24 +446,22 @@ int  QStore::LoopCheckBlocked(uint64_t now)
 int QStore::SelectDB(int dbno)
 {
     if (dbno == dbno_)
-    {
         return  dbno_;
-    }
     
     if (dbno >= 0 && dbno < static_cast<int>(store_.size()))
     {
         int oldDb = dbno_;
 
-        dbno_    = dbno;
-        return  oldDb;
+        dbno_ = dbno;
+        return oldDb;
     }
         
-    return  -1;
+    return -1;
 }
 
 int  QStore::GetDB() const
 {
-    return  dbno_;
+    return dbno_;
 }
 
 const QObject* QStore::GetObject(const QString& key) const
@@ -524,7 +522,7 @@ QType  QStore::KeyType(const QString& key) const
     if (!obj)
         return QType_invalid;
     
-    return  QType(obj->type);
+    return QType(obj->type);
 }
 
 static bool RandomMember(const QDB& hash, QString& res, QObject** val)
@@ -543,11 +541,11 @@ static bool RandomMember(const QDB& hash, QString& res, QObject** val)
 
 QString QStore::RandomKey(QObject** val) const
 {
-    QString  res;
+    QString res;
     if (!store_.empty() && !store_[dbno_].empty())
         RandomMember(store_[dbno_], res, val);
 
-    return  res;
+    return res;
 }
 
 size_t QStore::ScanKey(size_t cursor, size_t count, std::vector<QString>& res) const
@@ -555,7 +553,7 @@ size_t QStore::ScanKey(size_t cursor, size_t count, std::vector<QString>& res) c
     if (store_.empty() || store_[dbno_].empty())
         return 0;
 
-    std::vector<QDB::const_local_iterator>  iters;
+    std::vector<QDB::const_local_iterator> iters;
     size_t newCursor = ScanHashMember(store_[dbno_], cursor, count, iters);
 
     res.reserve(iters.size());
@@ -586,9 +584,7 @@ QError  QStore::GetValueByTypeNoTouch(const QString& key, QObject*& value, QType
 QError  QStore::_GetValueByType(const QString& key, QObject*& value, QType type, bool touch)
 {
     if (_ExpireIfNeed(key, ::Now()) == ExpireResult::expired)
-    {
         return QError_notExist;
-    }
     
     auto cobj = GetObject(key);
     if (cobj)
@@ -639,7 +635,7 @@ void QStore::SetExpire(const QString& key, uint64_t when) const
 
 int64_t QStore::TTL(const QString& key, uint64_t now)
 {
-    return  expiresDb_[dbno_].TTL(key, now);
+    return expiresDb_[dbno_].TTL(key, now);
 }
 
 bool QStore::ClearExpire(const QString& key)
@@ -652,7 +648,7 @@ QStore::ExpireResult QStore::_ExpireIfNeed(const QString& key, uint64_t now)
     return  expiresDb_[dbno_].ExpireIfNeed(key, now);
 }
 
-void    QStore::InitExpireTimer()
+void QStore::InitExpireTimer()
 {
     for (int i = 0; i < static_cast<int>(expiresDb_.size()); ++ i)
     {
@@ -668,7 +664,7 @@ void    QStore::InitExpireTimer()
     }
 }
 
-void    QStore::ResetDb()
+void QStore::ResetDb()
 {
     std::vector<QDB>(store_.size()).swap(store_);
     std::vector<ExpiresDB>(expiresDb_.size()).swap(expiresDb_);
@@ -676,7 +672,7 @@ void    QStore::ResetDb()
     dbno_ = 0;
 }
 
-size_t  QStore::BlockedSize() const
+size_t QStore::BlockedSize() const
 {
     size_t s = 0;
     for (const auto& b : blockedClients_)
