@@ -210,6 +210,12 @@ QError setrange(const std::vector<QString>& params, UnboundedBuffer* reply)
 
     if (newSize > str->size())  str->resize(newSize, '\0');
     str->replace(offset, params[3].size(), params[3]);
+    
+    if (value->encoding == QEncode_int)
+    {
+        value->Reset(new QString(*str));
+        value->encoding = QEncode_raw;
+    }
 
     FormatInt(static_cast<long>(str->size()), reply);
     return QError_ok;
@@ -433,14 +439,14 @@ QError setbit(const std::vector<QString>& params, UnboundedBuffer* reply)
     QError err = QSTORE.GetValueByType(params[1], value, QType_string);
     if (err == QError_notExist)
     {
-        value = QSTORE.SetValue(params[1], QObject::CreateString("0"));
+        value = QSTORE.SetValue(params[1], QObject::CreateString(""));
         err = QError_ok;
     }
 
     if (err != QError_ok)
     {
         Format0(reply);
-        return  err;
+        return err;
     }
 
     long offset = 0;
@@ -457,14 +463,13 @@ QError setbit(const std::vector<QString>& params, UnboundedBuffer* reply)
         Format0(reply);
         return QError_ok;
     }
-    
-    auto str = GetDecodedString(value);
-    QString newVal(*str);
+
+    QString newVal(*GetDecodedString(value));
 
     size_t  bytes = offset / 8;
     size_t  bits  = offset % 8;
 
-    if (bytes + 1 > newVal.size())     newVal.resize(bytes + 1, '0');
+    if (bytes + 1 > newVal.size())     newVal.resize(bytes + 1, '\0');
 
     const char oldByte = newVal[bytes];
     char& byte = newVal[bytes];
@@ -474,18 +479,19 @@ QError setbit(const std::vector<QString>& params, UnboundedBuffer* reply)
         byte &= ~(0x1 << bits);
 
     value->Reset(new QString(newVal));
+    value->encoding = QEncode_raw;
     FormatInt((oldByte & (0x1 << bits)) ? 1 : 0, reply);
 
     return QError_ok;
 }
 
-static QError  ChangeFloatValue(const QString& key, float delta, UnboundedBuffer* reply)
+static QError ChangeFloatValue(const QString& key, float delta, UnboundedBuffer* reply)
 {
     QObject* value;
     QError err = QSTORE.GetValueByType(key, value, QType_string);
     if (err == QError_notExist)
     {
-        value = QSTORE.SetValue(key, QObject::CreateString(0));
+        value = QSTORE.SetValue(key, QObject::CreateString("0"));
         err = QError_ok;
     }
 
@@ -506,6 +512,7 @@ static QError  ChangeFloatValue(const QString& key, float delta, UnboundedBuffer
     char newVal[32];
     int len = snprintf(newVal, sizeof newVal - 1, "%.6g", (oldVal + delta));
     value->Reset(new QString(newVal, len));
+    value->encoding = QEncode_raw;
 
     FormatBulk(newVal, len, reply);
     return QError_ok;
@@ -592,7 +599,7 @@ QError strlen(const std::vector<QString>& params, UnboundedBuffer* reply)
     if (err != QError_ok)
     {
         Format0(reply);
-        return  err;
+        return err;
     }
     
     auto str = GetDecodedString(val);
