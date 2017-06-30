@@ -391,8 +391,6 @@ bool QClient::Exec()
         DBG << "EXEC " << cmd[0] << ", for client " << GetID();
         const QCommandInfo* info = QCommandTable::GetCommandInfo(cmd[0]);
         QError err = QCommandTable::ExecuteCmd(cmd, info, &reply_);
-        SendPacket(reply_);
-        reply_.Clear();
         
         // may dirty clients;
         if (err == QError_ok && (info->attr & QAttr_write))

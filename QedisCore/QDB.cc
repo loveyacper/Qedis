@@ -300,7 +300,7 @@ void  QDBSaver::SaveLength(uint64_t  len)
     }
     else
     {
-        int8_t  encFlag = k32bits << 6;
+        int8_t  encFlag = static_cast<int8_t>(k32bits << 6);
         qdb_.Write(&encFlag, 1);
         len = htonl(len);
         qdb_.Write(&len, 4);
@@ -356,7 +356,7 @@ bool QDBSaver::SaveLZFString(const QString& str)
         return false;
     }
     
-    int8_t specialByte = (kSpecial << 6) | kEncLZF;
+    int8_t specialByte = static_cast<int8_t>(kSpecial << 6) | kEncLZF;
     qdb_.Write(&specialByte, 1);
     
     // compress len + raw len + str data;

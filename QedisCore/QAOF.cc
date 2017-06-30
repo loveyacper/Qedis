@@ -23,24 +23,20 @@ pid_t             g_rewritePid = -1;
  ****************************************************/
 void QAOFThreadController::RewriteDoneHandler(int exitRet, int whatSignal)
 {
+    g_rewritePid = -1;
+
     if (exitRet == 0 && whatSignal == 0)
     {
         INF << "save aof success";
-        g_rewritePid = -1;
-        
-        QAOFThreadController::Instance().Join();
         ::rename(g_aofTmp, g_config.appendfilename.c_str());
-        QAOFThreadController::Instance().Start();
     }
     else
     {
         ERR << "save aof failed with exit result " << exitRet << ", signal " << whatSignal;
-        g_rewritePid = -1;
-        
         ::unlink(g_aofTmp);
-        QAOFThreadController::Instance().Join();
-        QAOFThreadController::Instance().Start();
     }
+        
+    QAOFThreadController::Instance().Start();
 }
 
 
