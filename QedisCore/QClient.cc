@@ -16,8 +16,8 @@ std::set<std::weak_ptr<QClient>, std::owner_less<std::weak_ptr<QClient> > >
           QClient::s_monitors;
 
 PacketLength QClient::_ProcessInlineCmd(const char* buf,
-                                         size_t bytes,
-                                         std::vector<QString>& params)
+                                        size_t bytes,
+                                        std::vector<QString>& params)
 {
     if (bytes < 2)
         return 0;
@@ -143,7 +143,6 @@ PacketLength QClient::_HandlePacket(const char* start, std::size_t bytes)
     s_current = this;
 
     const char* const end   = start + bytes;
-
     const char* ptr  = start;
     
     if (GetPeerAddr() == QREPL.GetMasterAddr())
@@ -460,11 +459,6 @@ void  QClient::FeedMonitors(const std::vector<QString>& params)
              s_current->peerAddr_.GetPort());
 
     assert(n > 0);
-    if (n > static_cast<int>(sizeof buf))
-    {
-        ERR << "why snprintf return " << n << " bigger than buf size " << sizeof buf;
-        n = sizeof buf;
-    }
     
     for (const auto& e : params)
     {
@@ -494,3 +488,4 @@ void  QClient::FeedMonitors(const std::vector<QString>& params)
 }
     
 }
+

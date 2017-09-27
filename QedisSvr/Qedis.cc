@@ -113,11 +113,11 @@ bool  Qedis::ParseArgs(int ac, char* av[])
 }
 
 
-std::shared_ptr<StreamSocket>   Qedis::_OnNewConnection(int connfd)
+std::shared_ptr<StreamSocket> Qedis::_OnNewConnection(int connfd)
 {
     using namespace qedis;
 
-    std::shared_ptr<QClient> cli(new QClient());
+    auto cli(std::make_shared<QClient>());
     if (!cli->Init(connfd))
         cli.reset();
     

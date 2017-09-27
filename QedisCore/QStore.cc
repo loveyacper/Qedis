@@ -187,9 +187,7 @@ int QStore::ExpiresDB::LoopCheck(uint64_t now)
             // time to delete
             INF << "LoopCheck try delete key:" << it->first;
             
-            std::vector<QString>  params(2);
-            params[0] = "del";
-            params[1] = it->first;
+            std::vector<QString> params{"del", it->first};
             Propogate(params);
             
             QSTORE.DeleteKey(it->first);
@@ -312,11 +310,7 @@ size_t  QStore::BlockedClients::ServeClient(const QString& key, const PLIST& lis
                     dstlist->push_front(list->back());
                     INF << list->front() << " success lpush to target list " << target;
 
-                    std::vector<QString> params;
-                    params.push_back("lpush");
-                    params.push_back(target); // key
-                    params.push_back(list->back());
-
+                    std::vector<QString> params{"lpush", target, list->back()};
                     Propogate(params);
                 }
                 
@@ -333,10 +327,7 @@ size_t  QStore::BlockedClients::ServeClient(const QString& key, const PLIST& lis
                     FormatBulk(list->front(), &reply);
                     list->pop_front();
 
-                    std::vector<QString> params;
-                    params.push_back("lpop");
-                    params.push_back(key);
-
+                    std::vector<QString> params{"lpop", key};
                     Propogate(params);
                 }
                 else
@@ -344,10 +335,7 @@ size_t  QStore::BlockedClients::ServeClient(const QString& key, const PLIST& lis
                     FormatBulk(list->back(), &reply);
                     list->pop_back();
 
-                    std::vector<QString> params;
-                    params.push_back("rpop");
-                    params.push_back(key);
-
+                    std::vector<QString> params{"rpop", key};
                     Propogate(params);
                 }
                 
