@@ -14,29 +14,29 @@ TaskManager::~TaskManager()
      
 bool TaskManager::AddTask(PTCPSOCKET  task)    
 {   
-    std::lock_guard<std::mutex>  guard(lock_);
+    std::lock_guard<std::mutex> guard(lock_);
     newTasks_.push_back(task);
     ++ newCnt_;
 
-    return  true;    
+    return true;
 }
 
-TaskManager::PTCPSOCKET  TaskManager::FindTCP(unsigned int id) const
+TaskManager::PTCPSOCKET TaskManager::FindTCP(unsigned int id) const
 {
     if (id > 0)
     {
         auto it = tcpSockets_.find(id);
         if (it != tcpSockets_.end())
-            return  it->second;
+            return it->second;
     }
            
-    return  PTCPSOCKET();
+    return PTCPSOCKET();
 }
 
 bool TaskManager::_AddTask(PTCPSOCKET task)
 {   
     bool succ = tcpSockets_.insert(std::map<int, PTCPSOCKET>::value_type(task->GetID(), task)).second;
-    return  succ;    
+    return succ;    
 }
 
 
@@ -50,7 +50,7 @@ bool TaskManager::DoMsgParse()
 {
     if (newCnt_ > 0 && lock_.try_lock())
     {
-        NEWTASKS_T  tmpNewTask;
+        NEWTASKS_T tmpNewTask;
         tmpNewTask.swap(newTasks_);
         newCnt_ = 0;
         lock_.unlock();
@@ -67,25 +67,23 @@ bool TaskManager::DoMsgParse()
             else
             {
                 INF << "New connection from "
-                    << task->GetPeerAddr().GetIP()
+                    << task->GetPeerAddr().ToString()
                     << ", id = "
                     << task->GetID();
             }
         }
     }
 
-    bool  busy = false;
+    bool busy = false;
 
-    for (std::map<int, PTCPSOCKET>::iterator it(tcpSockets_.begin());
-         it != tcpSockets_.end();
-         )
+    for (auto it(tcpSockets_.begin()); it != tcpSockets_.end(); )
     {
         if (!it->second || it->second->Invalid())
         {
             if (it->second)
             {
                 INF << "Close connection from "
-                    << it->second->GetPeerAddr().GetIP()
+                    << it->second->GetPeerAddr().ToString()
                     << ", id = "
                     << it->second->GetID();
             }
@@ -100,7 +98,7 @@ bool TaskManager::DoMsgParse()
         }
     }
 
-    return  busy;
+    return busy;
 }
 
 }

@@ -28,7 +28,7 @@ void Server::HupHandler(int signum)
 
 Server* Server::sinstance_ = nullptr;
 
-std::set<int>   Server::slistenSocks_;
+std::set<int> Server::slistenSocks_;
 
 Server::Server() : bTerminate_(false), reloadCfg_(false)
 {
@@ -52,11 +52,11 @@ bool Server::TCPBind(const SocketAddr& addr)
 {
     using Internal::ListenSocket;
 
-    std::shared_ptr<ListenSocket> pServerSocket(new ListenSocket);
+    auto s(std::make_shared<ListenSocket>());
 
-    if (pServerSocket->Bind(addr))
+    if (s->Bind(addr))
     {
-        slistenSocks_.insert(pServerSocket->GetSocket());
+        slistenSocks_.insert(s->GetSocket());
         return true;
     }
     
@@ -91,11 +91,11 @@ void Server::TCPConnect(const SocketAddr& peer, const std::function<void ()>& cb
 
 void Server::_TCPConnect(const SocketAddr& peer, const std::function<void ()>* cb)
 {
-    std::shared_ptr<ClientSocket>  pClient(new ClientSocket());
+    auto client(std::make_shared<ClientSocket>());
     if (cb)
-        pClient->SetFailCallback(*cb);
+        client->SetFailCallback(*cb);
 
-    pClient->Connect(peer);
+    client->Connect(peer);
 }
 
 void Server::MainLoop(bool daemon)
@@ -149,13 +149,13 @@ void Server::MainLoop(bool daemon)
 }
 
 
-std::shared_ptr<StreamSocket>   Server::_OnNewConnection(int tcpsock)
+std::shared_ptr<StreamSocket> Server::_OnNewConnection(int tcpsock)
 {
     WRN << "implement your tcp accept, now close socket " << tcpsock;
-    return std::shared_ptr<StreamSocket>((StreamSocket* )0);
+    return std::shared_ptr<StreamSocket>(nullptr);
 }
 
-void  Server::NewConnection(int  sock, const std::function<void ()>& cb)
+void Server::NewConnection(int sock, const std::function<void ()>& cb)
 {
     if (sock == INVALID_SOCKET)
         return;
@@ -175,7 +175,7 @@ void  Server::NewConnection(int  sock, const std::function<void ()>& cb)
         tasks_.AddTask(pNewTask);
 }
 
-void   Server::AtForkHandler()
+void Server::AtForkHandler()
 {
     for (auto sock : slistenSocks_)
     {
@@ -183,7 +183,7 @@ void   Server::AtForkHandler()
     }
 }
 
-void   Server::DelListenSock(int sock)
+void Server::DelListenSock(int sock)
 {
     if (sock == INVALID_SOCKET)
         return;

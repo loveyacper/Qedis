@@ -17,7 +17,7 @@ public:
     StreamSocket();
    ~StreamSocket();
 
-    bool       Init(int localfd);
+    bool       Init(int localfd, const SocketAddr& peer);
     SocketType GetSocketType() const { return SocketType_Stream; }
 
 public:
@@ -25,7 +25,7 @@ public:
     int    Recv();
 public:
     // Send data
-    bool   SendPacket(const char* pData, std::size_t nBytes);
+    bool   SendPacket(const void* , std::size_t );
     bool   SendPacket(Buffer&  bf);
     bool   SendPacket(AttachedBuffer& abf);
     bool   SendPacket(qedis::UnboundedBuffer& ubf);

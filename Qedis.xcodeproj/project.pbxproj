@@ -1075,6 +1075,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = BA34F6041D5C151800F1DE01 /* Build configuration list for PBXNativeTarget "leveldb" */;
 			buildPhases = (
+				BA8B10761F7E691A004F99D0 /* ShellScript */,
 				BA34F5FF1D5C151700F1DE01 /* Sources */,
 				BA34F6001D5C151700F1DE01 /* Frameworks */,
 				BA34F6011D5C151700F1DE01 /* Headers */,
@@ -1219,6 +1220,22 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		BA8B10761F7E691A004F99D0 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if [ ! -d \"leveldb\" ]; then\n    echo \"leveldb not present. Fetching leveldb-1.18 from internet...\";\n    curl -s -L -O https://github.com/google/leveldb/archive/v1.18.tar.gz;\n    tar xzvf v1.18.tar.gz;\n    rm -f v1.18.tar.gz;\n    mv leveldb-1.18 leveldb;\nfi";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		BA34F5FF1D5C151700F1DE01 /* Sources */ = {

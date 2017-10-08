@@ -13,7 +13,7 @@ enum Color
     Color_max           ,
 };
 
-void  SetColor(Color c)
+void SetColor(Color c)
 {
     static const char* colors[Color_max] = {
         "",
@@ -29,7 +29,7 @@ void  SetColor(Color c)
     fprintf(stdout, "%s", colors[c]);
 }
 
-UnitTestBase::UnitTestBase() : m_pass(true), m_abort(false)
+UnitTestBase::UnitTestBase() : pass_(true), abort_(false)
 {
     UnitTestManager::Instance().AddTest(this);
 }
@@ -37,9 +37,9 @@ UnitTestBase::UnitTestBase() : m_pass(true), m_abort(false)
     
 UnitTestBase& UnitTestBase::SetInfo(const std::string& exprInfo, bool pass, bool abort)
 {
-    m_pass  = pass;
-    m_abort = abort;
-    m_expr  = (m_pass ? "[passed]: " : "[failed]: ") + exprInfo;
+    pass_  = pass;
+    abort_ = abort;
+    expr_  = (pass_ ? "[passed]: " : "[failed]: ") + exprInfo;
     return *this;
 }
 
@@ -47,27 +47,25 @@ UnitTestBase& UnitTestBase::SetInfo(const std::string& exprInfo, bool pass, bool
 void  UnitTestBase::Print() const
 {
     SetColor(Color_red);
-    for (std::vector<std::string>::const_iterator it(m_errors.begin());
-         it !=m_errors.end();
-         ++ it)
-    {
-        std::cout << *it << std::endl;
-    }
+
+    for (const auto& e : errors_)
+        std::cout << e << std::endl;
+
     SetColor(Color_normal);
 }
 
     
 void UnitTestBase::FlushError()
 {
-    if (m_pass)
+    if (pass_)
     {
         SetColor(Color_green);
-        std::cout << m_expr << std::endl;
+        std::cout << expr_ << std::endl;
         return;
     }
 
-    m_errors.push_back(m_expr);
-    if (m_abort)
+    errors_.push_back(expr_);
+    if (abort_)
     {
         Print();
         ::abort();
@@ -82,14 +80,14 @@ UnitTestManager& UnitTestManager::Instance()
     return mgr;
 }
 
-void    UnitTestManager::AddTest(UnitTestBase* test)
+void UnitTestManager::AddTest(UnitTestBase* test)
 {
-    m_tests.push_back(test);
+    tests_.push_back(test);
 }
 
-void    UnitTestManager::Clear()
+void UnitTestManager::Clear()
 {
-    m_tests.clear();
+    tests_.clear();
 }
 
 void UnitTestManager::Run()
@@ -97,25 +95,23 @@ void UnitTestManager::Run()
     std::size_t  pass = 0;
     std::size_t  fail = 0;
 
-    for (std::vector<UnitTestBase* >::const_iterator it(m_tests.begin());
-                       it != m_tests.end();
-                       ++ it)
+    for (const auto& ut : tests_)
     {
-        (*it)->Run();
-        if ((*it)->IsFine())
+        ut->Run();
+        if (ut->IsFine())
         {
             ++ pass;
 
             SetColor(Color_white);
-            std::cout << "ALL PASSED! " << (*it)->GetName() << std::endl;
+            std::cout << "ALL PASSED! " << ut->GetName() << std::endl;
         }
         else
         {
             ++ fail;
 
-            (*it)->Print();
+            ut->Print();
             SetColor(Color_purple);
-            std::cout << "FAILED! " << (*it)->GetName() << std::endl;
+            std::cout << "FAILED! " << ut->GetName() << std::endl;
         }
     }
 
@@ -127,32 +123,6 @@ void UnitTestManager::Run()
               << fail << " failed\n";
     SetColor(Color_normal);
 }
-
-#define HELLO_TEST  0
-#if HELLO_TEST
-bool f(bool b)
-{
-    return b;
-}
-
-TEST_CASE(test1)
-{
-    EXPECT_TRUE(5 != 3) << "fuck, why 5 != 3 failed ? ";
-    EXPECT_FALSE(0 != 0);
-    EXPECT_FALSE(3 == 2) << "fuck, why 3 == 2 passed? ";
-}
-
-TEST_CASE(test2)
-{
-    ASSERT_FALSE(2 != 2) << "fuck, why 2 != 2 passed? ";
-    ASSERT_TRUE(f(true)) << "fuck, why failed? ";
-
-    EXPECT_TRUE(9 != 9) << " true raise error!";
-    EXPECT_FALSE(0 == 0) << " raise error!";
-    ASSERT_FALSE(2 == 2) << " raise abort!";
-    ASSERT_FALSE(-1 == 0) << "fuck, why -1 == 0 passed? ";
-}
-#endif
 
 int main()
 {

@@ -188,6 +188,14 @@ bool  LoadQedisConfig(const char* cfgFile, QConfig& cfg)
     cfg.backendPath = parser.GetData<QString>("backendpath", cfg.backendPath);
     EraseQuotes(cfg.backendPath);
     cfg.backendHz = parser.GetData<int>("backendhz", 10);
+
+    // cluster
+    cfg.enableCluster = parser.GetData<QString>("cluster", "off") == "on";
+    if (cfg.enableCluster)
+    {
+        cfg.centers = SplitString(parser.GetData<QString>("clustercenters"), ';');
+        cfg.setid = parser.GetData<int>("setid", -1);
+    }
     
     return  cfg.CheckArgs();
 }
@@ -209,6 +217,11 @@ bool  QConfig::CheckArgs() const
     RETURN_IF_FAIL(backend >= BackEndNone && backend < BackEndMax);
     RETURN_IF_FAIL(backendHz >= 1 && backendHz <= 50);
 
+    if (enableCluster)
+    {
+        RETURN_IF_FAIL(!centers.empty());
+        RETURN_IF_FAIL(setid >= 0);
+    }
 
 #undef RETURN_IF_FAIL
     

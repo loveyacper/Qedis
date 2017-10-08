@@ -4,11 +4,12 @@
 
 #include <arpa/inet.h>
 #include <string.h>
+#include <string>
 #include <memory>
 #include <atomic>
 
-#define INVALID_SOCKET  (int)(~0)
-#define SOCKET_ERROR    (-1)
+#define INVALID_SOCKET (int)(~0)
+#define SOCKET_ERROR (-1)
 #define INVALID_PORT (-1)
 
 
@@ -37,6 +38,16 @@ struct SocketAddr
         Init(addr);
     }
 
+    // ip port format:  127.0.0.1:6379
+    SocketAddr(const std::string& ipport)
+    {
+        std::string::size_type p = ipport.find_first_of(':');
+        std::string ip = ipport.substr(0, p);
+        std::string port = ipport.substr(p + 1);
+
+        Init(ip.c_str(), static_cast<uint16_t>(std::stoi(port)));
+    }
+
     SocketAddr(uint32_t  netip, uint16_t netport)
     {
         Init(netip, netport);
@@ -56,14 +67,14 @@ struct SocketAddr
     {
         addr_.sin_family = AF_INET;       
         addr_.sin_addr.s_addr = netip;       
-        addr_.sin_port   = netport;
+        addr_.sin_port = netport;
     }
 
     void Init(const char* ip, uint16_t hostport)
     {
         addr_.sin_family = AF_INET;
         addr_.sin_addr.s_addr = ::inet_addr(ip);
-        addr_.sin_port   = htons(hostport);
+        addr_.sin_port = htons(hostport);
     }
 
     const sockaddr_in& GetAddr() const
@@ -81,9 +92,17 @@ struct SocketAddr
         return ::inet_ntop(AF_INET, (const char*)&addr_.sin_addr, buf, size);
     }
 
-    unsigned short  GetPort() const
+    unsigned short GetPort() const
     {
         return ntohs(addr_.sin_port);
+    }
+    
+    std::string ToString() const
+    {
+        char tmp[32];
+        const char* res = inet_ntop(AF_INET, &addr_.sin_addr, tmp, (socklen_t)(sizeof tmp));
+
+        return std::string(res) + ":" + std::to_string(ntohs(addr_.sin_port));
     }
 
     bool  Empty() const { return  0 == addr_.sin_family; }
@@ -133,13 +152,13 @@ public:
     virtual SocketType GetSocketType() const { return SocketType_Invalid; }
     bool Invalid() const { return invalid_; }
     
-    int  GetSocket() const {   return localSock_;   }
-    std::size_t GetID() const     {   return id_;   }
+    int  GetSocket() const { return localSock_; }
+    std::size_t GetID() const { return id_; }
 
     virtual bool OnReadable() { return false; }
     virtual bool OnWritable() { return false; }
     virtual bool OnError();
-    virtual void OnConnect()  {  }
+    virtual void OnConnect()  { }
 
     static int CreateTCPSocket();
     static int CreateUDPSocket();
@@ -157,12 +176,12 @@ protected:
     Socket();
 
     // The local socket
-    int    localSock_;
-    bool   epollOut_;
+    int localSock_;
+    bool epollOut_;
 
 private:
     std::atomic<bool> invalid_;
-    std::size_t    id_;
+    std::size_t id_;
     static std::atomic<std::size_t> sid_;
 };
 

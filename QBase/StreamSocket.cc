@@ -17,25 +17,21 @@ StreamSocket::StreamSocket()
 StreamSocket::~StreamSocket()
 {
     INF << __FUNCTION__ << " peer ("
-        << peerAddr_.GetIP()
-        << ":"
-        << peerAddr_.GetPort()
+        << peerAddr_.ToString()
         << ")";
 }
 
-bool StreamSocket::Init(int fd)
+bool StreamSocket::Init(int fd, const SocketAddr& peer)
 {
     if (fd < 0)
         return false;
 
-    Socket::GetPeerAddr(fd, peerAddr_);
+    peerAddr_ = peer;
     localSock_ = fd;
     SetNonBlock(localSock_);
 
     INF << __FUNCTION__ << " peer address ("
-        << peerAddr_.GetIP()
-        << ":"
-        << peerAddr_.GetPort()
+        << peerAddr_.ToString()
         << "), local socket is " << fd;
     
 #if defined(__APPLE__)
@@ -97,39 +93,37 @@ int StreamSocket::_Send(const BufferSequence& bf)
 }
 
 
-bool StreamSocket::SendPacket(const char* pData, size_t nBytes)
+bool StreamSocket::SendPacket(const void* data, size_t bytes)
 {
-    if (pData && nBytes > 0)
-        sendBuf_.Write(pData, nBytes);
+    if (data && bytes > 0)
+        sendBuf_.Write(data, bytes);
 
     return true;
 }
 
-bool  StreamSocket::SendPacket(Buffer& bf)
+bool StreamSocket::SendPacket(Buffer& bf)
 {
-    return  SendPacket(bf.ReadAddr(), bf.ReadableSize());
+    return SendPacket(bf.ReadAddr(), bf.ReadableSize());
 }
 
 
-bool  StreamSocket::SendPacket(AttachedBuffer& af)
+bool StreamSocket::SendPacket(AttachedBuffer& af)
 {
-    return  SendPacket(af.ReadAddr(), af.ReadableSize());
+    return SendPacket(af.ReadAddr(), af.ReadableSize());
 }
 
-bool  StreamSocket::SendPacket(qedis::UnboundedBuffer& ubf)
+bool StreamSocket::SendPacket(qedis::UnboundedBuffer& ubf)
 {
-    return  SendPacket(ubf.ReadAddr(), ubf.ReadableSize());
+    return SendPacket(ubf.ReadAddr(), ubf.ReadableSize());
 }
 
-bool  StreamSocket::OnReadable()
+bool StreamSocket::OnReadable()
 {
     int nBytes = StreamSocket::Recv();
     if (nBytes < 0)
     {
         INF << __FUNCTION__ << " failed, peer address ("
-            << peerAddr_.GetIP()
-            << ":"
-            << peerAddr_.GetPort()
+            << peerAddr_.ToString()
             << "), local socket is "
             << localSock_;
         
@@ -162,9 +156,7 @@ bool StreamSocket::Send()
     {
         Internal::NetThreadPool::Instance().EnableWrite(shared_from_this());
         INF << __FUNCTION__ << " peer address ("
-            << peerAddr_.GetIP()
-            << ":"
-            << peerAddr_.GetPort()
+            << peerAddr_.ToString()
             << "), local socket is "
             << localSock_
             << ", register write event";
@@ -195,9 +187,7 @@ bool StreamSocket::OnWritable()
     if (!epollOut_)
     {
         INF << __FUNCTION__ << " peer address ("
-            << peerAddr_.GetIP()
-            << ":"
-            << peerAddr_.GetPort()
+            << peerAddr_.ToString()
             << "), local socket is "
             << localSock_
             << ", unregister write event";
@@ -212,9 +202,7 @@ bool StreamSocket::OnError()
     if (Socket::OnError())
     {
         ERR << __FUNCTION__ << " peer address ("
-            << peerAddr_.GetIP()
-            << ":"
-            << peerAddr_.GetPort()
+            << peerAddr_.ToString()
             << "), local socket is "
             << localSock_;
 

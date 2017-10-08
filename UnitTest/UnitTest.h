@@ -5,20 +5,20 @@
 #include <sstream>
 #include <vector>
 
-class  UnitTestBase
+class UnitTestBase
 {
 public:
     friend class MsgHelper;
 
     UnitTestBase();
-    virtual ~UnitTestBase() {}
     // stack only, no need virtual destructor, but the warning...
+    virtual ~UnitTestBase() {}
     
-    const std::string& GetName() const  {  return m_name;  }
+    const std::string& GetName() const { return name_; }
     
     virtual void Run() = 0;
 
-    bool  IsFine() const    {  return m_errors.empty();  }
+    bool  IsFine() const { return errors_.empty(); }
     void  Print()  const;
 
     template <typename T>
@@ -26,20 +26,20 @@ public:
 
 protected:
     UnitTestBase& SetInfo(const std::string& exprInfo, bool pass = true, bool abort = false);
-    std::string   m_name;
+    std::string name_;
 
 private:
     void    FlushError();
     
-    bool    m_pass;
-    bool    m_abort;
+    bool    pass_;
+    bool    abort_;
 
-    std::string     m_expr;
-    std::vector<std::string>    m_errors;
+    std::string     expr_;
+    std::vector<std::string>    errors_;
     
 private:
-    UnitTestBase(const UnitTestBase& );
-    UnitTestBase& operator= (const UnitTestBase& );
+    UnitTestBase(const UnitTestBase& ) = delete;
+    UnitTestBase& operator= (const UnitTestBase& ) = delete;
 
     void* operator new(std::size_t ); // stack only
 };
@@ -47,11 +47,11 @@ private:
 template <typename T>
 inline UnitTestBase& UnitTestBase::operator<< (const T &  t)
 {
-    if (!m_pass)
+    if (!pass_)
     {
         std::ostringstream  str;
         str << t;
-        m_expr += str.str();
+        expr_ += str.str();
     }
 
     return *this;
@@ -73,7 +73,7 @@ public:
     {                                               \
     public:                                         \
         UnitTestBase##name() {                      \
-            m_name = #name;                         \
+            name_ = #name;                         \
         }                                           \
         virtual void Run();                         \
     } test_##name##_obj;                            \
@@ -105,7 +105,7 @@ public:
 private:
     UnitTestManager() {}
     
-    std::vector<UnitTestBase* > m_tests;
+    std::vector<UnitTestBase* > tests_;
 };
 
 #define RUN_ALL_TESTS   UnitTestManager::Instance().Run

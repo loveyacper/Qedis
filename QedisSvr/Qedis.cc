@@ -25,6 +25,11 @@
 #include "QedisLogo.h"
 #include "Qedis.h"
 
+#if QEDIS_CLUSTER
+#include "QClusterClient.h"
+
+#endif
+
 const unsigned Qedis::kRunidSize = 40;
 
 Qedis::Qedis() : port_(0), masterPort_(0)
@@ -116,12 +121,32 @@ bool  Qedis::ParseArgs(int ac, char* av[])
 std::shared_ptr<StreamSocket> Qedis::_OnNewConnection(int connfd)
 {
     using namespace qedis;
-
-    auto cli(std::make_shared<QClient>());
-    if (!cli->Init(connfd))
-        cli.reset();
     
-    return cli;
+    SocketAddr peer;
+    Socket::GetPeerAddr(connfd, peer);
+
+    auto it = std::find(g_config.centers.begin(), g_config.centers.end(), peer);
+    if (it == g_config.centers.end())
+    {
+        auto cli(std::make_shared<QClient>());
+        if (!cli->Init(connfd, peer))
+            cli.reset();
+
+        return cli;
+    }
+#if QEDIS_CLUSTER
+    else
+    {
+        DBG << "Connect success to cluster " << peer.ToString();
+        auto zkconn = std::make_shared<QClusterClient>();
+        if (!zkconn->Init(connfd, peer))
+            zkconn.reset();
+
+        return zkconn;
+    }
+#endif
+    
+    return nullptr;
 }
 
 Time  g_now;
@@ -180,6 +205,23 @@ static void LoadDbFromDisk()
         loader.Load(g_config.rdbfullname.c_str());
     }
 }
+
+#if QEDIS_CLUSTER
+static void OnConnectClusterFail(const std::vector<SocketAddr>& addrs, size_t& i)
+{
+    WRN << "Connect cluster failed " << addrs[i].ToString();
+    if (++i >= addrs.size())
+        i = 0;
+    
+    Timer* timer = TimerManager::Instance().CreateTimer();
+    timer->Init(3 * 1000, 1);
+    timer->SetCallback([=, &i]() {
+        USR << "OnTimer connect to " << addrs[i].GetIP() << ":" << addrs[i].GetPort();
+        Server::Instance()->TCPConnect(addrs[i], std::bind(OnConnectClusterFail, addrs, std::ref(i)));
+    });
+    TimerManager::Instance().AsyncAddTimer(timer);
+};
+#endif
 
 bool Qedis::_Init()
 {
@@ -295,6 +337,21 @@ bool Qedis::_Init()
     char logo[512] = "";
     snprintf(logo, sizeof logo - 1, qedisLogo, QEDIS_VERSION, static_cast<int>(sizeof(void*)) * 8, static_cast<int>(g_config.port)); 
     std::cerr << logo;
+
+#if QEDIS_CLUSTER
+    // cluster
+    if (g_config.enableCluster)
+    {
+        std::vector<SocketAddr> addrs;
+        for (const auto& s : g_config.centers)
+        {
+            addrs.push_back(SocketAddr(s));
+        }
+
+        std::function<void ()> retry = std::bind(OnConnectClusterFail, addrs, std::ref(clusterIndex_));
+        Server::Instance()->TCPConnect(addrs[clusterIndex_], retry);
+    }
+#endif
 
     return  true;
 }

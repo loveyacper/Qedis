@@ -31,6 +31,11 @@ private:
     
     qedis::QString master_;
     unsigned short masterPort_;
+
+#if QEDIS_CLUSTER
+    // cluster
+    size_t clusterIndex_ = 0;
+#endif
     
     static const unsigned kRunidSize;
 };

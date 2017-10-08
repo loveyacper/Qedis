@@ -2,6 +2,7 @@
 #define BERT_QCONFIG_H
 
 #include <map>
+#include <vector>
 #include "QString.h"
 
 namespace qedis
@@ -71,6 +72,11 @@ struct QConfig
     int backend; // enum BackEndType
     QString backendPath; 
     int backendHz; // the frequency of dump to backend
+
+    // cluster
+    bool enableCluster = false;
+    std::vector<QString> centers;
+    int setid = -1; // sharding set id
     
     QConfig();
 
