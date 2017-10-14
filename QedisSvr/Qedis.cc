@@ -138,11 +138,11 @@ std::shared_ptr<StreamSocket> Qedis::_OnNewConnection(int connfd)
     else
     {
         DBG << "Connect success to cluster " << peer.ToString();
-        auto zkconn = std::make_shared<QClusterClient>();
-        if (!zkconn->Init(connfd, peer))
-            zkconn.reset();
+        auto conn = std::make_shared<QClusterClient>();
+        if (!conn->Init(connfd, peer))
+            conn.reset();
 
-        return zkconn;
+        return conn;
     }
 #endif
     
@@ -214,7 +214,7 @@ static void OnConnectClusterFail(const std::vector<SocketAddr>& addrs, size_t& i
         i = 0;
     
     Timer* timer = TimerManager::Instance().CreateTimer();
-    timer->Init(3 * 1000, 1);
+    timer->Init(2 * 1000, 1);
     timer->SetCallback([=, &i]() {
         USR << "OnTimer connect to " << addrs[i].GetIP() << ":" << addrs[i].GetPort();
         Server::Instance()->TCPConnect(addrs[i], std::bind(OnConnectClusterFail, addrs, std::ref(i)));

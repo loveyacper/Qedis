@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include "QConfig.h"
+//#include "QReplication.h"
+#include "QCommand.h"
 #include "QClusterClient.h"
 
 #if USE_ZOOKEEPER
@@ -32,7 +34,19 @@ bool QClusterClient::Init(int fd, const SocketAddr& peer)
 
     auto me = std::static_pointer_cast<QClusterClient>(shared_from_this()); 
 #if USE_ZOOKEEPER
-    conn_.reset(new ZookeeperConn(me)); 
+    SocketAddr myAddr(g_config.ip.c_str(), g_config.port);
+    ZookeeperConn* zkconn = new ZookeeperConn(me, g_config.setid, myAddr.ToString());
+    zkconn->SetOnBecomeMaster([]() {
+        INF << "I become master";
+        std::vector<QString> cmd {"slaveof", "no", "one"};
+        slaveof(cmd, nullptr);
+    });
+    zkconn->SetOnBecomeSlave([](const std::string& master) {
+        INF << "I become slave of " << master;
+        std::vector<QString> cmd(SplitString(master, ':'));
+        slaveof({"slaveof", cmd[0], cmd[1]}, nullptr);
+    });
+    conn_.reset(zkconn);
 #else
 #error "Only support zookeeper for now, supporting etcd is in progress"
 
@@ -44,12 +58,6 @@ bool QClusterClient::Init(int fd, const SocketAddr& peer)
 void QClusterClient::OnConnect()
 {
     conn_->OnConnect();
-
-#if 0
-    // cluster 2.when connect, create my temp node
-    SocketAddr myAddr(g_config.ip.c_str(), g_config.port);
-    conn_->RunForMaster(g_config.setid, myAddr.ToString());
-#endif
 }
 
 } // end namespace qedis
