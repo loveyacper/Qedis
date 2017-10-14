@@ -36,6 +36,8 @@ static int deserialize_prime_response(struct prime_struct* req, const char* buff
     return 0;
 }
           
+const int kTimeout = 15 * 1000; // ms
+const int PING_XID = -2;
 
 namespace qedis
 {
@@ -48,9 +50,18 @@ ZookeeperConn::ZookeeperConn(const std::shared_ptr<StreamSocket>& c, int setId, 
     xid_(0),
     setId_(setId),
     addr_(addr),
-    state_(State::kNone)
+    state_(State::kNone),
+    pingTimer_(nullptr)
 {
+    lastPing_.tv_sec = 0;
+    lastPing_.tv_usec = 0;
     sessionInfo_.passwd[0] = '\0';
+}
+
+ZookeeperConn::~ZookeeperConn()
+{
+    if (pingTimer_)
+        TimerManager::Instance().KillTimer(pingTimer_);
 }
 
 bool ZookeeperConn::ParseMessage(const char*& data, size_t len)
@@ -90,22 +101,12 @@ bool ZookeeperConn::ParseMessage(const char*& data, size_t len)
 
             // update zxid
             if (hdr.zxid > 0)
-                lastSeenZxid_ = hdr.zxid;
+                sessionInfo_.lastSeenZxid = hdr.zxid;
             else
                 std::cout << "zxid " << hdr.zxid << std::endl;
 
-            if (hdr.err == ZOK)
-            {
-                if (!_ProcessResponse(hdr, ia))
-                    return false;
-            }
-            else
-            {
-                // TODO some error should be processed
-                // If watch sibling failed, then continued watch another
-                // until success or become master
-                std::cout << "hdr.err " << hdr.err << std::endl;
-            }
+            if (!_ProcessResponse(hdr, ia))
+                return false;
 
             data += thisLen + sizeof(thisLen);
         }
@@ -148,8 +149,8 @@ void ZookeeperConn::OnConnect()
     req.protocolVersion = 0; 
     req.sessionId = sessionInfo_.sessionId;
     req.passwd_len = sizeof(req.passwd);
-    req.timeOut = 15 * 1000; 
-    req.lastZxidSeen = lastSeenZxid_;
+    req.timeOut = kTimeout;
+    req.lastZxidSeen = sessionInfo_.lastSeenZxid;
     memcpy(req.passwd, sessionInfo_.passwd, req.passwd_len);
                     
     StackBuffer<HANDSHAKE_REQ_SIZE + 4> buf;
@@ -208,17 +209,16 @@ static int GetNodeSeq(const std::string& path)
     return std::stoi(number);
 }
 
-static SocketAddr GetNodeAddr(const std::string& path)
+static std::string GetNodeAddr(const std::string& path)
 {
     // /servers/set-{setid}/qedis(ip:port)-xxxseq
     auto start = path.find_first_of('(');
     auto end = path.find_first_of(')');
     if (start == std::string::npos ||
         end == std::string::npos)
-        return SocketAddr();
+        return std::string();
 
-    std::string addr(path.substr(start + 1, end));
-    return SocketAddr(addr);
+    return path.substr(start + 1, end - start - 1);
 }
 
 void ZookeeperConn::RunForMaster(int setid, const std::string& value)
@@ -280,7 +280,53 @@ bool ZookeeperConn::_ProcessHandshake(const prime_struct& rsp)
     fwrite(&sessionInfo_, sizeof sessionInfo_, 1, fp);
 
     state_ = State::kConnected;
+
+    _InitPingTimer();
     return true;
+}
+
+void ZookeeperConn::_InitPingTimer()
+{
+    assert (!pingTimer_);
+    pingTimer_ = TimerManager::Instance().CreateTimer();
+    pingTimer_->Init(kTimeout / 2);
+    pingTimer_->SetCallback([this]() {
+        INF << "send ping ";
+
+        struct oarchive *oa = create_buffer_oarchive();
+        struct RequestHeader h = { STRUCT_INITIALIZER(xid, PING_XID), STRUCT_INITIALIZER (type , ZOO_PING_OP) };
+
+        int rc = serialize_RequestHeader(oa, "header", &h); 
+        gettimeofday(&this->lastPing_, nullptr);
+
+        auto s = this->sock_.lock();
+        if (s)
+        {
+            int totalLen = htonl(get_buffer_len(oa));
+            s->SendPacket(&totalLen, sizeof totalLen);
+            s->SendPacket(get_buffer(oa), get_buffer_len(oa));
+
+            Request r;
+            r.xid = h.xid;
+            r.type = h.type;
+            pendingRequests_.emplace_back(std::move(r));
+        }
+
+        close_buffer_oarchive(&oa, 1);
+    });
+
+    TimerManager::Instance().AsyncAddTimer(pingTimer_);
+}
+
+bool ZookeeperConn::_IsMaster() const
+{
+    if (siblings_.empty())
+        return false;
+
+    auto me = siblings_.find(seq_);
+    assert (me != siblings_.end());
+
+    return me == siblings_.begin();
 }
 
 bool ZookeeperConn::_ProcessResponse(const ReplyHeader& hdr, iarchive* ia)
@@ -306,6 +352,16 @@ bool ZookeeperConn::_ProcessResponse(const ReplyHeader& hdr, iarchive* ia)
     std::cout << "req.type " << req.type << std::endl;
     switch (req.type)
     {
+    case ZOO_PING_OP:
+        {
+            timeval now;
+            gettimeofday(&now, nullptr);
+            int microseconds = (now.tv_sec - lastPing_.tv_sec) * 1000000;
+            microseconds += (now.tv_usec - lastPing_.tv_usec);
+            INF<< "recv ping used microseconds " << microseconds;
+        }
+        break;
+
     case ZOO_CREATE_OP:
         {
             CreateResponse rsp;
@@ -329,7 +385,7 @@ bool ZookeeperConn::_ProcessResponse(const ReplyHeader& hdr, iarchive* ia)
                 return false;
             }
 
-            DBG << "my node seq " << seq_ << " for my node " << node_ << ", addr " << GetNodeAddr(node_).ToString();
+            DBG << "my node seq " << seq_ << " for my node " << node_ << ", addr " << GetNodeAddr(node_);
             if (!_GetSiblings(MakeParentNode(setId_)))
                 return false;
         }
@@ -368,38 +424,62 @@ bool ZookeeperConn::_ProcessResponse(const ReplyHeader& hdr, iarchive* ia)
             }
             else
             {
-                if (onBecomeSlave_)
-                {
-                    SocketAddr master = GetNodeAddr(siblings_.begin()->second);
-                    if (master.Empty())
-                        return false;
-
-                    onBecomeSlave_(master.ToString());
-
-                    // TODO monitor the node bigger than me
-                    auto sibling = me;
-                    -- sibling; // I'll watch you
-                    _ExistsAndWatch(MakeParentNode(setId_) + "/" + sibling->second);
-                }
+                // monitor the node bigger than me
+                auto brother = -- me; // I'll watch you
+                _ExistsAndWatch(MakeParentNode(setId_) + "/" + brother->second);
             }
         }
         break;
 
     case ZOO_EXISTS_OP:
         {
-            ExistsResponse rsp;
-            if (deserialize_ExistsResponse(ia, "rsp", &rsp) != 0)
+            if (hdr.err == ZNONODE)
             {
-                ERR << "deserialize_ExistsResponse failed";
-                return false;
+                // check if I am the master
+                //_ExistsAndWatch(MakeParentNode(setId_) + "/" + sibling->second);
+                const std::string siblingName = req.path.substr(req.path.find_last_of('/') + 1);
+                const int seq = GetNodeSeq(siblingName);
+                siblings_.erase(seq);
+                if (_IsMaster())
+                {
+                    if (onBecomeMaster_)
+                        onBecomeMaster_();
+                }
+                else
+                {
+                    auto me = siblings_.find(seq_);
+                    assert (me != siblings_.begin());
+                    assert (me != siblings_.end());
+
+                    auto brother = -- me; // I'll watch you
+                    _ExistsAndWatch(MakeParentNode(setId_) + "/" + brother->second);
+                }
             }
-
-            QEDIS_DEFER
+            else
             {
-                deallocate_ExistsResponse(&rsp);
-            };
+                assert (hdr.err == ZOK);
+                ExistsResponse rsp;
+                if (deserialize_ExistsResponse(ia, "rsp", &rsp) != 0)
+                {
+                    ERR << "deserialize_ExistsResponse failed";
+                    return false;
+                }
 
-            DBG << "Exists response version " << rsp.stat.version;
+                QEDIS_DEFER
+                {
+                    deallocate_ExistsResponse(&rsp);
+                };
+
+                DBG << "Exists response version " << rsp.stat.version;
+                if (onBecomeSlave_)
+                {
+                    std::string master = GetNodeAddr(siblings_.begin()->second);
+                    if (master.empty())
+                        return false;
+
+                    onBecomeSlave_(master);
+                }
+            }
         }
         break;
 
@@ -469,7 +549,6 @@ bool ZookeeperConn::_ExistsAndWatch(const std::string& sibling)
     close_buffer_oarchive(&oa, 1);
     return rc >= 0;
 }
-
 
 } // end namespace qedis
 
