@@ -60,5 +60,10 @@ void QClusterClient::OnConnect()
     conn_->OnConnect();
 }
 
+void QClusterClient::OnDisconnect()
+{
+    conn_->OnDisconnect();
+}
+
 } // end namespace qedis
 

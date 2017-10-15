@@ -160,19 +160,18 @@ void Server::NewConnection(int sock, const std::function<void ()>& cb)
     if (sock == INVALID_SOCKET)
         return;
 
-    std::shared_ptr<StreamSocket>  pNewTask = _OnNewConnection(sock);
+    auto conn = _OnNewConnection(sock);
     
-    if (!pNewTask)
+    if (!conn)
     {
         Socket::CloseSocket(sock);
         return;
     }
 
-    pNewTask->OnConnect();
-    pNewTask->SetOnDisconnect(cb);
+    conn->SetOnDisconnect(cb);
 
-    if (NetThreadPool::Instance().AddSocket(pNewTask, EventTypeRead | EventTypeWrite))
-        tasks_.AddTask(pNewTask);
+    if (NetThreadPool::Instance().AddSocket(conn, EventTypeRead | EventTypeWrite))
+        tasks_.AddTask(conn);
 }
 
 void Server::AtForkHandler()

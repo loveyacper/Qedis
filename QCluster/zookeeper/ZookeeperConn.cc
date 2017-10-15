@@ -60,8 +60,6 @@ ZookeeperConn::ZookeeperConn(const std::shared_ptr<StreamSocket>& c, int setId, 
 
 ZookeeperConn::~ZookeeperConn()
 {
-    if (pingTimer_)
-        TimerManager::Instance().KillTimer(pingTimer_);
 }
 
 bool ZookeeperConn::ParseMessage(const char*& data, size_t len)
@@ -168,9 +166,14 @@ void ZookeeperConn::OnConnect()
     if (s)
     {
         state_ = State::kHandshaking;
-        // FIXME multi thread write!
         s->SendPacket(buf);
     }
+}
+
+void ZookeeperConn::OnDisconnect()
+{
+    if (pingTimer_)
+        TimerManager::Instance().KillTimer(pingTimer_);
 }
 
 static struct ACL _OPEN_ACL_UNSAFE_ACL[] = {{0x1f, {"world", "anyone"}}};
@@ -241,20 +244,7 @@ void ZookeeperConn::RunForMaster(int setid, const std::string& value)
     req.acl = ZOO_OPEN_ACL_UNSAFE;
     rc = rc < 0 ? rc : serialize_CreateRequest(oa, "req", &req);
 
-    auto s = sock_.lock();
-    if (s)
-    {
-        int totalLen = htonl(get_buffer_len(oa));
-        s->SendPacket(&totalLen, sizeof totalLen);
-        s->SendPacket(get_buffer(oa), get_buffer_len(oa));
-
-        Request req;
-        req.type = h.type;
-        req.xid = h.xid;
-        pendingRequests_.emplace_back(std::move(req));
-    }
-
-    close_buffer_oarchive(&oa, 1);
+    _SendPacket(h, oa);
 }
 
 int ZookeeperConn::_GetXid() const
@@ -296,23 +286,10 @@ void ZookeeperConn::_InitPingTimer()
         struct oarchive *oa = create_buffer_oarchive();
         struct RequestHeader h = { STRUCT_INITIALIZER(xid, PING_XID), STRUCT_INITIALIZER (type , ZOO_PING_OP) };
 
-        int rc = serialize_RequestHeader(oa, "header", &h); 
+        serialize_RequestHeader(oa, "header", &h); 
         gettimeofday(&this->lastPing_, nullptr);
 
-        auto s = this->sock_.lock();
-        if (s)
-        {
-            int totalLen = htonl(get_buffer_len(oa));
-            s->SendPacket(&totalLen, sizeof totalLen);
-            s->SendPacket(get_buffer(oa), get_buffer_len(oa));
-
-            Request r;
-            r.xid = h.xid;
-            r.type = h.type;
-            pendingRequests_.emplace_back(std::move(r));
-        }
-
-        close_buffer_oarchive(&oa, 1);
+        _SendPacket(h, oa);
     });
 
     TimerManager::Instance().AsyncAddTimer(pingTimer_);
@@ -502,21 +479,9 @@ bool ZookeeperConn::_GetSiblings(const std::string& parent)
     int rc = serialize_RequestHeader(oa, "header", &h); 
     rc = rc < 0 ? rc : serialize_GetChildren2Request(oa, "req", &req);
 
-    auto s = sock_.lock();
-    if (s)
-    {
-        int totalLen = htonl(get_buffer_len(oa));
-        s->SendPacket(&totalLen, sizeof totalLen);
-        s->SendPacket(get_buffer(oa), get_buffer_len(oa));
+    if (!_SendPacket(h, oa, &parent))
+        return false;
 
-        Request r;
-        r.xid = h.xid;
-        r.type = h.type;
-        r.path = parent;
-        pendingRequests_.emplace_back(std::move(r));
-    }
-
-    close_buffer_oarchive(&oa, 1);
     return rc >= 0;
 }
 
@@ -532,22 +497,31 @@ bool ZookeeperConn::_ExistsAndWatch(const std::string& sibling)
     int rc = serialize_RequestHeader(oa, "header", &h); 
     rc = rc < 0 ? rc : serialize_ExistsRequest(oa, "req", &req);
 
-    auto s = sock_.lock();
-    if (s)
-    {
-        int totalLen = htonl(get_buffer_len(oa));
-        s->SendPacket(&totalLen, sizeof totalLen);
-        s->SendPacket(get_buffer(oa), get_buffer_len(oa));
+    if (!_SendPacket(h, oa, &sibling))
+        return false;
 
-        Request r;
-        r.xid = h.xid;
-        r.type = h.type;
-        r.path = sibling;
-        pendingRequests_.emplace_back(std::move(r));
-    }
-
-    close_buffer_oarchive(&oa, 1);
     return rc >= 0;
+}
+
+bool ZookeeperConn::_SendPacket(const RequestHeader& h, struct oarchive* oa, const std::string* v)
+{
+    auto s = sock_.lock();
+    if (!s)
+        return false;
+        
+    int totalLen = htonl(get_buffer_len(oa));
+    s->SendPacket(&totalLen, sizeof totalLen);
+    s->SendPacket(get_buffer(oa), get_buffer_len(oa));
+
+    Request r;
+    r.xid = h.xid;
+    r.type = h.type;
+    if (v) r.path = *v;
+
+    pendingRequests_.emplace_back(std::move(r));
+   
+    close_buffer_oarchive(&oa, 1);
+    return true;
 }
 
 } // end namespace qedis

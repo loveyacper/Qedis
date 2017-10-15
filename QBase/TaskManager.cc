@@ -12,7 +12,7 @@ TaskManager::~TaskManager()
 }
     
      
-bool TaskManager::AddTask(PTCPSOCKET  task)    
+bool TaskManager::AddTask(PTCPSOCKET task)
 {   
     std::lock_guard<std::mutex> guard(lock_);
     newTasks_.push_back(task);
@@ -35,7 +35,8 @@ TaskManager::PTCPSOCKET TaskManager::FindTCP(unsigned int id) const
 
 bool TaskManager::_AddTask(PTCPSOCKET task)
 {   
-    bool succ = tcpSockets_.insert(std::map<int, PTCPSOCKET>::value_type(task->GetID(), task)).second;
+    //bool succ = tcpSockets_.insert(std::map<int, PTCPSOCKET>::value_type(task->GetID(), task)).second;
+    bool succ = tcpSockets_.insert({task->GetID(), task}).second;
     return succ;    
 }
 
@@ -70,6 +71,8 @@ bool TaskManager::DoMsgParse()
                     << task->GetPeerAddr().ToString()
                     << ", id = "
                     << task->GetID();
+
+                task->OnConnect();
             }
         }
     }
@@ -86,6 +89,8 @@ bool TaskManager::DoMsgParse()
                     << it->second->GetPeerAddr().ToString()
                     << ", id = "
                     << it->second->GetID();
+
+                it->second->OnDisconnect();
             }
             _RemoveTask(it);
         }

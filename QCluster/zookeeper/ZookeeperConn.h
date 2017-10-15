@@ -6,8 +6,10 @@
 #include "../QClusterInterface.h"
 
 struct prime_struct;
+struct RequestHeader;
 struct ReplyHeader;
 struct iarchive;
+struct oarchive;
 
 class Timer;
 
@@ -22,6 +24,7 @@ public:
 
     bool ParseMessage(const char*& data, size_t len) override;
     void OnConnect() override;
+    void OnDisconnect() override;
     void RunForMaster(int setid, const std::string& val) override;
 
 private:
@@ -31,6 +34,7 @@ private:
     bool _ExistsAndWatch(const std::string& sibling);
     void _InitPingTimer();
     bool _IsMaster() const;
+    bool _SendPacket(const RequestHeader& h, struct oarchive* oa, const std::string* = nullptr);
 
     int _GetXid() const;
     mutable int xid_;

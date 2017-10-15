@@ -63,7 +63,7 @@ struct SocketAddr
         memcpy(&addr_, &addr, sizeof(addr));
     }
 
-    void Init(uint32_t  netip, uint16_t netport)
+    void Init(uint32_t netip, uint16_t netport)
     {
         addr_.sin_family = AF_INET;       
         addr_.sin_addr.s_addr = netip;       
@@ -159,6 +159,7 @@ public:
     virtual bool OnWritable() { return false; }
     virtual bool OnError();
     virtual void OnConnect()  { }
+    virtual void OnDisconnect()  { }
 
     static int CreateTCPSocket();
     static int CreateUDPSocket();

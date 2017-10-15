@@ -27,7 +27,7 @@ public:
     void Clear()  { tcpSockets_.clear(); }
     PTCPSOCKET  FindTCP(unsigned int id) const;
     
-    size_t      TCPSize() const  {  return  tcpSockets_.size(); }
+    size_t TCPSize() const  {  return  tcpSockets_.size(); }
 
     bool DoMsgParse();
 

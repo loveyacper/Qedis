@@ -13,6 +13,7 @@ class QClusterClient: public StreamSocket
 {
 public:
     void OnConnect() override;
+    void OnDisconnect() override;
     bool Init(int fd, const SocketAddr& peer);
     
 private:
