@@ -30,11 +30,13 @@ public:
 private:
     bool _ProcessHandshake(const prime_struct& rsp);
     bool _ProcessResponse(const ReplyHeader& header, iarchive* ia);
+    bool _ProcessWatchEvent(const ReplyHeader& header, iarchive* ia);
     bool _GetSiblings(const std::string& parent);
     bool _ExistsAndWatch(const std::string& sibling);
     void _InitPingTimer();
     bool _IsMaster() const;
     bool _SendPacket(const RequestHeader& h, struct oarchive* oa, const std::string* = nullptr);
+    void _OnNodeDelete(const std::string& node);
 
     int _GetXid() const;
     mutable int xid_;
@@ -75,7 +77,7 @@ private:
     } sessionInfo_;
 #pragma pack()
 
-    static const std::string kSessionFile;
+    std::string sessionFile_;
     Timer* pingTimer_;
 };
 

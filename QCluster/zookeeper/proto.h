@@ -107,6 +107,28 @@ enum ZOO_ERRORS {
   ZSESSIONMOVED = -118 /*!<session moved to another server, so operation is ignored */ 
 };
 
+static const int WATCHER_EVENT_XID = -1;
+static const int PING_XID = -2;
+static const int AUTH_XID = -4;
+static const int SET_WATCHES_XID = -8;
+
+/* zookeeper event type constants */
+#define CREATED_EVENT_DEF 1
+#define DELETED_EVENT_DEF 2
+#define CHANGED_EVENT_DEF 3
+#define CHILD_EVENT_DEF 4
+#define SESSION_EVENT_DEF -1
+#define NOTWATCHING_EVENT_DEF -2
+
+
+/* zookeeper state constants */
+#define EXPIRED_SESSION_STATE_DEF -112
+#define AUTH_FAILED_STATE_DEF -113
+#define CONNECTING_STATE_DEF 1
+#define ASSOCIATING_STATE_DEF 2
+#define CONNECTED_STATE_DEF 3
+#define NOTCONNECTED_STATE_DEF 999
+
 
 #ifdef __cplusplus
 }

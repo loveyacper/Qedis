@@ -37,13 +37,10 @@ static int deserialize_prime_response(struct prime_struct* req, const char* buff
 }
           
 const int kTimeout = 15 * 1000; // ms
-const int PING_XID = -2;
 
 namespace qedis
 {
     
-const std::string ZookeeperConn::kSessionFile = "zk.session";
-
     
 ZookeeperConn::ZookeeperConn(const std::shared_ptr<StreamSocket>& c, int setId, const std::string& addr) :
     QClusterConn(c),
@@ -56,6 +53,7 @@ ZookeeperConn::ZookeeperConn(const std::shared_ptr<StreamSocket>& c, int setId, 
     lastPing_.tv_sec = 0;
     lastPing_.tv_usec = 0;
     sessionInfo_.passwd[0] = '\0';
+    sessionFile_ = "zk.session" + addr;
 }
 
 ZookeeperConn::~ZookeeperConn()
@@ -89,19 +87,16 @@ bool ZookeeperConn::ParseMessage(const char*& data, size_t len)
 
             int thisLen = *(int*)data;
             thisLen = ntohl(thisLen);
-            std::cout << "thisLen " << thisLen << ", recv Len " << len << std::endl;
             if (sizeof(thisLen) + thisLen > len)
                 return true;
 
-            struct ReplyHeader hdr; // xid zxid err
+            struct ReplyHeader hdr;
             struct iarchive *ia = create_buffer_iarchive(const_cast<char* >(data) + 4, thisLen); 
             deserialize_ReplyHeader(ia, "hdr", &hdr);
 
             // update zxid
             if (hdr.zxid > 0)
                 sessionInfo_.lastSeenZxid = hdr.zxid;
-            else
-                std::cout << "zxid " << hdr.zxid << std::endl;
 
             if (!_ProcessResponse(hdr, ia))
                 return false;
@@ -130,10 +125,10 @@ void ZookeeperConn::OnConnect()
     {
         auto del = [this](FILE* fp) {
             ::fclose(fp);
-            ::unlink(this->kSessionFile.c_str());
+            ::unlink(this->sessionFile_.c_str());
         };
 
-        std::unique_ptr<FILE, decltype(del)> _(fopen(kSessionFile.data(), "rb"), del);
+        std::unique_ptr<FILE, decltype(del)> _(fopen(sessionFile_.data(), "rb"), del);
         FILE* const fp = _.get();
 
         if (fp)
@@ -265,7 +260,7 @@ bool ZookeeperConn::_ProcessHandshake(const prime_struct& rsp)
     sessionInfo_.sessionId = rsp.sessionId;
     memcpy(sessionInfo_.passwd, rsp.passwd, rsp.passwd_len);
 
-    std::unique_ptr<FILE, decltype(fclose)*> _(fopen(kSessionFile.data(), "wb"), fclose);
+    std::unique_ptr<FILE, decltype(fclose)*> _(fopen(sessionFile_.data(), "wb"), fclose);
     FILE* fp = _.get();
     fwrite(&sessionInfo_, sizeof sessionInfo_, 1, fp);
 
@@ -306,8 +301,37 @@ bool ZookeeperConn::_IsMaster() const
     return me == siblings_.begin();
 }
 
+bool ZookeeperConn::_ProcessWatchEvent(const ReplyHeader& hdr, iarchive* ia)
+{
+    // TODO
+    struct WatcherEvent evt;
+    deserialize_WatcherEvent(ia, "event", &evt);
+
+    INF << "WatcherEvent type " << evt.type << ", state " << evt.state << ", path " << evt.path;
+
+    switch (evt.type)
+    {
+        case DELETED_EVENT_DEF:
+            _OnNodeDelete(evt.path);
+            break;
+
+        default:
+            break;
+    }
+
+    deallocate_WatcherEvent(&evt);
+    return true;
+}
+
 bool ZookeeperConn::_ProcessResponse(const ReplyHeader& hdr, iarchive* ia)
 {
+    if (hdr.xid == WATCHER_EVENT_XID)
+    {
+        return _ProcessWatchEvent(hdr, ia);
+    }
+
+    // TODO some other watcher events
+
     if (pendingRequests_.empty())
     {
         ERR << "Can not find request " << hdr.xid;
@@ -335,7 +359,7 @@ bool ZookeeperConn::_ProcessResponse(const ReplyHeader& hdr, iarchive* ia)
             gettimeofday(&now, nullptr);
             int microseconds = (now.tv_sec - lastPing_.tv_sec) * 1000000;
             microseconds += (now.tv_usec - lastPing_.tv_usec);
-            INF<< "recv ping used microseconds " << microseconds;
+            INF << "recv ping used microseconds " << microseconds;
         }
         break;
 
@@ -414,23 +438,7 @@ bool ZookeeperConn::_ProcessResponse(const ReplyHeader& hdr, iarchive* ia)
             {
                 // check if I am the master
                 //_ExistsAndWatch(MakeParentNode(setId_) + "/" + sibling->second);
-                const std::string siblingName = req.path.substr(req.path.find_last_of('/') + 1);
-                const int seq = GetNodeSeq(siblingName);
-                siblings_.erase(seq);
-                if (_IsMaster())
-                {
-                    if (onBecomeMaster_)
-                        onBecomeMaster_();
-                }
-                else
-                {
-                    auto me = siblings_.find(seq_);
-                    assert (me != siblings_.begin());
-                    assert (me != siblings_.end());
-
-                    auto brother = -- me; // I'll watch you
-                    _ExistsAndWatch(MakeParentNode(setId_) + "/" + brother->second);
-                }
+                _OnNodeDelete(req.path);
             }
             else
             {
@@ -522,6 +530,27 @@ bool ZookeeperConn::_SendPacket(const RequestHeader& h, struct oarchive* oa, con
    
     close_buffer_oarchive(&oa, 1);
     return true;
+}
+
+void ZookeeperConn::_OnNodeDelete(const std::string& node)
+{
+    const std::string siblingName = node.substr(node.find_last_of('/') + 1);
+    const int seq = GetNodeSeq(siblingName);
+    siblings_.erase(seq);
+    if (_IsMaster())
+    {
+        if (onBecomeMaster_)
+            onBecomeMaster_();
+    }
+    else
+    {
+        auto me = siblings_.find(seq_);
+        assert (me != siblings_.begin());
+        assert (me != siblings_.end());
+
+        auto brother = -- me; // I'll watch you
+        _ExistsAndWatch(MakeParentNode(setId_) + "/" + brother->second);
+    }
 }
 
 } // end namespace qedis

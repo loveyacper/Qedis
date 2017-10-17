@@ -26,6 +26,7 @@ public:
 public:
     virtual bool ParseMessage(const char*& data, size_t len) = 0;
     virtual void OnConnect() = 0;
+    virtual void OnDisconnect() = 0;
     virtual void RunForMaster(int setid, const std::string& val) = 0;
 
 protected:
