@@ -3,7 +3,6 @@
 
 #if QEDIS_CLUSTER
 
-//#include <memory>
 #include "StreamSocket.h"
 
 namespace qedis

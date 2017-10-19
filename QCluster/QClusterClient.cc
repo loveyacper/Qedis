@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include "QConfig.h"
-//#include "QReplication.h"
 #include "QCommand.h"
 #include "QClusterClient.h"
 

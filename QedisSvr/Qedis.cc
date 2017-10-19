@@ -12,6 +12,7 @@
 #include "Timer.h"
 
 #include "QClient.h"
+#include "QSlaveClient.h"
 #include "QStore.h"
 #include "QCommand.h"
 
@@ -125,17 +126,9 @@ std::shared_ptr<StreamSocket> Qedis::_OnNewConnection(int connfd)
     SocketAddr peer;
     Socket::GetPeerAddr(connfd, peer);
 
-    auto it = std::find(g_config.centers.begin(), g_config.centers.end(), peer);
-    if (it == g_config.centers.end())
-    {
-        auto cli(std::make_shared<QClient>());
-        if (!cli->Init(connfd, peer))
-            cli.reset();
-
-        return cli;
-    }
 #if QEDIS_CLUSTER
-    else
+    auto it = std::find(g_config.centers.begin(), g_config.centers.end(), peer);
+    if (it != g_config.centers.end())
     {
         DBG << "Connect success to cluster " << peer.ToString();
         auto conn = std::make_shared<QClusterClient>();
@@ -144,7 +137,33 @@ std::shared_ptr<StreamSocket> Qedis::_OnNewConnection(int connfd)
 
         return conn;
     }
+    else
 #endif
+    {
+        SocketAddr local;
+        Socket::GetLocalAddr(connfd, local);
+        
+        const bool peerIsMaster = (peer == QREPL.GetMasterAddr());
+        
+        if (peerIsMaster || local.GetPort() == g_config.port)
+        {
+            // incoming clients or connect to master
+            auto cli(std::make_shared<QClient>());
+            if (!cli->Init(connfd, peer))
+                cli.reset();
+
+            return cli;
+        }
+        else
+        {
+            INF << "Connect to slave " << peer.ToString();
+            auto cli(std::make_shared<QSlaveClient>());
+            if (!cli->Init(connfd, peer))
+                cli.reset();
+
+            return cli;
+        }
+    }
     
     return nullptr;
 }
@@ -292,7 +311,7 @@ bool Qedis::_Init()
 
     {
         auto repTimer = TimerManager::Instance().CreateTimer();
-        repTimer->Init(10 * 100);
+        repTimer->Init(1500);
         repTimer->SetCallback([&]() {
             QREPL.Cron();
         });

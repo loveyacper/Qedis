@@ -1,7 +1,7 @@
-#include <iostream>
 #include <unistd.h>
 #include "ZookeeperConn.h"
 #include "Log/Logger.h"
+#include "Server.h"
 #include "QCommon.h"
 
 #include "zookeeper.jute.h"
@@ -107,7 +107,6 @@ bool ZookeeperConn::ParseMessage(const char*& data, size_t len)
 
     default:
         assert (false);
-        data += len;
         break;
     }
 
@@ -116,11 +115,7 @@ bool ZookeeperConn::ParseMessage(const char*& data, size_t len)
 
 void ZookeeperConn::OnConnect()
 {
-    // But this is in net thread, I miss ananas!
     assert (state_ == State::kNone);
-
-    std::cout << __PRETTY_FUNCTION__ << std::endl;
-    DBG << __PRETTY_FUNCTION__;
 
     {
         auto del = [this](FILE* fp) {
@@ -172,11 +167,7 @@ void ZookeeperConn::OnDisconnect()
 }
 
 static struct ACL _OPEN_ACL_UNSAFE_ACL[] = {{0x1f, {"world", "anyone"}}};
-static struct ACL _READ_ACL_UNSAFE_ACL[] = {{0x01, {"world", "anyone"}}};
-static struct ACL _CREATOR_ALL_ACL_ACL[] = {{0x1f, {"auth", ""}}};
 struct ACL_vector ZOO_OPEN_ACL_UNSAFE = { 1, _OPEN_ACL_UNSAFE_ACL};
-struct ACL_vector ZOO_READ_ACL_UNSAFE = { 1, _READ_ACL_UNSAFE_ACL};
-struct ACL_vector ZOO_CREATOR_ALL_ACL = { 1, _CREATOR_ALL_ACL_ACL};
 
     
 static std::string MakeParentNode(int setid)
@@ -276,8 +267,6 @@ void ZookeeperConn::_InitPingTimer()
     pingTimer_ = TimerManager::Instance().CreateTimer();
     pingTimer_->Init(kTimeout / 2);
     pingTimer_->SetCallback([this]() {
-        INF << "send ping ";
-
         struct oarchive *oa = create_buffer_oarchive();
         struct RequestHeader h = { STRUCT_INITIALIZER(xid, PING_XID), STRUCT_INITIALIZER (type , ZOO_PING_OP) };
 
@@ -303,11 +292,12 @@ bool ZookeeperConn::_IsMaster() const
 
 bool ZookeeperConn::_ProcessWatchEvent(const ReplyHeader& hdr, iarchive* ia)
 {
-    // TODO
     struct WatcherEvent evt;
     deserialize_WatcherEvent(ia, "event", &evt);
 
-    INF << "WatcherEvent type " << evt.type << ", state " << evt.state << ", path " << evt.path;
+    INF << "WatcherEventType " << evt.type
+        << ", state " << evt.state
+        << ", path " << evt.path;
 
     switch (evt.type)
     {
@@ -330,7 +320,7 @@ bool ZookeeperConn::_ProcessResponse(const ReplyHeader& hdr, iarchive* ia)
         return _ProcessWatchEvent(hdr, ia);
     }
 
-    // TODO some other watcher events
+    // TODO process some other watcher events
 
     if (pendingRequests_.empty())
     {
@@ -350,7 +340,9 @@ bool ZookeeperConn::_ProcessResponse(const ReplyHeader& hdr, iarchive* ia)
         return false;
     }
 
-    std::cout << "req.type " << req.type << std::endl;
+    if (req.type != ZOO_PING_OP)
+        INF << "req.type " << req.type;
+
     switch (req.type)
     {
     case ZOO_PING_OP:
@@ -412,7 +404,7 @@ bool ZookeeperConn::_ProcessResponse(const ReplyHeader& hdr, iarchive* ia)
                 const std::string& node = rsp.children.data[i];
                 int seq = GetNodeSeq(node);
 
-                std::cout << "Get sibling " << node << std::endl;
+                INF << "Get sibling " << node;
                 siblings_.insert({seq, node});
             }
 
@@ -422,6 +414,14 @@ bool ZookeeperConn::_ProcessResponse(const ReplyHeader& hdr, iarchive* ia)
             {
                 if (onBecomeMaster_)
                     onBecomeMaster_();
+
+                auto slave = me;
+                for (++ slave; slave != siblings_.end(); ++ slave)
+                {
+                    // connect to slaves and send 'slave of me'
+                    SocketAddr addr(GetNodeAddr(slave->second));
+                    Server::Instance()->TCPConnect(addr);
+                }
             }
             else
             {
@@ -436,8 +436,6 @@ bool ZookeeperConn::_ProcessResponse(const ReplyHeader& hdr, iarchive* ia)
         {
             if (hdr.err == ZNONODE)
             {
-                // check if I am the master
-                //_ExistsAndWatch(MakeParentNode(setId_) + "/" + sibling->second);
                 _OnNodeDelete(req.path);
             }
             else
@@ -539,8 +537,8 @@ void ZookeeperConn::_OnNodeDelete(const std::string& node)
     siblings_.erase(seq);
     if (_IsMaster())
     {
-        if (onBecomeMaster_)
-            onBecomeMaster_();
+        // Though I'll be master, I must broadcast this fact to all children.
+        _GetSiblings(MakeParentNode(setId_));
     }
     else
     {
