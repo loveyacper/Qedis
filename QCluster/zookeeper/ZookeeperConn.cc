@@ -7,34 +7,27 @@
 #include "zookeeper.jute.h"
 #include "proto.h"
 
-// from zookeeper.c
-static int deserialize_prime_response(struct prime_struct* req, const char* buffer)
+static int deserialize_prime_response(struct prime_struct* req, AttachedBuffer& buffer)
 {
-    int offset = 0; 
-
-    memcpy(&req->len, buffer + offset, sizeof(req->len));
-    offset += sizeof(req->len); 
+    buffer >> req->len;
     req->len = ntohl(req->len); 
 
-    memcpy(&req->protocolVersion, buffer + offset, sizeof(req->protocolVersion)); 
-    offset += sizeof(req->protocolVersion);
+    buffer >> req->protocolVersion;
     req->protocolVersion = ntohl(req->protocolVersion); 
 
-    memcpy(&req->timeOut, buffer + offset, sizeof(req->timeOut)); 
-    offset += sizeof(req->timeOut);
+    buffer >> req->timeOut;
     req->timeOut = ntohl(req->timeOut);
 
-    memcpy(&req->sessionId, buffer + offset, sizeof(req->sessionId)); 
-    offset += sizeof(req->sessionId); 
+    buffer >> req->sessionId;
     req->sessionId = htonll(req->sessionId); 
 
-    memcpy(&req->passwd_len, buffer + offset, sizeof(req->passwd_len)); 
-    offset += sizeof(req->passwd_len); 
+    buffer >> req->passwd_len;
     req->passwd_len = ntohl(req->passwd_len); 
 
-    memcpy(req->passwd, buffer + offset, sizeof(req->passwd)); 
+    memcpy(req->passwd, buffer.ReadAddr(), sizeof(req->passwd)); 
     return 0;
 }
+          
           
 const int kTimeout = 15 * 1000; // ms
 
@@ -70,12 +63,11 @@ bool ZookeeperConn::ParseMessage(const char*& data, size_t len)
                 return true;
 
             struct prime_struct rsp;
-            deserialize_prime_response(&rsp, data);
+            AttachedBuffer buffer(const_cast<char* >(data), len);
+            deserialize_prime_response(&rsp, buffer);
             data += HANDSHAKE_RSP_SIZE;
         
-            if (_ProcessHandshake(rsp))
-                RunForMaster(setId_, addr_);
-            else
+            if (!_ProcessHandshake(rsp))
                 return false;
         }
         break;
@@ -246,7 +238,11 @@ bool ZookeeperConn::_ProcessHandshake(const prime_struct& rsp)
         return false;
     }
 
-    DBG << "new session Id " << rsp.sessionId;
+    const bool resumedSession = (sessionInfo_.sessionId == rsp.sessionId);
+    if (resumedSession)
+        DBG << "resume session Id " << rsp.sessionId;
+    else
+        DBG << "new session Id " << rsp.sessionId;
 
     sessionInfo_.sessionId = rsp.sessionId;
     memcpy(sessionInfo_.passwd, rsp.passwd, rsp.passwd_len);
@@ -258,6 +254,19 @@ bool ZookeeperConn::_ProcessHandshake(const prime_struct& rsp)
     state_ = State::kConnected;
 
     _InitPingTimer();
+                
+    if (resumedSession)
+    {
+        // My node must exists
+        if (!_GetSiblings(MakeParentNode(setId_)))
+            return false;
+    }
+    else
+    {
+        // Create my node
+        RunForMaster(setId_, addr_);
+    }
+
     return true;
 }
 
@@ -378,7 +387,10 @@ bool ZookeeperConn::_ProcessResponse(const ReplyHeader& hdr, iarchive* ia)
                 return false;
             }
 
-            DBG << "my node seq " << seq_ << " for my node " << node_ << ", addr " << GetNodeAddr(node_);
+            DBG << "my node seq " << seq_
+                << " for my node " << node_
+                << ", addr " << GetNodeAddr(node_);
+
             if (!_GetSiblings(MakeParentNode(setId_)))
                 return false;
         }
@@ -403,6 +415,28 @@ bool ZookeeperConn::_ProcessResponse(const ReplyHeader& hdr, iarchive* ia)
             {
                 const std::string& node = rsp.children.data[i];
                 int seq = GetNodeSeq(node);
+
+                if (node_.empty())
+                {
+                    std::string addr = GetNodeAddr(node);
+                    if (addr == addr_)
+                    {
+                        node_ = node;
+                        seq_ = seq;
+                        if (seq_ >= 0)
+                        {
+                            DBG << "Resumed session: my seq " << seq_
+                                << " for my node " << node_
+                                << ", addr " << GetNodeAddr(node_);
+                        }
+                        else
+                        {
+                            ERR << "Wrong node seq " << seq_ << " for node " << node_;
+                            return false;
+                        }
+                    }
+                }
+
 
                 INF << "Get sibling " << node;
                 siblings_.insert({seq, node});

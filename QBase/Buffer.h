@@ -447,9 +447,10 @@ public:
 typedef CircularBuffer<char* > AttachedBuffer;
 
 template <>
-inline AttachedBuffer::CircularBuffer(char* pBuf, std::size_t len) : maxSize_(RoundUp2Power(len + 1)),
-                                                             readPos_(0),
-                                                             writePos_(0)
+inline AttachedBuffer::CircularBuffer(char* pBuf, std::size_t len) :
+    maxSize_(RoundUp2Power(len + 1)),
+    readPos_(0),
+    writePos_(len)
 {
     buffer_ = pBuf;
     owned_  = false;
