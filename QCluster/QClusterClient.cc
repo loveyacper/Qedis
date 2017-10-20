@@ -1,3 +1,5 @@
+#if QEDIS_CLUSTER
+
 #include "Log/Logger.h"
 
 #include <algorithm>
@@ -65,4 +67,6 @@ void QClusterClient::OnDisconnect()
 }
 
 } // end namespace qedis
+
+#endif
 

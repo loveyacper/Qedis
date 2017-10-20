@@ -420,10 +420,7 @@ bool Qedis::_RunLogic()
     
     CheckChild();
     
-    if (!Server::_RunLogic())
-        std::this_thread::sleep_for(std::chrono::microseconds(100));
-
-    return  true;
+    return Server::_RunLogic();
 }
 
 

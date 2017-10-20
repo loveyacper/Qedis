@@ -1,3 +1,5 @@
+#if QEDIS_CLUSTER
+
 #include <unistd.h>
 #include "ZookeeperConn.h"
 #include "Log/Logger.h"
@@ -381,11 +383,7 @@ bool ZookeeperConn::_ProcessResponse(const ReplyHeader& hdr, iarchive* ia)
             assert (node_.empty());
             node_ = rsp.path;
             seq_ = GetNodeSeq(node_);
-            if (seq_ < 0)
-            {
-                ERR << "Wrong node seq " << seq_ << " for node " << node_;
-                return false;
-            }
+            assert (seq_ >= 0);
 
             DBG << "my node seq " << seq_
                 << " for my node " << node_
@@ -415,6 +413,7 @@ bool ZookeeperConn::_ProcessResponse(const ReplyHeader& hdr, iarchive* ia)
             {
                 const std::string& node = rsp.children.data[i];
                 int seq = GetNodeSeq(node);
+                assert (seq_ >= 0);
 
                 if (node_.empty())
                 {
@@ -423,17 +422,9 @@ bool ZookeeperConn::_ProcessResponse(const ReplyHeader& hdr, iarchive* ia)
                     {
                         node_ = node;
                         seq_ = seq;
-                        if (seq_ >= 0)
-                        {
-                            DBG << "Resumed session: my seq " << seq_
-                                << " for my node " << node_
-                                << ", addr " << GetNodeAddr(node_);
-                        }
-                        else
-                        {
-                            ERR << "Wrong node seq " << seq_ << " for node " << node_;
-                            return false;
-                        }
+                        DBG << "Resumed session: my seq " << seq_
+                            << " for my node " << node_
+                            << ", addr " << GetNodeAddr(node_);
                     }
                 }
 
@@ -587,3 +578,4 @@ void ZookeeperConn::_OnNodeDelete(const std::string& node)
 
 } // end namespace qedis
 
+#endif

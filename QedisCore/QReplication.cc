@@ -541,10 +541,7 @@ QError  slaveof(const std::vector<QString>& params, UnboundedBuffer* reply)
     }
     else
     {
-        long tmpPort = 0;
-        Strtol(params[2].c_str(), params[2].size(), &tmpPort);
-        unsigned short port = static_cast<unsigned short>(tmpPort);
-
+        unsigned short port = static_cast<unsigned short>(std::stoi(params[2]));
         SocketAddr reqMaster(params[1].c_str(), port);
 
         if (port > 0 && QREPL.GetMasterAddr() != reqMaster)

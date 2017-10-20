@@ -136,7 +136,8 @@ void Server::MainLoop(bool daemon)
                 reloadCfg_ = false;
             }
 
-            _RunLogic();
+            if (!_RunLogic())
+                std::this_thread::sleep_for(std::chrono::microseconds(100));
         }
     }
 

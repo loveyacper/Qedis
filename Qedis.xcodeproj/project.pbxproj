@@ -138,6 +138,22 @@
 		BA6C336D19EA77B200AC1800 /* QGlobRegex.h in Headers */ = {isa = PBXBuildFile; fileRef = BA6C336B19EA77B200AC1800 /* QGlobRegex.h */; };
 		BA6C336F19EA77C100AC1800 /* QGlobRegex_unittest.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA6C336E19EA77C100AC1800 /* QGlobRegex_unittest.cc */; };
 		BA6C337119EC0D9900AC1800 /* QPubsub.h in Headers */ = {isa = PBXBuildFile; fileRef = BA6C337019EC0D9900AC1800 /* QPubsub.h */; };
+		BA6E478E1F99056000EFBE6F /* QSlaveClient.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA6E478C1F99056000EFBE6F /* QSlaveClient.cc */; };
+		BA6E47951F9905E600EFBE6F /* QClusterClient.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA6E47921F9905E600EFBE6F /* QClusterClient.cc */; };
+		BA6E479E1F9905F500EFBE6F /* recordio.c in Sources */ = {isa = PBXBuildFile; fileRef = BA6E47971F9905F500EFBE6F /* recordio.c */; };
+		BA6E479F1F9905F500EFBE6F /* zookeeper.jute.c in Sources */ = {isa = PBXBuildFile; fileRef = BA6E479A1F9905F500EFBE6F /* zookeeper.jute.c */; };
+		BA6E47A01F9905F500EFBE6F /* ZookeeperConn.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA6E479C1F9905F500EFBE6F /* ZookeeperConn.cc */; };
+		BA6E47AD1F99068A00EFBE6F /* QClusterClient.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA6E47921F9905E600EFBE6F /* QClusterClient.cc */; };
+		BA6E47AE1F99068A00EFBE6F /* recordio.c in Sources */ = {isa = PBXBuildFile; fileRef = BA6E47971F9905F500EFBE6F /* recordio.c */; };
+		BA6E47AF1F99068A00EFBE6F /* zookeeper.jute.c in Sources */ = {isa = PBXBuildFile; fileRef = BA6E479A1F9905F500EFBE6F /* zookeeper.jute.c */; };
+		BA6E47B01F99068A00EFBE6F /* ZookeeperConn.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA6E479C1F9905F500EFBE6F /* ZookeeperConn.cc */; };
+		BA6E47B11F9906A400EFBE6F /* QClusterClient.h in Headers */ = {isa = PBXBuildFile; fileRef = BA6E47931F9905E600EFBE6F /* QClusterClient.h */; };
+		BA6E47B21F9906A400EFBE6F /* QClusterInterface.h in Headers */ = {isa = PBXBuildFile; fileRef = BA6E47941F9905E600EFBE6F /* QClusterInterface.h */; };
+		BA6E47B31F9906A400EFBE6F /* proto.h in Headers */ = {isa = PBXBuildFile; fileRef = BA6E47961F9905F500EFBE6F /* proto.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		BA6E47B41F9906A400EFBE6F /* recordio.h in Headers */ = {isa = PBXBuildFile; fileRef = BA6E47981F9905F500EFBE6F /* recordio.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		BA6E47B51F9906A400EFBE6F /* zookeeper_version.h in Headers */ = {isa = PBXBuildFile; fileRef = BA6E47991F9905F500EFBE6F /* zookeeper_version.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		BA6E47B61F9906A400EFBE6F /* zookeeper.jute.h in Headers */ = {isa = PBXBuildFile; fileRef = BA6E479B1F9905F500EFBE6F /* zookeeper.jute.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		BA6E47B71F9906A400EFBE6F /* ZookeeperConn.h in Headers */ = {isa = PBXBuildFile; fileRef = BA6E479D1F9905F500EFBE6F /* ZookeeperConn.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		BA98F83D1B01B16600ABCBD9 /* QConfig.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA98F83B1B01B16600ABCBD9 /* QConfig.cc */; };
 		BA98F83E1B01B16600ABCBD9 /* QConfig.h in Headers */ = {isa = PBXBuildFile; fileRef = BA98F83C1B01B16600ABCBD9 /* QConfig.h */; };
 		BA98F8411B1B539600ABCBD9 /* QSlowLog.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA98F83F1B1B539600ABCBD9 /* QSlowLog.cc */; };
@@ -227,6 +243,20 @@
 			remoteInfo = leveldb;
 		};
 		BA4CD22E1CEB55B400F68F67 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BABEBECD19C4474900010636 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BAD0C5D819E79FF7005B3784;
+			remoteInfo = qedislib;
+		};
+		BA6E47A91F99066700EFBE6F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BABEBECD19C4474900010636 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = BAFC83FD19C44AE800C18B22;
+			remoteInfo = qbaselib;
+		};
+		BA6E47AB1F99066700EFBE6F /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = BABEBECD19C4474900010636 /* Project object */;
 			proxyType = 1;
@@ -424,6 +454,21 @@
 		BA6C336B19EA77B200AC1800 /* QGlobRegex.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QGlobRegex.h; path = QedisCore/QGlobRegex.h; sourceTree = SOURCE_ROOT; };
 		BA6C336E19EA77C100AC1800 /* QGlobRegex_unittest.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = QGlobRegex_unittest.cc; sourceTree = "<group>"; };
 		BA6C337019EC0D9900AC1800 /* QPubsub.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = QPubsub.h; path = QedisCore/QPubsub.h; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
+		BA6E478C1F99056000EFBE6F /* QSlaveClient.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QSlaveClient.cc; path = QedisCore/QSlaveClient.cc; sourceTree = SOURCE_ROOT; };
+		BA6E478D1F99056000EFBE6F /* QSlaveClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QSlaveClient.h; path = QedisCore/QSlaveClient.h; sourceTree = SOURCE_ROOT; };
+		BA6E47911F9905E600EFBE6F /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = CMakeLists.txt; path = QCluster/CMakeLists.txt; sourceTree = "<group>"; };
+		BA6E47921F9905E600EFBE6F /* QClusterClient.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QClusterClient.cc; path = QCluster/QClusterClient.cc; sourceTree = "<group>"; };
+		BA6E47931F9905E600EFBE6F /* QClusterClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QClusterClient.h; path = QCluster/QClusterClient.h; sourceTree = "<group>"; };
+		BA6E47941F9905E600EFBE6F /* QClusterInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QClusterInterface.h; path = QCluster/QClusterInterface.h; sourceTree = "<group>"; };
+		BA6E47961F9905F500EFBE6F /* proto.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = proto.h; path = QCluster/zookeeper/proto.h; sourceTree = "<group>"; };
+		BA6E47971F9905F500EFBE6F /* recordio.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = recordio.c; path = QCluster/zookeeper/recordio.c; sourceTree = "<group>"; };
+		BA6E47981F9905F500EFBE6F /* recordio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = recordio.h; path = QCluster/zookeeper/recordio.h; sourceTree = "<group>"; };
+		BA6E47991F9905F500EFBE6F /* zookeeper_version.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = zookeeper_version.h; path = QCluster/zookeeper/zookeeper_version.h; sourceTree = "<group>"; };
+		BA6E479A1F9905F500EFBE6F /* zookeeper.jute.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = zookeeper.jute.c; path = QCluster/zookeeper/zookeeper.jute.c; sourceTree = "<group>"; };
+		BA6E479B1F9905F500EFBE6F /* zookeeper.jute.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = zookeeper.jute.h; path = QCluster/zookeeper/zookeeper.jute.h; sourceTree = "<group>"; };
+		BA6E479C1F9905F500EFBE6F /* ZookeeperConn.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ZookeeperConn.cc; path = QCluster/zookeeper/ZookeeperConn.cc; sourceTree = "<group>"; };
+		BA6E479D1F9905F500EFBE6F /* ZookeeperConn.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ZookeeperConn.h; path = QCluster/zookeeper/ZookeeperConn.h; sourceTree = "<group>"; };
+		BA6E47A51F99064D00EFBE6F /* libqcluster.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libqcluster.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		BA98F83B1B01B16600ABCBD9 /* QConfig.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QConfig.cc; path = QedisCore/QConfig.cc; sourceTree = SOURCE_ROOT; };
 		BA98F83C1B01B16600ABCBD9 /* QConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QConfig.h; path = QedisCore/QConfig.h; sourceTree = SOURCE_ROOT; };
 		BA98F83F1B1B539600ABCBD9 /* QSlowLog.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QSlowLog.cc; path = QedisCore/QSlowLog.cc; sourceTree = SOURCE_ROOT; };
@@ -518,6 +563,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		BA4CD2161CEB54F000F68F67 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		BA6E47A21F99064D00EFBE6F /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -750,6 +802,33 @@
 			name = Modules;
 			sourceTree = "<group>";
 		};
+		BA6E478F1F9905C800EFBE6F /* QCluster */ = {
+			isa = PBXGroup;
+			children = (
+				BA6E47911F9905E600EFBE6F /* CMakeLists.txt */,
+				BA6E47921F9905E600EFBE6F /* QClusterClient.cc */,
+				BA6E47931F9905E600EFBE6F /* QClusterClient.h */,
+				BA6E47941F9905E600EFBE6F /* QClusterInterface.h */,
+				BA6E47901F9905D400EFBE6F /* zookeeper */,
+			);
+			name = QCluster;
+			sourceTree = "<group>";
+		};
+		BA6E47901F9905D400EFBE6F /* zookeeper */ = {
+			isa = PBXGroup;
+			children = (
+				BA6E47961F9905F500EFBE6F /* proto.h */,
+				BA6E47971F9905F500EFBE6F /* recordio.c */,
+				BA6E47981F9905F500EFBE6F /* recordio.h */,
+				BA6E47991F9905F500EFBE6F /* zookeeper_version.h */,
+				BA6E479A1F9905F500EFBE6F /* zookeeper.jute.c */,
+				BA6E479B1F9905F500EFBE6F /* zookeeper.jute.h */,
+				BA6E479C1F9905F500EFBE6F /* ZookeeperConn.cc */,
+				BA6E479D1F9905F500EFBE6F /* ZookeeperConn.h */,
+			);
+			name = zookeeper;
+			sourceTree = "<group>";
+		};
 		BAA158B219C44A0F007713F9 /* QBase */ = {
 			isa = PBXGroup;
 			children = (
@@ -802,6 +881,7 @@
 				BAD0C61819E7A059005B3784 /* QedisSvr */,
 				BAA158B219C44A0F007713F9 /* QBase */,
 				BABEBED719C4474900010636 /* QedisCore */,
+				BA6E478F1F9905C800EFBE6F /* QCluster */,
 				BA4CD2141CEB54BC00F68F67 /* Modules */,
 				BADC7D7219D6BC700036858E /* UnitTest */,
 				BABEBED619C4474900010636 /* Products */,
@@ -817,6 +897,7 @@
 				BAD0C5D919E79FF7005B3784 /* libqedislib.dylib */,
 				BA4CD2191CEB54F000F68F67 /* libqedismodule.dylib */,
 				BA34F6031D5C151700F1DE01 /* libleveldb.dylib */,
+				BA6E47A51F99064D00EFBE6F /* libqcluster.dylib */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -824,6 +905,8 @@
 		BABEBED719C4474900010636 /* QedisCore */ = {
 			isa = PBXGroup;
 			children = (
+				BA6E478C1F99056000EFBE6F /* QSlaveClient.cc */,
+				BA6E478D1F99056000EFBE6F /* QSlaveClient.h */,
 				BA34F9F51D5C25E400F1DE01 /* QDumpInterface.h */,
 				BA34F9F61D5C25E400F1DE01 /* QLeveldb.cc */,
 				BA34F9F71D5C25E400F1DE01 /* QLeveldb.h */,
@@ -1009,6 +1092,20 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BA6E47A31F99064D00EFBE6F /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BA6E47B31F9906A400EFBE6F /* proto.h in Headers */,
+				BA6E47B41F9906A400EFBE6F /* recordio.h in Headers */,
+				BA6E47B51F9906A400EFBE6F /* zookeeper_version.h in Headers */,
+				BA6E47B61F9906A400EFBE6F /* zookeeper.jute.h in Headers */,
+				BA6E47B71F9906A400EFBE6F /* ZookeeperConn.h in Headers */,
+				BA6E47B11F9906A400EFBE6F /* QClusterClient.h in Headers */,
+				BA6E47B21F9906A400EFBE6F /* QClusterInterface.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		BAD0C5D719E79FF7005B3784 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
@@ -1107,6 +1204,25 @@
 			productReference = BA4CD2191CEB54F000F68F67 /* libqedismodule.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
 		};
+		BA6E47A41F99064D00EFBE6F /* qcluster */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BA6E47A61F99064D00EFBE6F /* Build configuration list for PBXNativeTarget "qcluster" */;
+			buildPhases = (
+				BA6E47A11F99064D00EFBE6F /* Sources */,
+				BA6E47A21F99064D00EFBE6F /* Frameworks */,
+				BA6E47A31F99064D00EFBE6F /* Headers */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				BA6E47AA1F99066700EFBE6F /* PBXTargetDependency */,
+				BA6E47AC1F99066700EFBE6F /* PBXTargetDependency */,
+			);
+			name = qcluster;
+			productName = qcluster;
+			productReference = BA6E47A51F99064D00EFBE6F /* libqcluster.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
 		BABEBED419C4474900010636 /* Qedis */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = BABEBEDE19C4474900010636 /* Build configuration list for PBXNativeTarget "Qedis" */;
@@ -1197,6 +1313,10 @@
 					BA4CD2181CEB54F000F68F67 = {
 						CreatedOnToolsVersion = 6.1.1;
 					};
+					BA6E47A41F99064D00EFBE6F = {
+						CreatedOnToolsVersion = 8.3.3;
+						ProvisioningStyle = Automatic;
+					};
 				};
 			};
 			buildConfigurationList = BABEBED019C4474900010636 /* Build configuration list for PBXProject "Qedis" */;
@@ -1217,6 +1337,7 @@
 				BAD0C5D819E79FF7005B3784 /* qedislib */,
 				BA4CD2181CEB54F000F68F67 /* qedismodule */,
 				BA34F6021D5C151700F1DE01 /* leveldb */,
+				BA6E47A41F99064D00EFBE6F /* qcluster */,
 			);
 		};
 /* End PBXProject section */
@@ -1299,10 +1420,26 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BA6E47A11F99064D00EFBE6F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BA6E47AD1F99068A00EFBE6F /* QClusterClient.cc in Sources */,
+				BA6E47AE1F99068A00EFBE6F /* recordio.c in Sources */,
+				BA6E47AF1F99068A00EFBE6F /* zookeeper.jute.c in Sources */,
+				BA6E47B01F99068A00EFBE6F /* ZookeeperConn.cc in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		BABEBED119C4474900010636 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BA6E47A01F9905F500EFBE6F /* ZookeeperConn.cc in Sources */,
+				BA6E479F1F9905F500EFBE6F /* zookeeper.jute.c in Sources */,
+				BA6E478E1F99056000EFBE6F /* QSlaveClient.cc in Sources */,
+				BA6E47951F9905E600EFBE6F /* QClusterClient.cc in Sources */,
+				BA6E479E1F9905F500EFBE6F /* recordio.c in Sources */,
 				BAD0C61A19E7A075005B3784 /* Qedis.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1391,6 +1528,16 @@
 			isa = PBXTargetDependency;
 			target = BAD0C5D819E79FF7005B3784 /* qedislib */;
 			targetProxy = BA4CD22E1CEB55B400F68F67 /* PBXContainerItemProxy */;
+		};
+		BA6E47AA1F99066700EFBE6F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BAFC83FD19C44AE800C18B22 /* qbaselib */;
+			targetProxy = BA6E47A91F99066700EFBE6F /* PBXContainerItemProxy */;
+		};
+		BA6E47AC1F99066700EFBE6F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = BAD0C5D819E79FF7005B3784 /* qedislib */;
+			targetProxy = BA6E47AB1F99066700EFBE6F /* PBXContainerItemProxy */;
 		};
 		BAD0C5DE19E7A002005B3784 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -1501,6 +1648,55 @@
 				EXECUTABLE_PREFIX = lib;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+		BA6E47A71F99064D00EFBE6F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CODE_SIGN_IDENTITY = "-";
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				EXECUTABLE_PREFIX = lib;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		BA6E47A81F99064D00EFBE6F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				EXECUTABLE_PREFIX = lib;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -1722,6 +1918,14 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		BA6E47A61F99064D00EFBE6F /* Build configuration list for PBXNativeTarget "qcluster" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BA6E47A71F99064D00EFBE6F /* Debug */,
+				BA6E47A81F99064D00EFBE6F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
 		};
 		BABEBED019C4474900010636 /* Build configuration list for PBXProject "Qedis" */ = {
 			isa = XCConfigurationList;

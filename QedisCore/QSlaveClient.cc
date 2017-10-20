@@ -24,7 +24,7 @@ void QSlaveClient::OnConnect()
     
 PacketLength QSlaveClient::_HandlePacket(const char* msg, std::size_t len)
 {
-    return len;
+    return static_cast<PacketLength>(len);
 }
 
 }
