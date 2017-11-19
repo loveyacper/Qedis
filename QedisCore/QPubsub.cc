@@ -7,9 +7,9 @@
 namespace qedis
 {
 
-QPubsub&    QPubsub::Instance()
+QPubsub& QPubsub::Instance()
 {
-    static QPubsub  ps;
+    static QPubsub ps;
     return ps;
 }
     
@@ -23,7 +23,8 @@ size_t QPubsub::Subscribe(QClient* client, const QString& channel)
 
         assert (it != channels_.end());
 
-        bool succ = it->second.insert(std::static_pointer_cast<QClient>(client->shared_from_this())).second;
+        auto c = std::static_pointer_cast<QClient>(client->shared_from_this());
+        bool succ = it->second.insert(std::move(c)).second;
         assert (succ);
         return 1;
     }
@@ -41,7 +42,8 @@ std::size_t QPubsub::UnSubscribe(QClient* client, const QString& channel)
 
         Clients& clientSet = it->second;
 
-        std::size_t n = clientSet.erase(std::static_pointer_cast<QClient>(client->shared_from_this()));
+        auto c = std::static_pointer_cast<QClient>(client->shared_from_this());
+        std::size_t n = clientSet.erase(c);
         assert (n == 1);
 
         if (clientSet.empty())
@@ -73,11 +75,12 @@ size_t QPubsub::PSubscribe(QClient* client, const QString& channel)
     {
         auto it(patternChannels_.find(channel));
         if (it == patternChannels_.end())
-            it = patternChannels_.insert(ChannelClients::value_type(channel, Clients())).first;
+            it = patternChannels_.insert({channel, Clients()}).first;
 
         assert (it != patternChannels_.end());
 
-        bool succ = it->second.insert(std::static_pointer_cast<QClient>(client->shared_from_this())).second;
+        auto c = std::static_pointer_cast<QClient>(client->shared_from_this());
+        bool succ = it->second.insert(c).second;
         assert (succ);
         return 1;
     }
@@ -90,12 +93,13 @@ std::size_t QPubsub::PUnSubscribe(QClient* client, const QString& channel)
 {
     if (client && client->PUnSubscribe(channel))
     {
-        auto  it(patternChannels_.find(channel));
+        auto it(patternChannels_.find(channel));
         assert (it != patternChannels_.end());
 
         Clients& clientSet = it->second;
 
-        std::size_t n = clientSet.erase(std::static_pointer_cast<QClient>(client->shared_from_this()));
+        auto c = std::static_pointer_cast<QClient>(client->shared_from_this());
+        std::size_t n = clientSet.erase(c);
         assert (n == 1);
 
         if (clientSet.empty())
@@ -120,7 +124,37 @@ std::size_t QPubsub::PUnSubscribeAll(QClient* client)
 
     return n;
 }
-
+    
+size_t QPubsub::_Publish(QPubsub::Clients& clients, const std::vector<QString>& args)
+{
+    size_t n = 0;
+    for (auto itCli(clients.begin()); itCli != clients.end(); )
+    {
+        auto cli = itCli->lock();
+        if (!cli)
+        {
+            itCli = clients.erase(itCli);
+        }
+        else
+        {
+            SocketAddr peer;
+            Socket::GetPeerAddr(cli->GetSocket(), peer);
+            INF << "Publish msg:" << args.back() << " to " << peer.ToString();
+            
+            UnboundedBuffer reply;
+            PreFormatMultiBulk(args.size(), &reply);
+            for (const auto& arg : args)
+            {
+                FormatBulk(arg, &reply);
+            }
+            cli->SendPacket(reply);
+            ++ itCli;
+            ++ n;
+        }
+    }
+    
+    return n;
+}
 
 std::size_t QPubsub::PublishMsg(const QString& channel, const QString& msg)
 {
@@ -129,69 +163,15 @@ std::size_t QPubsub::PublishMsg(const QString& channel, const QString& msg)
     auto it(channels_.find(channel));
     if (it != channels_.end())
     {
-        Clients&  clientSet = it->second;
-        for (auto  itCli(clientSet.begin());
-                   itCli != clientSet.end();
-            )
-        {
-            auto cli = itCli->lock();
-            if (!cli)
-            {
-                clientSet.erase(itCli ++);
-            }
-            else
-            {
-                SocketAddr peer;
-                Socket::GetPeerAddr(cli->GetSocket(), peer);
-                INF << "Publish msg:" << msg.c_str() << " to " << peer.GetIP() << ":" << peer.GetPort();
-
-                UnboundedBuffer   reply;
-                PreFormatMultiBulk(3, &reply);
-                FormatBulk("message", 7, &reply);
-                FormatBulk(channel, &reply);
-                FormatBulk(msg, &reply);
-                cli->SendPacket(reply);
-
-                ++ itCli;
-                ++ n;
-            }
-        }
+        n += _Publish(it->second, {"message", channel, msg});
     }
 
-    // TODO fuck me
     for (auto& pattern : patternChannels_)
     {
         if (glob_match(pattern.first, channel))
         {
-            INF << channel.c_str() << " match " << pattern.first.c_str();
-            Clients&  clientSet = pattern.second;
-            for (auto itCli(clientSet.begin());
-                      itCli != clientSet.end();
-                )
-            {
-                auto cli = itCli->lock();
-                if (!cli)
-                {
-                    clientSet.erase(itCli ++);
-                }
-                else
-                {
-                    SocketAddr peer;
-                    Socket::GetPeerAddr(cli->GetSocket(), peer);
-                    INF << "Publish msg:" << msg.c_str() << " to " << peer.GetIP() << ":" << peer.GetPort();
-
-                    UnboundedBuffer   reply;
-                    PreFormatMultiBulk(4, &reply);
-                    FormatBulk("pmessage", 8, &reply);
-                    FormatBulk(pattern.first, &reply);
-                    FormatBulk(channel, &reply);
-                    FormatBulk(msg, &reply);
-                    cli->SendPacket(reply);
-
-                    ++ itCli;
-                    ++ n;
-                }
-            }
+            n += _Publish(pattern.second, {"pmessage", pattern.first, channel, msg});
+            INF << channel << " match " << pattern.first;
         }
     }
 
@@ -210,18 +190,17 @@ void QPubsub::_RecycleClients(ChannelClients& channels, QString& start)
     if (it == channels.end())
         it = channels.begin();
 
-    size_t  n = 0;
-    while (it != channels.end() && n < 20)
+    const size_t kEraseMax = 10;
+    size_t n = 0;
+    while (it != channels.end() && n < kEraseMax)
     {
         Clients& cls = it->second;
-        for (auto itCli(cls.begin());
-                  itCli != cls.end();
-            )
+        for (auto itCli(cls.begin()); itCli != cls.end(); )
         {
             if (itCli->expired())
             {
-                INF << "erase client";
-                cls.erase(itCli ++);
+                INF << "_RecycleClient on channel " << it->first;
+                itCli = cls.erase(itCli);
                 ++ n;
             }
             else
@@ -232,8 +211,8 @@ void QPubsub::_RecycleClients(ChannelClients& channels, QString& start)
         
         if (cls.empty())
         {
-            INF << "erase channel " << it->first.c_str();
-            channels.erase(it ++);
+            INF << "erase channel " << it->first;
+            it = channels.erase(it);
         }
         else
         {
@@ -250,7 +229,7 @@ void QPubsub::_RecycleClients(ChannelClients& channels, QString& start)
 void QPubsub::InitPubsubTimer()
 {
     auto timer = TimerManager::Instance().CreateTimer();
-    timer->Init(100);
+    timer->Init(200);
     timer->SetCallback([&] (std::string& channel, std::string& pattern) {
             QPubsub::Instance().RecycleClients(channel, pattern);
         },
@@ -313,7 +292,7 @@ QError  subscribe(const std::vector<QString>& params, UnboundedBuffer* reply)
 
             SocketAddr peer;
             Socket::GetPeerAddr(client->GetSocket(), peer);
-            INF << "subscribe " << pa.c_str() << " by " << peer.GetIP() << ":" << peer.GetPort();
+            INF << "subscribe " << pa << " by " << peer.ToString();
         }
     }
 
@@ -336,7 +315,7 @@ QError  psubscribe(const std::vector<QString>& params, UnboundedBuffer* reply)
 
             SocketAddr peer;
             Socket::GetPeerAddr(client->GetSocket(), peer);
-            INF << "psubscribe " << pa.c_str() << " by " << peer.GetIP() << ":" << peer.GetPort();
+            INF << "psubscribe " << pa << " by " << peer.ToString();
         }
     }
 
@@ -371,7 +350,7 @@ QError  unsubscribe(const std::vector<QString>& params, UnboundedBuffer* reply)
 
                 SocketAddr peer;
                 Socket::GetPeerAddr(client->GetSocket(), peer);
-                INF << "unsubscribe " << params[i].c_str() << " by " << peer.GetIP() << ":" << peer.GetPort();
+                INF << "unsubscribe " << params[i] << " by " << peer.ToString();
             }
         }
 
@@ -412,7 +391,7 @@ QError  punsubscribe(const std::vector<QString>& params, UnboundedBuffer* reply)
 
                 SocketAddr peer;
                 Socket::GetPeerAddr(client->GetSocket(), peer);
-                INF << "punsubscribe " << params[i].c_str() << " by " << peer.GetIP() << ":" << peer.GetPort();
+                INF << "punsubscribe " << params[i] << " by " << peer.ToString();
             }
         }
 

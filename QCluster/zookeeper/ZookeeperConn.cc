@@ -67,7 +67,7 @@ bool ZookeeperConn::ParseMessage(const char*& data, size_t len)
             struct prime_struct rsp;
             AttachedBuffer buffer(const_cast<char* >(data), len);
             deserialize_prime_response(&rsp, buffer);
-            data += HANDSHAKE_RSP_SIZE;
+            data += sizeof(int) + rsp.len;
         
             if (!_ProcessHandshake(rsp))
                 return false;
@@ -362,7 +362,8 @@ bool ZookeeperConn::_ProcessResponse(const ReplyHeader& hdr, iarchive* ia)
             gettimeofday(&now, nullptr);
             int microseconds = (now.tv_sec - lastPing_.tv_sec) * 1000000;
             microseconds += (now.tv_usec - lastPing_.tv_usec);
-            INF << "recv ping used microseconds " << microseconds;
+            if (microseconds > 10 * 1000)
+                WRN << "recv ping used microseconds " << microseconds;
         }
         break;
 

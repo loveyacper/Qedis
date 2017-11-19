@@ -48,6 +48,8 @@ private:
     QString  startChannel_;
     QString  startPattern_;
     static void _RecycleClients(ChannelClients& channels, QString& start);
+    
+    size_t _Publish(QPubsub::Clients& clients, const std::vector<QString>& args);
 };
     
 }

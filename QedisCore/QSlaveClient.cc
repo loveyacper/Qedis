@@ -13,11 +13,15 @@ void QSlaveClient::OnConnect()
 
     SendPacket(cmd.data(), cmd.size());
     
+    auto wk = std::weak_ptr<QSlaveClient>(std::static_pointer_cast<QSlaveClient>(this->shared_from_this()));
     Timer* timer = TimerManager::Instance().CreateTimer();
     timer->Init(3 * 1000, 1);
-    timer->SetCallback([this]() {
-        USR << "OnTimer close " << this->GetPeerAddr().ToString();
-        this->OnError();
+    timer->SetCallback([wk]() {
+        auto me = wk.lock();
+        if (me) {
+            USR << "OnTimer close " << me->GetPeerAddr().ToString();
+            me->OnError();
+        }
     });
     TimerManager::Instance().AsyncAddTimer(timer);
 }

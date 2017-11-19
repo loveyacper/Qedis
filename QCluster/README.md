@@ -29,7 +29,7 @@
 
  一组Qedis进程形成一个set，set内最多只有一个master，其它都是slave，且没有级联复制结构。
 
- 通过配置文件中setid来配置set，相同setid的Qedis进程将形成同一个set。
+ 通过配置文件中setid来配置set，相同setid的Qedis进程将形成一个set。
 
  通过设置配置文件中cluster开关，Qedis在启动时，将尝试向Zookeeper的/servers/set-{id}/下创建自己的临时顺序节点。
 
@@ -41,4 +41,4 @@
 
  当我收到监视的节点被删除的通知，则判断自己是否是master（因为启动时已经获得孩子列表了）。
 
- 是或不是，都继续重复上叙过的逻辑。
+ 是或不是，都继续重复上述过的逻辑。

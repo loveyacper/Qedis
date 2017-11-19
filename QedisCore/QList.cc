@@ -194,7 +194,7 @@ static QError  _GenericBlockedPop(vector<QString>::const_iterator keyBegin,
                 
                 if (target)
                 {
-                    // fuck, the target process
+                    // the target process
                 }
 
                 {
