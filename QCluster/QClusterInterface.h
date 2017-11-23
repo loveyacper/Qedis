@@ -3,18 +3,12 @@
 
 #if QEDIS_CLUSTER
 
-#include "StreamSocket.h"
-
 namespace qedis
 {
 
 class QClusterConn
 { 
 public:
-    QClusterConn(const std::shared_ptr<StreamSocket>& c) : sock_(c)
-    {
-    }
-
     virtual ~QClusterConn()
     {
     }
@@ -26,10 +20,8 @@ public:
     virtual bool ParseMessage(const char*& data, size_t len) = 0;
     virtual void OnConnect() = 0;
     virtual void OnDisconnect() = 0;
-    virtual void RunForMaster(int setid, const std::string& val) = 0;
 
 protected:
-    std::weak_ptr<StreamSocket> sock_;
     std::function<void ()> onBecomeMaster_;
     std::function<void (const std::string& )> onBecomeSlave_;
 

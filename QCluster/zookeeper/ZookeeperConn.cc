@@ -38,7 +38,7 @@ namespace qedis
     
     
 ZookeeperConn::ZookeeperConn(const std::shared_ptr<StreamSocket>& c, int setId, const std::string& addr) :
-    QClusterConn(c),
+    sock_(c),
     xid_(0),
     setId_(setId),
     addr_(addr),
@@ -204,7 +204,7 @@ static std::string GetNodeAddr(const std::string& path)
     return path.substr(start + 1, end - start - 1);
 }
 
-void ZookeeperConn::RunForMaster(int setid, const std::string& value)
+void ZookeeperConn::_RunForMaster(int setid, const std::string& value)
 {
     INF << __FUNCTION__ << ", setid " << setid << ", value " << value;
 
@@ -266,7 +266,7 @@ bool ZookeeperConn::_ProcessHandshake(const prime_struct& rsp)
     else
     {
         // Create my node
-        RunForMaster(setId_, addr_);
+        _RunForMaster(setId_, addr_);
     }
 
     return true;

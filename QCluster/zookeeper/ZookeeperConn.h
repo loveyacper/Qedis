@@ -3,6 +3,7 @@
 
 #include <list>
 #include <map>
+#include "StreamSocket.h"
 #include "../QClusterInterface.h"
 
 struct prime_struct;
@@ -25,9 +26,9 @@ public:
     bool ParseMessage(const char*& data, size_t len) override;
     void OnConnect() override;
     void OnDisconnect() override;
-    void RunForMaster(int setid, const std::string& val) override;
 
 private:
+    void _RunForMaster(int setid, const std::string& val);
     bool _ProcessHandshake(const prime_struct& rsp);
     bool _ProcessResponse(const ReplyHeader& header, iarchive* ia);
     bool _ProcessWatchEvent(const ReplyHeader& header, iarchive* ia);
@@ -79,6 +80,7 @@ private:
 
     std::string sessionFile_;
     Timer* pingTimer_;
+    std::weak_ptr<StreamSocket> sock_;
 };
 
 } // end namespace qedis
