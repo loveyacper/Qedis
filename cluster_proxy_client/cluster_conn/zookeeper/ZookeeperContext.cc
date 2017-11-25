@@ -64,7 +64,7 @@ static void serialize_prime_connect(struct connect_req *req, char* buffer)
 }
 
 
-const int kTimeout = 15 * 1000; // ms
+const int kTimeout = 10 * 1000; // ms
 
 namespace qedis
 {
@@ -143,7 +143,7 @@ bool ZookeeperContext::_ProcessResponse(const ReplyHeader& hdr, iarchive* ia)
     if (hdr.err != 0)
     {
         std::cout << "TODO hdr.err " << hdr.err << std::endl;
-        return false;
+        //return false;
     }
 
     if (hdr.xid == WATCHER_EVENT_XID)
@@ -162,6 +162,9 @@ bool ZookeeperContext::_ProcessResponse(const ReplyHeader& hdr, iarchive* ia)
     auto& req = pendingReq_.front();
     ANANAS_DEFER
     {
+        if (hdr.err)
+            std::cout << "Error " << hdr.err << " with " << req.path << std::endl;
+
         pendingReq_.pop();
     };
 
@@ -209,7 +212,7 @@ bool ZookeeperContext::_ProcessResponse(const ReplyHeader& hdr, iarchive* ia)
         {
             ZkResponse rsp;
             auto& grsp = rsp.child2Rsp;
-            if (deserialize_GetChildren2Response(ia, "rsp", &grsp) != 0)
+            if (deserialize_GetChildren2Response(ia, "rsp", &grsp.children) != 0)
             {
                 std::cout << "deserialize_GetChildren2Response failed\n";
                 return false;
@@ -217,9 +220,34 @@ bool ZookeeperContext::_ProcessResponse(const ReplyHeader& hdr, iarchive* ia)
 
             ANANAS_DEFER
             {
-                deallocate_GetChildren2Response(&grsp);
+                deallocate_Buffer(&grsp.parent);
+                deallocate_GetChildren2Response(&grsp.children);
             };
 
+            grsp.parent = allocate_Buffer(req.path.size());
+            memcpy(grsp.parent.buff, req.path.data(), req.path.size());
+            req.promise.SetValue(rsp);
+        }
+        break;
+
+    case ZOO_GETDATA_OP:
+        {
+            ZkResponse rsp;
+            auto& grsp = rsp.dataRsp;
+            if (deserialize_GetDataResponse(ia, "rsp", &grsp.data) != 0)
+            {
+                std::cout << "deserialize_GetDataResponse failed\n";
+                return false;
+            }
+
+            ANANAS_DEFER
+            {
+                deallocate_Buffer(&grsp.path);
+                deallocate_GetDataResponse(&grsp.data);
+            };
+
+            grsp.path = allocate_Buffer(req.path.size());
+            memcpy(grsp.path.buff, req.path.data(), req.path.size());
             req.promise.SetValue(rsp);
         }
         break;
@@ -235,7 +263,7 @@ bool ZookeeperContext::_ProcessResponse(const ReplyHeader& hdr, iarchive* ia)
 void ZookeeperContext::ProcessPing(long lastPing, ZkResponse now)
 {
     int millseconds = now.recvPing - lastPing;
-    if (millseconds >= 5)
+    if (millseconds > 1)
         std::cout << "ProcessPing used millseconds:" << millseconds << std::endl;
 }
 
@@ -243,7 +271,7 @@ bool ZookeeperContext::ProcessHandshake(const prime_struct& rsp)
 {
     if (sessionInfo_.sessionId && sessionInfo_.sessionId != rsp.sessionId)
     {
-        std::cout << "expired, new session " << rsp.sessionId << std::endl;
+        std::cout << "expired old session " << sessionInfo_.sessionId << ", new session " << rsp.sessionId << std::endl;
         return false;
     }
 
@@ -259,6 +287,7 @@ bool ZookeeperContext::ProcessHandshake(const prime_struct& rsp)
 
     std::unique_ptr<FILE, decltype(fclose)*> _(fopen(sessionFile_.data(), "wb"), fclose);
     FILE* fp = _.get();
+    assert (fp);
     fwrite(&sessionInfo_, sizeof sessionInfo_, 1, fp);
 
     assert (state_ == State::kHandshaking);
@@ -367,12 +396,12 @@ ananas::Future<ZkResponse> ZookeeperContext::GetChildren2(const std::string& par
     rc = rc < 0 ? rc : serialize_GetChildren2Request(oa, "req", &req);
 
     _SendPacket(oa);
-    return _PendingRequest(h.type, h.xid);
+    return _PendingRequest(h.type, h.xid, &parent);
 }
 
 void ZookeeperContext::ProcessGetChildren2(const ZkResponse& rsp)
 {
-    const auto& crsp = rsp.child2Rsp;
+    const auto& crsp = rsp.child2Rsp.children;
     for (int i = 0; i < crsp.children.count; ++ i)
     {
         const std::string& node = crsp.children.data[i];
@@ -393,12 +422,12 @@ ananas::Future<ZkResponse> ZookeeperContext::GetData(const std::string& node, bo
     rc = rc < 0 ? rc : serialize_GetDataRequest(oa, "req", &req);
 
     _SendPacket(oa);
-    return _PendingRequest(h.type, h.xid);
+    return _PendingRequest(h.type, h.xid, &node);
 }
 
 void ZookeeperContext::ProcessGetData(const ZkResponse& rsp)
 {
-    std::cout << "GetData " << rsp.dataRsp.data.buff << std::endl;
+    std::cout << "GetData " << rsp.dataRsp.data.data.buff << std::endl;
 }
 
 

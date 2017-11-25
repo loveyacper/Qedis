@@ -35,6 +35,16 @@ struct SocketAddr
         Init(ip, hostport);
     }
 
+    // ip port format:  127.0.0.1:6379
+    SocketAddr(const std::string& ipport) 
+    { 
+        std::string::size_type p = ipport.find_first_of(':'); 
+        std::string ip = ipport.substr(0, p); 
+        std::string port = ipport.substr(p + 1); 
+
+        Init(ip.c_str(), static_cast<uint16_t>(std::stoi(port))); 
+    } 
+
     void Init(const sockaddr_in& addr)
     {
         memcpy(&addr_, &addr, sizeof(addr));

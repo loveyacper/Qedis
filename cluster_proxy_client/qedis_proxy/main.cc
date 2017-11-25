@@ -24,11 +24,6 @@ void OnConnect(ananas::Connection* conn)
     ctx->OnConnect();
 }
             
-void OnDisConnect(ananas::Connection* conn)
-{
-    INF(logger) << "OnDisConnect " << conn->Identifier();
-}
-
 void OnNewConnection(ananas::Connection* conn)
 {
     std::cout << "OnNewConnection " << conn->Identifier() << std::endl;
@@ -41,8 +36,6 @@ void OnNewConnection(ananas::Connection* conn)
 #endif
     conn->SetUserData(ctx);
     conn->SetMinPacketSize(4);
-    conn->SetOnConnect(OnConnect);
-    conn->SetOnDisconnect(OnDisConnect);
     conn->SetOnMessage([ctx](Connection* c, const char* data, PacketLen_t len) -> PacketLen_t {
          const char* ptr = data;
          if (!ctx->OnData(ptr, len)) {
@@ -51,6 +44,7 @@ void OnNewConnection(ananas::Connection* conn)
 
          return static_cast<PacketLen_t>(ptr - data);
     });
+    conn->SetOnConnect(OnConnect); // must be last
 }
     
 void OnConnFail(ananas::EventLoop* loop, const ananas::SocketAddr& peer)

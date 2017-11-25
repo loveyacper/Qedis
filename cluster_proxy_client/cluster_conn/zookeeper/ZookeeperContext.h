@@ -86,7 +86,9 @@ private:
                 promise = std::move(r.promise);
                 type = r.type;
                 xid = r.xid;
+                path = r.path;
                 r.type = r.xid = -1;
+                r.path.clear();
             }
             return *this;
         }

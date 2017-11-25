@@ -28,6 +28,23 @@ public:
     void OnDisconnect() override final;
 
 private:
+    ananas::Try<qedis::ZookeeperContext* >
+        _ProcessHandshake(const ZkResponse& );
+
+    ananas::Future<std::vector<ananas::Try<ZkResponse>>>
+        _RegisterAndGetServers(ananas::Try<qedis::ZookeeperContext* >&& );
+
+    ananas::Future<std::vector<ananas::Try<ZkResponse>>>
+        _GetShardingInfo(const std::vector<ananas::Try<ZkResponse>>& );
+
+    bool _ProcessShardingInfo(const std::vector<ananas::Try<ZkResponse>>& );
+
+    ananas::Future<std::vector<ananas::Try<ZkResponse>>>
+        _GetServers(const std::vector<ananas::Try<ZkResponse>>& );
+
+    bool _ProcessServerInfo(const std::vector<ananas::Try<ZkResponse>>& );
+    void _InitPingTimer();
+
     ananas::Connection* conn_;
     std::unique_ptr<qedis::ZookeeperContext> ctx_;
 };
