@@ -31,7 +31,6 @@ struct buffer {
 };
 
 void deallocate_String(char **s);
-struct buffer allocate_Buffer(int32_t len);
 void deallocate_Buffer(struct buffer *b);
 void deallocate_vector(void *d);
 struct iarchive {

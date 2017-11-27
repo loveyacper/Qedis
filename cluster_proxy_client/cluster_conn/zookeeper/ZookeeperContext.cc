@@ -92,13 +92,12 @@ bool ZookeeperContext::ParseMessage(const char*& data, ananas::PacketLen_t len)
             if (len < HANDSHAKE_RSP_SIZE)
                 return true;
 
-            ZkResponse zkrsp;
-            struct prime_struct& rsp = zkrsp.handshakeRsp;
-            deserialize_prime_response(&rsp, const_cast<char* >(data));
-            data += sizeof(int) + rsp.len;
-            std::cout << "skip kHandshaking " << rsp.len << std::endl;
+            auto zkrsp = NewResponse<prime_struct>();
+            deserialize_prime_response(zkrsp.get(), const_cast<char* >(data));
+            data += sizeof(int) + zkrsp->len;
+            std::cout << "skip kHandshaking " << zkrsp->len << std::endl;
 
-            pendingReq_.front().promise.SetValue(zkrsp);
+            pendingReq_.front().promise.SetValue(AnyCast<void>(zkrsp));
             pendingReq_.pop();
         }
         break;
@@ -181,18 +180,17 @@ bool ZookeeperContext::_ProcessResponse(const ReplyHeader& hdr, iarchive* ia)
             timeval now;
             gettimeofday(&now, nullptr);
 
-            ZkResponse rsp;
-            rsp.recvPing = now.tv_sec * 1000;
-            rsp.recvPing += now.tv_usec  / 1000;
+            auto rsp = NewResponse<long>();
+            *rsp = now.tv_sec * 1000;
+            *rsp += now.tv_usec  / 1000;
 
-            req.promise.SetValue(rsp);
+            req.promise.SetValue(AnyCast<void>(rsp));
         }
         break;
 
     case ZOO_CREATE_OP:
         {
-            ZkResponse rsp;
-            auto& crsp = rsp.createRsp;
+            CreateResponse crsp;
             if (deserialize_CreateResponse(ia, "rsp", &crsp) != 0)
             {
                 std::cout << "deserialize_CreateResponse failed\n";
@@ -204,15 +202,17 @@ bool ZookeeperContext::_ProcessResponse(const ReplyHeader& hdr, iarchive* ia)
                 deallocate_CreateResponse(&crsp);
             };
 
-            req.promise.SetValue(rsp);
+            auto rsp = NewResponse<CreateRsp>();
+            *rsp = Convert(crsp);
+
+            req.promise.SetValue(AnyCast<void>(rsp));
         }
         break;
 
     case ZOO_GETCHILDREN2_OP:
         {
-            ZkResponse rsp;
-            auto& grsp = rsp.child2Rsp;
-            if (deserialize_GetChildren2Response(ia, "rsp", &grsp.children) != 0)
+            GetChildren2Response grsp;
+            if (deserialize_GetChildren2Response(ia, "rsp", &grsp) != 0)
             {
                 std::cout << "deserialize_GetChildren2Response failed\n";
                 return false;
@@ -220,21 +220,19 @@ bool ZookeeperContext::_ProcessResponse(const ReplyHeader& hdr, iarchive* ia)
 
             ANANAS_DEFER
             {
-                deallocate_Buffer(&grsp.parent);
-                deallocate_GetChildren2Response(&grsp.children);
+                deallocate_GetChildren2Response(&grsp);
             };
 
-            grsp.parent = allocate_Buffer(req.path.size());
-            memcpy(grsp.parent.buff, req.path.data(), req.path.size());
-            req.promise.SetValue(rsp);
+            auto rsp = NewResponse<ChildrenRsp>();
+            *rsp = Convert(req.path, grsp);
+            req.promise.SetValue(AnyCast<void>(rsp));
         }
         break;
 
     case ZOO_GETDATA_OP:
         {
-            ZkResponse rsp;
-            auto& grsp = rsp.dataRsp;
-            if (deserialize_GetDataResponse(ia, "rsp", &grsp.data) != 0)
+            GetDataResponse drsp;
+            if (deserialize_GetDataResponse(ia, "rsp", &drsp) != 0)
             {
                 std::cout << "deserialize_GetDataResponse failed\n";
                 return false;
@@ -242,13 +240,13 @@ bool ZookeeperContext::_ProcessResponse(const ReplyHeader& hdr, iarchive* ia)
 
             ANANAS_DEFER
             {
-                deallocate_Buffer(&grsp.path);
-                deallocate_GetDataResponse(&grsp.data);
+                deallocate_GetDataResponse(&drsp);
             };
 
-            grsp.path = allocate_Buffer(req.path.size());
-            memcpy(grsp.path.buff, req.path.data(), req.path.size());
-            req.promise.SetValue(rsp);
+            auto rsp = NewResponse<DataRsp>();
+            *rsp = Convert(req.path, drsp);
+
+            req.promise.SetValue(AnyCast<void>(rsp));
         }
         break;
 
@@ -262,28 +260,30 @@ bool ZookeeperContext::_ProcessResponse(const ReplyHeader& hdr, iarchive* ia)
     
 void ZookeeperContext::ProcessPing(long lastPing, ZkResponse now)
 {
-    int millseconds = now.recvPing - lastPing;
+    auto rsp = AnyCast<long>(now);
+    int millseconds = *rsp - lastPing;
     if (millseconds > 1)
         std::cout << "ProcessPing used millseconds:" << millseconds << std::endl;
 }
 
-bool ZookeeperContext::ProcessHandshake(const prime_struct& rsp)
+bool ZookeeperContext::ProcessHandshake(const ZkResponse& rsp)
 {
-    if (sessionInfo_.sessionId && sessionInfo_.sessionId != rsp.sessionId)
+    auto hrsp = AnyCast<prime_struct>(rsp);
+    if (sessionInfo_.sessionId && sessionInfo_.sessionId != hrsp->sessionId)
     {
-        std::cout << "expired old session " << sessionInfo_.sessionId << ", new session " << rsp.sessionId << std::endl;
+        std::cout << "expired old session " << sessionInfo_.sessionId << ", new session " << hrsp->sessionId << std::endl;
         return false;
     }
 
-    resumed_ = (sessionInfo_.sessionId == rsp.sessionId);
+    resumed_ = (sessionInfo_.sessionId == hrsp->sessionId);
     if (resumed_)
-        std::cout << "resume session Id " << rsp.sessionId << std::endl;
+        std::cout << "resume session Id " << hrsp->sessionId << std::endl;
     else
-        std::cout << "new session Id " << rsp.sessionId << std::endl;
+        std::cout << "new session Id " << hrsp->sessionId << std::endl;
 
     // record this sessionInfo;
-    sessionInfo_.sessionId = rsp.sessionId;
-    memcpy(sessionInfo_.passwd, rsp.passwd, rsp.passwd_len);
+    sessionInfo_.sessionId = hrsp->sessionId;
+    memcpy(sessionInfo_.passwd, hrsp->passwd, hrsp->passwd_len);
 
     std::unique_ptr<FILE, decltype(fclose)*> _(fopen(sessionFile_.data(), "wb"), fclose);
     FILE* fp = _.get();
@@ -293,7 +293,7 @@ bool ZookeeperContext::ProcessHandshake(const prime_struct& rsp)
     assert (state_ == State::kHandshaking);
     state_  = State::kConnected;
 
-    std::cout << "recv ProcessHandshake sid " << rsp.sessionId << std::endl;
+    std::cout << "recv ProcessHandshake sid " << hrsp->sessionId << std::endl;
     return true;
 }
 
@@ -380,7 +380,8 @@ ananas::Future<ZkResponse> ZookeeperContext::CreateNode(bool empher,
 
 void ZookeeperContext::ProcessCreateNode(const ZkResponse& rsp)
 {
-    std::cout << "Create Node " << rsp.createRsp.path << std::endl;
+    auto crsp = AnyCast<CreateRsp>(rsp);
+    std::cout << "Create Node " << crsp->path << std::endl;
 }
 
 ananas::Future<ZkResponse> ZookeeperContext::GetChildren2(const std::string& parent, bool watch)
@@ -401,11 +402,12 @@ ananas::Future<ZkResponse> ZookeeperContext::GetChildren2(const std::string& par
 
 void ZookeeperContext::ProcessGetChildren2(const ZkResponse& rsp)
 {
-    const auto& crsp = rsp.child2Rsp.children;
-    for (int i = 0; i < crsp.children.count; ++ i)
+    auto grsp = AnyCast<ChildrenRsp>(rsp);
+    std::cout << "GetChildren2 for " << grsp->parent << std::endl;
+
+    for (const auto& c : grsp->children)
     {
-        const std::string& node = crsp.children.data[i];
-        std::cout << "GetChildren2 " << node << std::endl;
+        std::cout << "child: " << c << std::endl;
     }
 }
 
@@ -427,7 +429,8 @@ ananas::Future<ZkResponse> ZookeeperContext::GetData(const std::string& node, bo
 
 void ZookeeperContext::ProcessGetData(const ZkResponse& rsp)
 {
-    std::cout << "GetData " << rsp.dataRsp.data.data.buff << std::endl;
+    auto drsp = AnyCast<DataRsp>(rsp);
+    std::cout << "GetData " << drsp->path << " : " << drsp->data << std::endl;
 }
 
 

@@ -27,7 +27,7 @@ bool ZookeeperConn::OnData(const char*& data, size_t len)
 ananas::Try<qedis::ZookeeperContext* >
 ZookeeperConn::_ProcessHandshake(const ZkResponse& rsp) 
 {
-    if (ctx_->ProcessHandshake(rsp.handshakeRsp))
+    if (ctx_->ProcessHandshake(rsp))
     {
         std::cout << "DoHandshake succ\n";
         return ananas::Try<qedis::ZookeeperContext* >(ctx_.get());
@@ -77,12 +77,11 @@ ZookeeperConn::_GetShardingInfo(const std::vector<ananas::Try<ZkResponse>>& rsps
         const ZkResponse& sets = rsps.back();
         ctx_->ProcessGetChildren2(sets);
 
-        const auto& crsp = sets.child2Rsp.children;
-        for (int i = 0; i < crsp.children.count; ++ i)
+        auto grsp = AnyCast<ChildrenRsp>(sets);
+        for (const auto& child : grsp->children)
         {
-            const std::string& node = crsp.children.data[i];
-            std::cout << "Try get data " << qedis::ProxyConfig::kQedisSetsPath + node << std::endl;
-            auto fut = ctx_->GetData(qedis::ProxyConfig::kQedisSetsPath + "/" + node, true);
+            std::cout << "Try get data " << qedis::ProxyConfig::kQedisSetsPath + "/" + child << std::endl;
+            auto fut = ctx_->GetData(qedis::ProxyConfig::kQedisSetsPath + "/" + child, true);
             futures.emplace_back(std::move(fut));
         }
     }
@@ -107,29 +106,21 @@ bool ZookeeperConn::_ProcessShardingInfo(const std::vector<ananas::Try<ZkRespons
     {
         ctx_->ProcessGetData(rsp);
 
-        ZkResponse rsp2 = rsp;
+        //ZkResponse rsp2 = rsp;
+        auto drsp = AnyCast<DataRsp>(rsp.Value());
         
         // /servers/set-1
-        const std::string path(rsp2.dataRsp.path.buff, rsp2.dataRsp.path.len);
-        const std::string data(rsp2.dataRsp.data.data.buff, rsp2.dataRsp.data.data.len);
-
-        int setid = GetSetID(path);
+        int setid = GetSetID(drsp->path);
         if (setid < 0)
         {
             std::cout << "Wrong setid " << setid << std::endl;
             return false;
         }
             
-        std::cout << "Path = " << path << ", setid " << setid << std::endl;
-        std::cout << "Value = " << rsp2.dataRsp.data.data.buff << std::endl;
+        std::cout << "Path = " << drsp->path << ", setid " << setid << std::endl;
+        std::cout << "Value = " << drsp->data << std::endl;
         
-        std::vector<std::string> shardings = ananas::SplitString(data, ',');
-        for (const auto& id : shardings)
-        {
-            std::cout << "sharding " << id << std::endl;
-        }
-
-        //ServerManager::Instance().AddShardingInfo(setid, shardings);
+        std::vector<std::string> shardings = ananas::SplitString(drsp->data, ',');
         ClusterManager::Instance().AddShardingInfo(setid, shardings);
     }
 
@@ -145,12 +136,10 @@ ZookeeperConn::_GetServers(const std::vector<ananas::Try<ZkResponse>>& vrsp)
     {
         ctx_->ProcessGetData(rsp);
 
-        ZkResponse rsp2 = rsp;
+        auto drsp = AnyCast<DataRsp>(rsp.Value());
         
         // /servers/set-1
-        const std::string path(rsp2.dataRsp.path.buff, rsp2.dataRsp.path.len);
-
-        auto fut = ctx_->GetChildren2(path, true);
+        auto fut = ctx_->GetChildren2(drsp->path, true);
         futures.emplace_back(std::move(fut));
     }
 
@@ -176,18 +165,15 @@ bool ZookeeperConn::_ProcessServerInfo(const std::vector<ananas::Try<ZkResponse>
     {
         ctx_->ProcessGetChildren2(rsp);
 
-        ZkResponse rsp2 = rsp;
-        const auto& crsp = rsp2.child2Rsp; 
+        auto crsp = AnyCast<ChildrenRsp>(rsp.Value());
             
-        const std::string parent(crsp.parent.buff, crsp.parent.len);
-        std::cout << "Parent& children " << parent << std::endl;
+        std::cout << "Parent& " << crsp->parent << std::endl;
 
-        int setid = GetSetID(parent);
-        for (int i = 0; i < crsp.children.children.count; ++ i)
+        int setid = GetSetID(crsp->parent);
+        for (const auto& child : crsp->children)
         {
             // qedis(127.0.0.1:6379)-0000000215
-            std::string data = crsp.children.children.data[i];
-            data = GetNodeAddr(data);
+            std::string data = GetNodeAddr(child);
             std::cout << "child " << data << std::endl;
             ClusterManager::Instance().AddServerInfo(setid, data);
         }
@@ -239,31 +225,14 @@ void ZookeeperConn::OnConnect()
         })
         .Then([me = this](const std::vector<ananas::Try<ZkResponse> >& vrsp) mutable {
             // 6. store qedis servers' info
-            if (me->_ProcessServerInfo(vrsp))
-                return me->ctx_.get();
-            else
-                return (qedis::ZookeeperContext* )nullptr;
+            return me->_ProcessServerInfo(vrsp);
         })
-        .Then([me = this](qedis::ZookeeperContext* ctx) {
+        .Then([me = this](bool succ) {
             // 7. Init ping timer
-            if (ctx) {
+            if (succ) {
                 me->_InitPingTimer();
-                //return me->conn_->GetLoop();
-            }
-            else {
-                //return (ananas::EventLoop*)nullptr;
             }
         })
-#if 0
-        .Then([](ananas::EventLoop* loop) {
-            // 8. Listen for qedis client
-            if (loop) {
-                ananas::SocketAddr addr(qedis::g_config.bindAddr);
-                if (loop->Listen(addr, [](ananas::Connection* c) {}))
-                    std::cout << "Listen succ\n";
-            }
-        })
-#endif
         .OnTimeout(std::chrono::seconds(5), []() {
                 std::cout << "OnTimeout handshake\n";
                 ananas::EventLoop::ExitApplication();

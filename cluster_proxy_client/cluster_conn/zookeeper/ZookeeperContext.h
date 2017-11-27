@@ -31,7 +31,7 @@ public:
 
     // requests
     ananas::Future<ZkResponse> DoHandshake();
-    bool ProcessHandshake(const prime_struct& rsp);
+    bool ProcessHandshake(const ZkResponse& rsp);
 
     // Ping
     ananas::Future<ZkResponse> Ping();

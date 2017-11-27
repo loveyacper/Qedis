@@ -30,14 +30,6 @@ void deallocate_String(char **s)
     *s = 0;
 }
 
-struct buffer allocate_Buffer(int32_t len)
-{
-    struct buffer b;
-    b.len = len;
-    b.buff = malloc(len);
-    return b;
-}
-
 void deallocate_Buffer(struct buffer *b)
 {
     if (b->buff)
