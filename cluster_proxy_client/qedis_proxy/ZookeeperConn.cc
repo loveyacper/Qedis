@@ -5,26 +5,27 @@
 #include "net/EventLoop.h"
 #include "util/Util.h"
 
-#include "ZookeeperProxyConn.h"
+#include "ZookeeperConn.h"
 #include "ProxyConfig.h"
-#include "ServerManager.h"
+#include "ClusterManager.h"
 
-ZookeeperProxyConn::ZookeeperProxyConn(ananas::Connection* c) :
+ZookeeperConn::ZookeeperConn(ananas::Connection* c) :
     conn_(c)
 {
     ctx_.reset(new qedis::ZookeeperContext(c));
 }
     
-ZookeeperProxyConn::~ZookeeperProxyConn()
+ZookeeperConn::~ZookeeperConn()
 {
 }
 
-bool ZookeeperProxyConn::OnData(const char*& data, size_t len)
+bool ZookeeperConn::OnData(const char*& data, size_t len)
 {
     return ctx_->ParseMessage(data, len);
 }
 
-ananas::Try<qedis::ZookeeperContext* > ZookeeperProxyConn::_ProcessHandshake(const ZkResponse& rsp) 
+ananas::Try<qedis::ZookeeperContext* >
+ZookeeperConn::_ProcessHandshake(const ZkResponse& rsp) 
 {
     if (ctx_->ProcessHandshake(rsp.handshakeRsp))
     {
@@ -39,7 +40,8 @@ ananas::Try<qedis::ZookeeperContext* > ZookeeperProxyConn::_ProcessHandshake(con
     }
 }
 
-ananas::Future<std::vector<ananas::Try<ZkResponse>>> ZookeeperProxyConn::_RegisterAndGetServers(ananas::Try<qedis::ZookeeperContext* >&& tctx)
+ananas::Future<std::vector<ananas::Try<ZkResponse>>>
+ZookeeperConn::_RegisterAndGetServers(ananas::Try<qedis::ZookeeperContext* >&& tctx)
 {
     std::vector<ananas::Future<ZkResponse> > futures;
     try
@@ -66,7 +68,8 @@ ananas::Future<std::vector<ananas::Try<ZkResponse>>> ZookeeperProxyConn::_Regist
     return ananas::WhenAll(std::begin(futures), std::end(futures));
 }
 
-ananas::Future<std::vector<ananas::Try<ZkResponse>>> ZookeeperProxyConn::_GetShardingInfo(const std::vector<ananas::Try<ZkResponse>>& rsps)
+ananas::Future<std::vector<ananas::Try<ZkResponse>>>
+ZookeeperConn::_GetShardingInfo(const std::vector<ananas::Try<ZkResponse>>& rsps)
 {
     std::vector<ananas::Future<ZkResponse> > futures;
     if (!rsps.empty())
@@ -87,30 +90,6 @@ ananas::Future<std::vector<ananas::Try<ZkResponse>>> ZookeeperProxyConn::_GetSha
     return ananas::WhenAll(std::begin(futures), std::end(futures));
 }
 
-#if 0
-ananas::Future<std::vector<ananas::Try<ZkResponse>>> ZookeeperProxyConn::_GetServers(const std::vector<ananas::Try<ZkResponse>>& rsps)
-{
-    std::vector<ananas::Future<ZkResponse> > futures;
-    if (!rsps.empty())
-    {
-        const ZkResponse& sets = rsps.back();
-        ctx_->ProcessGetChildren2(sets);
-
-        const auto& crsp = sets.child2Rsp;
-        for (int i = 0; i < crsp.children.count; ++ i)
-        {
-            const std::string& node = crsp.children.data[i];
-            std::cout << "Try get children " << qedis::ProxyConfig::kQedisSetsPath + node << std::endl;
-            auto fut = ctx_->GetData(qedis::ProxyConfig::kQedisSetsPath + "/" + node, true);
-            futures.emplace_back(std::move(fut));
-        }
-    }
-
-    return ananas::WhenAll(std::begin(futures), std::end(futures));
-}
-#endif
-                
-                
 // /servers/set-1
 static int GetSetID(const std::string& path)
 {
@@ -122,7 +101,7 @@ static int GetSetID(const std::string& path)
     return std::stoi(number);
 }
 
-bool ZookeeperProxyConn::_ProcessShardingInfo(const std::vector<ananas::Try<ZkResponse>>& vrsp)
+bool ZookeeperConn::_ProcessShardingInfo(const std::vector<ananas::Try<ZkResponse>>& vrsp)
 {
     for (const auto& rsp : vrsp)
     {
@@ -150,13 +129,15 @@ bool ZookeeperProxyConn::_ProcessShardingInfo(const std::vector<ananas::Try<ZkRe
             std::cout << "sharding " << id << std::endl;
         }
 
-        ServerManager::Instance().AddShardingInfo(setid, shardings);
+        //ServerManager::Instance().AddShardingInfo(setid, shardings);
+        ClusterManager::Instance().AddShardingInfo(setid, shardings);
     }
 
     return true;
 }
     
-ananas::Future<std::vector<ananas::Try<ZkResponse>>> ZookeeperProxyConn::_GetServers(const std::vector<ananas::Try<ZkResponse>>& vrsp)
+ananas::Future<std::vector<ananas::Try<ZkResponse>>>
+ZookeeperConn::_GetServers(const std::vector<ananas::Try<ZkResponse>>& vrsp)
 {
     std::vector<ananas::Future<ZkResponse> > futures;
 
@@ -189,7 +170,7 @@ static std::string GetNodeAddr(const std::string& path)
 }
 
 
-bool ZookeeperProxyConn::_ProcessServerInfo(const std::vector<ananas::Try<ZkResponse>>& vrsp)
+bool ZookeeperConn::_ProcessServerInfo(const std::vector<ananas::Try<ZkResponse>>& vrsp)
 {
     for (const auto& rsp : vrsp)
     {
@@ -208,39 +189,14 @@ bool ZookeeperProxyConn::_ProcessServerInfo(const std::vector<ananas::Try<ZkResp
             std::string data = crsp.children.children.data[i];
             data = GetNodeAddr(data);
             std::cout << "child " << data << std::endl;
-            ServerManager::Instance().AddServerInfo(setid, data);
+            ClusterManager::Instance().AddServerInfo(setid, data);
         }
-        //void AddServerInfo(int setid, const std::string& host)
-        
-#if 0
-        // /servers/set-1
-        const std::string path(rsp2.dataRsp.path.buff, rsp2.dataRsp.path.len);
-        const std::string data(rsp2.dataRsp.data.data.buff, rsp2.dataRsp.data.data.len);
-
-        int setid = GetSetID(path);
-        if (setid < 0)
-        {
-            std::cout << "Wrong setid " << setid << std::endl;
-            return false;
-        }
-            
-        std::cout << "Path = " << path << ", setid " << setid << std::endl;
-        std::cout << "Value = " << rsp2.dataRsp.data.data.buff << std::endl;
-        
-        std::vector<std::string> shardings = ananas::SplitString(data, ',');
-        for (const auto& id : shardings)
-        {
-            std::cout << "sharding " << id << std::endl;
-        }
-
-        ServerManager::Instance().AddShardingInfo(setid, shardings);
-#endif
     }
 
     return true;
 }
 
-void ZookeeperProxyConn::_InitPingTimer() 
+void ZookeeperConn::_InitPingTimer() 
 {
     auto doPing = [conn = conn_, ctx = ctx_.get()]()
                   {
@@ -252,14 +208,10 @@ void ZookeeperProxyConn::_InitPingTimer()
                       ctx->Ping().Then(processPing);
                   };
 
-    auto pingId = conn_->GetLoop()->ScheduleAfter<ananas::kForever>(std::chrono::seconds(3), doPing);
-
-    conn_->SetOnDisconnect([pingId](ananas::Connection* c) {
-            c->GetLoop()->Cancel(pingId);
-    });
+    pingId_ = conn_->GetLoop()->ScheduleAfter<ananas::kForever>(std::chrono::seconds(3), doPing);
 }
     
-void ZookeeperProxyConn::OnConnect()
+void ZookeeperConn::OnConnect()
 {
     ctx_->DoHandshake()
         .Then([me = this](const ZkResponse& rsp) mutable {
@@ -287,21 +239,31 @@ void ZookeeperProxyConn::OnConnect()
         })
         .Then([me = this](const std::vector<ananas::Try<ZkResponse> >& vrsp) mutable {
             // 6. store qedis servers' info
-            me->_ProcessServerInfo(vrsp);
-            std::cout << "rsps!!!!!!" << std::endl;
-            return me->ctx_.get();
+            if (me->_ProcessServerInfo(vrsp))
+                return me->ctx_.get();
+            else
+                return (qedis::ZookeeperContext* )nullptr;
         })
         .Then([me = this](qedis::ZookeeperContext* ctx) {
             // 7. Init ping timer
-            me->_InitPingTimer();
-            return me->conn_->GetLoop();
+            if (ctx) {
+                me->_InitPingTimer();
+                //return me->conn_->GetLoop();
+            }
+            else {
+                //return (ananas::EventLoop*)nullptr;
+            }
         })
+#if 0
         .Then([](ananas::EventLoop* loop) {
             // 8. Listen for qedis client
-            ananas::SocketAddr addr(qedis::g_config.bindAddr);
-            if (loop->Listen(addr, [](ananas::Connection* c) {}))
-                std::cout << "Listen succ\n";
+            if (loop) {
+                ananas::SocketAddr addr(qedis::g_config.bindAddr);
+                if (loop->Listen(addr, [](ananas::Connection* c) {}))
+                    std::cout << "Listen succ\n";
+            }
         })
+#endif
         .OnTimeout(std::chrono::seconds(5), []() {
                 std::cout << "OnTimeout handshake\n";
                 ananas::EventLoop::ExitApplication();
@@ -309,7 +271,9 @@ void ZookeeperProxyConn::OnConnect()
         );
 }
 
-void ZookeeperProxyConn::OnDisconnect()
+void ZookeeperConn::OnDisconnect()
 {
+    if (pingId_)
+        conn_->GetLoop()->Cancel(pingId_);
 }
 

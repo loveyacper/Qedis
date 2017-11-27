@@ -9,7 +9,7 @@ namespace qedis
 
 static void EraseQuotes(std::string& str)
 {
-    // convert "hello" to  hello
+    // convert "hello" to hello
     if (str.size() < 2)
         return;
 
@@ -25,18 +25,24 @@ const std::string ProxyConfig::kQedisSetsPath = "/servers";
 
 ProxyConfig g_config;
 
-ProxyConfig::ProxyConfig()
+ProxyConfig::ProxyConfig() :
+    bindAddr("127.0.0.1:6379"),
+    logDir("log_proxy"),
+    clusters({"127.0.0.1:2181"})
 {
-    bindAddr = "127.0.0.1:6379";
 }
 
 bool LoadProxyConfig(const char* cfgFile, ProxyConfig& cfg)
 {
-    ConfigParser  parser;
+    ConfigParser parser;
     if (!parser.Load(cfgFile))
         return false;
+    
+    cfg.bindAddr = parser.GetData<std::string>("bind", cfg.bindAddr);
+    cfg.logDir = parser.GetData<std::string>("logdir", cfg.logDir);
 
     return true;
 }
 
 } // end namespace qedis
+

@@ -14,13 +14,13 @@ class Connection;
 //
 // 对于集群客户端，先连接zk，成功后，同时注册自己和获取PROXY节点列表，然后就可以发起请求
 // PROXY节点无状态，可以随意负载均衡的请求
-class ZookeeperProxyConn : public qedis::ClusterConn
+class ZookeeperConn final : public qedis::ClusterConn
 {
 public:
     explicit
-    ZookeeperProxyConn(ananas::Connection* c);
+    ZookeeperConn(ananas::Connection* c);
 
-    virtual ~ZookeeperProxyConn();
+    virtual ~ZookeeperConn();
 
 public:
     bool OnData(const char*& data, size_t len) override final;
@@ -47,6 +47,8 @@ private:
 
     ananas::Connection* conn_;
     std::unique_ptr<qedis::ZookeeperContext> ctx_;
+
+    ananas::TimerId pingId_;
 };
 
 #endif
