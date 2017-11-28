@@ -5,6 +5,7 @@
 #include "ananas/net/EventLoop.h"
 #include "ClusterManager.h"
 #include "ClientManager.h"
+#include "QedisManager.h"
 
 std::shared_ptr<ananas::Logger> g_logger;
 
@@ -30,11 +31,13 @@ int main(int ac, char* av[])
     ananas::EventLoop loop;
     ClusterManager::Instance().SetEventLoop(&loop);
     if (!ClusterManager::Instance().Connect())
-        return -1;
+        ananas::EventLoop::ExitApplication();
 
     ClientManager::Instance().SetEventLoop(&loop);
     if (!ClientManager::Instance().Listen(g_config.bindAddr))
-        return -2;
+        ananas::EventLoop::ExitApplication();
+
+    QedisManager::Instance().SetEventLoop(&loop);
 
     loop.Run();
 

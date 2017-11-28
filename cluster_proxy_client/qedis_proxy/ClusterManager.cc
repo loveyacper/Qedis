@@ -126,7 +126,7 @@ void ClusterManager::AddServerInfo(int setid, const std::string& host)
 const std::string& ClusterManager::GetServer(const std::string& key) const
 {
     // TODO calc key's hash value
-    int hash = 0;
+    const int hash = 1;
 
     auto it = shardingInfo_.find(hash);
     if (it != shardingInfo_.end())

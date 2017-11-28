@@ -9,7 +9,7 @@
 #include "net/Connection.h"
 #include "ServerProtocol.h"
 
-class ClientConn
+class ClientConn final
 {
 public:
     explicit

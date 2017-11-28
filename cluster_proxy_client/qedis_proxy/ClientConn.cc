@@ -2,6 +2,10 @@
 #include "ProxyLog.h"
 #include "ClientConn.h"
 
+#include "ClusterManager.h"
+#include "QedisManager.h"
+#include "QedisConn.h"
+
 #define CRLF "\r\n"
 
 static 
@@ -82,20 +86,45 @@ ananas::PacketLen_t ClientConn::OnRecv(ananas::Connection* conn, const char* dat
     
     assert (parseRet == ParseResult::ok);
 
-#if 0
-    // TODO handle packet 
-    // 1. calc hash
-    qedisMgr.Forward(params)
-        .Then([](const QedisResponse& rsp) {
-            // rsp:  : +-  *   $
+    const auto& params = proto_.GetParams();
+    if (params.size() <= 1 ||
+        params[0] == "watch")
+    {
+        // ping multi exec watch
+        static const std::string kError = "-ERR No such command\r\n";
+        hostConn_->SendPacket(kError.data(), kError.size());
+    }
+    else
+    {
+        const std::string host = ClusterManager::Instance().GetServer(params[1]);
+        if (host.empty())
+        {
+            static const std::string kError = "-ERR Server not ready\r\n";
+            hostConn_->SendPacket(kError.data(), kError.size());
+        }
+        else
+        {
+            QedisManager::Instance().GetConnection(host).Then([params, conn = this->hostConn_](ananas::Try<QedisConn* >&& qconn) {
+                try {
+                // TODO fuck me
+                    QedisConn* qc = qconn;
+                    auto fut = qc->ForwardRequest(params);
+                    fut.Then([conn](const std::string& reply) {
+                        conn->SendPacket(reply.data(), reply.size());
+                    });
+                }
+                catch (const std::exception& e) {
+                    ERR(g_logger) << "GetServer with exception " << e.what();
+                    static const std::string kError = "-ERR Server not alive\r\n";
+                    conn->SendPacket(kError.data(), kError.size());
+                }
+            });
+        }
+    }
 
-        });
-    const auto& params = proto_.GetParams(); 
-    if (params.empty()) 
-        return static_cast<ananas::PacketLen_t>(ptr - data);
-#endif
     proto_.Reset();
 
+#if 0
     // pseudo reply
     {
         std::string reply = "-ERR ";
@@ -103,6 +132,7 @@ ananas::PacketLen_t ClientConn::OnRecv(ananas::Connection* conn, const char* dat
         reply += "\r\n";
         hostConn_->SendPacket(reply.data(), reply.size());
     }
+#endif
 
     return static_cast<ananas::PacketLen_t>(ptr - data);
 }

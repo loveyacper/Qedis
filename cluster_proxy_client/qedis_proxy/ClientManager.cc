@@ -38,8 +38,6 @@ void ClientManager::OnNewConnection(ananas::Connection* conn)
 
     auto ctx = std::make_shared<ClientConn>(conn);
 
-    using ananas::Connection;
-
     conn->SetUserData(ctx);
     conn->SetMinPacketSize(4);
     conn->SetOnMessage(std::bind(&ClientConn::OnRecv,
