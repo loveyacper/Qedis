@@ -4,6 +4,7 @@
 #include "ProxyConfig.h"
 #include "ananas/net/EventLoop.h"
 #include "ClusterManager.h"
+#include "ClientManager.h"
 
 std::shared_ptr<ananas::Logger> g_logger;
 
@@ -28,7 +29,12 @@ int main(int ac, char* av[])
 
     ananas::EventLoop loop;
     ClusterManager::Instance().SetEventLoop(&loop);
-    ClusterManager::Instance().Connect();
+    if (!ClusterManager::Instance().Connect())
+        return -1;
+
+    ClientManager::Instance().SetEventLoop(&loop);
+    if (!ClientManager::Instance().Listen(g_config.bindAddr))
+        return -2;
 
     loop.Run();
 
