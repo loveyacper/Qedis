@@ -1,9 +1,8 @@
-#ifndef BERT_SERVERPROTOCOL_H
-#define BERT_SERVERPROTOCOL_H
+#ifndef BERT_PROTOCOL_H
+#define BERT_PROTOCOL_H
 
 #include <vector>
 #include <string>
-
 
 enum class ParseResult : int8_t 
 { 
@@ -34,6 +33,46 @@ private:
     int paramLen_ = -1;
     std::vector<std::string> params_;
 };
+
+
+enum class ResponseType
+{
+    None,
+    Fine,   // +
+    Error,  // -
+    String, // $
+    Number, // :
+    Multi,  // *
+};
+
+class ClientProtocol
+{
+public:
+    ClientProtocol();
+
+    void Reset();
+
+    ParseResult Parse(const char*& data, const char* end);
+    const std::string& GetParam() const { return content_; }
+
+private:
+    // $3\r\nabc\r\n
+    ParseResult _ParseStr(const char*& ptr, const char* end);
+    ParseResult _ParseStrval(const char*& ptr, const char* end);
+    ParseResult _ParseStrlen(const char*& ptr, const char* end, int& result);
+
+    // *2\r\n$4\r\nname\r\n$4\r\nbert\r\n
+    ParseResult _ParseMulti(const char*& ptr, const char* end);
+
+    static const int kInvalid = -2;
+
+    ResponseType type_;
+    std::string content_;
+    int multi_ = kInvalid;
+    int paramLen_ = kInvalid;
+    int nParams_ = 0;
+};
+
 
 #endif
 

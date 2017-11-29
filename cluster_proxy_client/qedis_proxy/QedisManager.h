@@ -56,7 +56,7 @@ private:
     };
 
     using ConnectPromise = ananas::Promise<QedisConn* >;
-    std::unordered_map<std::string, ConnectPromise> pending_;
+    std::unordered_map<std::string, std::vector<ConnectPromise> > pending_;
 };
 
 #endif

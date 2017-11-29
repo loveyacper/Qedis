@@ -72,6 +72,8 @@ bool Connector::Connect(const SocketAddr& addr, DurationMs timeout)
     int ret = ::connect(localSock_, (struct sockaddr*)&peer_, sizeof peer_);
     if (ret == 0)
     {
+        INF(internal::g_debug) << "Soon SUCCESS! client socket " << localSock_
+                               << " connected to " << peer_.ToString();
         _OnSuccess();
         return true;
     }

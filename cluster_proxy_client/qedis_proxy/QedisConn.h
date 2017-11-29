@@ -6,7 +6,7 @@
 #include <vector>
 #include "net/Connection.h"
 #include "future/Future.h"
-#include "ClientProtocol.h"
+#include "Protocol.h"
 
 // Build redis request from multiple strings, use inline protocol 
 template <typename... Args>

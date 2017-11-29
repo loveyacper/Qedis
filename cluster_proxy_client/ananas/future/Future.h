@@ -132,7 +132,7 @@ public:
 
         state_->pm_.set_value(t);
         if (state_->then_)
-            state_->then_(t);
+            state_->then_(SHIT(t));
     }
 
     template <typename SHIT = T>

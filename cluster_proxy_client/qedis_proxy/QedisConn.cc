@@ -7,7 +7,6 @@ QedisConn::QedisConn(ananas::Connection* conn) :
 {
 }
 
-// temp
 static 
 std::string BuildRequest(const std::vector<std::string>& params)
 {
@@ -40,67 +39,31 @@ QedisConn::ForwardRequest(const std::vector<std::string>& params)
     return fut;
 }
     
-#if 0
-ananas::Future<std::pair<ResponseType, std::string> >
-QedisContext::Get(const std::string& key)
-{
-    // Qedis inline protocol request
-    std::string req_buf = BuildQedisRequest("get", key);
-    hostConn_->SendPacket(req_buf.data(), req_buf.size());
-
-    QedisContext::Request req;
-    req.request.push_back("get");
-    req.request.push_back(key);
-
-    auto fut = req.promise.GetFuture();
-    pending_.push(std::move(req));
-
-    return fut;
-}
-    
-ananas::Future<std::pair<ResponseType, std::string> >
-QedisContext::Set(const std::string& key, const std::string& value)
-{
-    // Qedis inline protocol request
-    std::string req_buf = BuildQedisRequest("set", key, value);
-    hostConn_->SendPacket(req_buf.data(), req_buf.size());
-
-    QedisContext::Request req;
-    req.request.push_back("set");
-    req.request.push_back(key);
-    req.request.push_back(value);
-
-    auto fut = req.promise.GetFuture();
-    pending_.push(std::move(req));
-
-    return fut;
-}
-#endif
-
-
 ananas::PacketLen_t QedisConn::OnRecv(ananas::Connection* conn, const char* data, ananas::PacketLen_t len)
 {
     const char* ptr = data;
     auto parseRet = proto_.Parse(ptr, ptr + len);
-    if (parseRet == CParseResult::error)
+    if (parseRet == ParseResult::error)
     {
         conn->ActiveClose();
         return 0;
     }
-    else if (parseRet != CParseResult::ok) 
+    else if (parseRet != ParseResult::ok) 
     {
         // wait
         return static_cast<ananas::PacketLen_t>(ptr - data); 
     }
 
-    assert (parseRet == CParseResult::ok);
+    assert (parseRet == ParseResult::ok);
         
     auto& req = pending_.front();
+#if 0
     std::cout << "--- Request: [ ";
     for (const auto& arg : req.request)
         std::cout << arg << " ";
     std::cout << "]\n--- Response --\n";
     std::cout << proto_.GetParam() << "\n";
+#endif
 
     req.promise.SetValue(proto_.GetParam());
     pending_.pop();

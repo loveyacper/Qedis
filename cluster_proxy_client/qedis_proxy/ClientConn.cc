@@ -78,14 +78,13 @@ ananas::PacketLen_t ClientConn::OnRecv(ananas::Connection* conn, const char* dat
         proto_.SetParams(params);
         parseRet = ParseResult::ok;
     }
-    else if (parseRet != ParseResult::ok) 
+    
+    if (parseRet != ParseResult::ok) 
     { 
         // wait
         return static_cast<ananas::PacketLen_t>(ptr - data); 
     }
     
-    assert (parseRet == ParseResult::ok);
-
     const auto& params = proto_.GetParams();
     if (params.size() <= 1 ||
         params[0] == "watch")
@@ -106,10 +105,10 @@ ananas::PacketLen_t ClientConn::OnRecv(ananas::Connection* conn, const char* dat
         {
             QedisManager::Instance().GetConnection(host).Then([params, conn = this->hostConn_](ananas::Try<QedisConn* >&& qconn) {
                 try {
-                // TODO fuck me
                     QedisConn* qc = qconn;
                     auto fut = qc->ForwardRequest(params);
                     fut.Then([conn](const std::string& reply) {
+                        DBG(g_logger) << "Send reply " << reply;
                         conn->SendPacket(reply.data(), reply.size());
                     });
                 }

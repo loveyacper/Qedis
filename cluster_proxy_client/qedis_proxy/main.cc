@@ -23,7 +23,7 @@ int main(int ac, char* av[])
     }
 
     ananas::LogManager::Instance().Start();
-    g_logger = ananas::LogManager::Instance().CreateLog(logALL, logALL, g_config.logDir.data());
+    g_logger = ananas::LogManager::Instance().CreateLog(logERROR, logALL, g_config.logDir.data());
 
     for (const auto& addr : g_config.clusters)
         ClusterManager::Instance().AddClusterAddr(addr);

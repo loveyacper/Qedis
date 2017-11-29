@@ -5,6 +5,7 @@
 #include "net/EventLoop.h"
 #include "net/Connection.h"
 #include "net/Socket.h"
+#include <iostream>
 
 QedisManager& QedisManager::Instance()
 {
@@ -25,20 +26,22 @@ void QedisManager::SetEventLoop(ananas::EventLoop* loop)
 
 ananas::Future<QedisConn* > QedisManager::Connect(const std::string& addr)
 {
-    // TODO use shared_future?
-    // how to handle multiple connect to same addr?
     ConnectPromise promise;
     auto fut = promise.GetFuture();
-    pending_.insert({addr, std::move(promise)});
+    auto& promiseList = pending_[addr];
+    promiseList.emplace_back(std::move(promise));
 
-    bool succ = loop_->Connect(ananas::SocketAddr(addr),
-                               std::bind(&QedisManager::OnNewConnection, this, std::placeholders::_1),
-                               std::bind(&QedisManager::OnConnFail, this, std::placeholders::_1, std::placeholders::_2), 
-                               ananas::DurationMs(1000));
-    if (!succ)
+    if (promiseList.size() == 1)
     {
-        pending_.erase(addr);
-        return ananas::MakeExceptionFuture<QedisConn* >(std::runtime_error("connect " + addr + " failed"));
+        bool succ = loop_->Connect(ananas::SocketAddr(addr),
+                                   std::bind(&QedisManager::OnNewConnection, this, std::placeholders::_1),
+                                   std::bind(&QedisManager::OnConnFail, this, std::placeholders::_1, std::placeholders::_2), 
+                                   ananas::DurationMs(1000));
+        if (!succ)
+        {
+            pending_.erase(addr);
+            return ananas::MakeExceptionFuture<QedisConn* >(std::runtime_error("connect " + addr + " failed"));
+        }
     }
 
     return fut;
@@ -72,7 +75,9 @@ void QedisManager::OnConnect(ananas::Connection* conn)
     bool succ = connMap_.insert({conn->Peer().ToString(), conn}).second;
     assert (succ);
 
-    req->second.SetValue(ctx.get());
+    for (auto& prom : req->second)
+        prom.SetValue(ctx.get());
+    //req->second.SetValue(ctx.get());
     pending_.erase(req);
 }
 
@@ -90,7 +95,9 @@ void QedisManager::OnConnFail(ananas::EventLoop* loop, const ananas::SocketAddr&
     auto req = pending_.find(peer.ToString());
     if (req != pending_.end())
     {
-        req->second.SetException(std::make_exception_ptr(std::runtime_error("Failed connect to " + peer.ToString())));
+        for (auto& prom : req->second)
+            prom.SetException(std::make_exception_ptr(std::runtime_error("Failed connect to " + peer.ToString())));
+        //req->second.SetException(std::make_exception_ptr(std::runtime_error("Failed connect to " + peer.ToString())));
         pending_.erase(req);
     }
 }

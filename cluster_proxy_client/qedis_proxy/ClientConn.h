@@ -7,7 +7,7 @@
 #include <unordered_map>
 
 #include "net/Connection.h"
-#include "ServerProtocol.h"
+#include "Protocol.h"
 
 class ClientConn final
 {
