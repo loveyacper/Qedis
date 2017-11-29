@@ -20,7 +20,6 @@ public:
 private:
     ServerProtocol proto_;
     ananas::Connection* hostConn_;
-    std::string reply_;
 };
 
 #endif

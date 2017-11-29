@@ -28,10 +28,16 @@ ananas::Future<std::string>
 QedisConn::ForwardRequest(const std::vector<std::string>& params)
 {
     std::string buf = BuildRequest(params);
-    hostConn_->SendPacket(buf.data(), buf.size());
+    return ForwardRequest(buf);
+}
+
+ananas::Future<std::string>
+QedisConn::ForwardRequest(const std::string& rawReq)
+{
+    hostConn_->SendPacket(rawReq.data(), rawReq.size());
 
     QedisConn::Request req;
-    req.request = params;
+    //req.request = params;
 
     auto fut = req.promise.GetFuture();
     pending_.push(std::move(req));

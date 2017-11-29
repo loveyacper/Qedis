@@ -115,7 +115,7 @@ public:
 
         state_->pm_.set_value(t);
         if (state_->then_)
-            state_->then_(std::move(t));
+            state_->then_(Try<T>(std::move(t)));
     }
 
 
@@ -132,7 +132,7 @@ public:
 
         state_->pm_.set_value(t);
         if (state_->then_)
-            state_->then_(SHIT(t));
+            state_->then_(Try<T>(t));
     }
 
     template <typename SHIT = T>
@@ -603,6 +603,17 @@ inline Future<T2> MakeReadyFuture(T2&& value)
 
     return f;
 }
+
+template <typename T2>
+inline Future<T2> MakeReadyFuture(const T2& value)
+{
+    Promise<T2> pm;
+    auto f(pm.GetFuture());
+    pm.SetValue(value);
+
+    return f;
+}
+
 
 inline Future<void> MakeReadyFuture()
 {

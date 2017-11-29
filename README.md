@@ -3,7 +3,7 @@
 
 [Click me switch to English](README.en.md)
 
-C++11实现的增强版Redis服务器,使用Leveldb作为持久化存储引擎。(集群正在实现中)
+C++11实现的增强版分布式Redis服务器,使用Leveldb作为持久化存储引擎。
 
 ## 环境需求
 * C++11、CMake

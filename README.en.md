@@ -35,7 +35,7 @@ Run this command, compare with redis use pipeline commands, try it.
  When memory is low, you can make Qedis to free memory by evict some key according to LRU.
 
 ## Master-slave Replication, transaction, RDB/AOF, slow log, publish-subscribe
- Qedis supports all of them :-)
+ Qedis supports them all :-)
  
 ## Command List
 #### show all supported commands list, about 137 commands

@@ -34,22 +34,16 @@ public:
     ananas::Future<std::string> 
     ForwardRequest(const std::vector<std::string>& params);
 
-    // Qedis get command
-    //ananas::Future<std::pair<ResponseType, std::string> > Get(const std::string& key);
-    // Qedis set command
-    //ananas::Future<std::pair<ResponseType, std::string> > Set(const std::string& key, const std::string& value);
+    ananas::Future<std::string>
+    ForwardRequest(const std::string& rawRequest);
 
-    // Parse response
     ananas::PacketLen_t OnRecv(ananas::Connection* conn, const char* data, ananas::PacketLen_t len);
-
-    //static void PrintResponse(const std::pair<ResponseType, std::string>& info);
-
 private:
     ananas::Connection* hostConn_;
 
     struct Request
     {
-        std::vector<std::string> request;
+        //std::vector<std::string> request;
         ananas::Promise<std::string> promise;
 
         Request() = default;

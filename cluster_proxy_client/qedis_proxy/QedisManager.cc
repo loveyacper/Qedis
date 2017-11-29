@@ -5,7 +5,6 @@
 #include "net/EventLoop.h"
 #include "net/Connection.h"
 #include "net/Socket.h"
-#include <iostream>
 
 QedisManager& QedisManager::Instance()
 {
@@ -77,7 +76,7 @@ void QedisManager::OnConnect(ananas::Connection* conn)
 
     for (auto& prom : req->second)
         prom.SetValue(ctx.get());
-    //req->second.SetValue(ctx.get());
+
     pending_.erase(req);
 }
 
@@ -97,7 +96,7 @@ void QedisManager::OnConnFail(ananas::EventLoop* loop, const ananas::SocketAddr&
     {
         for (auto& prom : req->second)
             prom.SetException(std::make_exception_ptr(std::runtime_error("Failed connect to " + peer.ToString())));
-        //req->second.SetException(std::make_exception_ptr(std::runtime_error("Failed connect to " + peer.ToString())));
+
         pending_.erase(req);
     }
 }

@@ -90,6 +90,9 @@ void ClusterManager::OnDisconnect(ananas::Connection* conn)
 {
     INF(g_logger) << "ClusterManager::OnDisconnect " << conn->Identifier();
 
+    shardingInfo_.clear();
+    hostInfo_.clear();
+
     auto ctx = conn->GetUserData<qedis::ClusterConn>();
     ctx->OnDisconnect();
 }

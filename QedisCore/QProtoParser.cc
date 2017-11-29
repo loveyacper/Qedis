@@ -92,7 +92,15 @@ QParseResult QProtoParser::_ParseStr(const char*& ptr, const char* end, QString&
             return QParseResult::wait;
     }
 
-    return _ParseStrval(ptr, end, result);
+    if (paramLen_ == -1)
+    {
+        result.clear(); // or should be "(nil)" ?
+        return QParseResult::ok;
+    }
+    else
+    {
+        return _ParseStrval(ptr, end, result);
+    }
 }
 
 QParseResult QProtoParser::_ParseStrval(const char*& ptr, const char* end, QString& result)

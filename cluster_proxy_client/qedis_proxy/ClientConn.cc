@@ -6,7 +6,7 @@
 #include "QedisManager.h"
 #include "QedisConn.h"
 
-#define CRLF "\r\n"
+#include "net/EventLoop.h"
 
 static 
 ananas::PacketLen_t ProcessInlineCmd(const char* buf,
@@ -54,6 +54,8 @@ ClientConn::ClientConn(ananas::Connection* conn) :
 
 ananas::PacketLen_t ClientConn::OnRecv(ananas::Connection* conn, const char* data, ananas::PacketLen_t len)
 {
+    assert (conn == hostConn_);
+
     const char* const end = data + len;
     const char* ptr = data;
 
@@ -63,7 +65,6 @@ ananas::PacketLen_t ClientConn::OnRecv(ananas::Connection* conn, const char* dat
         if (!proto_.IsInitialState())
         {
             ERR(g_logger) << "ParseError for " << data;
-            // error protocol
             hostConn_->ActiveClose();
             return 0;
         }
@@ -74,22 +75,22 @@ ananas::PacketLen_t ClientConn::OnRecv(ananas::Connection* conn, const char* dat
         if (consumed == 0)
             return 0;
 
-        ptr += consumed;
         proto_.SetParams(params);
+        proto_.SetParam(std::string(ptr, ptr + consumed));
+
+        ptr += consumed;
         parseRet = ParseResult::ok;
     }
     
     if (parseRet != ParseResult::ok) 
     { 
-        // wait
         return static_cast<ananas::PacketLen_t>(ptr - data); 
     }
     
     const auto& params = proto_.GetParams();
-    if (params.size() <= 1 ||
-        params[0] == "watch")
+    if (params.size() <= 1)
     {
-        // ping multi exec watch
+        // TODO filter command
         static const std::string kError = "-ERR No such command\r\n";
         hostConn_->SendPacket(kError.data(), kError.size());
     }
@@ -98,58 +99,46 @@ ananas::PacketLen_t ClientConn::OnRecv(ananas::Connection* conn, const char* dat
         const std::string host = ClusterManager::Instance().GetServer(params[1]);
         if (host.empty())
         {
+            // TODO error message
             static const std::string kError = "-ERR Server not ready\r\n";
             hostConn_->SendPacket(kError.data(), kError.size());
         }
         else
         {
-            QedisManager::Instance().GetConnection(host).Then([params, conn = this->hostConn_](ananas::Try<QedisConn* >&& qconn) {
-                try {
-                    QedisConn* qc = qconn;
-                    auto fut = qc->ForwardRequest(params);
-                    fut.Then([conn](const std::string& reply) {
-                        DBG(g_logger) << "Send reply " << reply;
-                        conn->SendPacket(reply.data(), reply.size());
-                    });
-                }
-                catch (const std::exception& e) {
-                    ERR(g_logger) << "GetServer with exception " << e.what();
-                    static const std::string kError = "-ERR Server not alive\r\n";
-                    conn->SendPacket(kError.data(), kError.size());
-                }
-            });
+            // Forwart request to Qedis `host`
+            const auto& rawReq = proto_.GetRawRequest();
+            QedisManager::Instance().GetConnection(host)
+                .Then([rawReq, conn = hostConn_](ananas::Try<QedisConn* >&& qconn) {
+                    try {
+                        QedisConn* qc = qconn;
+                        auto rspFuture = qc->ForwardRequest(rawReq);
+                        rspFuture.OnTimeout(std::chrono::seconds(3), [conn]() {
+                                const std::string kTimeout = "-ERR Server response timeout\r\n";
+                                conn->SendPacket(kTimeout.data(), kTimeout.size());
+                            }, conn->GetLoop()
+                        );
+                        return rspFuture;
+                    }
+                    catch (const std::exception& e) {
+                        ERR(g_logger) << "GetServer with exception " << e.what();
+                        static const std::string kError = "-ERR Server not alive\r\n";
+                        return ananas::MakeReadyFuture<std::string>(kError);
+                    }
+                })
+                .Then([conn](const std::string& reply) {
+                    DBG(g_logger) << "Send reply " << reply;
+                    conn->SendPacket(reply.data(), reply.size());
+                })
+                .OnTimeout(std::chrono::seconds(3), [conn]() {
+                        const std::string kTimeout = "-ERR Internal server connect timeout\r\n";
+                        conn->SendPacket(kTimeout.data(), kTimeout.size());
+                    }, hostConn_->GetLoop()
+                );
         }
     }
 
     proto_.Reset();
 
-#if 0
-    // pseudo reply
-    {
-        std::string reply = "-ERR ";
-        reply += hostConn_->Peer().ToString();
-        reply += "\r\n";
-        hostConn_->SendPacket(reply.data(), reply.size());
-    }
-#endif
-
     return static_cast<ananas::PacketLen_t>(ptr - data);
-}
-
-// helper
-static size_t FormatBulk(const char* str, size_t len, std::string* reply)
-{
-    size_t oldSize = reply->size();
-    (*reply) += '$';
-
-    char val[32];
-    int tmp = snprintf(val, sizeof val - 1, "%lu" CRLF, len);
-    reply->append(val, tmp);
-
-    if (str && len > 0)
-        reply->append(str, len);
-        
-    reply->append(CRLF, 2);
-    return reply->size() - oldSize;
 }
 
