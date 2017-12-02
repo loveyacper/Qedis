@@ -48,11 +48,11 @@ bool Server::_RunLogic()
     return tasks_.DoMsgParse();
 }
 
-bool Server::TCPBind(const SocketAddr& addr)
+bool Server::TCPBind(const SocketAddr& addr, int tag)
 {
     using Internal::ListenSocket;
 
-    auto s(std::make_shared<ListenSocket>());
+    auto s(std::make_shared<ListenSocket>(tag));
 
     if (s->Bind(addr))
     {
@@ -60,38 +60,38 @@ bool Server::TCPBind(const SocketAddr& addr)
         return true;
     }
     
-    return  false;
+    return false;
 }
 
 
-void Server::TCPReconnect(const SocketAddr& peer)
+void Server::TCPReconnect(const SocketAddr& peer, int tag)
 {
     INF << __FUNCTION__ << peer.GetIP();
 
     Timer* pTimer = TimerManager::Instance().CreateTimer();
     pTimer->Init(2 * 1000, 1);
-    pTimer->SetCallback([&, peer]() {
-            USR << "OnTimer reconnect to " << peer.GetIP() << ":" << peer.GetPort();
-            Server::Instance()->TCPConnect(peer, [=]() { Server::Instance()->TCPReconnect(peer); });
-            });
+    pTimer->SetCallback([&, tag, peer]() {
+        USR << "OnTimer reconnect to " << peer.GetIP() << ":" << peer.GetPort();
+        Server::Instance()->TCPConnect(peer, [=]() { Server::Instance()->TCPReconnect(peer, tag); }, tag);
+    });
 
 
     TimerManager::Instance().AsyncAddTimer(pTimer);
 }
 
-void Server::TCPConnect(const SocketAddr& peer)
+void Server::TCPConnect(const SocketAddr& peer, int tag)
 {
-    _TCPConnect(peer, nullptr);
+    _TCPConnect(peer, nullptr, tag);
 }
 
-void Server::TCPConnect(const SocketAddr& peer, const std::function<void ()>& cb)
+void Server::TCPConnect(const SocketAddr& peer, const std::function<void ()>& cb, int tag)
 {
-    _TCPConnect(peer, &cb);
+    _TCPConnect(peer, &cb, tag);
 }
 
-void Server::_TCPConnect(const SocketAddr& peer, const std::function<void ()>* cb)
+void Server::_TCPConnect(const SocketAddr& peer, const std::function<void ()>* cb, int tag)
 {
-    auto client(std::make_shared<ClientSocket>());
+    auto client(std::make_shared<ClientSocket>(tag));
     if (cb)
         client->SetFailCallback(*cb);
 
@@ -150,18 +150,18 @@ void Server::MainLoop(bool daemon)
 }
 
 
-std::shared_ptr<StreamSocket> Server::_OnNewConnection(int tcpsock)
+std::shared_ptr<StreamSocket> Server::_OnNewConnection(int tcpsock, int tag)
 {
     WRN << "implement your tcp accept, now close socket " << tcpsock;
     return std::shared_ptr<StreamSocket>(nullptr);
 }
 
-void Server::NewConnection(int sock, const std::function<void ()>& cb)
+void Server::NewConnection(int sock, int tag, const std::function<void ()>& cb)
 {
     if (sock == INVALID_SOCKET)
         return;
 
-    auto conn = _OnNewConnection(sock);
+    auto conn = _OnNewConnection(sock, tag);
     
     if (!conn)
     {

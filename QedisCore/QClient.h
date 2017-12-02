@@ -10,6 +10,11 @@
 #include <unordered_set>
 #include <unordered_map>
 
+namespace ConnectionTag
+{
+    const int kQedisClient = 1;
+};
+
 namespace qedis
 {
 

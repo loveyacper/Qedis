@@ -1,4 +1,12 @@
-# Qedis
+
+     _____     _____   _____   _   ______                  
+    /  _  \   | ____| |  _  \ | | /  ___/                        
+    | | | |   | |__   | | | | | | | |____
+    | | | |   |  __|  | | | | | |  \__   \
+    | |_| |_  | |___  | |_| | | |  ___|  |
+    \_______| |_____| |_____/ |_| /_____/
+
+
 [![Build Status](https://travis-ci.org/loveyacper/Qedis.svg?branch=master)](https://travis-ci.org/loveyacper/Qedis)
 
 [Click me switch to English](README.en.md)
@@ -64,3 +72,4 @@ C++11实现的增强版分布式Redis服务器,使用Leveldb作为持久化存�
 ## TODO
 * 支持lua
 * Qedis Cluster多语言客户端
+

@@ -11,7 +11,7 @@
 #include "NetThreadPool.h"
 
 
-ClientSocket::ClientSocket()
+ClientSocket::ClientSocket(int tag) : tag_(tag)
 {
 }
 
@@ -47,7 +47,7 @@ bool ClientSocket::Connect(const SocketAddr& dst)
             << peerAddr_.GetPort()
             << "]";
        
-        Server::Instance()->NewConnection(localSock_);
+        Server::Instance()->NewConnection(localSock_, tag_, onConnectFail_);
         localSock_ = INVALID_SOCKET;
         return  true;
     }
@@ -107,7 +107,7 @@ bool ClientSocket::OnWritable()
         << ":"
         << peerAddr_.GetPort() << ")";
 
-    Server::Instance()->NewConnection(localSock_, onConnectFail_);
+    Server::Instance()->NewConnection(localSock_, tag_, onConnectFail_);
     localSock_ = INVALID_SOCKET; 
 
     return true;

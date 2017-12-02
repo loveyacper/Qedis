@@ -228,7 +228,8 @@ void QReplication::Cron()
                     QREPL.SetMasterState(QReplState_none);
                     if (!masterInfo_.downSince)
                         masterInfo_.downSince = ::time(nullptr);
-                });
+                },
+                ConnectionTag::kQedisClient);
 
                 masterInfo_.state = QReplState_connecting;
             }

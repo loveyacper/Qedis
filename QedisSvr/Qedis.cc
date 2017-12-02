@@ -119,33 +119,16 @@ bool  Qedis::ParseArgs(int ac, char* av[])
 }
 
 
-std::shared_ptr<StreamSocket> Qedis::_OnNewConnection(int connfd)
+std::shared_ptr<StreamSocket> Qedis::_OnNewConnection(int connfd, int tag)
 {
     using namespace qedis;
-    
+
     SocketAddr peer;
     Socket::GetPeerAddr(connfd, peer);
 
-#if QEDIS_CLUSTER
-    auto it = std::find(g_config.centers.begin(), g_config.centers.end(), peer);
-    if (it != g_config.centers.end())
+    switch (tag)
     {
-        DBG << "Connect success to cluster " << peer.ToString();
-        auto conn = std::make_shared<QClusterClient>();
-        if (!conn->Init(connfd, peer))
-            conn.reset();
-
-        return conn;
-    }
-    else
-#endif
-    {
-        SocketAddr local;
-        Socket::GetLocalAddr(connfd, local);
-        
-        const bool peerIsMaster = (peer == QREPL.GetMasterAddr());
-        
-        if (peerIsMaster || local.GetPort() == g_config.port)
+    case ConnectionTag::kQedisClient:
         {
             // incoming clients or connect to master
             auto cli(std::make_shared<QClient>());
@@ -154,7 +137,19 @@ std::shared_ptr<StreamSocket> Qedis::_OnNewConnection(int connfd)
 
             return cli;
         }
-        else
+        break;
+#if QEDIS_CLUSTER
+    case ConnectionTag::kSentinelClient:
+        {
+            DBG << "Connect success to cluster " << peer.ToString();
+            auto conn = std::make_shared<QClusterClient>();
+            if (!conn->Init(connfd, peer))
+                conn.reset();
+
+            return conn;
+        }
+        break;
+    case ConnectionTag::kSlaveClient:
         {
             INF << "Connect to slave " << peer.ToString();
             auto cli(std::make_shared<QSlaveClient>());
@@ -163,6 +158,11 @@ std::shared_ptr<StreamSocket> Qedis::_OnNewConnection(int connfd)
 
             return cli;
         }
+        break;
+#endif
+    default:
+        ERR << "Unknown tag " << tag;
+        break;
     }
     
     return nullptr;
@@ -236,7 +236,7 @@ static void OnConnectClusterFail(const std::vector<SocketAddr>& addrs, size_t& i
     timer->Init(2 * 1000, 1);
     timer->SetCallback([=, &i]() {
         USR << "OnTimer connect to " << addrs[i].GetIP() << ":" << addrs[i].GetPort();
-        Server::Instance()->TCPConnect(addrs[i], std::bind(OnConnectClusterFail, addrs, std::ref(i)));
+        Server::Instance()->TCPConnect(addrs[i], std::bind(OnConnectClusterFail, addrs, std::ref(i)), ConnectionTag::kSentinelClient);
     });
     TimerManager::Instance().AsyncAddTimer(timer);
 };
@@ -274,9 +274,9 @@ bool Qedis::_Init()
         g_log = LogManager::Instance().CreateLog(level, dest, g_config.logdir.c_str());
     }
     
-    SocketAddr addr(g_config.ip.c_str() , g_config.port);
+    SocketAddr addr(g_config.ip.c_str(), g_config.port);
     
-    if (!Server::TCPBind(addr))
+    if (!Server::TCPBind(addr, ConnectionTag::kQedisClient))
     {
         ERR << "can not bind socket on port " << addr.GetPort();
         return false;
@@ -368,7 +368,7 @@ bool Qedis::_Init()
         }
 
         std::function<void ()> retry = std::bind(OnConnectClusterFail, addrs, std::ref(clusterIndex_));
-        Server::Instance()->TCPConnect(addrs[clusterIndex_], retry);
+        Server::Instance()->TCPConnect(addrs[clusterIndex_], retry, ConnectionTag::kSentinelClient);
     }
 #endif
 

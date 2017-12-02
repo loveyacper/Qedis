@@ -11,7 +11,8 @@ class ListenSocket : public Socket
 {
     static const int LISTENQ;
 public:
-    ListenSocket();
+    explicit
+    ListenSocket(int tag);
     ~ListenSocket();
     
     SocketType GetSocketType() const { return SocketType_Listen; }
@@ -25,6 +26,7 @@ private:
     int _Accept();
     sockaddr_in     addrClient_;
     unsigned short  localPort_;
+    const int       tag_;
 };
 
 }

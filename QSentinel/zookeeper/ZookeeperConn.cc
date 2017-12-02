@@ -446,7 +446,7 @@ bool ZookeeperConn::_ProcessResponse(const ReplyHeader& hdr, iarchive* ia)
                 {
                     // connect to slaves and send 'slave of me'
                     SocketAddr addr(GetNodeAddr(slave->second));
-                    Server::Instance()->TCPConnect(addr);
+                    Server::Instance()->TCPConnect(addr, ConnectionTag::kSlaveClient);
                 }
             }
             else

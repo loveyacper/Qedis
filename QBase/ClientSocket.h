@@ -9,7 +9,8 @@
 class ClientSocket : public Socket
 {
 public:
-    ClientSocket();
+    explicit
+    ClientSocket(int tag);
     ~ClientSocket();
     bool    Connect(const SocketAddr& addr);
     bool    OnWritable();
@@ -19,6 +20,7 @@ public:
     void SetFailCallback(const std::function<void ()>& cb) { onConnectFail_ = cb; }
 
 private:
+    const int tag_;
     SocketAddr peerAddr_;
     std::function<void ()> onConnectFail_;
 };

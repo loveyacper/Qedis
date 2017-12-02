@@ -1,5 +1,6 @@
 #include <vector>
 #include <fstream>
+#include <memory>
 #include "ConfigParser.h"
 
 static const int  SPACE     = ' ';
@@ -32,7 +33,7 @@ bool ConfigParser::Load(const char* fileName)
     const std::size_t size = fbuf->pubseekoff (0, ifs.end, ifs.in);
     fbuf->pubseekpos (0, ifs.in);
       
-    // allocate memory to contain file data
+    // allocate memory to hold file data
     std::unique_ptr<char []> data(new char[size]);
     fbuf->sgetn(data.get(), size);
     ifs.close();

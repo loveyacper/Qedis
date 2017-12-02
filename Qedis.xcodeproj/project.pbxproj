@@ -456,18 +456,18 @@
 		BA6C337019EC0D9900AC1800 /* QPubsub.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = QPubsub.h; path = QedisCore/QPubsub.h; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		BA6E478C1F99056000EFBE6F /* QSlaveClient.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QSlaveClient.cc; path = QedisCore/QSlaveClient.cc; sourceTree = SOURCE_ROOT; };
 		BA6E478D1F99056000EFBE6F /* QSlaveClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QSlaveClient.h; path = QedisCore/QSlaveClient.h; sourceTree = SOURCE_ROOT; };
-		BA6E47911F9905E600EFBE6F /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = CMakeLists.txt; path = QCluster/CMakeLists.txt; sourceTree = "<group>"; };
-		BA6E47921F9905E600EFBE6F /* QClusterClient.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QClusterClient.cc; path = QCluster/QClusterClient.cc; sourceTree = "<group>"; };
-		BA6E47931F9905E600EFBE6F /* QClusterClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QClusterClient.h; path = QCluster/QClusterClient.h; sourceTree = "<group>"; };
-		BA6E47941F9905E600EFBE6F /* QClusterInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QClusterInterface.h; path = QCluster/QClusterInterface.h; sourceTree = "<group>"; };
-		BA6E47961F9905F500EFBE6F /* proto.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = proto.h; path = QCluster/zookeeper/proto.h; sourceTree = "<group>"; };
-		BA6E47971F9905F500EFBE6F /* recordio.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = recordio.c; path = QCluster/zookeeper/recordio.c; sourceTree = "<group>"; };
-		BA6E47981F9905F500EFBE6F /* recordio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = recordio.h; path = QCluster/zookeeper/recordio.h; sourceTree = "<group>"; };
-		BA6E47991F9905F500EFBE6F /* zookeeper_version.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = zookeeper_version.h; path = QCluster/zookeeper/zookeeper_version.h; sourceTree = "<group>"; };
-		BA6E479A1F9905F500EFBE6F /* zookeeper.jute.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = zookeeper.jute.c; path = QCluster/zookeeper/zookeeper.jute.c; sourceTree = "<group>"; };
-		BA6E479B1F9905F500EFBE6F /* zookeeper.jute.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = zookeeper.jute.h; path = QCluster/zookeeper/zookeeper.jute.h; sourceTree = "<group>"; };
-		BA6E479C1F9905F500EFBE6F /* ZookeeperConn.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ZookeeperConn.cc; path = QCluster/zookeeper/ZookeeperConn.cc; sourceTree = "<group>"; };
-		BA6E479D1F9905F500EFBE6F /* ZookeeperConn.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ZookeeperConn.h; path = QCluster/zookeeper/ZookeeperConn.h; sourceTree = "<group>"; };
+		BA6E47911F9905E600EFBE6F /* CMakeLists.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = CMakeLists.txt; path = QSentinel/CMakeLists.txt; sourceTree = "<group>"; };
+		BA6E47921F9905E600EFBE6F /* QClusterClient.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QClusterClient.cc; path = QSentinel/QClusterClient.cc; sourceTree = "<group>"; };
+		BA6E47931F9905E600EFBE6F /* QClusterClient.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QClusterClient.h; path = QSentinel/QClusterClient.h; sourceTree = "<group>"; };
+		BA6E47941F9905E600EFBE6F /* QClusterInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QClusterInterface.h; path = QSentinel/QClusterInterface.h; sourceTree = "<group>"; };
+		BA6E47961F9905F500EFBE6F /* proto.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = proto.h; path = QSentinel/zookeeper/proto.h; sourceTree = "<group>"; };
+		BA6E47971F9905F500EFBE6F /* recordio.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = recordio.c; path = QSentinel/zookeeper/recordio.c; sourceTree = "<group>"; };
+		BA6E47981F9905F500EFBE6F /* recordio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = recordio.h; path = QSentinel/zookeeper/recordio.h; sourceTree = "<group>"; };
+		BA6E47991F9905F500EFBE6F /* zookeeper_version.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = zookeeper_version.h; path = QSentinel/zookeeper/zookeeper_version.h; sourceTree = "<group>"; };
+		BA6E479A1F9905F500EFBE6F /* zookeeper.jute.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = zookeeper.jute.c; path = QSentinel/zookeeper/zookeeper.jute.c; sourceTree = "<group>"; };
+		BA6E479B1F9905F500EFBE6F /* zookeeper.jute.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = zookeeper.jute.h; path = QSentinel/zookeeper/zookeeper.jute.h; sourceTree = "<group>"; };
+		BA6E479C1F9905F500EFBE6F /* ZookeeperConn.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ZookeeperConn.cc; path = QSentinel/zookeeper/ZookeeperConn.cc; sourceTree = "<group>"; };
+		BA6E479D1F9905F500EFBE6F /* ZookeeperConn.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ZookeeperConn.h; path = QSentinel/zookeeper/ZookeeperConn.h; sourceTree = "<group>"; };
 		BA6E47A51F99064D00EFBE6F /* libqcluster.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libqcluster.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		BA98F83B1B01B16600ABCBD9 /* QConfig.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QConfig.cc; path = QedisCore/QConfig.cc; sourceTree = SOURCE_ROOT; };
 		BA98F83C1B01B16600ABCBD9 /* QConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QConfig.h; path = QedisCore/QConfig.h; sourceTree = SOURCE_ROOT; };
@@ -802,7 +802,7 @@
 			name = Modules;
 			sourceTree = "<group>";
 		};
-		BA6E478F1F9905C800EFBE6F /* QCluster */ = {
+		BA6E478F1F9905C800EFBE6F /* QSentinel */ = {
 			isa = PBXGroup;
 			children = (
 				BA6E47911F9905E600EFBE6F /* CMakeLists.txt */,
@@ -811,7 +811,7 @@
 				BA6E47941F9905E600EFBE6F /* QClusterInterface.h */,
 				BA6E47901F9905D400EFBE6F /* zookeeper */,
 			);
-			name = QCluster;
+			name = QSentinel;
 			sourceTree = "<group>";
 		};
 		BA6E47901F9905D400EFBE6F /* zookeeper */ = {
@@ -881,7 +881,7 @@
 				BAD0C61819E7A059005B3784 /* QedisSvr */,
 				BAA158B219C44A0F007713F9 /* QBase */,
 				BABEBED719C4474900010636 /* QedisCore */,
-				BA6E478F1F9905C800EFBE6F /* QCluster */,
+				BA6E478F1F9905C800EFBE6F /* QSentinel */,
 				BA4CD2141CEB54BC00F68F67 /* Modules */,
 				BADC7D7219D6BC700036858E /* UnitTest */,
 				BABEBED619C4474900010636 /* Products */,

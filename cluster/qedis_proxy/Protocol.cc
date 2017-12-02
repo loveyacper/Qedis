@@ -1,5 +1,6 @@
 
 #include <cassert>
+#include <algorithm>
 #include "Protocol.h"
 
 // 1 request -> multi strlist

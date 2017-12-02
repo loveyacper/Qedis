@@ -23,9 +23,8 @@ protected:
 public:
     virtual ~Server();
 
-    bool  TCPBind(const SocketAddr&  listenAddr);
-    void  TCPReconnect(const SocketAddr& peer);
-    void  TCPConnect(const SocketAddr& peer, const std::function<void()>* cb);
+    bool  TCPBind(const SocketAddr& listenAddr, int tag);
+    void  TCPReconnect(const SocketAddr& peer, int tag);
 
     static Server*  Instance() {   return   sinstance_;  }
 
@@ -33,10 +32,10 @@ public:
     void Terminate()  { bTerminate_ = true; }
 
     void MainLoop(bool daemon = false);
-    void NewConnection(int sock, const std::function<void ()>& cb = std::function<void ()>());
+    void NewConnection(int sock, int tag, const std::function<void ()>& cb = std::function<void ()>());
 
-    void TCPConnect(const SocketAddr& peer);
-    void TCPConnect(const SocketAddr& peer, const std::function<void ()>& cb);
+    void TCPConnect(const SocketAddr& peer, int tag);
+    void TCPConnect(const SocketAddr& peer, const std::function<void ()>& cb, int tag);
 
     size_t  TCPSize() const  {  return  tasks_.TCPSize(); }
 
@@ -52,8 +51,8 @@ public:
     static void DelListenSock(int sock);
 
 private:
-    virtual std::shared_ptr<StreamSocket>   _OnNewConnection(int tcpsock);
-    void _TCPConnect(const SocketAddr& peer, const std::function<void()>* cb = nullptr);
+    virtual std::shared_ptr<StreamSocket> _OnNewConnection(int tcpsock, int tag);
+    void _TCPConnect(const SocketAddr& peer, const std::function<void()>* cb = nullptr, int tag = -1);
 
     std::atomic<bool> bTerminate_;
     Internal::TaskManager   tasks_;

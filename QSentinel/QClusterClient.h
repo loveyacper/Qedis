@@ -6,6 +6,12 @@
 #include "StreamSocket.h"
 #include "QClusterInterface.h"
 
+namespace ConnectionTag
+{
+   const int kSentinelClient = 2;
+}
+
+
 namespace qedis
 {
 

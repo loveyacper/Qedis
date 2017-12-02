@@ -3,6 +3,11 @@
 
 #if QEDIS_CLUSTER
 
+namespace ConnectionTag
+{
+   const int kSlaveClient = 3;
+}
+
 namespace qedis
 {
 

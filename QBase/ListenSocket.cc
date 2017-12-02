@@ -14,9 +14,10 @@ namespace Internal
 
 const int ListenSocket::LISTENQ = 1024;
 
-ListenSocket::ListenSocket() 
+ListenSocket::ListenSocket(int tag) :
+    localPort_(INVALID_PORT),
+    tag_(tag)
 {
-    localPort_  =  INVALID_PORT;
 }
 
 ListenSocket::~ListenSocket()
@@ -84,7 +85,7 @@ bool ListenSocket::OnReadable()
         int connfd = _Accept();
         if (connfd >= 0)
         {
-            Server::Instance()->NewConnection(connfd);
+            Server::Instance()->NewConnection(connfd, tag_);
         }
         else
         {

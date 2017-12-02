@@ -20,7 +20,7 @@ public:
     const qedis::QString& GetConfigName() const { return cfgFile_; }
 
 private:
-    std::shared_ptr<StreamSocket>  _OnNewConnection(int fd) override;
+    std::shared_ptr<StreamSocket> _OnNewConnection(int fd, int tag) override;
     bool    _Init() override;
     bool    _RunLogic() override;
     void    _Recycle() override;

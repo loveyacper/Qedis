@@ -35,7 +35,7 @@ bool ClusterManager::Connect()
         return false;
 
     index_ ++;
-    if (index_ >= cluster_.size())
+    if (index_ >= static_cast<int>(cluster_.size()))
         index_ = 0;
 
     const ananas::SocketAddr& addr = cluster_[index_];
@@ -66,7 +66,7 @@ void ClusterManager::OnNewConnection(ananas::Connection* conn)
 
     conn->SetUserData(ctx);
     conn->SetMinPacketSize(4);
-    conn->SetOnMessage([ctx](Connection* c, const char* data, PacketLen_t len) -> PacketLen_t {
+    conn->SetOnMessage([ctx](Connection* c, const char* data, PacketLen_t len) {
          const char* ptr = data;
          if (!ctx->OnData(ptr, len)) {
              c->ActiveClose();
