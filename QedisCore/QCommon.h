@@ -217,21 +217,23 @@ enum class QParseResult : int8_t
     error,
 };
 
-QParseResult  GetIntUntilCRLF(const char*& ptr, std::size_t nBytes, int& val);
+QParseResult GetIntUntilCRLF(const char*& ptr, std::size_t nBytes, int& val);
 
-std::vector<QString>  SplitString(const QString& str, char seperator);
+std::vector<QString> SplitString(const QString& str, char seperator);
 
 // Build redis request from multiple strings, use inline protocol 
 template <typename... Args>
 std::string BuildInlineRequest(Args&& ...);
 
 template <typename S>
+inline
 std::string BuildInlineRequest(S&& s)
 {
     return std::string(std::forward<S>(s)) + "\r\n";
 }
 
 template <typename H, typename... T>
+inline
 std::string BuildInlineRequest(H&& head, T&&... tails)
 {
     std::string h(std::forward<H>(head));

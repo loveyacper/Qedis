@@ -1,5 +1,6 @@
 #include <cassert>
 #include "ProxyLog.h"
+#include "Command.h"
 #include "ClientConn.h"
 
 #include "ClusterManager.h"
@@ -7,6 +8,7 @@
 #include "QedisConn.h"
 
 #include "net/EventLoop.h"
+#include "util/Util.h"
 
 static 
 ananas::PacketLen_t ProcessInlineCmd(const char* buf,
@@ -75,8 +77,8 @@ ananas::PacketLen_t ClientConn::OnRecv(ananas::Connection* conn, const char* dat
         if (consumed == 0)
             return 0;
 
-        proto_.SetParams(params);
-        proto_.SetParam(std::string(ptr, ptr + consumed));
+        proto_.GetParams() = params;
+        proto_.GetRawRequest().assign(ptr, ptr + consumed);
 
         ptr += consumed;
         parseRet = ParseResult::ok;
@@ -87,57 +89,58 @@ ananas::PacketLen_t ClientConn::OnRecv(ananas::Connection* conn, const char* dat
         return static_cast<ananas::PacketLen_t>(ptr - data); 
     }
     
+    ANANAS_DEFER {
+        proto_.Reset();
+    };
+
+    // handle request packet
     const auto& params = proto_.GetParams();
-    if (params.size() <= 1)
+    assert (!params.empty());
+
+    std::string cmd(params[0]);
+    std::transform(params[0].begin(), params[0].end(), cmd.begin(), ::tolower);
+
+    const CommandInfo* info = CommandTable::GetCommandInfo(cmd);
+    if (!info)
     {
-        // TODO filter command
-        static const std::string kError = "-ERR No such command\r\n";
-        hostConn_->SendPacket(kError.data(), kError.size());
-    }
-    else
-    {
-        const std::string host = ClusterManager::Instance().GetServer(params[1]);
-        if (host.empty())
-        {
-            // TODO error message
-            static const std::string kError = "-ERR Server not ready\r\n";
-            hostConn_->SendPacket(kError.data(), kError.size());
-        }
-        else
-        {
-            // Forwart request to Qedis `host`
-            const auto& rawReq = proto_.GetRawRequest();
-            QedisManager::Instance().GetConnection(host)
-                .Then([rawReq, conn = hostConn_](ananas::Try<QedisConn* >&& qconn) {
-                    try {
-                        QedisConn* qc = qconn;
-                        auto rspFuture = qc->ForwardRequest(rawReq);
-                        rspFuture.OnTimeout(std::chrono::seconds(3), [conn]() {
-                                const std::string kTimeout = "-ERR Server response timeout\r\n";
-                                conn->SendPacket(kTimeout.data(), kTimeout.size());
-                            }, conn->GetLoop()
-                        );
-                        return rspFuture;
-                    }
-                    catch (const std::exception& e) {
-                        ERR(g_logger) << "GetServer with exception " << e.what();
-                        static const std::string kError = "-ERR Server not alive\r\n";
-                        return ananas::MakeReadyFuture<std::string>(kError);
-                    }
-                })
-                .Then([conn](const std::string& reply) {
-                    DBG(g_logger) << "Send reply " << reply;
-                    conn->SendPacket(reply.data(), reply.size());
-                })
-                .OnTimeout(std::chrono::seconds(3), [conn]() {
-                        const std::string kTimeout = "-ERR Internal server connect timeout\r\n";
-                        conn->SendPacket(kTimeout.data(), kTimeout.size());
-                    }, hostConn_->GetLoop()
-                );
-        }
+        const auto& e = g_errorInfo[QError_unknowCmd];
+        hostConn_->SendPacket(e.errorStr, e.len);
+        return static_cast<ananas::PacketLen_t>(ptr - data); 
     }
 
-    proto_.Reset();
+    if (info->handler)
+    {
+        std::string reply(info->handler(params));
+        hostConn_->SendPacket(reply.data(), reply.size());
+        return static_cast<ananas::PacketLen_t>(ptr - data); 
+    }
+
+    const auto& host = ClusterManager::Instance().GetServer(params[1]);
+    if (host.empty())
+    {
+        const auto& e = g_errorInfo[QError_notready];
+        hostConn_->SendPacket(e.errorStr, e.len);
+        return static_cast<ananas::PacketLen_t>(ptr - data); 
+    }
+            
+    // Forwart request to Qedis `host`
+    const auto& rawReq = proto_.GetRawRequest();
+    QedisManager::Instance().GetConnection(host)
+        .Then([rawReq, conn = hostConn_](ananas::Try<QedisConn* >&& qconn) {
+            try {
+                QedisConn* qc = qconn;
+                return qc->ForwardRequest(rawReq);
+            }
+            catch (const std::exception& e) {
+                ERR(g_logger) << "GetServer with exception " << e.what();
+                const auto& info = g_errorInfo[QError_dead];
+                return ananas::MakeReadyFuture<std::string>(std::string(info.errorStr, info.len));
+            }
+        })
+        .Then([conn](const std::string& reply) {
+            DBG(g_logger) << "Send reply " << reply;
+            conn->SendPacket(reply.data(), reply.size());
+        });
 
     return static_cast<ananas::PacketLen_t>(ptr - data);
 }

@@ -37,7 +37,6 @@ QedisConn::ForwardRequest(const std::string& rawReq)
     hostConn_->SendPacket(rawReq.data(), rawReq.size());
 
     QedisConn::Request req;
-    //req.request = params;
 
     auto fut = req.promise.GetFuture();
     pending_.push(std::move(req));
@@ -63,15 +62,7 @@ ananas::PacketLen_t QedisConn::OnRecv(ananas::Connection* conn, const char* data
     assert (parseRet == ParseResult::ok);
         
     auto& req = pending_.front();
-#if 0
-    std::cout << "--- Request: [ ";
-    for (const auto& arg : req.request)
-        std::cout << arg << " ";
-    std::cout << "]\n--- Response --\n";
-    std::cout << proto_.GetParam() << "\n";
-#endif
-
-    req.promise.SetValue(proto_.GetParam());
+    req.promise.SetValue(proto_.GetContent());
     pending_.pop();
 
     proto_.Reset();

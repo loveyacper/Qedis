@@ -239,16 +239,9 @@ ParseResult ClientProtocol::Parse(const char*& ptr, const char* end)
                 break;
 
             default:
-                assert (!!!"wrong type");
                 return ParseResult::error;
         }
-    
-        //content_.push_back(data[0]);
-        //++ data;
     }
-
-    const char* res = SearchCRLF(data + 1, end - (data + 1));
-    if (!res) return ParseResult::wait;
 
     bool ready = false;
     switch (type_)
@@ -256,8 +249,18 @@ ParseResult ClientProtocol::Parse(const char*& ptr, const char* end)
         case ResponseType::Fine:
         case ResponseType::Error:
         case ResponseType::Number:
-            data = res + 2;
-            ready = true;
+            {
+                const char* res = SearchCRLF(data + 1, end - (data + 1));
+                if (res)
+                {
+                    data = res + 2;
+                    ready = true;
+                }
+                else
+                {
+                    return ParseResult::wait;
+                }
+            }
             break;
 
         case ResponseType::String:

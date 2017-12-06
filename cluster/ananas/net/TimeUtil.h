@@ -14,8 +14,8 @@ class Time
 {
 public:
     Time();
-    Time(const Time& other) = delete;
-    Time& operator= (const Time& ) = delete;
+    //Time(const Time& other) = delete;
+    //Time& operator= (const Time& ) = delete;
 
     void Now();
     int64_t MilliSeconds() const;
