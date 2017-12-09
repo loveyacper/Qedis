@@ -26,6 +26,8 @@ const QCommandInfo QCommandTable::s_info[] =
     {"renamenx",    QAttr_write,               3,  &renamenx},
     {"scan",        QAttr_read,               -2,  &scan},
     {"sort",        QAttr_read,               -2,  &sort},
+    {"dump",        QAttr_read,                2,  &dump},
+    {"restore",     QAttr_write,              -4,  &restore},
 
     // server
     {"select",      QAttr_read,                2,  &select},
@@ -198,7 +200,7 @@ const QCommandInfo* QCommandTable::GetCommandInfo(const QString& cmd)
         return it->second;
     }
     
-    return  0;
+    return 0;
 }
     
 bool  QCommandTable::AliasCommand(const std::map<QString, QString>& aliases)
@@ -247,7 +249,7 @@ QError QCommandTable::ExecuteCmd(const std::vector<QString>& params, const QComm
     if (params.empty())
     {
         ReplyError(QError_param, reply);
-        return   QError_param;
+        return QError_param;
     }
 
     if (!info)
@@ -259,7 +261,7 @@ QError QCommandTable::ExecuteCmd(const std::vector<QString>& params, const QComm
     if (!info->CheckParamsCount(static_cast<int>(params.size())))
     {
         ReplyError(QError_param, reply);
-        return   QError_param;
+        return QError_param;
     }
 
     return info->handler(params, reply);
@@ -270,7 +272,7 @@ QError QCommandTable::ExecuteCmd(const std::vector<QString>& params, UnboundedBu
     if (params.empty())
     {
         ReplyError(QError_param, reply);
-        return   QError_param;
+        return QError_param;
     }
     
     auto it(s_handlers.find(params[0]));
@@ -299,7 +301,7 @@ bool QCommandInfo::CheckParamsCount(int nParams) const
         return nParams + params >= 0;
 }
 
-QError  cmdlist(const std::vector<QString>& params, UnboundedBuffer* reply)
+QError cmdlist(const std::vector<QString>& params, UnboundedBuffer* reply)
 {
     PreFormatMultiBulk(QCommandTable::s_handlers.size(), reply);
     for (const auto& kv : QCommandTable::s_handlers)

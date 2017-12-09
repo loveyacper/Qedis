@@ -57,6 +57,15 @@ static const int8_t  kEnc16Bits = 1;
 static const int8_t  kEnc32Bits = 2;
 static const int8_t  kEncLZF    = 3;
 
+QDBSaver::QDBSaver(const char* qdbFile)
+{
+    if (qdbFile)
+    {
+        if (!qdb_.Open(qdbFile, false))
+            assert (false);
+    }
+}
+
 void  QDBSaver::Save(const char* qdbFile)
 {
     char     tmpFile[64] = "";
@@ -388,6 +397,12 @@ void QDBSaver::SaveDoneHandler(int exitRet, int whatSignal)
 }
 
 
+QDBLoader::QDBLoader(const char *data, size_t len)
+{
+    if (data && len)
+        qdb_.Attach(data, len);
+}
+
 int  QDBLoader::Load(const char *filename)
 {
     if (!qdb_.Open(filename))
@@ -420,7 +435,7 @@ int  QDBLoader::Load(const char *filename)
     bool eof = false;
     while (!eof)
     {
-        int8_t indicator = qdb_.Read<int8_t>();
+        int8_t indicator = LoadByte();
         
         switch (indicator)
         {
@@ -483,6 +498,7 @@ int  QDBLoader::Load(const char *filename)
             {
                 QString key = LoadKey();
                 QObject obj = LoadObject(indicator);
+                assert (obj.type != QType_invalid);
                 DBG << "encounter key = " << key << ", obj.encoding = " << obj.encoding;
 
                 assert(absTimeout >= 0);
@@ -714,7 +730,6 @@ QObject  QDBLoader::LoadObject(int8_t type)
             break;
     }
     
-    assert(false);
     return QObject(QType_invalid);
 }
 
@@ -1128,6 +1143,117 @@ void QDBLoader::_LoadResizeDB()
     (void)special;
     (void)dbsize;
     (void)expiresize;
+}
+
+
+std::string DumpObject(const QObject& val)
+{
+    const char* file = "qedisdump";
+    {
+        QDBSaver saver(file);
+        saver.SaveType(val);
+        saver.SaveObject(val);
+    }
+
+    // 2 bytes version
+    char v[2];
+    v[0] = kQDBVersion & 0xFF;
+    v[1] = (kQDBVersion >> 8) & 0xFF;
+
+    InputMemoryFile ifile;
+    ifile.Open(file);
+
+    std::size_t size = std::numeric_limits<std::size_t>::max();
+    const char* data = ifile.Read(size);
+
+    std::string result(data, size);
+    result.append(v, 2);
+    // 8 bytes crc
+    const uint64_t crc = crc64(0, (const unsigned char* )result.data(), result.size());
+    result.append((const char*)&crc, 8);
+
+    unlink(file);
+    return result;
+}
+
+QObject RestoreObject(const char* data, size_t len)
+{
+    QDBLoader loader(data, len);
+    int8_t type = loader.LoadByte();
+    QObject obj = loader.LoadObject(type);
+
+    // check version
+    char v[2];
+    v[0] = loader.LoadByte();
+    v[1] = loader.LoadByte();
+    if (v[0] != kQDBVersion)
+        return QObject();
+
+    // check crc
+    uint64_t crc = 0;
+    unsigned char* p = (unsigned char*)&crc;
+    for (size_t i = 0; i < sizeof(crc); ++ i)
+    {
+        p[i] = loader.LoadByte();
+    }
+
+    const uint64_t expectCrc = crc64(0, (const unsigned char* )data, len - 8);
+    if (expectCrc != crc)
+        return QObject();
+
+    return obj;
+}
+
+QError dump(const std::vector<QString>& params, UnboundedBuffer* reply)
+{
+    QObject* val;
+    if (QSTORE.GetValue(params[1], val) != QError_ok)
+    {
+        ReplyError(QError_notExist, reply);
+        return QError_notExist;
+    }
+
+    std::string str(DumpObject(*val));
+    FormatBulk(str, reply);
+    return QError_ok;
+}
+
+// restore key ttl ser-val replace
+QError restore(const std::vector<QString>& params, UnboundedBuffer* reply)
+{
+    QObject obj(RestoreObject(params[3].data(), params[3].size()));
+    if (obj.type == QType_invalid)
+    {
+        char err[] = "-ERR DUMP payload version or checksum are wrong\r\n";
+        reply->PushData(err, sizeof err - 1);
+        return QError_nop;
+    }
+
+    long ttl = 0;
+    if (!Strtol(params[2].c_str(), params[2].size(), &ttl))
+    {
+        ReplyError(QError_nan, reply);
+        return QError_nan;
+    }
+
+    bool replace = false;
+    if (params.size() == 5 && params[4] == "replace")
+        replace = true;
+
+    const auto& key = params[1];
+    if (!replace && QSTORE.GetObject(key))
+    {
+        USR << "Can not replace " << key;
+        ReplyError(QError_busykey, reply);
+        return QError_busykey;
+    }
+
+    QSTORE.SetValue(key, std::move(obj));
+    if (ttl > 0)
+        QSTORE.SetExpireAfter(key, ttl);
+
+    FormatOK(reply);
+    return QError_ok;
 }
 
 }

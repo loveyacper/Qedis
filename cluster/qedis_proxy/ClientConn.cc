@@ -1,4 +1,6 @@
 #include <cassert>
+#include <algorithm>
+
 #include "ProxyLog.h"
 #include "Command.h"
 #include "ClientConn.h"

@@ -12,6 +12,8 @@ public:
     bool Open(const char* file);
     void Close();
 
+    void Attach(const char* data, size_t len);
+
     const char* Read(std::size_t& len);
     template <typename T>
     T Read();
@@ -23,7 +25,7 @@ private:
     bool _MapReadOnly();
 
     int file_;
-    char* pMemory_;
+    char* memory_;
     std::size_t offset_;
     std::size_t size_;
 };
@@ -31,7 +33,7 @@ private:
 template <typename T>
 inline T  InputMemoryFile::Read()
 {
-    T res(*reinterpret_cast<T* >(pMemory_ + offset_));
+    T res(*reinterpret_cast<T* >(memory_ + offset_));
     offset_ += sizeof(T);
     
     return res;
@@ -66,7 +68,7 @@ private:
     void _AssureSpace(std::size_t size);
 
     int file_;
-    char* pMemory_;
+    char* memory_;
     std::size_t offset_;
     std::size_t size_;
     std::size_t syncPos_;

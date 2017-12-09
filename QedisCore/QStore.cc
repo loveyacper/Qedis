@@ -65,7 +65,11 @@ void QObject::Reset(void* newvalue)
     value = newvalue;
 }
         
-QObject::QObject(QObject&& obj)
+QObject::QObject(QObject&& obj) :
+    type(QType_invalid),
+    encoding(QEncode_invalid),
+    lru(0),
+    value(nullptr)
 {
     _MoveFrom(std::move(obj));
 }
@@ -618,6 +622,11 @@ QObject* QStore::SetValue(const QString& key, QObject&& value)
 void QStore::SetExpire(const QString& key, uint64_t when) const
 {
     expiresDb_[dbno_].SetExpire(key, when);
+}
+
+void QStore::SetExpireAfter(const QString& key, uint64_t ttl) const
+{
+    SetExpire(key, ::Now() + ttl);
 }
 
 

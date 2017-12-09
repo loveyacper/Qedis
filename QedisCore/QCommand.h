@@ -38,6 +38,8 @@ QCommandHandler  rename;
 QCommandHandler  renamenx;
 QCommandHandler  scan;
 QCommandHandler  sort;
+QCommandHandler  dump;
+QCommandHandler  restore;
 
 // server commands
 QCommandHandler  select;
@@ -177,6 +179,7 @@ QCommandHandler  module;
     
 // help
 QCommandHandler  cmdlist;
+
 
 extern Delegate<void (UnboundedBuffer& )> g_infoCollector;
 extern void OnMemoryInfoCollect(UnboundedBuffer& );

@@ -22,9 +22,17 @@ CommandHandler  info;
 struct CommandInfo
 {
     std::string cmd;
-    int attr = 0;
-    int params = 0;
-    CommandHandler* handler = nullptr;
+    int attr;
+    int params;
+    CommandHandler* handler;
+
+    CommandInfo(const std::string& c, int a, int p, CommandHandler* ch = nullptr) :
+        cmd(c),
+        attr(a),
+        params(p),
+        handler(ch)
+    {
+    }
 
     bool CheckParamsCount(int nParams) const;
 };

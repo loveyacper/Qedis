@@ -17,7 +17,7 @@ static const int   kInvalidFile = -1;
 static char* const kInvalidAddr = reinterpret_cast<char*>(-1);
 
 InputMemoryFile::InputMemoryFile() : file_(kInvalidFile),
-                                     pMemory_(kInvalidAddr),
+                                     memory_(kInvalidAddr),
                                      offset_(0),
                                      size_(0)
 {
@@ -37,8 +37,16 @@ bool InputMemoryFile::_MapReadOnly()
     fstat(file_, &st);
     size_ = st.st_size;
 
-    pMemory_ = (char* )::mmap(0, size_, PROT_READ, MAP_PRIVATE, file_, 0);
-    return   pMemory_ != kInvalidAddr;
+    memory_ = (char* )::mmap(0, size_, PROT_READ, MAP_PRIVATE, file_, 0);
+    return memory_ != kInvalidAddr;
+}
+
+void InputMemoryFile::Attach(const char* data, size_t len)
+{
+    memory_ = (char* )data;
+    size_ = len;
+    offset_ = 0;
+    file_ = kInvalidFile;
 }
 
 bool  InputMemoryFile::Open(const char* file)
@@ -62,12 +70,12 @@ void  InputMemoryFile::Close()
 {
     if (file_ != kInvalidFile)
     {
-        ::munmap(pMemory_, size_);
+        ::munmap(memory_, size_);
         ::close(file_);
 
         file_      = kInvalidFile;
         size_      = 0;
-        pMemory_   = kInvalidAddr;
+        memory_   = kInvalidAddr;
         offset_    = 0;
     }
 }
@@ -80,7 +88,7 @@ const char* InputMemoryFile::Read(std::size_t& len)
     if (offset_ + len > size_)
         len = size_ - offset_;
 
-    return  pMemory_ + offset_;
+    return  memory_ + offset_;
 }
 
 void InputMemoryFile::Skip(size_t len)
@@ -98,7 +106,7 @@ bool InputMemoryFile::IsOpen() const
 // OutputMemoryFile
 
 OutputMemoryFile::OutputMemoryFile() : file_(kInvalidFile),
-                                       pMemory_(kInvalidAddr),
+                                       memory_(kInvalidAddr),
                                        offset_(0),
                                        size_(0),
                                        syncPos_(0)
@@ -157,13 +165,13 @@ void  OutputMemoryFile::Close()
 {
     if (file_ != kInvalidFile)
     {
-        ::munmap(pMemory_, size_);
+        ::munmap(memory_, size_);
         ::ftruncate(file_, offset_);
         ::close(file_);
 
         file_ = kInvalidFile;
         size_ = 0;
-        pMemory_ = kInvalidAddr;
+        memory_ = kInvalidAddr;
         offset_ = 0;
         syncPos_ = 0;
     }
@@ -177,7 +185,7 @@ bool    OutputMemoryFile::Sync()
     if (syncPos_ >= offset_)
         return false;
 
-    ::msync(pMemory_ + syncPos_, offset_ - syncPos_, MS_SYNC);
+    ::msync(memory_ + syncPos_, offset_ - syncPos_, MS_SYNC);
     syncPos_ = offset_;
     
     return true;
@@ -190,11 +198,11 @@ bool OutputMemoryFile::_MapWriteOnly()
 
 #if 0
     // codes below cause coredump when file size > 4MB
-    if (m_pMemory != kInvalidAddr)
-        ::munmap(m_pMemory, m_size);
+    if (m_memory != kInvalidAddr)
+        ::munmap(m_memory, m_size);
 #endif
-    pMemory_ = (char*)::mmap(0, size_, PROT_WRITE, MAP_SHARED, file_, 0);
-    return (pMemory_ != kInvalidAddr);
+    memory_ = (char*)::mmap(0, size_, PROT_WRITE, MAP_SHARED, file_, 0);
+    return (memory_ != kInvalidAddr);
 }
 
 void OutputMemoryFile::Truncate(std::size_t  size)
@@ -217,7 +225,7 @@ void OutputMemoryFile::TruncateTailZero()
         return;
 
     size_t tail = size_;
-    while (tail > 0 && pMemory_[--tail] == '\0')
+    while (tail > 0 && memory_[--tail] == '\0')
         ;
 
     ++ tail;
@@ -234,9 +242,9 @@ bool OutputMemoryFile::IsOpen() const
 void OutputMemoryFile::Write(const void* data, size_t len)
 {
     _AssureSpace(len);
-    assert(pMemory_ > 0);
+    assert(memory_ > 0);
 
-    ::memcpy(pMemory_ + offset_, data, len);
+    ::memcpy(memory_ + offset_, data, len);
     offset_ += len;
     assert(offset_ <= size_);
 }

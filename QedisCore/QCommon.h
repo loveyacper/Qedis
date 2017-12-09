@@ -96,6 +96,7 @@ enum QError
     QError_moduleinit = 16,
     QError_moduleuninit = 17,
     QError_modulerepeat = 18,
+    QError_busykey      = 19,
     QError_max,
 };
 

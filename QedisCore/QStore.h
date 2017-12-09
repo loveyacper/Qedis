@@ -123,6 +123,7 @@ public:
         notExist = -2,
     };
     void    SetExpire(const QString& key, uint64_t when) const;
+    void    SetExpireAfter(const QString& key, uint64_t ttl) const;
     int64_t TTL(const QString& key, uint64_t now);
     bool    ClearExpire(const QString& key);
     int     LoopCheckExpire(uint64_t now);

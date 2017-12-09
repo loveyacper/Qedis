@@ -10,6 +10,8 @@ namespace qedis
 class QDBSaver
 {
 public:
+    explicit
+    QDBSaver(const char* file = nullptr);
     void    Save(const char* qdbFile);
     void    SaveType(const QObject& obj);
     void    SaveKey(const QString& key);
@@ -38,8 +40,11 @@ extern pid_t  g_qdbPid;
 class QDBLoader
 {
 public:
+    explicit
+    QDBLoader(const char* data = nullptr, size_t len = 0);
     int Load(const char* filename);
 
+    int8_t  LoadByte() { return qdb_.Read<int8_t>(); }
     size_t  LoadLength(bool& special);
     QObject LoadSpecialStringObject(size_t  specialVal);
     QString LoadString(size_t strLen);
@@ -66,6 +71,9 @@ private:
     InputMemoryFile qdb_;
 };
     
+std::string DumpObject(const QObject& val);
+QObject RestoreObject(const char* data, size_t len);
+
 }
 
 #endif

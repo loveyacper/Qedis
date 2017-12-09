@@ -9,7 +9,7 @@
 namespace qedis
 {
 
-struct QErrorInfo  g_errorInfo[] = {
+struct QErrorInfo g_errorInfo[] = {
     {sizeof "+OK\r\n"- 1,   "+OK\r\n"},
     {sizeof "-ERR Operation against a key holding the wrong kind of value\r\n"- 1, "-ERR Operation against a key holding the wrong kind of value\r\n"}, 
     {sizeof "-ERR already exist"- 1,   "-ERR already exist"},
@@ -30,6 +30,8 @@ struct QErrorInfo  g_errorInfo[] = {
     {sizeof "-ERR init module failed\r\n"-1, "-ERR init module failed\r\n"},
     {sizeof "-ERR uninit module failed\r\n"-1, "-ERR uninit module failed\r\n"},
     {sizeof "-ERR module already loaded\r\n"-1, "-ERR module already loaded\r\n"},
+    {sizeof "-BUSYKEY Target key name already exists.\r\n"-1, "-BUSYKEY Target key name already exists.\r\n"},
+    //
 };
 
 
@@ -254,7 +256,7 @@ std::size_t FormatEmptyBulk(UnboundedBuffer* reply)
     return reply->PushData("$0" CRLF CRLF, 6);
 }
 
-void  ReplyError(QError err, UnboundedBuffer* reply)
+void ReplyError(QError err, UnboundedBuffer* reply)
 {
     if (!reply)
         return;
@@ -264,7 +266,7 @@ void  ReplyError(QError err, UnboundedBuffer* reply)
     reply->PushData(info.errorStr, info.len);
 }
 
-size_t  FormatNull(UnboundedBuffer* reply)
+size_t FormatNull(UnboundedBuffer* reply)
 {
     if (!reply)
         return 0;
@@ -281,18 +283,18 @@ size_t  FormatNullArray(UnboundedBuffer* reply)
     if (!reply)
         return 0;
     
-    size_t   oldSize = reply->ReadableSize();
+    size_t oldSize = reply->ReadableSize();
     reply->PushData("*-1" CRLF, 5);
     
     return reply->ReadableSize() - oldSize;
 }
 
-size_t  FormatOK(UnboundedBuffer* reply)
+size_t FormatOK(UnboundedBuffer* reply)
 {
     if (!reply)
         return 0;
     
-    size_t   oldSize = reply->ReadableSize();
+    size_t oldSize = reply->ReadableSize();
     reply->PushData("+OK" CRLF, 5);
     
     return reply->ReadableSize() - oldSize;
@@ -305,7 +307,7 @@ size_t Format1(UnboundedBuffer* reply)
     
     const char* val = ":1\r\n";
     
-    size_t  oldSize = reply->ReadableSize();
+    size_t oldSize = reply->ReadableSize();
     reply->PushData(val, 4);
     
     return reply->ReadableSize() - oldSize;
@@ -318,13 +320,13 @@ size_t Format0(UnboundedBuffer* reply)
 
     const char* val = ":0\r\n";
     
-    size_t  oldSize = reply->ReadableSize();
+    size_t oldSize = reply->ReadableSize();
     reply->PushData(val, 4);
     
     return reply->ReadableSize() - oldSize;
 }
 
-QParseResult  GetIntUntilCRLF(const char*& ptr, std::size_t nBytes, int& val)
+QParseResult GetIntUntilCRLF(const char*& ptr, std::size_t nBytes, int& val)
 {
     if (nBytes < 3)
         return QParseResult::wait;
