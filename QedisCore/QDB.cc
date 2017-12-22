@@ -62,7 +62,7 @@ QDBSaver::QDBSaver(const char* qdbFile)
     if (qdbFile)
     {
         if (!qdb_.Open(qdbFile, false))
-            assert (false);
+            ERR << "QDBSaver can not open file " << qdbFile;
     }
 }
 
@@ -74,7 +74,7 @@ void  QDBSaver::Save(const char* qdbFile)
     if (!qdb_.Open(tmpFile, false))
         assert (false);
     
-    char     buf[16];
+    char buf[16];
     snprintf(buf, sizeof buf, "REDIS%04d", kQDBVersion);
     qdb_.Write(buf, 9);
 
@@ -156,7 +156,7 @@ void QDBSaver::SaveType(const QObject& obj)
             break;
             
         default:
-            assert (false);
+            assert(!!!"Wrong encoding");
             break;
     }
 }
@@ -290,7 +290,7 @@ void QDBSaver::SaveString(const QString& str)
 }
     
 
-void  QDBSaver::SaveLength(uint64_t  len)
+void QDBSaver::SaveLength(uint64_t len)
 {
     assert ((len & ~0xFFFFFFFF) == 0);
   
@@ -385,7 +385,6 @@ void QDBSaver::SaveDoneHandler(int exitRet, int whatSignal)
     {
         INF << "save rdb success";
         g_lastQDBSave = time(NULL);
-
         QStore::dirty_ = 0;
     }
     else
@@ -423,7 +422,7 @@ int  QDBLoader::Load(const char *filename)
     if (!Strtol(data + 5, 4, &qdbversion) ||
         qdbversion < 6)
     {
-        return - 123;
+        return - __LINE__;
     }
     qdb_.Skip(9);
     
@@ -432,10 +431,17 @@ int  QDBLoader::Load(const char *filename)
     //  EOF + crc
 
     int64_t absTimeout = 0;
+    int8_t indicator = 0;
     bool eof = false;
     while (!eof)
     {
-        int8_t indicator = LoadByte();
+        try {
+            indicator = LoadByte();
+        }
+        catch (const std::runtime_error& e) {
+            ERR << "LoadByte with exception: " << e.what();
+            return - __LINE__;
+        }
         
         switch (indicator)
         {
@@ -446,24 +452,49 @@ int  QDBLoader::Load(const char *filename)
 
             case kAux:
                 DBG << "encounter AUX";
-                _LoadAux();
+                try {
+                    _LoadAux();
+                }
+                catch (const std::runtime_error& e) {
+                    ERR << "_LoadAux with exception: " << e.what();
+                    return - __LINE__;
+                }
                 break;
 
             case kResizeDb:
                 DBG << "encounter kResizeDb";
-                _LoadResizeDB();
+                try {
+                    _LoadResizeDB();
+                }
+                catch (const std::runtime_error& e) {
+                    ERR << "_LoadResizeDB with exception: " << e.what();
+                    return - __LINE__;
+                }
                 break;
                 
             case kSelectDB:
             {
                 bool special;
-                auto dbno = LoadLength(special);
-                assert(!special);
+                size_t dbno = 0;
+                try {
+                    dbno = LoadLength(special);
+                }
+                catch (const std::runtime_error& e) {
+                    ERR << "LoadLength with exception: " << e.what();
+                    return - __LINE__;
+                }
+
+                if (special)
+                {
+                    ERR << "LoadLength should not be special";
+                    return - __LINE__;
+                }
+
                 // check db no
                 if (dbno > kMaxDbNum)
                 {
                     ERR << "Abnormal db number " << dbno;
-                    return false;
+                    return __LINE__;
                 }
 
                 if (QSTORE.SelectDB(static_cast<int>(dbno)) == -1)
@@ -476,12 +507,26 @@ int  QDBLoader::Load(const char *filename)
             }
                 
             case kExpireMs:
-                absTimeout = qdb_.Read<int64_t>();
+                try {
+                    absTimeout = qdb_.Read<int64_t>();
+                }
+                catch (const std::runtime_error& e) {
+                    ERR << "Read kExpireMs with exception: " << e.what();
+                    return - __LINE__;
+                }
+
                 break;
                 
             case kExpire:
-                absTimeout = qdb_.Read<int64_t>();
-                absTimeout *= 1000;
+                try {
+                    absTimeout = qdb_.Read<int64_t>();
+                    absTimeout *= 1000;
+                }
+                catch (const std::runtime_error& e) {
+                    ERR << "Read kExpire with exception: " << e.what();
+                    return - __LINE__;
+                }
+
                 break;
                 
             case kTypeString:
@@ -496,12 +541,24 @@ int  QDBLoader::Load(const char *filename)
             case kTypeZSetZipList:
             case kTypeQuickList:
             {
-                QString key = LoadKey();
-                QObject obj = LoadObject(indicator);
-                assert (obj.type != QType_invalid);
-                DBG << "encounter key = " << key << ", obj.encoding = " << obj.encoding;
+                QString key;
+                QObject obj;
+                try {
+                    key = LoadKey();
+                    obj = LoadObject(indicator);
+                    assert (obj.type != QType_invalid);
+                    DBG << "encounter key = " << key << ", obj.encoding = " << obj.encoding;
+                }
+                catch (const std::runtime_error& e) {
+                    ERR << "Read object with exception: " << e.what();
+                    return - __LINE__;
+                }
 
-                assert(absTimeout >= 0);
+                if (absTimeout < 0)
+                {
+                    ERR << "Wrong absTimeout " << absTimeout;
+                    return - __LINE__;
+                }
                 
                 if (absTimeout == 0)
                 {
@@ -526,13 +583,17 @@ int  QDBLoader::Load(const char *filename)
             }
                 
             default:
-                printf("%d is unknown\n", indicator);
-                assert (false);
-                break;
+                ERR << indicator << " is unknown type";
+                return - __LINE__;
         }
     }
     
     return 0;
+}
+    
+int8_t QDBLoader::LoadByte()
+{
+    return qdb_.Read<int8_t>();
 }
 
 size_t  QDBLoader::LoadLength(bool& special)
@@ -578,7 +639,8 @@ size_t  QDBLoader::LoadLength(bool& special)
             
         default:
         {
-            assert(false);
+            std::string s("Wrong length type:" + std::to_string(byte));
+            throw std::runtime_error(std::move(s));
         }
     }
 
@@ -586,7 +648,7 @@ size_t  QDBLoader::LoadLength(bool& special)
 }
 
 
-QObject  QDBLoader::LoadSpecialStringObject(size_t  specialVal)
+QObject QDBLoader::LoadSpecialStringObject(size_t  specialVal)
 {
     bool isInt = true;
     long val;
@@ -618,7 +680,7 @@ QObject  QDBLoader::LoadSpecialStringObject(size_t  specialVal)
         }
             
         default:
-            assert(false);
+            throw std::runtime_error("Wrong specialVal");
     }
     
     if (isInt)
@@ -627,7 +689,7 @@ QObject  QDBLoader::LoadSpecialStringObject(size_t  specialVal)
         return QObject::CreateString(LoadLZFString());
 }
 
-QString  QDBLoader::LoadString(size_t strLen)
+QString QDBLoader::LoadString(size_t strLen)
 {
     const char* str = qdb_.Read(strLen);
     qdb_.Skip(strLen);
@@ -636,37 +698,45 @@ QString  QDBLoader::LoadString(size_t strLen)
 }
 
 
-QString  QDBLoader::LoadLZFString()
+QString QDBLoader::LoadLZFString()
 {
-    bool  special;
+    bool special;
     size_t compressLen = LoadLength(special);
-    assert(!special);
+    if (special)
+    {
+        ERR << "Should not be special for compressLen";
+        return QString();
+    }
     
     unsigned rawLen = static_cast<unsigned>(LoadLength(special));
-    assert(!special);
+    if (special)
+    {
+        ERR << "Should not be special for rawLen";
+        return QString();
+    }
     
     const char* compressStr = qdb_.Read(compressLen);
     
-    QString  val;
+    QString val;
     val.resize(rawLen);
     if (lzf_decompress(compressStr, static_cast<unsigned>(compressLen),
                        &val[0], rawLen) == 0)
     {
         ERR << "decompress error";
-        return  QString();
+        return QString();
     }
 
     qdb_.Skip(compressLen);
-    return  val;
+    return val;
 }
 
 QString QDBLoader::LoadKey()
 {
-    return  _LoadGenericString();
+    return _LoadGenericString();
 }
 
 
-QObject  QDBLoader::LoadObject(int8_t type)
+QObject QDBLoader::LoadObject(int8_t type)
 {
     switch (type)
     {
@@ -736,7 +806,7 @@ QObject  QDBLoader::LoadObject(int8_t type)
 
 QString QDBLoader::_LoadGenericString()
 {
-    bool   special;
+    bool special;
     size_t len = LoadLength(special);
     
     if (special)
@@ -754,11 +824,13 @@ QObject QDBLoader::_LoadList()
 {
     bool special;
     const auto len = LoadLength(special);
-    assert(!special);
+    if (special)
+        throw std::runtime_error("LoadList length should not be special");
+
     DBG << "list length = " << len;
     
     QObject obj(QObject::CreateList());
-    PLIST  list(obj.CastList());
+    PLIST list(obj.CastList());
     for (size_t i = 0; i < len; ++ i)
     {
         const auto elemLen = LoadLength(special);
@@ -784,7 +856,9 @@ QObject QDBLoader::_LoadSet()
 {
     bool special;
     const auto len = LoadLength(special);
-    assert(!special);
+    if (special)
+        throw std::runtime_error("LoadSet length should not be special");
+
     DBG << "set length = " << len;
     
     QObject obj(QObject::CreateSet());
@@ -814,7 +888,9 @@ QObject QDBLoader::_LoadHash()
 {
     bool special;
     const auto len = LoadLength(special);
-    assert(!special);
+    if (special)
+        throw std::runtime_error("LoadHash length should not be special");
+
     DBG << "hash length = " << len;
     
     QObject obj(QObject::CreateHash());
@@ -853,11 +929,13 @@ QObject QDBLoader::_LoadHash()
 }
 
 
-QObject    QDBLoader::_LoadSSet()
+QObject QDBLoader::_LoadSSet()
 {
     bool special;
     const auto len = LoadLength(special);
-    assert(!special);
+    if (special)
+        throw std::runtime_error("LoadSortedSet length should not be special");
+
     DBG << "sset length = " << len;
     
     QObject obj(QObject::CreateSSet());
@@ -916,7 +994,7 @@ double  QDBLoader::_LoadDoubleValue()
             assert(len == byte1st);
             qdb_.Skip(len);
             
-            std::istringstream  is(std::string(val, len));
+            std::istringstream is(std::string(val, len));
             is >> dvalue;
             
             break;
@@ -951,7 +1029,7 @@ struct ZipListElement
     {
         assert(!sval);
 
-        QString  str(16, 0);
+        QString str(16, 0);
         auto len = Number2Str(&str[0], 16, lval);
         str.resize(len);
         
@@ -1055,12 +1133,12 @@ QObject QDBLoader::_LoadZipList(const QString& zl, int8_t type)
 }
 
 
-QObject     QDBLoader::_LoadIntset()
+QObject QDBLoader::_LoadIntset()
 {
     QString str = _LoadGenericString();
     
-    intset* iset  = (intset* )&str[0];
-    unsigned nElem  = intsetLen(iset);
+    intset* iset = (intset* )&str[0];
+    unsigned nElem = intsetLen(iset);
     
     std::vector<int64_t>  elements;
     elements.resize(nElem);
@@ -1088,8 +1166,8 @@ QObject QDBLoader::_LoadQuickList()
     bool special = true;
     auto nElem = LoadLength(special);
 
-    QObject  obj(QObject::CreateList());
-    PLIST  list(obj.CastList());
+    QObject obj(QObject::CreateList());
+    PLIST list(obj.CastList());
     while (nElem -- > 0)
     {
         QString zl = _LoadGenericString();
@@ -1134,10 +1212,12 @@ void QDBLoader::_LoadResizeDB()
 {
     bool special = true;
     auto dbsize = LoadLength(special);
-    assert(!special);
+    if (special)
+        throw std::runtime_error("Should not be special when LoadLength");
 
     auto expiresize = LoadLength(special);
-    assert(!special);
+    if (special)
+        throw std::runtime_error("Should not be special when LoadLength");
 
     // Qedis just ignore this
     (void)special;
@@ -1178,30 +1258,36 @@ std::string DumpObject(const QObject& val)
 
 QObject RestoreObject(const char* data, size_t len)
 {
-    QDBLoader loader(data, len);
-    int8_t type = loader.LoadByte();
-    QObject obj = loader.LoadObject(type);
+    try {
+        QDBLoader loader(data, len);
+        int8_t type = loader.LoadByte();
+        QObject obj = loader.LoadObject(type);
 
-    // check version
-    char v[2];
-    v[0] = loader.LoadByte();
-    v[1] = loader.LoadByte();
-    if (v[0] != kQDBVersion)
-        return QObject();
+        // check version
+        char v[2];
+        v[0] = loader.LoadByte();
+        v[1] = loader.LoadByte();
+        if (v[0] != kQDBVersion)
+            return QObject();
 
-    // check crc
-    uint64_t crc = 0;
-    unsigned char* p = (unsigned char*)&crc;
-    for (size_t i = 0; i < sizeof(crc); ++ i)
-    {
-        p[i] = loader.LoadByte();
+        // check crc
+        uint64_t crc = 0;
+        unsigned char* p = (unsigned char*)&crc;
+        for (size_t i = 0; i < sizeof(crc); ++ i)
+        {
+            p[i] = loader.LoadByte();
+        }
+
+        const uint64_t expectCrc = crc64(0, (const unsigned char* )data, len - 8);
+        if (expectCrc != crc)
+            return QObject();
+
+        return obj;
     }
-
-    const uint64_t expectCrc = crc64(0, (const unsigned char* )data, len - 8);
-    if (expectCrc != crc)
+    catch (const std::runtime_error& e) {
+        ERR << "RestoreObject with exception: " << e.what();
         return QObject();
-
-    return obj;
+    }
 }
 
 QError dump(const std::vector<QString>& params, UnboundedBuffer* reply)

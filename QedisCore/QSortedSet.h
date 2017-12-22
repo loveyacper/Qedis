@@ -18,8 +18,8 @@ public:
     using Score2Members = std::map<double, Members>;
 
     using Member2Score = std::unordered_map<QString, double,
-            my_hash,
-            std::equal_to<QString> >;
+                                            my_hash,
+                                            std::equal_to<QString> >;
 
     Member2Score::iterator FindMember(const QString& member);
     Member2Score::const_iterator begin() const {  return members_.begin(); };
@@ -35,17 +35,19 @@ public:
     Member2Score::value_type
         GetMemberByRank(std::size_t rank) const;
     
-    std::vector<Member2Score::value_type > RangeByRank(long start, long end) const;
+    std::vector<Member2Score::value_type >
+        RangeByRank(long start, long end) const;
 
     std::vector<Member2Score::value_type >
         RangeByScore(double minScore, double maxScore);
-    std::size_t Size    ()  const;
+
+    std::size_t Size() const;
 
 private:
     Score2Members   scores_;
     Member2Score    members_;
 };
-    
+
 }
 
 #endif

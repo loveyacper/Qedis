@@ -6,6 +6,9 @@ using namespace qedis;
 TEST_CASE(regex_star)
 {
     EXPECT_TRUE(glob_match("a*b?*?", "abxy"));
+    EXPECT_TRUE(glob_match("*a", "aa"));
+    EXPECT_TRUE(glob_match("*a", "abaa"));
+    EXPECT_TRUE(glob_match("***a", "aaaa"));
     EXPECT_FALSE(glob_match("a*b?*?", "cb"));
 
     EXPECT_TRUE(glob_match("a*b", "ab"));

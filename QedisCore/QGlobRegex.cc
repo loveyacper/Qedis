@@ -71,6 +71,9 @@ bool QGlobRegex::TryMatch()
             // fall through;
 
         default:
+            if (tOff_ >= tLen_)
+                return false;
+
             if (pattern_[pOff_] != text_[tOff_])
                 return false;
 
@@ -98,12 +101,14 @@ bool QGlobRegex::_ProcessStar()
     while (tOff_ < tLen_)
     {
         std::size_t oldpoff = pOff_;
+        std::size_t oldtoff = tOff_;
         if (TryMatch())
         {
             return true;
         }
 
         pOff_ = oldpoff;
+        tOff_ = oldtoff;
         ++ tOff_;
     }
 

@@ -54,7 +54,7 @@ Run this command, compare with redis use pipeline commands, try it.
  Qedis supports them all :-)
  
 ## Command List
-#### show all supported commands list, about 137 commands
+#### show all supported commands list, about 140 commands
 - cmdlist
 
 ## TODO

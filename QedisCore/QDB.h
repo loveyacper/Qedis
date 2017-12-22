@@ -44,7 +44,7 @@ public:
     QDBLoader(const char* data = nullptr, size_t len = 0);
     int Load(const char* filename);
 
-    int8_t  LoadByte() { return qdb_.Read<int8_t>(); }
+    int8_t  LoadByte();
     size_t  LoadLength(bool& special);
     QObject LoadSpecialStringObject(size_t  specialVal);
     QString LoadString(size_t strLen);

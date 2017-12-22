@@ -41,6 +41,15 @@ bool InputMemoryFile::_MapReadOnly()
     return memory_ != kInvalidAddr;
 }
 
+void InputMemoryFile::_CheckAvail(std::size_t len) throw(std::runtime_error)
+{
+    if (offset_ + len > size_)
+    {
+        std::string s("Not enough data, require " + std::to_string(len) + ", only has " + std::to_string(size_ - offset_));
+        throw std::runtime_error(std::move(s));
+    }
+}
+
 void InputMemoryFile::Attach(const char* data, size_t len)
 {
     memory_ = (char* )data;
@@ -93,8 +102,8 @@ const char* InputMemoryFile::Read(std::size_t& len)
 
 void InputMemoryFile::Skip(size_t len)
 {
+    _CheckAvail(len);
     offset_ += len;
-    assert (offset_ <= size_);
 }
 
 bool InputMemoryFile::IsOpen() const

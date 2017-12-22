@@ -2,6 +2,7 @@
 #define BERT_MEMORYFILE_H
 
 #include <string>
+#include <stdexcept>
 
 class InputMemoryFile
 {
@@ -23,6 +24,7 @@ public:
 
 private:
     bool _MapReadOnly();
+    void _CheckAvail(std::size_t len) throw(std::runtime_error);
 
     int file_;
     char* memory_;
@@ -31,8 +33,10 @@ private:
 };
 
 template <typename T>
-inline T  InputMemoryFile::Read()
+inline T InputMemoryFile::Read()
 {
+    _CheckAvail(sizeof(T));
+
     T res(*reinterpret_cast<T* >(memory_ + offset_));
     offset_ += sizeof(T);
     
@@ -53,6 +57,7 @@ public:
 
     void Truncate(std::size_t size);
     //!! if process terminated abnormally, erase the trash data
+    //requirement: text file.
     void TruncateTailZero();
 
     void Write(const void* data, std::size_t len);
