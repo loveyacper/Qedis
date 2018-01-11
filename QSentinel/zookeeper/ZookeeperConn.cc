@@ -38,12 +38,12 @@ namespace qedis
     
     
 ZookeeperConn::ZookeeperConn(const std::shared_ptr<StreamSocket>& c, int setId, const std::string& addr) :
-    sock_(c),
     xid_(0),
     setId_(setId),
     addr_(addr),
     state_(State::kNone),
-    pingTimer_(nullptr)
+    pingTimer_(nullptr),
+    sock_(c)
 {
     lastPing_.tv_sec = 0;
     lastPing_.tv_usec = 0;
@@ -160,7 +160,11 @@ void ZookeeperConn::OnDisconnect()
         TimerManager::Instance().KillTimer(pingTimer_);
 }
 
-static struct ACL _OPEN_ACL_UNSAFE_ACL[] = {{0x1f, {"world", "anyone"}}};
+static struct ACL _OPEN_ACL_UNSAFE_ACL[] = {{0x1f,
+                                                 {const_cast<char*>("world"),
+                                                  const_cast<char*>("anyone")
+                                                 }
+                                           }};
 struct ACL_vector ZOO_OPEN_ACL_UNSAFE = { 1, _OPEN_ACL_UNSAFE_ACL};
 
     
@@ -414,7 +418,7 @@ bool ZookeeperConn::_ProcessResponse(const ReplyHeader& hdr, iarchive* ia)
             {
                 const std::string& node = rsp.children.data[i];
                 int seq = GetNodeSeq(node);
-                assert (seq_ >= 0);
+                assert (seq >= 0);
 
                 if (node_.empty())
                 {

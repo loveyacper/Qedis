@@ -168,6 +168,7 @@ std::size_t FormatSingle(const QString& str, UnboundedBuffer* reply);
 std::size_t FormatBulk(const char* str, std::size_t len, UnboundedBuffer* reply);
 std::size_t FormatBulk(const QString& str, UnboundedBuffer* reply);
 std::size_t PreFormatMultiBulk(std::size_t nBulk, UnboundedBuffer* reply);
+std::size_t FormatMultiBulk(const std::vector<QString> vs, UnboundedBuffer* reply);
 
 std::size_t FormatEmptyBulk(UnboundedBuffer* reply);
 std::size_t FormatNull(UnboundedBuffer* reply);

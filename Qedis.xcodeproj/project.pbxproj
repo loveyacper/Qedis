@@ -158,6 +158,7 @@
 		BA98F83E1B01B16600ABCBD9 /* QConfig.h in Headers */ = {isa = PBXBuildFile; fileRef = BA98F83C1B01B16600ABCBD9 /* QConfig.h */; };
 		BA98F8411B1B539600ABCBD9 /* QSlowLog.cc in Sources */ = {isa = PBXBuildFile; fileRef = BA98F83F1B1B539600ABCBD9 /* QSlowLog.cc */; };
 		BA98F8421B1B539600ABCBD9 /* QSlowLog.h in Headers */ = {isa = PBXBuildFile; fileRef = BA98F8401B1B539600ABCBD9 /* QSlowLog.h */; };
+		BAB2265E2007B7B7005241F6 /* QMigration.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAB2265C2007B7B7005241F6 /* QMigration.cc */; };
 		BAD0C5FF19E7A02C005B3784 /* QClient.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAD0C5E319E7A02C005B3784 /* QClient.cc */; };
 		BAD0C60019E7A02C005B3784 /* QClient.h in Headers */ = {isa = PBXBuildFile; fileRef = BAD0C5E419E7A02C005B3784 /* QClient.h */; };
 		BAD0C60119E7A02C005B3784 /* QCommand.cc in Sources */ = {isa = PBXBuildFile; fileRef = BAD0C5E519E7A02C005B3784 /* QCommand.cc */; };
@@ -475,6 +476,8 @@
 		BA98F8401B1B539600ABCBD9 /* QSlowLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QSlowLog.h; path = QedisCore/QSlowLog.h; sourceTree = SOURCE_ROOT; };
 		BA99A7591CF19ED20051C43C /* qedis.conf */ = {isa = PBXFileReference; lastKnownFileType = text; path = qedis.conf; sourceTree = "<group>"; };
 		BA99CC521C52852C00BB88F7 /* Qedis.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Qedis.h; path = QedisSvr/Qedis.h; sourceTree = "<group>"; };
+		BAB2265C2007B7B7005241F6 /* QMigration.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QMigration.cc; path = QedisCore/QMigration.cc; sourceTree = SOURCE_ROOT; };
+		BAB2265D2007B7B7005241F6 /* QMigration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QMigration.h; path = QedisCore/QMigration.h; sourceTree = SOURCE_ROOT; };
 		BABEBED519C4474900010636 /* Qedis */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Qedis; sourceTree = BUILT_PRODUCTS_DIR; };
 		BAC9098D1B9D30DB002003C2 /* CMakeCommon */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeCommon; sourceTree = "<group>"; };
 		BAC9098E1B9D30DB002003C2 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
@@ -846,7 +849,6 @@
 				BAFC840A19C44AFD00C18B22 /* EPoller.h */,
 				BAFC840B19C44AFD00C18B22 /* Kqueue.cc */,
 				BAFC840C19C44AFD00C18B22 /* Kqueue.h */,
-				BAFC840D19C44AFD00C18B22 /* ListenSocket.cc */,
 				BAFC840E19C44AFD00C18B22 /* ListenSocket.h */,
 				BAFC840F19C44AFD00C18B22 /* Log */,
 				BAFC842A19C44AFD00C18B22 /* NetThreadPool.cc */,
@@ -857,6 +859,7 @@
 				BAFC846019C44AFD00C18B22 /* Socket.cc */,
 				BAFC846119C44AFD00C18B22 /* Socket.h */,
 				BAFC846219C44AFD00C18B22 /* StreamSocket.cc */,
+				BAFC840D19C44AFD00C18B22 /* ListenSocket.cc */,
 				BAFC846319C44AFD00C18B22 /* StreamSocket.h */,
 				BAFC846419C44AFD00C18B22 /* TaskManager.cc */,
 				BAFC846519C44AFD00C18B22 /* TaskManager.h */,
@@ -905,6 +908,8 @@
 		BABEBED719C4474900010636 /* QedisCore */ = {
 			isa = PBXGroup;
 			children = (
+				BAB2265C2007B7B7005241F6 /* QMigration.cc */,
+				BAB2265D2007B7B7005241F6 /* QMigration.h */,
 				BA6E478C1F99056000EFBE6F /* QSlaveClient.cc */,
 				BA6E478D1F99056000EFBE6F /* QSlaveClient.h */,
 				BA34F9F51D5C25E400F1DE01 /* QDumpInterface.h */,
@@ -1436,6 +1441,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BA6E47A01F9905F500EFBE6F /* ZookeeperConn.cc in Sources */,
+				BAB2265E2007B7B7005241F6 /* QMigration.cc in Sources */,
 				BA6E479F1F9905F500EFBE6F /* zookeeper.jute.c in Sources */,
 				BA6E478E1F99056000EFBE6F /* QSlaveClient.cc in Sources */,
 				BA6E47951F9905E600EFBE6F /* QClusterClient.cc in Sources */,

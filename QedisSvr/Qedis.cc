@@ -1,7 +1,7 @@
 //
 //  Qedis.cc
 //
-//  Copyright (c) 2014-2017年 Bert Young. All rights reserved.
+//  Copyright (c) 2014-2018 Bert Young. All rights reserved.
 //
 
 #include <iostream>
@@ -17,6 +17,7 @@
 #include "QCommand.h"
 
 #include "QPubsub.h"
+#include "QMigration.h"
 #include "QDB.h"
 #include "QAOF.h"
 #include "QConfig.h"
@@ -160,6 +161,16 @@ std::shared_ptr<StreamSocket> Qedis::_OnNewConnection(int connfd, int tag)
         }
         break;
 #endif
+    case ConnectionTag::kMigrateClient:
+        {
+            INF << "Connect to migrate " << peer.ToString();
+            auto cli(std::make_shared<QMigrateClient>());
+            if (!cli->Init(connfd, peer))
+                cli.reset();
+
+            return cli;
+        }
+        break;
     default:
         ERR << "Unknown tag " << tag;
         break;
@@ -290,6 +301,7 @@ bool Qedis::_Init()
     QSTORE.InitEvictionTimer();
     QSTORE.InitDumpBackends();
     QPubsub::Instance().InitPubsubTimer();
+    QMigrationManager::Instance().InitMigrationTimer();
     
     // Only if there is no backend, load aof or rdb
     if (g_config.backend == qedis::BackEndNone)

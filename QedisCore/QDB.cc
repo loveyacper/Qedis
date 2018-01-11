@@ -59,16 +59,13 @@ static const int8_t  kEncLZF    = 3;
 
 QDBSaver::QDBSaver(const char* qdbFile)
 {
-    if (qdbFile)
-    {
-        if (!qdb_.Open(qdbFile, false))
-            ERR << "QDBSaver can not open file " << qdbFile;
-    }
+    if (qdbFile && !qdb_.Open(qdbFile, false))
+        ERR << "QDBSaver can not open file " << qdbFile;
 }
 
 void  QDBSaver::Save(const char* qdbFile)
 {
-    char     tmpFile[64] = "";
+    char tmpFile[64] = "";
     snprintf(tmpFile, sizeof tmpFile, "tmp_qdb_file_%d", getpid());
     
     if (!qdb_.Open(tmpFile, false))
@@ -1228,9 +1225,10 @@ void QDBLoader::_LoadResizeDB()
 
 std::string DumpObject(const QObject& val)
 {
-    const char* file = "qedisdump";
+    std::string file = "qedisdump";
+    file += std::to_string(getpid());
     {
-        QDBSaver saver(file);
+        QDBSaver saver(file.data());
         saver.SaveType(val);
         saver.SaveObject(val);
     }
@@ -1241,7 +1239,7 @@ std::string DumpObject(const QObject& val)
     v[1] = (kQDBVersion >> 8) & 0xFF;
 
     InputMemoryFile ifile;
-    ifile.Open(file);
+    ifile.Open(file.data());
 
     std::size_t size = std::numeric_limits<std::size_t>::max();
     const char* data = ifile.Read(size);
@@ -1252,7 +1250,7 @@ std::string DumpObject(const QObject& val)
     const uint64_t crc = crc64(0, (const unsigned char* )result.data(), result.size());
     result.append((const char*)&crc, 8);
 
-    unlink(file);
+    unlink(file.data());
     return result;
 }
 
@@ -1311,7 +1309,7 @@ QError restore(const std::vector<QString>& params, UnboundedBuffer* reply)
     if (obj.type == QType_invalid)
     {
         char err[] = "-ERR DUMP payload version or checksum are wrong\r\n";
-        reply->PushData(err, sizeof err - 1);
+        if (reply) reply->PushData(err, sizeof err - 1);
         return QError_nop;
     }
 
@@ -1342,5 +1340,5 @@ QError restore(const std::vector<QString>& params, UnboundedBuffer* reply)
     return QError_ok;
 }
 
-}
+} // end namespace qedis
 

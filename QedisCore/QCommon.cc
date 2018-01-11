@@ -251,6 +251,15 @@ size_t  PreFormatMultiBulk(size_t nBulk, UnboundedBuffer* reply)
     return reply->ReadableSize() - oldSize;
 }
 
+std::size_t FormatMultiBulk(const std::vector<QString> vs, UnboundedBuffer* reply)
+{
+    size_t size = 0;
+    for (const auto& s : vs)
+        size += FormatBulk(s, reply);
+
+    return size;
+}
+
 std::size_t FormatEmptyBulk(UnboundedBuffer* reply)
 {
     return reply->PushData("$0" CRLF CRLF, 6);

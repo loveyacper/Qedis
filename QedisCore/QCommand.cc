@@ -28,6 +28,7 @@ const QCommandInfo QCommandTable::s_info[] =
     {"sort",        QAttr_read,               -2,  &sort},
     {"dump",        QAttr_read,                2,  &dump},
     {"restore",     QAttr_write,              -4,  &restore},
+    {"migrate",     QAttr_read,               -6,  &migrate},
 
     // server
     {"select",      QAttr_read,                2,  &select},

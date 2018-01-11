@@ -7,6 +7,7 @@
 #include <string>
 #include <memory>
 #include <atomic>
+#include <functional>
 
 #define INVALID_SOCKET (int)(~0)
 #define SOCKET_ERROR (-1)
@@ -100,15 +101,16 @@ struct SocketAddr
     std::string ToString() const
     {
         char tmp[32];
-        const char* res = inet_ntop(AF_INET, &addr_.sin_addr, tmp, (socklen_t)(sizeof tmp));
+        const char* res = inet_ntop(AF_INET,
+                                    &addr_.sin_addr,
+                                    tmp,
+                                    (socklen_t)(sizeof tmp));
 
         return std::string(res) + ":" + std::to_string(ntohs(addr_.sin_port));
     }
 
     bool  Empty() const { return  0 == addr_.sin_family; }
     void  Clear()       { memset(&addr_, 0, sizeof addr_); }
-
-    sockaddr_in  addr_;
     
     inline friend bool operator== (const SocketAddr& a, const SocketAddr& b)
     {
@@ -117,12 +119,32 @@ struct SocketAddr
                a.addr_.sin_port        ==  b.addr_.sin_port ;
     }
     
-    
     inline friend bool operator!= (const SocketAddr& a, const SocketAddr& b)
     {
-        return  !(a == b);
+        return !(a == b);
     }
+
+    sockaddr_in addr_;
 };
+
+// custom specialization of std::hash can be injected into std
+namespace std
+{ 
+    template<>
+    struct hash<SocketAddr> 
+    { 
+        typedef SocketAddr argument_type; 
+        typedef std::size_t result_type; 
+        result_type operator()(const argument_type& s) const noexcept 
+        {
+            result_type h1 = std::hash<short>{}(s.addr_.sin_family); 
+            result_type h2 = std::hash<unsigned short>{}(s.addr_.sin_port); 
+            result_type h3 = std::hash<unsigned int>{}(s.addr_.sin_addr.s_addr);
+            result_type tmp = h1 ^ (h2 << 1);
+            return h3 ^ (tmp << 1);
+        }
+    }; 
+}
 
 
 namespace Internal
@@ -130,7 +152,7 @@ namespace Internal
 class SendThread;
 }
 
-// Abstraction for a UDP/TCP socket
+// Abstraction for a TCP socket
 class Socket : public std::enable_shared_from_this<Socket>
 {
     friend class Internal::SendThread;

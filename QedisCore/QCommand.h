@@ -40,6 +40,7 @@ QCommandHandler  scan;
 QCommandHandler  sort;
 QCommandHandler  dump;
 QCommandHandler  restore;
+QCommandHandler  migrate;
 
 // server commands
 QCommandHandler  select;
