@@ -3,6 +3,12 @@
 
 #if QEDIS_CLUSTER
 
+#include <vector>
+#include <string>
+#include <functional>
+
+#include "Socket.h"
+
 namespace ConnectionTag
 {
    const int kSlaveClient = 3;
@@ -18,8 +24,15 @@ public:
     {
     }
 
-    void SetOnBecomeMaster(std::function<void ()> cb) { onBecomeMaster_ = std::move(cb); }
-    void SetOnBecomeSlave(std::function<void (const std::string& )> cb) { onBecomeSlave_ = std::move(cb); }
+    void SetOnBecomeMaster(std::function<void (const std::vector<SocketAddr>& )> cb)
+    {
+        onBecomeMaster_ = std::move(cb);
+    }
+
+    void SetOnBecomeSlave(std::function<void (const std::string& )> cb)
+    {
+        onBecomeSlave_ = std::move(cb);
+    }
 
 public:
     virtual bool ParseMessage(const char*& data, size_t len) = 0;
@@ -27,7 +40,7 @@ public:
     virtual void OnDisconnect() = 0;
 
 protected:
-    std::function<void ()> onBecomeMaster_;
+    std::function<void (const std::vector<SocketAddr>& )> onBecomeMaster_;
     std::function<void (const std::string& )> onBecomeSlave_;
 
 };

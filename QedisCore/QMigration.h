@@ -67,7 +67,7 @@ public:
 
 private:
     PacketLength _HandlePacket(const char* msg, std::size_t len) override;
-    int readyRsp_ = 0;
+    size_t readyRsp_ = 0;
 };
 
 } // end namespace qedis

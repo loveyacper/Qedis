@@ -3,7 +3,6 @@
 #include <unistd.h>
 #include "ZookeeperConn.h"
 #include "Log/Logger.h"
-#include "Server.h"
 #include "QCommon.h"
 
 #include "zookeeper.jute.h"
@@ -442,23 +441,78 @@ bool ZookeeperConn::_ProcessResponse(const ReplyHeader& hdr, iarchive* ia)
             assert (me != siblings_.end());
             if (me == siblings_.begin())
             {
-                if (onBecomeMaster_)
-                    onBecomeMaster_();
-
-                auto slave = me;
-                for (++ slave; slave != siblings_.end(); ++ slave)
+                // I am master!先获取节点分片信息，再执行slaveof no one等
+                if (!_GetData(MakeParentNode(setId_), true))
                 {
-                    // connect to slaves and send 'slave of me'
-                    SocketAddr addr(GetNodeAddr(slave->second));
-                    Server::Instance()->TCPConnect(addr, ConnectionTag::kSlaveClient);
+                    ERR << "_GetData failed for set " << setId_;
+                    return false;
                 }
             }
             else
             {
                 // monitor the node bigger than me
                 auto brother = -- me; // I'll watch you
-                _ExistsAndWatch(MakeParentNode(setId_) + "/" + brother->second);
+                _Exists(MakeParentNode(setId_) + "/" + brother->second, true);
             }
+        }
+        break;
+
+    case ZOO_GETDATA_OP:
+        {
+            GetDataResponse drsp;
+            if (deserialize_GetDataResponse(ia, "rsp", &drsp) != 0)
+            {
+                ERR << "deserialize_GetDataResponse failed";
+                return false;
+            }
+
+            QEDIS_DEFER
+            {
+                deallocate_GetDataResponse(&drsp);
+            };
+                
+            // 获取了节点分片信息
+
+            std::vector<SocketAddr> slaves;
+            slaves.reserve(siblings_.size());
+
+            auto me = siblings_.find(seq_);
+            assert (me != siblings_.end());
+            auto slave = me;
+            for (++ slave; slave != siblings_.end(); ++ slave)
+            {
+                SocketAddr addr(GetNodeAddr(slave->second));
+                slaves.push_back(addr);
+            }
+
+#if 0
+            std::vector<int> shardings;
+            std::unordered_map<int, std::vector<int> > migration; // dst set & shardings
+            {
+                // *set的数据格式是  1,3,4,7|2:1,4
+                std::string data(drsp.data.buff, drsp.data.len);
+                std::vector<QString> tmp(SplitString(data, '|'));
+                std::vector<QString> shardingStr(SplitString(tmp[0], ','));
+                auto it = tmp.begin();
+                for (++ it; it != tmp.end(); ++ it)
+                {
+                    std::vector<QString> dstAndShardingStr(SplitString(*it, ':'));
+                    assert (dstAndShardingStr.size() == 2);
+
+                    int dstSetId = std::stoi(dstAndShardingStr[0]);
+                    std::vector<QString> migrateStr(SplitString(dstAndShardingStr[1], ','));
+                    std::vector<int> migrates;
+                    migrates.reserve(migrateStr.size());
+                    for (const auto& s : migrateStr)
+                        migrates.push_back(std::stoi(s));
+
+                    migration[dstSetId] = migrates;
+                }
+            }
+#endif
+
+            if (onBecomeMaster_)
+                onBecomeMaster_(slaves);
         }
         break;
 
@@ -521,14 +575,33 @@ bool ZookeeperConn::_GetSiblings(const std::string& parent)
     return rc >= 0;
 }
 
-bool ZookeeperConn::_ExistsAndWatch(const std::string& sibling)
+bool ZookeeperConn::_GetData(const std::string& node, bool watch)
+{
+    struct oarchive* oa = create_buffer_oarchive();
+
+    struct RequestHeader h = { STRUCT_INITIALIZER( xid, _GetXid()), STRUCT_INITIALIZER(type ,ZOO_GETDATA_OP)};
+    struct GetDataRequest req;
+    req.path = const_cast<char* >(node.data());
+    req.watch = watch ? 1 : 0;
+    
+    int rc = serialize_RequestHeader(oa, "header", &h); 
+    rc = rc < 0 ? rc : serialize_GetDataRequest(oa, "req", &req);
+
+    if (!_SendPacket(h, oa, &node))
+        return false;
+
+    return rc >= 0;
+}
+
+
+bool ZookeeperConn::_Exists(const std::string& sibling, bool watch)
 {
     struct oarchive* oa = create_buffer_oarchive();
 
     struct RequestHeader h = { STRUCT_INITIALIZER( xid, _GetXid()), STRUCT_INITIALIZER (type ,ZOO_EXISTS_OP)};
     struct ExistsRequest req;
     req.path = const_cast<char* >(sibling.data());
-    req.watch = 1;
+    req.watch = watch ? 1 : 0;
     
     int rc = serialize_RequestHeader(oa, "header", &h); 
     rc = rc < 0 ? rc : serialize_ExistsRequest(oa, "req", &req);
@@ -568,7 +641,9 @@ void ZookeeperConn::_OnNodeDelete(const std::string& node)
     if (_IsMaster())
     {
         // Though I'll be master, I must broadcast this fact to all children.
-        _GetSiblings(MakeParentNode(setId_));
+        bool succ = _GetSiblings(MakeParentNode(setId_));
+        if (!succ)
+            ERR << __FUNCTION__ << ", _GetSiblings failed with " << setId_;
     }
     else
     {
@@ -577,7 +652,7 @@ void ZookeeperConn::_OnNodeDelete(const std::string& node)
         assert (me != siblings_.end());
 
         auto brother = -- me; // I'll watch you
-        _ExistsAndWatch(MakeParentNode(setId_) + "/" + brother->second);
+        _Exists(MakeParentNode(setId_) + "/" + brother->second, true);
     }
 }
 

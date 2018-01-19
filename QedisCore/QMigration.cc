@@ -8,7 +8,6 @@ namespace qedis
 
 static void ProcessItem(MigrationItem& item, QMigrateClient* conn)
 {
-    int pendings = 0;
     UnboundedBuffer request;
     for (auto it = item.keys.begin();
               it != item.keys.end(); )
@@ -27,7 +26,6 @@ static void ProcessItem(MigrationItem& item, QMigrateClient* conn)
             continue;
         }
 
-        ++ pendings;
         std::string contents = DumpObject(*obj);
         if (item.replace)
         {
@@ -43,7 +41,7 @@ static void ProcessItem(MigrationItem& item, QMigrateClient* conn)
         ++ it;
     }
 
-    if (pendings > 0)
+    if (!request.IsEmpty())
     {
         UnboundedBuffer select;
         PreFormatMultiBulk(2, &select);

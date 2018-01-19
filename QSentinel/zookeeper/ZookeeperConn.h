@@ -33,7 +33,8 @@ private:
     bool _ProcessResponse(const ReplyHeader& header, iarchive* ia);
     bool _ProcessWatchEvent(const ReplyHeader& header, iarchive* ia);
     bool _GetSiblings(const std::string& parent);
-    bool _ExistsAndWatch(const std::string& sibling);
+    bool _GetData(const std::string& node, bool watch = true);
+    bool _Exists(const std::string& sibling, bool watch = true);
     void _InitPingTimer();
     bool _IsMaster() const;
     bool _SendPacket(const RequestHeader& h, struct oarchive* oa, const std::string* = nullptr);
