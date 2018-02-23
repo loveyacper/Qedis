@@ -12,7 +12,7 @@ namespace qedis
 extern unsigned int dictGenHashFunction(const void* key, int len);
 
 // hash function
-struct my_hash
+struct Hash
 {
     size_t operator() (const QString& str) const;
 };
@@ -44,7 +44,6 @@ inline typename HASH::const_local_iterator RandomHashMember(const HASH& containe
         return it;
     }
     
-    
     return typename HASH::const_local_iterator();
 }
 
@@ -69,7 +68,7 @@ inline size_t ScanHashMember(const HASH& container,
         if (idx < bktSize)
         {
             // find the bucket;
-            auto   it = container.begin(bucket);
+            auto it = container.begin(bucket);
             while (idx > 0)
             {
                 ++ it;
@@ -100,7 +99,7 @@ inline size_t ScanHashMember(const HASH& container,
                 }
             }
 
-            return  newCursor;
+            return newCursor;
         }
         else
         {
@@ -108,7 +107,7 @@ inline size_t ScanHashMember(const HASH& container,
         }
     }
 
-    return 0;   // never here
+    return 0; // never here
 }
     
 extern void getRandomHexChars(char *p, unsigned int len);

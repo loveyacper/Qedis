@@ -7,11 +7,9 @@
 namespace qedis
 {
 
-using QSet = std::unordered_set<QString,
-        my_hash,
-        std::equal_to<QString> >;
+using QSet = std::unordered_set<QString, Hash>;
 
-size_t   SScanKey(const QSet& qset, size_t cursor, size_t count, std::vector<QString>& res);
+size_t SScanKey(const QSet& qset, size_t cursor, size_t count, std::vector<QString>& res);
     
 }
 

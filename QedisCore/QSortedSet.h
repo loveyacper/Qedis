@@ -18,8 +18,8 @@ public:
     using Score2Members = std::map<double, Members>;
 
     using Member2Score = std::unordered_map<QString, double,
-                                            my_hash,
-                                            std::equal_to<QString> >;
+                                            Hash>;//,
+                                            //std::equal_to<QString> >;
 
     Member2Score::iterator FindMember(const QString& member);
     Member2Score::const_iterator begin() const {  return members_.begin(); };

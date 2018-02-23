@@ -1,10 +1,10 @@
-
-#include "QDB.h"
-#include "Log/Logger.h"
 #include <sstream>
 #include <unistd.h>
 #include <math.h>
 #include <arpa/inet.h>
+
+#include "QDB.h"
+#include "Log/Logger.h"
 
 extern "C"
 {
@@ -202,24 +202,29 @@ void QDBSaver::SaveObject(const QObject& obj)
  * 254: + inf
  * 255: - inf
  */
-void  QDBSaver::_SaveDoubleValue(double val)
+void QDBSaver::_SaveDoubleValue(double val)
 {
-    unsigned char buf[128];
-    int len;
+    unsigned char buf[64];
+    size_t len;
     
-    if (isnan(val)) {
+    if (std::isnan(val))
+    {
         buf[0] = 253;
         len = 1;
-    } else if (!std::isfinite(val)) {
+    }
+    else if (!std::isfinite(val))
+    {
         len = 1;
         buf[0] = (val < 0) ? 255 : 254;
-    } else {
-        snprintf((char*)buf+1,sizeof(buf)-1,"%.6g",val);
-        buf[0] = strlen((char*)buf+1);
-        len = buf[0]+1;
+    }
+    else
+    {
+        snprintf((char*)&buf[1],sizeof(buf) - 1, "%.6g", val);
+        buf[0] = strlen((char*)&buf[1]);
+        len = buf[0] + 1;
     }
     
-    qdb_.Write(buf,len);
+    qdb_.Write(buf, len);
 }
 
 
@@ -234,7 +239,7 @@ void QDBSaver::_SaveList(const PLIST& l)
 }
 
 
-void  QDBSaver::_SaveSet(const PSET& s)
+void QDBSaver::_SaveSet(const PSET& s)
 {
     SaveLength(s->size());
     
@@ -244,7 +249,7 @@ void  QDBSaver::_SaveSet(const PSET& s)
     }
 }
 
-void  QDBSaver::_SaveHash(const PHASH& h)
+void QDBSaver::_SaveHash(const PHASH& h)
 {
     SaveLength(h->size());
     
@@ -256,7 +261,7 @@ void  QDBSaver::_SaveHash(const PHASH& h)
 }
 
 
-void    QDBSaver::_SaveSSet(const PSSET& ss)
+void QDBSaver::_SaveSSet(const PSSET& ss)
 {
     SaveLength(ss->Size());
     
@@ -372,7 +377,7 @@ bool QDBSaver::SaveLZFString(const QString& str)
     
     DBG << "compress len " << compressLen << ", raw len " << str.size();
     
-    return  true;
+    return true;
 }
 
 
@@ -399,7 +404,7 @@ QDBLoader::QDBLoader(const char *data, size_t len)
         qdb_.Attach(data, len);
 }
 
-int  QDBLoader::Load(const char *filename)
+int QDBLoader::Load(const char *filename)
 {
     if (!qdb_.Open(filename))
     {
@@ -593,12 +598,12 @@ int8_t QDBLoader::LoadByte()
     return qdb_.Read<int8_t>();
 }
 
-size_t  QDBLoader::LoadLength(bool& special)
+size_t QDBLoader::LoadLength(bool& special)
 {
     const int8_t byte = qdb_.Read<int8_t>();
     
     special = false;
-    size_t  lenResult = 0;
+    size_t lenResult = 0;
     
     switch ((byte & 0xC0) >> 6)
     {
@@ -859,7 +864,7 @@ QObject QDBLoader::_LoadSet()
     DBG << "set length = " << len;
     
     QObject obj(QObject::CreateSet());
-    PSET  set(obj.CastSet());
+    PSET set(obj.CastSet());
     for (size_t i = 0; i < len; ++ i)
     {
         const auto elemLen = LoadLength(special);
@@ -891,7 +896,7 @@ QObject QDBLoader::_LoadHash()
     DBG << "hash length = " << len;
     
     QObject obj(QObject::CreateHash());
-    PHASH  hash(obj.CastHash());
+    PHASH hash(obj.CastHash());
     for (size_t i = 0; i < len; ++ i)
     {
         const auto keyLen = LoadLength(special);
@@ -936,7 +941,7 @@ QObject QDBLoader::_LoadSSet()
     DBG << "sset length = " << len;
     
     QObject obj(QObject::CreateSSet());
-    PSSET  sset(obj.CastSortedSet());
+    PSSET sset(obj.CastSortedSet());
     for (size_t i = 0; i < len; ++ i)
     {
         const auto memberLen = LoadLength(special);
@@ -959,11 +964,11 @@ QObject QDBLoader::_LoadSSet()
     return obj;
 }
 
-double  QDBLoader::_LoadDoubleValue()
+double QDBLoader::_LoadDoubleValue()
 {
     const uint8_t byte1st = qdb_.Read<uint8_t>();
 
-    double  dvalue;
+    double dvalue;
     switch (byte1st)
     {
         case 253:
@@ -1000,15 +1005,15 @@ double  QDBLoader::_LoadDoubleValue()
     
     DBG << "load double value " << dvalue;
     
-    return  dvalue;
+    return dvalue;
 }
 
 struct ZipListElement
 {
     unsigned char* sval;
-    unsigned int   slen;
+    unsigned int slen;
     
-    long long      lval;
+    long long lval;
     
     QString ToString() const
     {
@@ -1044,9 +1049,9 @@ QObject QDBLoader::_LoadZipList(int8_t type)
 QObject QDBLoader::_LoadZipList(const QString& zl, int8_t type)
 {
     unsigned char* zlist = (unsigned char* )&zl[0];
-    unsigned       nElem = ziplistLen(zlist);
+    unsigned nElem = ziplistLen(zlist);
     
-    std::vector<ZipListElement>  elements;
+    std::vector<ZipListElement> elements;
     elements.resize(nElem);
     
     for (unsigned i = 0; i < nElem; ++ i)
@@ -1062,8 +1067,8 @@ QObject QDBLoader::_LoadZipList(const QString& zl, int8_t type)
     {
         case kTypeZipList:
         {
-            QObject  obj(QObject::CreateList());
-            PLIST    list(obj.CastList());
+            QObject obj(QObject::CreateList());
+            PLIST list(obj.CastList());
             
             for (const auto& elem : elements)
             {
@@ -1075,8 +1080,8 @@ QObject QDBLoader::_LoadZipList(const QString& zl, int8_t type)
             
         case kTypeHashZipList:
         {
-            QObject  obj(QObject::CreateHash());
-            PHASH    hash(obj.CastHash());
+            QObject obj(QObject::CreateHash());
+            PHASH hash(obj.CastHash());
             
             assert(elements.size() % 2 == 0);
             
@@ -1094,8 +1099,8 @@ QObject QDBLoader::_LoadZipList(const QString& zl, int8_t type)
             
         case kTypeZSetZipList:
         {
-            QObject  obj(QObject::CreateSSet());
-            PSSET    sset(obj.CastSortedSet());
+            QObject obj(QObject::CreateSSet());
+            PSSET sset(obj.CastSortedSet());
 
             assert(elements.size() % 2 == 0);
             
@@ -1104,7 +1109,7 @@ QObject QDBLoader::_LoadZipList(const QString& zl, int8_t type)
                 const QString& member = it->ToString();
                 ++ it;
                 
-                double  score;
+                double score;
                 if (it->sval)
                 {
                     Strtod((const char* )it->sval, it->slen, &score);
@@ -1137,7 +1142,7 @@ QObject QDBLoader::_LoadIntset()
     intset* iset = (intset* )&str[0];
     unsigned nElem = intsetLen(iset);
     
-    std::vector<int64_t>  elements;
+    std::vector<int64_t> elements;
     elements.resize(nElem);
     
     for (unsigned i = 0; i < nElem; ++ i)
@@ -1145,8 +1150,8 @@ QObject QDBLoader::_LoadIntset()
         intsetGet(iset, i, &elements[i]);
     }
     
-    QObject  obj(QObject::CreateSet());
-    PSET     set(obj.CastSet());
+    QObject obj(QObject::CreateSet());
+    PSET set(obj.CastSet());
     
     for (auto v : elements)
     {
@@ -1331,6 +1336,8 @@ QError restore(const std::vector<QString>& params, UnboundedBuffer* reply)
         ReplyError(QError_busykey, reply);
         return QError_busykey;
     }
+
+    DBG << "Restore key " << key << ", ttl " << ttl;
 
     QSTORE.SetValue(key, std::move(obj));
     if (ttl > 0)

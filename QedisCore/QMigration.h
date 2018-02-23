@@ -2,6 +2,8 @@
 #define BERT_QMIGRATION_H
 
 #include <deque>
+#include <vector>
+#include <set>
 #include "QClient.h"
 
 namespace ConnectionTag
@@ -31,6 +33,8 @@ struct MigrationItem
     std::weak_ptr<StreamSocket> client;
 
     MigrateState state = MigrateState::None;
+
+    std::string ToString() const;
 };
 
 class QMigrateClient;
@@ -51,6 +55,8 @@ public:
     void OnConnectMigrateFail(const SocketAddr& dst);
     void OnConnect(QMigrateClient* );
 
+    void SetOnDone(std::function<void ()> f);
+
 private:
     QMigrationManager() { }
 
@@ -58,6 +64,7 @@ private:
     std::unordered_map<SocketAddr, std::weak_ptr<QMigrateClient> > conns_;
 
     std::unordered_set<SocketAddr> pendingConnect_;
+    std::function<void ()> onMigrateDone_;
 };
 
 class QMigrateClient : public StreamSocket
@@ -69,6 +76,9 @@ private:
     PacketLength _HandlePacket(const char* msg, std::size_t len) override;
     size_t readyRsp_ = 0;
 };
+
+extern
+void MigrateClusterData(const std::unordered_map<SocketAddr, std::set<int>>& migration, std::function<void ()> onDone);
 
 } // end namespace qedis
 

@@ -9,10 +9,10 @@
 namespace qedis
 {
 
-using QHash = std::unordered_map<QString, QString, my_hash, std::equal_to<QString> >;
+using QHash = std::unordered_map<QString, QString, Hash>;
 
 
-size_t   HScanKey(const QHash& hash, size_t cursor, size_t count, std::vector<QString>& res);
+size_t HScanKey(const QHash& hash, size_t cursor, size_t count, std::vector<QString>& res);
 
 }
 

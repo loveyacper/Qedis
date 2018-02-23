@@ -67,7 +67,7 @@ unsigned int dictGenHashFunction(const void* key, int len) {
 }
 
 // hash function
-size_t my_hash::operator() (const QString& str) const {
+size_t Hash::operator() (const QString& str) const {
     return dictGenHashFunction(str.data(), static_cast<int>(str.size()));
 }
 

@@ -72,9 +72,7 @@ private:
 
 class QClient;
 
-using QDB = std::unordered_map<QString, QObject,
-                               my_hash,
-                               std::equal_to<QString> >;
+using QDB = std::unordered_map<QString, QObject, qedis::Hash>;
 
 
 const int kMaxDbNum = 65536;
@@ -177,9 +175,7 @@ private:
         int LoopCheck(uint64_t now);
         
     private:
-        using Q_EXPIRE_DB = std::unordered_map<QString, uint64_t,
-                                    my_hash,
-                                    std::equal_to<QString> >;
+        using Q_EXPIRE_DB = std::unordered_map<QString, uint64_t, Hash>;
         Q_EXPIRE_DB expireKeys_;  // all the keys to be expired, unorder.
     };
     
@@ -198,7 +194,7 @@ private:
         size_t Size() const { return blockedClients_.size(); }
     private:
         using Clients = std::list<std::tuple<std::weak_ptr<QClient>, uint64_t, ListPosition> >;
-        using WaitingList = std::unordered_map<QString, Clients>;
+        using WaitingList = std::unordered_map<QString, Clients, Hash>;
         
         WaitingList blockedClients_;
     };
@@ -211,9 +207,7 @@ private:
     std::vector<BlockedClients> blockedClients_;
     std::vector<std::unique_ptr<QDumpInterface> > backends_;
         
-    using ToSyncDb = std::unordered_map<QString, const QObject* ,
-                                        my_hash,
-                                        std::equal_to<QString> >;
+    using ToSyncDb = std::unordered_map<QString, const QObject*, Hash>;
     std::vector<ToSyncDb> waitSyncKeys_;
     int dbno_;
 };

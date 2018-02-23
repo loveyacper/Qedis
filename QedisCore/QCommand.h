@@ -2,7 +2,7 @@
 #define BERT_QCOMMAND_H
 
 #include <vector>
-#include <map>
+#include <unordered_map>
 #include "QCommon.h"
 #include "QString.h"
 #include "Delegate.h"
@@ -207,7 +207,7 @@ public:
     static QError ExecuteCmd(const std::vector<QString>& params, const QCommandInfo* info, UnboundedBuffer* reply = nullptr);
     static QError ExecuteCmd(const std::vector<QString>& params, UnboundedBuffer* reply = nullptr);
 
-    static bool  AliasCommand(const std::map<QString, QString>& aliases);
+    static bool  AliasCommand(const std::unordered_map<QString, QString>& aliases);
     static bool  AliasCommand(const QString& oldKey, const QString& newKey);
 
     static bool  AddCommand(const QString& cmd, const QCommandInfo* info);
@@ -218,7 +218,7 @@ private:
 
     static const QCommandInfo s_info[];
 
-    static std::map<QString, const QCommandInfo*, NocaseComp>  s_handlers;
+    static std::unordered_map<QString, const QCommandInfo* >  s_handlers;
 };
 
 }

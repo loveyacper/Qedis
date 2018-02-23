@@ -37,13 +37,27 @@ bool QClusterClient::Init(int fd, const SocketAddr& peer)
     SocketAddr myAddr(g_config.ip.c_str(), g_config.port);
 
 #if USE_ZOOKEEPER
-    QClusterConn* conn = new ZookeeperConn(me, g_config.setid, myAddr.ToString());
+    conn_.reset(new ZookeeperConn(me, g_config.setid, myAddr.ToString()));
+    QClusterConn* const conn = conn_.get();
 #else
 #error "Only support zookeeper for now, supporting etcd is in progress"
 #endif
 
+    extern
+    void MigrateClusterData(const std::unordered_map<SocketAddr, std::set<int>>& ,
+                            std::function<void ()> );
+
+    conn->SetOnMigration([conn](const std::unordered_map<SocketAddr, std::set<int>>& migration) {
+            // *set的数据格式是  1,3,4,7|ipport@1,4|ipport@3,7
+            // 含义:本set负责slot 1347，但是现在正在将slot 1,4迁移到6379机器
+            MigrateClusterData(migration, [conn]() {
+                INF << "MigrateClusterData done";
+                conn->UpdateShardData();
+            });
+    });
+
     conn->SetOnBecomeMaster([](const std::vector<SocketAddr>& slaves) {
-        INF << "I become master";
+        INF << "I become master!";
         std::vector<QString> cmd {"slaveof", "no", "one"};
         slaveof(cmd, nullptr);
 
@@ -53,9 +67,6 @@ bool QClusterClient::Init(int fd, const SocketAddr& peer)
             // connect to slaves and send 'slave of me' 
             Server::Instance()->TCPConnect(addr, ConnectionTag::kSlaveClient);
         }
-        // 读取所有set的数据保存其版本号 
-        // *set的数据格式是  1,3,4,7|2:1,4
-        // 含义:本set负责slot 1347，但是现在正在将slot 1,4迁移到set2上
     });
 
     conn->SetOnBecomeSlave([](const std::string& master) {
@@ -63,8 +74,6 @@ bool QClusterClient::Init(int fd, const SocketAddr& peer)
         std::vector<QString> cmd(SplitString(master, ':'));
         slaveof({"slaveof", cmd[0], cmd[1]}, nullptr);
     });
-
-    conn_.reset(conn);
 
     return true; 
 }

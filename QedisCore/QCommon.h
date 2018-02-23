@@ -194,24 +194,6 @@ inline void AdjustIndex(long& start, long& end, size_t  size)
     if (end >= static_cast<long>(size))  end = size - 1;
 }
 
-struct NocaseComp
-{
-    bool operator() (const QString& s1, const QString& s2) const
-    {
-        return strcasecmp(s1.c_str(), s2.c_str()) < 0;
-    }
-
-    bool operator() (const char* s1, const QString& s2) const
-    {
-        return strcasecmp(s1, s2.c_str()) < 0;
-    }
-
-    bool operator() (const QString& s1, const char* s2) const
-    {
-        return strcasecmp(s1.c_str(), s2) < 0;
-    }
-};
-
 enum class QParseResult : int8_t
 {
     ok,
@@ -222,6 +204,23 @@ enum class QParseResult : int8_t
 QParseResult GetIntUntilCRLF(const char*& ptr, std::size_t nBytes, int& val);
 
 std::vector<QString> SplitString(const QString& str, char seperator);
+
+template <typename ITER>
+inline
+std::string StringJoin(ITER first, ITER last, char sep)
+{
+    std::string result;
+    if (first == last)
+        return result;
+
+    result += std::to_string(*first);
+    for (++ first; first != last; ++ first)
+    {
+        result += ',' + std::to_string(*first);
+    }
+
+    return result;
+}
 
 // Build redis request from multiple strings, use inline protocol 
 template <typename... Args>

@@ -1,7 +1,7 @@
 #ifndef BERT_QCONFIG_H
 #define BERT_QCONFIG_H
 
-#include <map>
+#include <unordered_map>
 #include <vector>
 #include "QString.h"
 
@@ -33,7 +33,7 @@ struct QConfig
     // auth
     QString   password;
     
-    std::map<QString, QString>   aliases;
+    std::unordered_map<QString, QString>   aliases;
 
     // @ rdb
     // save seconds changes

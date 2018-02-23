@@ -173,7 +173,7 @@ const QCommandInfo QCommandTable::s_info[] =
     
 Delegate<void (UnboundedBuffer& )> g_infoCollector;
 
-std::map<QString, const QCommandInfo*, NocaseComp>  QCommandTable::s_handlers;
+std::unordered_map<QString, const QCommandInfo* >  QCommandTable::s_handlers;
 
 QCommandTable::QCommandTable()
 {
@@ -204,7 +204,7 @@ const QCommandInfo* QCommandTable::GetCommandInfo(const QString& cmd)
     return 0;
 }
     
-bool  QCommandTable::AliasCommand(const std::map<QString, QString>& aliases)
+bool  QCommandTable::AliasCommand(const std::unordered_map<QString, QString>& aliases)
 {
     for (const auto& pair : aliases)
     {
