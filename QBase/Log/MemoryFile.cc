@@ -186,7 +186,7 @@ void  OutputMemoryFile::Close()
     }
 }
 
-bool    OutputMemoryFile::Sync()
+bool OutputMemoryFile::Sync()
 {
     if (file_ == kInvalidFile)
         return false;
@@ -196,7 +196,7 @@ bool    OutputMemoryFile::Sync()
 
     ::msync(memory_ + syncPos_, offset_ - syncPos_, MS_SYNC);
     syncPos_ = offset_;
-    
+
     return true;
 }
 
@@ -205,11 +205,6 @@ bool OutputMemoryFile::_MapWriteOnly()
     if (size_ == 0 || file_ == kInvalidFile)
         return false;
 
-#if 0
-    // codes below cause coredump when file size > 4MB
-    if (m_memory != kInvalidAddr)
-        ::munmap(m_memory, m_size);
-#endif
     memory_ = (char*)::mmap(0, size_, PROT_WRITE, MAP_SHARED, file_, 0);
     return (memory_ != kInvalidAddr);
 }
@@ -251,7 +246,6 @@ bool OutputMemoryFile::IsOpen() const
 void OutputMemoryFile::Write(const void* data, size_t len)
 {
     _AssureSpace(len);
-    assert(memory_ > 0);
 
     ::memcpy(memory_ + offset_, data, len);
     offset_ += len;

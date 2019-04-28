@@ -22,7 +22,6 @@
 #include "QAOF.h"
 #include "QConfig.h"
 #include "QSlowLog.h"
-#include "QModule.h"
 
 #include "QedisLogo.h"
 #include "Qedis.h"
@@ -105,7 +104,7 @@ bool  Qedis::ParseArgs(int ac, char* av[])
             {
                 return false;
             }
-            
+
             master_ = std::string(av[++i]);
             masterPort_ = static_cast<unsigned short>(std::atoi(av[++i]));
         }
@@ -115,7 +114,7 @@ bool  Qedis::ParseArgs(int ac, char* av[])
             return false;
         }
     }
-    
+
     return true;
 }
 
@@ -175,7 +174,7 @@ std::shared_ptr<StreamSocket> Qedis::_OnNewConnection(int connfd, int tag)
         ERR << "Unknown tag " << tag;
         break;
     }
-    
+
     return nullptr;
 }
 
@@ -184,10 +183,10 @@ Time  g_now;
 static void QdbCron()
 {
     using namespace qedis;
-    
+
     if (g_qdbPid != -1)
         return;
-    
+
     if (g_now.MilliSeconds() > (g_lastQDBSave + unsigned(g_config.saveseconds)) * 1000UL &&
         QStore::dirty_ >= g_config.savechanges)
     {
@@ -209,7 +208,7 @@ static void QdbCron()
         {
             g_qdbPid = ret;
         }
-            
+
         INF << "ServerCron save rdb file " << g_config.rdbfullname;
     }
 }
@@ -217,7 +216,7 @@ static void QdbCron()
 static void LoadDbFromDisk()
 {
     using namespace qedis;
-    
+
     //  USE AOF RECOVERY FIRST, IF FAIL, THEN RDB
     QAOFLoader aofLoader;
     if (aofLoader.Load(g_config.appendfilename.c_str()))
@@ -242,7 +241,7 @@ static void OnConnectClusterFail(const std::vector<SocketAddr>& addrs, size_t& i
     WRN << "Connect cluster failed " << addrs[i].ToString();
     if (++i >= addrs.size())
         i = 0;
-    
+
     Timer* timer = TimerManager::Instance().CreateTimer();
     timer->Init(2 * 1000, 1);
     timer->SetCallback([=, &i]() {
@@ -256,23 +255,23 @@ static void OnConnectClusterFail(const std::vector<SocketAddr>& addrs, size_t& i
 bool Qedis::_Init()
 {
     using namespace qedis;
-    
+
     char runid[kRunidSize + 1] = "";
     getRandomHexChars(runid, kRunidSize);
     g_config.runid.assign(runid, kRunidSize);
-    
+
     if (port_ != 0)
         g_config.port = port_;
 
     if (!logLevel_.empty())
         g_config.loglevel = logLevel_;
-    
+
     if (!master_.empty())
     {
         g_config.masterIp = master_;
         g_config.masterPort = masterPort_;
     }
-    
+
     // process log
     {
         unsigned int level = ConvertLogLevel(g_config.loglevel), dest = 0;
@@ -281,12 +280,11 @@ bool Qedis::_Init()
             dest = logConsole;
         else
             dest = logFILE;
-        
+
         g_log = LogManager::Instance().CreateLog(level, dest, g_config.logdir.c_str());
     }
-    
+
     SocketAddr addr(g_config.ip.c_str(), g_config.port);
-    
     if (!Server::TCPBind(addr, ConnectionTag::kQedisClient))
     {
         ERR << "can not bind socket on port " << addr.GetPort();
@@ -302,7 +300,7 @@ bool Qedis::_Init()
     QSTORE.InitDumpBackends();
     QPubsub::Instance().InitPubsubTimer();
     QMigrationManager::Instance().InitMigrationTimer();
-    
+
     // Only if there is no backend, load aof or rdb
     if (g_config.backend == qedis::BackEndNone)
         LoadDbFromDisk();
@@ -311,7 +309,7 @@ bool Qedis::_Init()
 
     QSlowLog::Instance().SetThreshold(g_config.slowlogtime);
     QSlowLog::Instance().SetLogLimit(static_cast<std::size_t>(g_config.slowlogmaxlen));
-    
+
     {
         auto cronTimer = TimerManager::Instance().CreateTimer();
         cronTimer->Init(1000 / qedis::g_config.hz);
@@ -329,39 +327,12 @@ bool Qedis::_Init()
         });
         TimerManager::Instance().AddTimer(repTimer);
     }
-    
+
     // master ip
     if (!g_config.masterIp.empty())
     {
         QREPL.SetMasterAddr(g_config.masterIp.c_str(),
                             g_config.masterPort);
-    }
-    
-    // load so modules
-    const auto& modules = g_config.modules;
-    for (const auto& mod: modules)
-    {
-        try
-        {
-            MODULES.Load(mod.c_str());
-            std::cerr << "Load " << mod << " successful\n";
-        }
-        catch (const ModuleNoLoad& e)
-        {
-            std::cerr << "Load " << mod << " failed\n";
-        }
-        catch (const ModuleExist& e)
-        {
-            std::cerr << "Load " << mod << " failed because exist\n";
-        }
-        catch (const std::runtime_error& e)
-        {
-            std::cerr << "Load " << mod << " failed because runtime error\n";
-        }
-        catch (...)
-        {
-            std::cerr << "Load " << mod << " failed, unknown exception\n";
-        }
     }
 
     // output logo to console
@@ -403,7 +374,7 @@ static void CheckChild()
         int signal = 0;
 
         if (WIFSIGNALED(statloc)) signal = WTERMSIG(statloc);
-        
+
         if (pid == g_qdbPid)
         {
             QDBSaver::SaveDoneHandler(exit, signal);
@@ -429,9 +400,9 @@ bool Qedis::_RunLogic()
 {
     g_now.Now();
     TimerManager::Instance().UpdateTimers(g_now);
-    
+
     CheckChild();
-    
+
     return Server::_RunLogic();
 }
 
@@ -457,13 +428,12 @@ int main(int ac, char* av[])
         if (!LoadQedisConfig(svr.GetConfigName().c_str(), qedis::g_config))
         {
             std::cerr << "Load config file [" << svr.GetConfigName() << "] failed!\n";
-            return false;
+            return -2;
         }
     }
-    
+
     svr.MainLoop(qedis::g_config.daemonize);
-    
+
     return 0;
 }
-
 

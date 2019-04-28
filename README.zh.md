@@ -22,7 +22,7 @@ C++11实现的增强版分布式Redis服务器,使用Leveldb作为持久化存�
 
  当然也可以使用官方redis-sentinel。
 
- 详见[cluster Readme](QCluster/README.md)
+ 详见[cluster Readme](cluster/README.md)
 
  scale-out集群正在开发中...
 
@@ -49,11 +49,6 @@ C++11实现的增强版分布式Redis服务器,使用Leveldb作为持久化存�
  我在rMBP late2013笔记本上测试结果如图：
 
 ![image](https://github.com/loveyacper/Qedis/blob/master/performance.png)
-
-
-## 编写扩展模块
- Qedis支持动态库模块，可以在运行时添加新命令。
- 我添加了三个命令(ldel, skeys, hgets)作为演示。
 
 ## 支持冷数据淘汰
  是的，在内存受限的情况下，你可以让Qedis根据简单的LRU算法淘汰一些key以释放内存。

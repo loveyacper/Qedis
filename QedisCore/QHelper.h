@@ -2,8 +2,8 @@
 #define BERT_HELPER_H
 
 #include "QString.h"
-#include <vector> 
-#include <cstdlib> 
+#include <vector>
+#include <cstdlib>
 
 namespace qedis
 {
@@ -26,24 +26,28 @@ inline typename HASH::const_local_iterator RandomHashMember(const HASH& containe
     {
         return typename HASH::const_local_iterator();
     }
-    
-    while (true)
+
+    size_t lucky = random() % container.size();
+    for (size_t i = 0; i < container.bucket_count(); ++i)
     {
-        size_t bucket = random() % container.bucket_count();
-        if (container.bucket_size(bucket) == 0)
-            continue;
-        
-        long lucky = random() % container.bucket_size(bucket);
-        typename HASH::const_local_iterator it = container.begin(bucket);
-        while (lucky > 0)
+        if (lucky >= container.bucket_size(i))
         {
-            ++ it;
-            -- lucky;
+            lucky -= container.bucket_size(i);
         }
-        
-        return it;
+        else
+        {
+            auto it = container.begin(i);
+            while (lucky > 0)
+            {
+                ++ it;
+                -- lucky;
+            }
+
+            return it;
+        }
     }
-    
+
+    // never here
     return typename HASH::const_local_iterator();
 }
 

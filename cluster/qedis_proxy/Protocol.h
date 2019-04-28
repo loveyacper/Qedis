@@ -25,7 +25,7 @@ public:
     std::string& GetRawRequest() & { return content_; }
     std::string&& GetRawRequest() && { return std::move(content_); }
 
-    bool IsInitialState() const { return multi_ == -1; }
+    bool IsInitialState() const { return multi_ == kInvalid; }
 
 private:
     ParseResult _ParseMulti(const char*& ptr, const char* end, int& result);
@@ -34,11 +34,13 @@ private:
     ParseResult _ParseStrval(const char*& ptr, const char* end, std::string& res);
     ParseResult _ParseStrlen(const char*& ptr, const char* end, int& result);
 
-    int multi_ = -1;
-    int paramLen_ = -1;
+    int multi_ = kInvalid;
+    int paramLen_ = kInvalid;
     std::vector<std::string> params_;
     int nParams_ = 0;
     std::string content_;
+
+    static const int kInvalid = -2;
 };
 
 

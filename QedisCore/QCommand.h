@@ -175,9 +175,6 @@ QCommandHandler  sync;
 QCommandHandler  slaveof;
 QCommandHandler  replconf;
 
-// modules
-QCommandHandler  module;
-    
 // help
 QCommandHandler  cmdlist;
 
@@ -200,7 +197,6 @@ class QCommandTable
 {
 public:
     QCommandTable();
-    
     static void Init();
 
     static const QCommandInfo* GetCommandInfo(const QString& cmd);

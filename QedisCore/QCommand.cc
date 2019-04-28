@@ -49,7 +49,7 @@ const QCommandInfo QCommandTable::s_info[] =
     {"auth",        QAttr_read,                2,  &auth},
     {"slowlog",     QAttr_read,               -2,  &slowlog},
     {"config",      QAttr_read,               -3,  &config},
-    
+
     // string
     {"strlen",      QAttr_read,                2,  &strlen},
     {"set",         QAttr_write,               3,  &set},
@@ -149,28 +149,24 @@ const QCommandInfo QCommandTable::s_info[] =
     {"psubscribe",  QAttr_read,               -2,  &psubscribe},
     {"punsubscribe",QAttr_read,               -1,  &punsubscribe},
     {"pubsub",      QAttr_read,               -2,  &pubsub},
-    
-    
+
     // multi
     {"watch",       QAttr_read,               -2,  &watch},
     {"unwatch",     QAttr_read,                1,  &unwatch},
     {"multi",       QAttr_read,                1,  &multi},
     {"exec",        QAttr_read,                1,  &exec},
     {"discard",     QAttr_read,                1,  &discard},
-    
+
     // replication
     {"sync",        QAttr_read,                1,  &sync},
     {"psync",       QAttr_read,                1,  &sync},
     {"slaveof",     QAttr_read,                3,  &slaveof},
     {"replconf",    QAttr_read,               -3,  &replconf},
 
-    // modules
-    {"module",      QAttr_read,               -2,  &module},
-   
     // help
     {"cmdlist",     QAttr_read,                1,  &cmdlist},
 };
-    
+
 Delegate<void (UnboundedBuffer& )> g_infoCollector;
 
 std::unordered_map<QString, const QCommandInfo* >  QCommandTable::s_handlers;
@@ -186,7 +182,7 @@ void QCommandTable::Init()
     {
         s_handlers[info.cmd] = &info;
     }
-    
+
     g_infoCollector += OnMemoryInfoCollect;
     g_infoCollector += OnServerInfoCollect;
     g_infoCollector += OnClientInfoCollect;
@@ -200,10 +196,10 @@ const QCommandInfo* QCommandTable::GetCommandInfo(const QString& cmd)
     {
         return it->second;
     }
-    
+
     return 0;
 }
-    
+
 bool  QCommandTable::AliasCommand(const std::unordered_map<QString, QString>& aliases)
 {
     for (const auto& pair : aliases)
@@ -211,10 +207,10 @@ bool  QCommandTable::AliasCommand(const std::unordered_map<QString, QString>& al
         if (!AliasCommand(pair.first, pair.second))
             return false;
     }
-            
+
     return true;
 }
-    
+
 bool  QCommandTable::AliasCommand(const QString& oldKey, const QString& newKey)
 {
     auto info = DelCommand(oldKey);
@@ -258,7 +254,7 @@ QError QCommandTable::ExecuteCmd(const std::vector<QString>& params, const QComm
         ReplyError(QError_unknowCmd, reply);
         return QError_unknowCmd;
     }
-    
+
     if (!info->CheckParamsCount(static_cast<int>(params.size())))
     {
         ReplyError(QError_param, reply);
@@ -275,25 +271,24 @@ QError QCommandTable::ExecuteCmd(const std::vector<QString>& params, UnboundedBu
         ReplyError(QError_param, reply);
         return QError_param;
     }
-    
+
     auto it(s_handlers.find(params[0]));
     if (it == s_handlers.end())
     {
         ReplyError(QError_unknowCmd, reply);
         return QError_unknowCmd;
     }
-    
+
     const QCommandInfo* info = it->second;
     if (!info->CheckParamsCount(static_cast<int>(params.size())))
     {
         ReplyError(QError_param, reply);
         return   QError_param;
     }
-    
+
     return info->handler(params, reply);
 }
 
-    
 bool QCommandInfo::CheckParamsCount(int nParams) const
 {
     if (params > 0)
@@ -314,3 +309,4 @@ QError cmdlist(const std::vector<QString>& params, UnboundedBuffer* reply)
 }
 
 }
+

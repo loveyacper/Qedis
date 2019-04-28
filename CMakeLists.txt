@@ -5,7 +5,6 @@ PROJECT(QEDIS)
 SUBDIRS(QBase)
 SUBDIRS(QedisCore)
 SUBDIRS(QedisSvr)
-SUBDIRS(Modules)
 SUBDIRS(UnitTest)
 
 

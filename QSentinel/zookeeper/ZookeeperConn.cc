@@ -11,31 +11,31 @@
 static int deserialize_prime_response(struct prime_struct* req, AttachedBuffer& buffer)
 {
     buffer >> req->len;
-    req->len = ntohl(req->len); 
+    req->len = ntohl(req->len);
 
     buffer >> req->protocolVersion;
-    req->protocolVersion = ntohl(req->protocolVersion); 
+    req->protocolVersion = ntohl(req->protocolVersion);
 
     buffer >> req->timeOut;
     req->timeOut = ntohl(req->timeOut);
 
     buffer >> req->sessionId;
-    req->sessionId = htonll(req->sessionId); 
+    req->sessionId = htonll(req->sessionId);
 
     buffer >> req->passwd_len;
-    req->passwd_len = ntohl(req->passwd_len); 
+    req->passwd_len = ntohl(req->passwd_len);
 
-    memcpy(req->passwd, buffer.ReadAddr(), sizeof(req->passwd)); 
+    memcpy(req->passwd, buffer.ReadAddr(), sizeof(req->passwd));
     return 0;
 }
-          
-          
+
+
 const int kTimeout = 15 * 1000; // ms
 
 namespace qedis
 {
-    
-    
+
+
 ZookeeperConn::ZookeeperConn(const std::shared_ptr<StreamSocket>& c, int setId, const std::string& addr) :
     xid_(0),
     setId_(setId),
@@ -67,7 +67,7 @@ bool ZookeeperConn::ParseMessage(const char*& data, size_t len)
             AttachedBuffer buffer(const_cast<char* >(data), len);
             deserialize_prime_response(&rsp, buffer);
             data += sizeof(int) + rsp.len;
-        
+
             if (!_ProcessHandshake(rsp))
                 return false;
         }
@@ -111,29 +111,26 @@ void ZookeeperConn::OnConnect()
     assert (state_ == State::kNone);
 
     {
-        auto del = [this](FILE* fp) {
+        FILE* const fp = fopen(sessionFile_.data(), "rb");
+
+        if (fp) {
+            fread(&sessionInfo_, sizeof sessionInfo_, 1, fp);
             ::fclose(fp);
             ::unlink(this->sessionFile_.c_str());
-        };
-
-        std::unique_ptr<FILE, decltype(del)> _(fopen(sessionFile_.data(), "rb"), del);
-        FILE* const fp = _.get();
-
-        if (fp)
-            fread(&sessionInfo_, sizeof sessionInfo_, 1, fp);
+        }
     }
 
     char buffer_req[HANDSHAKE_REQ_SIZE];
     int len = sizeof(buffer_req);
-    
-    struct connect_req req; 
-    req.protocolVersion = 0; 
+
+    struct connect_req req;
+    req.protocolVersion = 0;
     req.sessionId = sessionInfo_.sessionId;
     req.passwd_len = sizeof(req.passwd);
     req.timeOut = kTimeout;
     req.lastZxidSeen = sessionInfo_.lastSeenZxid;
     memcpy(req.passwd, sessionInfo_.passwd, req.passwd_len);
-                    
+
     StackBuffer<HANDSHAKE_REQ_SIZE + 4> buf;
     buf << htonl(len)
         << htonl(req.protocolVersion)
@@ -166,11 +163,11 @@ static struct ACL _OPEN_ACL_UNSAFE_ACL[] = {{0x1f,
                                            }};
 struct ACL_vector ZOO_OPEN_ACL_UNSAFE = { 1, _OPEN_ACL_UNSAFE_ACL};
 
-    
+
 static std::string MakeParentNode(int setid)
 {
     std::string path("/servers/set-");
-    path += std::to_string(setid); 
+    path += std::to_string(setid);
 
     return path;
 }
@@ -234,9 +231,9 @@ void ZookeeperConn::_RunForMaster(int setid, const std::string& value)
 
 int ZookeeperConn::_GetXid() const
 {
-    return ++ xid_; 
+    return ++ xid_;
 }
-    
+
 bool ZookeeperConn::_ProcessHandshake(const prime_struct& rsp)
 {
     if (sessionInfo_.sessionId && sessionInfo_.sessionId != rsp.sessionId)
@@ -261,7 +258,7 @@ bool ZookeeperConn::_ProcessHandshake(const prime_struct& rsp)
     state_ = State::kConnected;
 
     _InitPingTimer();
-                
+
     if (resumedSession)
     {
         // My node must exists
@@ -288,7 +285,7 @@ void ZookeeperConn::_InitPingTimer()
         struct oarchive *oa = create_buffer_oarchive();
         struct RequestHeader h = { STRUCT_INITIALIZER(xid, PING_XID), STRUCT_INITIALIZER (type , ZOO_PING_OP) };
 
-        serialize_RequestHeader(oa, "header", &h); 
+        serialize_RequestHeader(oa, "header", &h);
         gettimeofday(&this->lastPing_, nullptr);
 
         _SendPacket(h, oa);
@@ -428,7 +425,7 @@ bool ZookeeperConn::_ProcessResponse(const ReplyHeader& hdr, iarchive* ia)
             {
                 deallocate_GetDataResponse(&drsp);
             };
-                
+
             return req.cb(&drsp);
         }
         break;
@@ -469,10 +466,12 @@ bool ZookeeperConn::_ProcessResponse(const ReplyHeader& hdr, iarchive* ia)
 bool ZookeeperConn::_ProcessData(const std::string& data)
 {
     INF << "Got data " << data;
+    //TODO  sharding
+    return true;
 
     // *set的数据格式是  1,3,4,7|ipport@1,4|ipport@3,7
     std::vector<QString> tmp(SplitString(data, '|'));
-    switch (tmp.size()) 
+    switch (tmp.size())
     {
         case 0:
             ERR << "Why no data on my set " << setId_;
@@ -540,7 +539,7 @@ bool ZookeeperConn::_OnMySetData(void* r)
     std::string data(drsp.data.buff, drsp.data.len);
     return _ProcessData(data);
 }
-    
+
 std::vector<SocketAddr> ZookeeperConn::_CollectSlaveAddr() const
 {
     assert (_IsMaster());
@@ -566,8 +565,8 @@ bool ZookeeperConn::_GetSiblings(const std::string& parent, std::function<bool (
     struct GetChildren2Request req;
     req.path = const_cast<char* >(parent.data());
     req.watch = 0;
-    
-    int rc = serialize_RequestHeader(oa, "header", &h); 
+
+    int rc = serialize_RequestHeader(oa, "header", &h);
     rc = rc < 0 ? rc : serialize_GetChildren2Request(oa, "req", &req);
 
     if (!_SendPacket(h, oa, std::move(cb), &parent))
@@ -584,8 +583,8 @@ bool ZookeeperConn::_GetData(const std::string& node, bool watch, std::function<
     struct GetDataRequest req;
     req.path = const_cast<char* >(node.data());
     req.watch = watch ? 1 : 0;
-    
-    int rc = serialize_RequestHeader(oa, "header", &h); 
+
+    int rc = serialize_RequestHeader(oa, "header", &h);
     rc = rc < 0 ? rc : serialize_GetDataRequest(oa, "req", &req);
 
     if (!_SendPacket(h, oa, std::move(cb), &node))
@@ -605,8 +604,8 @@ bool ZookeeperConn::_SetData(const std::string& node, const std::string& data, i
     req.data.buff = const_cast<char* >(data.data());
     req.data.len = static_cast<int32_t>(data.size());
     req.version = ver;
-    
-    int rc = serialize_RequestHeader(oa, "header", &h); 
+
+    int rc = serialize_RequestHeader(oa, "header", &h);
     rc = rc < 0 ? rc : serialize_SetDataRequest(oa, "req", &req);
 
     if (!_SendPacket(h, oa, std::move(cb), &node))
@@ -623,8 +622,8 @@ bool ZookeeperConn::_Exists(const std::string& sibling, bool watch, std::functio
     struct ExistsRequest req;
     req.path = const_cast<char* >(sibling.data());
     req.watch = watch ? 1 : 0;
-    
-    int rc = serialize_RequestHeader(oa, "header", &h); 
+
+    int rc = serialize_RequestHeader(oa, "header", &h);
     rc = rc < 0 ? rc : serialize_ExistsRequest(oa, "req", &req);
 
     if (!_SendPacket(h, oa, std::move(cb), &sibling))
@@ -641,7 +640,7 @@ bool ZookeeperConn::_SendPacket(const RequestHeader& h,
     auto s = sock_.lock();
     if (!s)
         return false;
-        
+
     int totalLen = htonl(get_buffer_len(oa));
     s->SendPacket(&totalLen, sizeof totalLen);
     s->SendPacket(get_buffer(oa), get_buffer_len(oa));
@@ -653,7 +652,7 @@ bool ZookeeperConn::_SendPacket(const RequestHeader& h,
     r.cb = std::move(cb);
 
     pendingRequests_.emplace_back(std::move(r));
-   
+
     close_buffer_oarchive(&oa, 1);
     return true;
 }

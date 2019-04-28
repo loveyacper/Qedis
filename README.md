@@ -22,15 +22,11 @@ A C++11 implementation of distributed redis server, use Leveldb for persist stor
 
  Of course you can also use redis-sentinel.
 
- See details in [cluster Readme](QCluster/README.md), still in development.
+ See details in [cluster Readme](cluster/README.md), still in development.
 
 ## Fully compatible with redis
  You can test Qedis with redis-cli, redis-benchmark, or use redis as master with Qedis as slave or conversely, it also can work with redis sentinel.
  In a word, Qedis is full compatible with Redis.
-
-## Support module for write your own extensions
- Qedis supports module now, still in progress, much work to do.
- I added three commands(ldel, skeys, hgets) for demonstration.
 
 ## Persistence: Not limited to memory
  Leveldb can be configured as backend for Qedis.

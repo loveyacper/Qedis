@@ -79,8 +79,8 @@ ParseResult GetIntUntilCRLF(const char*& ptr, std::size_t nBytes, int& val)
 
 void ServerProtocol::Reset()
 {
-    multi_ = -1;
-    paramLen_ = -1;
+    multi_ = kInvalid;
+    paramLen_ = kInvalid;
     params_.clear();
     content_.clear();
     nParams_ = 0;
@@ -88,7 +88,7 @@ void ServerProtocol::Reset()
 
 ParseResult ServerProtocol::ParseRequest(const char*& ptr, const char* end)
 {
-    if (multi_ == -1)
+    if (multi_ == kInvalid)
     {
         const char* const start = ptr;
         auto parseRet = _ParseMulti(ptr, end, multi_);
@@ -141,7 +141,7 @@ ParseResult ServerProtocol::_ParseStrlist(const char*& ptr, const char* end, std
 
 ParseResult ServerProtocol::_ParseStr(const char*& ptr, const char* end, std::string& res)
 {
-    if (paramLen_ == -1)
+    if (paramLen_ == kInvalid)
     {
         const char* const start = ptr;
         auto parseRet = _ParseStrlen(ptr, end, paramLen_);
@@ -158,6 +158,7 @@ ParseResult ServerProtocol::_ParseStr(const char*& ptr, const char* end, std::st
     if (paramLen_ == -1)
     {
         res.clear();
+        paramLen_ = kInvalid;
         return ParseResult::ok;
     }
     else
@@ -180,7 +181,7 @@ ParseResult ServerProtocol::_ParseStrval(const char*& ptr, const char* end, std:
 
     res.assign(ptr, tail - ptr);
     ptr = tail + 2;
-    paramLen_ = -1;
+    paramLen_ = kInvalid;
 
     content_.append(start, ptr);
     return ParseResult::ok;
@@ -321,9 +322,14 @@ ParseResult ClientProtocol::_ParseStr(const char*& ptr, const char* end)
     }
 
     if (paramLen_ == -1)
+    {
+        paramLen_ = kInvalid;
         return ParseResult::ok;
+    }
     else
+    {
         return _ParseStrval(ptr, end);
+    }
 }
 
 ParseResult ClientProtocol::_ParseStrval(const char*& ptr, const char* end)
