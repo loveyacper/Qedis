@@ -251,7 +251,7 @@ bool OutputMemoryFile::IsOpen() const
 void OutputMemoryFile::Write(const void* data, size_t len)
 {
     _AssureSpace(len);
-    assert(memory_ > 0);
+    assert(memory_);
 
     ::memcpy(memory_ + offset_, data, len);
     offset_ += len;

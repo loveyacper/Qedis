@@ -457,7 +457,7 @@ int main(int ac, char* av[])
         if (!LoadQedisConfig(svr.GetConfigName().c_str(), qedis::g_config))
         {
             std::cerr << "Load config file [" << svr.GetConfigName() << "] failed!\n";
-            return false;
+            return -2;
         }
     }
     
