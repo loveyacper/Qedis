@@ -5,6 +5,7 @@
 #include "QMulti.h"
 #include "Log/Logger.h"
 #include "QLeveldb.h"
+#include "QRocksdb.h"
 #include <limits>
 #include <cassert>
 
@@ -473,7 +474,7 @@ const QObject* QStore::GetObject(const QString& key) const
         QObject obj = backends_[dbno_]->Get(key);
         if (obj.type != QType_invalid)
         {
-            DBG << "GetKey from leveldb:" << key;
+            DBG << "GetKey from db:" << key;
 
             QObject& realobj = ((*db)[key] = std::move(obj));
             realobj.lru = QObject::lruclock;
@@ -796,13 +797,28 @@ void QStore::InitDumpBackends()
         for (size_t i = 0; i < store_.size(); ++ i)
         {
             std::unique_ptr<QLeveldb> db(new QLeveldb);
-            QString dbpath = g_config.backendPath + std::to_string(i);
+            QString dbpath = g_config.backendPath + std::to_string(i) + "_L";
             if (!db->Open(dbpath.data()))
                 assert(false);
             else
                 USR << "Open leveldb " << dbpath;
 
             backends_.push_back(std::move(db));
+        }
+    }
+    else if (g_config.backend == BackEndRocksdb)
+    {
+        waitSyncKeys_.resize(store_.size());
+        for (size_t i = 0; i < store_.size(); ++ i)
+        {
+            std::unique_ptr<QRocksdb> db(new QRocksdb);
+            QString dbpath = g_config.backendPath + std::to_string(i) + "_R";
+            if (!db->Open(dbpath.data()))
+                assert(false);
+            else
+                USR << "Open rocksdb " << dbpath;
+
+            backends_.push_back(std::move(db));        
         }
     }
     else 
@@ -848,12 +864,12 @@ void  QStore::DumpToBackends(int dbno)
                 when += now;
 
             backends_[dbno]->Put(it->first, *it->second, when);
-            DBG << "UPDATE leveldb key " << it->first << ", when = " << when;
+            DBG << "UPDATE db key " << it->first << ", when = " << when;
         }
         else
         {
             backends_[dbno]->Delete(it->first);
-            DBG << "DELETE leveldb key " << it->first;
+            DBG << "DELETE db key " << it->first;
         }
             
         it = dirtyKeys.erase(it);
