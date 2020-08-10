@@ -12,7 +12,8 @@ enum BackEndType
 {
     BackEndNone = 0,
     BackEndLeveldb = 1,
-    BackEndMax = 2,
+    BackEndRocksdb = 2,
+    BackEndMax = 3,
 };
 
 struct QConfig
@@ -72,6 +73,22 @@ struct QConfig
     int backend; // enum BackEndType
     QString backendPath; 
     int backendHz; // the frequency of dump to backend
+
+    // rocksdb
+    size_t write_buffer_size;
+    int level0_file_num_compaction_trigger;
+    int level0_slowdown_writes_trigger;
+    int level0_stop_writes_trigger;
+    int max_write_buffer_number;
+    int min_write_buffer_number_to_merge;
+    int max_background_jobs;
+    uint32_t max_subcompactions;
+    int max_open_files;
+    bool enable_pipelined_write;
+    size_t max_log_file_size;
+    uint64_t max_manifest_file_size;
+    bool unordered_write; // Since RocksDB 6.3
+    bool two_write_queues; // Since RocksDB 6.3
 
     // cluster
     bool enableCluster = false;
