@@ -152,6 +152,7 @@ public:
     // eviction timer for lru
     void    InitEvictionTimer();
     // for backends
+    void    FreeAllBackends();
     void    InitDumpBackends();
     void    DumpToBackends(int dbno);
     void    AddDirtyKey(const QString& key);
@@ -209,7 +210,7 @@ private:
     mutable std::vector<QDB> store_;
     mutable std::vector<ExpiresDB> expiresDb_;
     std::vector<BlockedClients> blockedClients_;
-    std::vector<std::unique_ptr<QDumpInterface> > backends_;
+    std::vector<QDumpInterface* > backends_;
         
     using ToSyncDb = std::unordered_map<QString, const QObject* ,
                                         my_hash,

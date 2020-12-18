@@ -438,7 +438,9 @@ bool Qedis::_RunLogic()
 
 void Qedis::_Recycle()
 {
+    using namespace qedis;
     std::cerr << "Qedis::_Recycle: server is exiting.. BYE BYE\n";
+    QSTORE.FreeAllBackends();
     qedis::QAOFThreadController::Instance().Stop();
 }
 

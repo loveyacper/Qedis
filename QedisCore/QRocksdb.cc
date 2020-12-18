@@ -13,6 +13,7 @@ QRocksdb::QRocksdb() : db_(nullptr)
 
 QRocksdb::~QRocksdb()
 {
+    delete db_;
 }
 
 bool QRocksdb::IsOpen() const 
