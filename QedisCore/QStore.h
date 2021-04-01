@@ -210,7 +210,7 @@ private:
     mutable std::vector<QDB> store_;
     mutable std::vector<ExpiresDB> expiresDb_;
     std::vector<BlockedClients> blockedClients_;
-    std::vector<QDumpInterface* > backends_;
+    std::vector<std::unique_ptr<QDumpInterface> > backends_;
         
     using ToSyncDb = std::unordered_map<QString, const QObject* ,
                                         my_hash,

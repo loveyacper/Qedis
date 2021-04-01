@@ -17,6 +17,15 @@ A C++11 implementation of distributed redis server, use Leveldb for persist stor
 * C++11 & CMake
 * Linux or OS X
 
+## Build Qedis In Docker
+
+Run follow command on a machine with docker installed：
+
+```
+// build image，compile code，Run qedis_server
+cd ci; make image; make build-dev; make build-run
+```
+
 ## Cluster Features
  Use zookeeper for leader election, to reach high availability.
 

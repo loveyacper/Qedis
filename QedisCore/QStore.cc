@@ -672,11 +672,7 @@ void QStore::ResetDb()
 
 void QStore::FreeAllBackends()
 {
-    for (std::vector<QDumpInterface* >::iterator it = backends_.begin(); it != backends_.end(); ++it)
-    {
-        std::cerr << "free backend" << std::endl;
-        delete *it;
-    }
+    backends_.clear();
 }
 
 size_t QStore::BlockedSize() const
@@ -805,14 +801,14 @@ void QStore::InitDumpBackends()
         waitSyncKeys_.resize(store_.size());
         for (size_t i = 0; i < store_.size(); ++ i)
         {
-            QLeveldb *db = new QLeveldb;
+            std::unique_ptr<QLeveldb> db(new QLeveldb);
             QString dbpath = g_config.backendPath + std::to_string(i) + "_L";
             if (!db->Open(dbpath.data()))
                 assert(false);
             else
                 USR << "Open leveldb " << dbpath;
 
-            backends_.push_back(db);
+            backends_.push_back(std::move(db));
         }
     }
     else if (g_config.backend == BackEndRocksdb)
@@ -820,14 +816,14 @@ void QStore::InitDumpBackends()
         waitSyncKeys_.resize(store_.size());
         for (size_t i = 0; i < store_.size(); ++ i)
         {
-            QRocksdb* db = new QRocksdb;
+            std::unique_ptr<QRocksdb> db(new QRocksdb);
             QString dbpath = g_config.backendPath + std::to_string(i) + "_R";
             if (!db->Open(dbpath.data()))
                 assert(false);
             else
                 USR << "Open rocksdb " << dbpath;
 
-            backends_.push_back(db);        
+            backends_.push_back(std::move(db));        
         }
     }
     else 
