@@ -24,7 +24,7 @@ public:
 
 private:
     bool _MapReadOnly();
-    void _CheckAvail(std::size_t len) throw(std::runtime_error);
+    void _CheckAvail(std::size_t len);
 
     int file_;
     char* memory_;

@@ -41,7 +41,7 @@ bool InputMemoryFile::_MapReadOnly()
     return memory_ != kInvalidAddr;
 }
 
-void InputMemoryFile::_CheckAvail(std::size_t len) throw(std::runtime_error)
+void InputMemoryFile::_CheckAvail(std::size_t len)
 {
     if (offset_ + len > size_)
     {
