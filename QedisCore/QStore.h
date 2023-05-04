@@ -152,7 +152,6 @@ public:
     // eviction timer for lru
     void    InitEvictionTimer();
     // for backends
-    void    FreeAllBackends();
     void    InitDumpBackends();
     void    DumpToBackends(int dbno);
     void    AddDirtyKey(const QString& key);

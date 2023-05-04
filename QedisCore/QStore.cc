@@ -8,7 +8,7 @@
 #include "QRocksdb.h"
 #include <limits>
 #include <cassert>
-#include <iostream>
+
 
 namespace qedis
 {
@@ -668,11 +668,6 @@ void QStore::ResetDb()
     std::vector<ExpiresDB>(expiresDb_.size()).swap(expiresDb_);
     std::vector<BlockedClients>(blockedClients_.size()).swap(blockedClients_);
     dbno_ = 0;
-}
-
-void QStore::FreeAllBackends()
-{
-    backends_.clear();
 }
 
 size_t QStore::BlockedSize() const
