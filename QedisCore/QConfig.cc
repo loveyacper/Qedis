@@ -66,22 +66,6 @@ QConfig::QConfig()
     backend = BackEndNone;
     backendPath = "dump";
     backendHz = 10;
-
-     // for rocksdb
-    write_buffer_size = 1024 * 1024 * 128UL;
-    level0_file_num_compaction_trigger = 4;
-    level0_slowdown_writes_trigger = 20;
-    level0_stop_writes_trigger = 36;
-    max_write_buffer_number = 8;
-    min_write_buffer_number_to_merge = 2;
-    max_background_jobs = 8;
-    max_subcompactions = 4;
-    max_open_files = -1;
-    unordered_write = false;
-    two_write_queues = false;
-    enable_pipelined_write = false;
-    max_log_file_size = 1024 * 1024 * 1024UL;
-    max_manifest_file_size = 1024 * 1024 * 128UL;
 }
 
 bool  LoadQedisConfig(const char* cfgFile, QConfig& cfg)
@@ -213,22 +197,6 @@ bool  LoadQedisConfig(const char* cfgFile, QConfig& cfg)
         cfg.setid = parser.GetData<int>("setid", -1);
     }
     
-    // rocksdb
-    cfg.write_buffer_size = parser.GetData<size_t>("write_buffer_size", 1024 * 1024 * 128UL);
-    cfg.level0_file_num_compaction_trigger = parser.GetData<int>("level0_file_num_compaction_trigger", 4);
-    cfg.level0_slowdown_writes_trigger = parser.GetData<int>("level0_slowdown_writes_trigger", 20);
-    cfg.level0_stop_writes_trigger = parser.GetData<int>("level0_stop_writes_trigger", 36);
-    cfg.max_write_buffer_number = parser.GetData<int>("max_write_buffer_number", 8);
-    cfg.min_write_buffer_number_to_merge = parser.GetData<int>("min_write_buffer_number_to_merge", 2);
-    cfg.max_background_jobs = parser.GetData<int>("max_background_jobs", 8);
-    cfg.max_subcompactions = parser.GetData<int>("max_subcompactions", 4);
-    cfg.max_open_files = parser.GetData<int>("max_open_files", -1);
-    cfg.max_log_file_size = parser.GetData<int>("max_log_file_size", 1073741824);
-    cfg.max_manifest_file_size = parser.GetData<int>("max_manifest_file_size", 134217728);
-    cfg.enable_pipelined_write = (parser.GetData<QString>("enable_pipelined_write", "false") == "true");
-    cfg.unordered_write = (parser.GetData<QString>("unordered_write", "false") == "true");
-    cfg.two_write_queues = (parser.GetData<QString>("two_write_queues", "false") == "true");
-
     return  cfg.CheckArgs();
 }
     
