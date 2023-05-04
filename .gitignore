@@ -4,6 +4,3 @@
 #
 build/
 bin/
-rocksdb/
-leveldb/
-.vscode/

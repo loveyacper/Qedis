@@ -10,7 +10,6 @@
 #include <memory>
 #include <mutex>
 #include <atomic>
-#include <functional>
 
 uint64_t Now();
 
