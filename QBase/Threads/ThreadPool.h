@@ -2,6 +2,7 @@
 #define BERT_THREADPOOL_H
 
 #include <deque>
+#include <functional>
 #include <thread>
 #include <memory>
 #include <future>

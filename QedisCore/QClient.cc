@@ -462,7 +462,7 @@ void  QClient::FeedMonitors(const std::vector<QString>& params)
     
     for (const auto& e : params)
     {
-        if (static_cast<int>(sizeof buf) < n)
+        if (n < static_cast<int>(sizeof buf))
             n += snprintf(buf + n, sizeof buf - n, "%s ", e.data());
         else
             break;

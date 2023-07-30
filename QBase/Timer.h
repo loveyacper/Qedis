@@ -3,6 +3,7 @@
 #define BERT_TIMER_H
 
 #include <vector>
+#include <functional>
 #include <set>
 #include <ctime>
 #include <sys/time.h>

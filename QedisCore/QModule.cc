@@ -22,7 +22,7 @@ const QString& QModule::Name() const
     return soname_;
 }
 
-void QModule::Load(const char* so, bool lazy) throw(std::runtime_error)
+void QModule::Load(const char* so, bool lazy)
 {
     assert (!handler_);
 
@@ -73,7 +73,7 @@ QModuleManager& QModuleManager::Instance()
 }
     
 
-QModule* QModuleManager::Load(const char* so, bool lazy) throw(std::logic_error, std::runtime_error)
+QModule* QModuleManager::Load(const char* so, bool lazy)
 {
     auto module = std::make_shared<QModule>();
     module->Load(so, lazy);

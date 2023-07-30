@@ -51,7 +51,7 @@ public:
 
     const QString& Name() const;
 
-    void Load(const char* so, bool lazy = false) throw(std::runtime_error);
+    void Load(const char* so, bool lazy = false);
     void UnLoad();
     void* Symbol(const char* symbol);
 
@@ -68,7 +68,7 @@ public:
     QModuleManager(const QModuleManager& ) = delete;
     void operator= (const QModuleManager& ) = delete;
 
-    QModule* Load(const char* so, bool lazy = false) throw(std::logic_error, std::runtime_error);
+    QModule* Load(const char* so, bool lazy = false);
     void UnLoad(const char* so);
 
     QModule* GetModule(const char* so);
